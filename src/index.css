@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE 10+ */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Safari and Chrome */
+}
+.custom-clipped-image {
+  clip-path: ellipse(90px 150px at 0% 50%);
+}
+.curved-mask {
+  clip-path: ellipse(90px 150px at 0% 50%);
+}
+.mains.curved-mask {
+  clip-path: ellipse(90px 270px at 0% 48%);
+}
+
+
+
