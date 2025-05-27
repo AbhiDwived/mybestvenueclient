@@ -8,10 +8,11 @@ import 'react-calendar/dist/Calendar.css';
 import EditProfile from './EditProfiles';
 import PortfolioTab from './Portfolio';
 import PackagesAndFaqs from './PackagesAndFaqs';
-import Inquiries from './Inquiries';
+import Inquiries from './Inquiries/Inquiries';
 import ReviewSection from './Reviews';
 import Analytics from './Analytics';
-import EditCoverPhoto from './EditCoverPhoto';
+// import EditCoverPhoto from './EditCoverPhoto';
+import { Link } from 'react-router-dom';
 
 
 const Dashboard = () => {
@@ -96,32 +97,69 @@ const Dashboard = () => {
 
   return (
     <div className="p-6 bg-white min-h-screen text-gray-800 font-serif">
-      
+
       {/* Header */}
-      <div className="mb-2">
+      {/* <div className="mb-2">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold font-serif">Dream Wedding Photography</h1>
             <p className="text-sm text-gray-600 font-serif">Photographer • Delhi, India</p>
           </div>
-          
+
           <div className="flex justify-between items-start gap-4">
-  <div className="flex flex-col">
-    <span className="text-black text-sm font-medium font-serif">Profile Status</span>
-    <div className="flex items-center justify-center">
-      <span className="text-green-700 font-bold text-sm font-serif">Active</span>
-    </div>
-  </div>
-  <button className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm">
-    Preview Profile
-  </button>
-</div>
+            <div className="flex flex-col">
+              <span className="text-black text-sm font-medium font-serif">Profile Status</span>
+              <div className="flex items-center justify-center">
+                <span className="text-green-700 font-bold text-sm font-serif">Active</span>
+              </div>
+            </div>
+            <Link to="/vendor/preview_profile">
+              <button className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm">
+                Preview Profile
+              </button>
+            </Link>
+          </div>
 
         </div>
+      </div> */}
+      <div className="mb-2 px-4">
+  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    
+    {/* Left: Title and Subtitle */}
+    <div>
+      <h1 className="text-xl md:text-2xl font-bold font-serif">
+        Dream Wedding Photography
+      </h1>
+      <p className="text-sm text-gray-600 font-serif">
+        Photographer • Delhi, India
+      </p>
+    </div>
+
+    {/* Right: Profile Status + Button */}
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="flex flex-col">
+        <span className="text-black text-sm font-medium font-serif">
+          Profile Status
+        </span>
+        <div className="flex items-center">
+          <span className="text-green-700 font-bold text-sm font-serif">
+            Active
+          </span>
+        </div>
       </div>
+      <Link to="/vendor/preview_profile">
+        <button className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm w-full sm:w-auto text-center">
+          Preview Profile
+        </button>
+      </Link>
+    </div>
+
+  </div>
+</div>
+
 
       {/* Tabs */}
-      <div className="flex flex-wrap justify-center md:justify-start space-x-4 bg-[#f5f8fb] p-2 rounded-md mb-6 text-sm">
+      {/* <div className="flex flex-wrap justify-center md:justify-start space-x-4 bg-[#f5f8fb] p-2 rounded-md mb-6 text-sm">
         {tabs.map((tab, i) => (
           <button
             key={i}
@@ -131,7 +169,21 @@ const Dashboard = () => {
             {tab}
           </button>
         ))}
-      </div>
+      </div> */}
+      <div className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 bg-[#f5f8fb] p-2 rounded-md mb-6 text-sm">
+  {tabs.map((tab, i) => (
+    <button
+      key={i}
+      onClick={() => handleTabClick(tab)}
+      className={`px-3 py-1 rounded-md font-medium whitespace-nowrap ${
+        tab === activeTab ? 'bg-white text-black shadow-sm' : 'text-gray-600'
+      }`}
+    >
+      {tab}
+    </button>
+  ))}
+</div>
+
 
       {/* Dynamic Content Based on Active Tab */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -203,7 +255,7 @@ const Dashboard = () => {
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-gray-50 p-4 rounded border">
+            <div className="bg-gray-50 p-2 rounded border">
               <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
               <p className="text-sm text-gray-500 mb-2">Latest inquiries and reviews</p>
 
@@ -229,12 +281,12 @@ const Dashboard = () => {
           </>
         )}
 
- 
+
 
         {/* Add similar conditional rendering for other tabs */}
         {activeTab === 'Edit Profile' && (
           <div className="col-span-3 bg-white   w-full">
-            
+
             <EditProfile />
             {/* <EditCoverPhoto/> */}
             {/* Add Edit Profile form here */}
@@ -243,68 +295,68 @@ const Dashboard = () => {
 
         {activeTab === 'Portfolio' && (
           <div className="col-span-3 bg-white">
-            <PortfolioTab/>
+            <PortfolioTab />
           </div>
         )}
 
         {activeTab === 'Packages & FAQs' && (
           <div className="col-span-3 bg-white ">
-           
-           <PackagesAndFaqs/>
+
+            <PackagesAndFaqs />
           </div>
         )}
 
         {activeTab === 'Inquiries' && (
           <div className="col-span-3 bg-white ">
-           <Inquiries/>
+            <Inquiries />
           </div>
         )}
 
         {activeTab === 'Reviews' && (
           <div className="col-span-3 bg-white ">
-           <ReviewSection/>
+            <ReviewSection />
           </div>
         )}
 
         {activeTab === 'Analytics' && (
           <div className="col-span-3 bg-white p-4 rounded border">
             <Analytics />
-            
+
           </div>
         )}
       </div>
 
-             {activeTab === 'Overview' && (
-          <div className="col-span-2 bg-white p-4 rounded border mt-5">
-            <h2 className="text-lg font-semibold mb-2">Upcoming Weddings</h2>
-            <p className="text-sm text-gray-500 mb-2">Your Scheduled Bookings</p>
-            {upcomingWeddings.map((wedding, index) => (
-              <div key={index} className="flex items-center space-x-4 border p-4 rounded mb-2 relative">
-                <span
-                  className="text-gray-800 cursor-pointer"
-                  onClick={() => setShowDatePickerForWedding(index === showDatePickerForWedding ? null : index)}
-                >
-                  <MdOutlineCalendarMonth size={40} />
-                </span>
-                <div className="flex-1">
-                  <p className="font-medium">{wedding.name}</p>
-                  <p className="text-sm text-gray-500">{wedding.date}</p>
-                </div>
-                <button className="border border-gray-300 rounded px-4 py-1">Contact Client</button>
-
-                {/* Dropdown DatePicker */}
-                {showDatePickerForWedding === index && (
-                  <div className="absolute top-full left-0 z-10 mt-1 shadow-lg bg-white p-2 rounded">
-                    <DatePicker
-                      inline
-                      onChange={(date) => handleWeddingDateSelect(index, date, wedding.name)}
-                    />
-                  </div>
-                )}
+      {activeTab === 'Overview' && (
+        <div className="col-span-2 bg-white p-4 rounded border mt-5">
+          <h2 className="text-lg font-semibold mb-2">Upcoming Weddings</h2>
+          <p className="text-sm text-gray-500 mb-2">Your Scheduled Bookings</p>
+          {upcomingWeddings.map((wedding, index) => (
+            <div key={index} className="flex items-center space-x-4 border p-4 rounded mb-2 relative">
+              <span
+                className="text-gray-800 cursor-pointer"
+                onClick={() => setShowDatePickerForWedding(index === showDatePickerForWedding ? null : index)}
+              >
+                <MdOutlineCalendarMonth size={40} />
+              </span>
+              <div className="flex-1">
+                <p className="font-medium">{wedding.name}</p>
+                <p className="text-sm text-gray-500">{wedding.date}</p>
               </div>
-            ))}
-          </div>
-        )}
+              <button className="border border-gray-300 rounded px-4 py-1">Contact Client</button>
+
+              {/* Dropdown DatePicker */}
+              {showDatePickerForWedding === index && (
+                <div className="absolute top-full left-0 z-10 mt-1 shadow-lg bg-white p-2 rounded">
+                  <DatePicker
+                    inline
+                    onChange={(date) => handleWeddingDateSelect(index, date, wedding.name)}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

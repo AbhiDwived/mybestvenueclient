@@ -9,7 +9,7 @@ const loginRedirects = {
 };
 
 const ProtectedRoute = ({ allowedRoles = [], children }) => {
-  // Get auth states from Redux
+  // Get auth slices from Redux
   const userAuth = useSelector((state) => state.auth || {});
   const vendorAuth = useSelector((state) => state.vendor || {});
   const adminAuth = useSelector((state) => state.adminAuth || {});
@@ -17,44 +17,41 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
   let isAuthenticated = false;
   let currentRole = null;
 
-  // Detect admin
+  // Check admin first (highest priority)
   if (adminAuth.isAuthenticated && adminAuth.admin) {
     isAuthenticated = true;
-    // Use role from admin object if available, fallback to 'admin'
     currentRole = adminAuth.admin.role || 'admin';
   }
-  // Detect vendor
+  // Then check vendor
   else if (vendorAuth.isAuthenticated && vendorAuth.vendor) {
     isAuthenticated = true;
-    // Use role from vendor object if available, fallback to 'vendor'
     currentRole = vendorAuth.vendor.role || 'vendor';
   }
-  // Detect user
+  // Then check user
   else if (userAuth.isAuthenticated && userAuth.user) {
     isAuthenticated = true;
-    // Use role from user object if available, fallback to 'user'
     currentRole = userAuth.user.role || 'user';
   }
 
-  // Debug logs
+  // Debug logs (remove or comment out in production)
   console.log('userAuth:', userAuth);
   console.log('vendorAuth:', vendorAuth);
   console.log('adminAuth:', adminAuth);
   console.log('isAuthenticated:', isAuthenticated);
   console.log('currentRole:', currentRole);
 
-  // Not logged in
+  // Not authenticated, redirect to login page based on first allowed role or default to user login
   if (!isAuthenticated) {
     const redirectTo = loginRedirects[allowedRoles[0]] || '/user/login';
     return <Navigate to={redirectTo} replace />;
   }
 
-  // Logged in, but wrong role
+  // Authenticated but role not authorized
   if (allowedRoles.length > 0 && !allowedRoles.includes(currentRole)) {
     return <Navigate to="/not-authorized" replace />;
   }
 
-  // Support both children and nested routes
+  // Authorized — render children or nested routes
   return children ? children : <Outlet />;
 };
 

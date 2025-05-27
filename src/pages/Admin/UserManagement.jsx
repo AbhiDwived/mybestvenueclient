@@ -1,99 +1,81 @@
-
 import React, { useState } from 'react';
 import { FaEye, FaPen, FaTrash } from 'react-icons/fa';
-
-const usersData = [
-  { name: "Arjun & Meera Kumar", email: "arjun.meera@example.com", role: "User", status: "Active", dateJoined: "10/15/2023" },
-  { name: "Vikram & Nisha Patel", email: "vikram.nisha@example.com", role: "User", status: "Active", dateJoined: "11/5/2023" },
-  { name: "Dream Wedding Photography", email: "info@dreamwedding.com", role: "Vendor", status: "Active", dateJoined: "9/20/2023" },
-  { name: "Royal Palace Banquet", email: "bookings@royalpalace.com", role: "Vendor", status: "Active", dateJoined: "8/12/2023" },
-  { name: "Karan & Priya Malhotra", email: "karan.priya@example.com", role: "User", status: "Inactive", dateJoined: "11/25/2023" },
-  { name: "Karan & Priya Malhotra", email: "karan.priya@example.com", role: "User", status: "Inactive", dateJoined: "11/25/2023" },
-  { name: "Karan & Priya Malhotra", email: "karan.priya@example.com", role: "User", status: "Inactive", dateJoined: "11/25/2023" },
-  { name: "Karan & Priya Malhotra", email: "karan.priya@example.com", role: "User", status: "Inactive", dateJoined: "11/25/2023" },
-  { name: "Aditya & Suchita", email: "karan.priya@example.com", role: "User", status: "Inactive", dateJoined: "11/25/2023" },
-];
+import { useGetAllUsersQuery, useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 
 const UserManagement = () => {
+  const { data: usersDataRaw, isLoading: usersLoading, isError: usersError } = useGetAllUsersQuery();
+  const { data: vendorsDataRaw, isLoading: vendorsLoading, isError: vendorsError } = useGetAllVendorsQuery();
+
+  const usersData = Array.isArray(usersDataRaw) ? usersDataRaw : usersDataRaw?.users || [];
+  const vendorsData = Array.isArray(vendorsDataRaw) ? vendorsDataRaw : vendorsDataRaw?.vendors || [];
+
+  const combinedData = [
+    ...usersData.map(user => ({ ...user, role: 'user' })),
+    ...vendorsData.map(vendor => ({ ...vendor, role: 'vendor' }))
+  ];
+
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [suggestions, setSuggestions] = useState([]);
   const usersPerPage = 5;
 
-  const handleView = (user) => {
-    alert(`Viewing user: ${user.name}`);
-  };
+  const filteredUsers = combinedData.filter(user => {
+    const isApprovedVendor = user.role === "vendor";
+    const isUser = user.role === "user";
 
-  const handleEdit = (user) => {
-    alert(`Editing user: ${user.name}`);
-  };
+    const shouldInclude = roleFilter === "all"
+      ? isUser || isApprovedVendor
+      : roleFilter === "vendor"
+        ? isApprovedVendor
+        : isUser;
 
-  const handleDelete = (user) => {
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${user.name}?`);
-    if (confirmDelete) {
-      alert(`Deleted user: ${user.name}`);
-    }
-  };
+    const matchesSearch =
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const handleSearchChange = (e) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-    if (term.length > 0) {
-      const matchedSuggestions = usersData.filter(user =>
-        user.name.toLowerCase().includes(term.toLowerCase()) ||
-        user.email.toLowerCase().includes(term.toLowerCase())
-      );
-      setSuggestions(matchedSuggestions);
-    } else {
-      setSuggestions([]);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion.name);
-    setSuggestions([]);
-  };
-
-  const filteredUsers = usersData.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || user.role.toLowerCase() === roleFilter;
-    return matchesSearch && matchesRole;
+    return shouldInclude && matchesSearch;
   });
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const startIdx = (currentPage - 1) * usersPerPage;
   const paginatedUsers = filteredUsers.slice(startIdx, startIdx + usersPerPage);
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleView = (user) => alert(`Viewing profile: ${user.name}`);
+  const handleEdit = (user) => alert(`Editing profile: ${user.name}`);
+  const handleDelete = (user) => {
+    if (window.confirm(`Delete ${user.name}?`)) {
+      alert(`Deleted: ${user.name}`);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    const d = new Date(dateString);
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  if (usersLoading || vendorsLoading) return <p className="p-4">Loading users and vendors...</p>;
+  if (usersError || vendorsError) return <p className="p-4 text-red-500">Failed to load data.</p>;
+
   return (
     <div className="p-6 bg-white rounded-xl shadow">
-      <h2 className="text-xl font-semibold">User Management</h2>
-      <p className="text-sm text-gray-500 mb-4">Manage all registered users on the platform</p>
+      <h2 className="text-xl font-semibold mb-2">User & Vendor Management</h2>
+      <p className="text-sm text-gray-500 mb-4">Manage all registered users and vendors on the platform</p>
 
       <div className="flex justify-between items-center mb-4 relative">
-        <div className="w-1/3 relative">
-          <input
-            type="text"
-            placeholder="Search users..."
-            className="w-full px-3 py-2 border rounded-md text-sm"
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-          {suggestions.length > 0 && (
-            <ul className="absolute z-10 bg-white border w-full rounded-md mt-1 shadow">
-              {suggestions.map((s, i) => (
-                <li
-                  key={i}
-                  onClick={() => handleSuggestionClick(s)}
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                >
-                  {s.name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <input
+          type="text"
+          placeholder="Search users or vendors..."
+          className="w-1/3 px-3 py-2 border rounded-md text-sm"
+          value={searchTerm}
+          onChange={handleSearchChange}
+        />
+
         <select
           className="w-40 px-3 py-2 border rounded-md text-sm"
           value={roleFilter}
@@ -102,50 +84,83 @@ const UserManagement = () => {
             setCurrentPage(1);
           }}
         >
-          <option value="all">All Users</option>
-          <option value="user">User</option>
-          <option value="vendor">Vendor</option>
+          <option value="all">All Users & Vendors</option>
+          <option value="user">Users</option>
+          <option value="vendor">Vendors</option>
         </select>
       </div>
 
       <div className="overflow-auto">
         <table className="w-full table-auto border-collapse">
           <thead>
-            <tr className="border-gray-200 rounded-full text-left text-gray-600 bg-gray-100">
-              <th className="p-1">Name</th>
-              <th className="p-1">Email</th>
-              <th className="p-1">Role</th>
-              <th className="p-1">Status</th>
-              <th className="p-1">Date Joined</th>
-              <th className="p-1">Actions</th>
+            <tr className="bg-gray-100 text-left text-gray-600 rounded-full">
+              <th className="p-2">Name</th>
+              <th className="p-2">Email</th>
+              <th className="p-2">Role</th>
+              <th className="p-2">Status</th>
+              <th className="p-2">Date Joined</th>
+              <th className="p-2">Category</th>
+              <th className="p-2">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {paginatedUsers.map((user, idx) => (
-              <tr key={idx} className="border-b hover:bg-gray-50">
-                <td className="p-1 font-medium">{user.name}</td>
-                <td className="p-1 text-sm text-gray-700">{user.email}</td>
-                <td className="p-1">
-                  <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{user.role}</span>
-                </td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>{user.status}</span>
-                </td>
-                <td className="p-3 text-sm">{user.dateJoined}</td>
-                <td className="p-3 space-x-3 text-gray-600">
-                  <button onClick={() => handleView(user)}><FaEye className="w-6 h-6 inline p-1" /></button>
-                  <button onClick={() => handleEdit(user)}><FaPen className="w-6 h-6 inline p-1" /></button>
-                  <button onClick={() => handleDelete(user)}><FaTrash className="w-6 h-6 inline text-red-500 p-1" /></button>
-                </td>
+            {paginatedUsers.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center p-4 text-gray-500">No users or vendors found.</td>
               </tr>
-            ))}
+            ) : (
+              paginatedUsers.map((user, idx) => (
+                <tr key={user._id || idx} className="border-b hover:bg-gray-50">
+                  <td className="p-2 font-medium">{user.name}</td>
+                  <td className="p-2 text-sm text-gray-700">{user.email || "-"}</td>
+                  <td className="p-2">
+                    <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs capitalize">
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="p-2 text-sm">
+                    {/* Status logic */}
+                    {user.role === 'vendor' ? (
+                      user.status === 'Approved' ? (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                          Pending
+                        </span>
+                      )
+                    ) : (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        user.status === 'Inactive'
+                          ? 'bg-gray-200 text-gray-600'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {user.status === 'Inactive' ? 'Inactive' : 'Active'}
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-2 text-sm">
+                    {user.role === 'vendor' 
+                      ? formatDate(user.appliedDate)
+                      : formatDate(user.createdAt)}
+                  </td>
+                  <td className="p-2 text-sm">{user.role === 'vendor' ? (user.category || "-") : "-"}</td>
+                  <td className=" text-gray-600">
+                    <button onClick={() => handleView(user)} title="View"><FaEye className="inline w-4 h-4" /></button>
+                    <button onClick={() => handleEdit(user)} title="Edit"><FaPen className="inline w-4 h-4 mx-4" /></button>
+                    <button onClick={() => handleDelete(user)} title="Delete"><FaTrash className="inline w-4 h-4 text-red-500" /></button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
         <span>
-          Showing {startIdx + 1}-{Math.min(startIdx + usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
+          Showing {startIdx + 1}-{Math.min(startIdx + usersPerPage, filteredUsers.length)} of {filteredUsers.length} entries
         </span>
         <div className="space-x-2">
           <button
@@ -169,6 +184,3 @@ const UserManagement = () => {
 };
 
 export default UserManagement;
-
-
-

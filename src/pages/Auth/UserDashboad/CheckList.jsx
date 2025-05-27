@@ -55,7 +55,7 @@ export default function CheckList() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Checklist Section */}
                     <div className="lg:col-span-2">
-                        <div className="bg-white rounded-lg shadow p-6 mb-6">
+                        <div className="bg-white rounded-lg  p-6 mb-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-bold text-wedding-dark">Wedding Checklist</h2>
                                 <div className="text-sm text-gray-600">
@@ -66,7 +66,7 @@ export default function CheckList() {
                             {/* Progress Bar */}
                             <div className="w-full bg-gray-200 h-3 rounded-full mb-6">
                                 <div
-                                    className="bg-[#0f304d] h-3 rounded-full transition-all duration-300"
+                                    className="bg-[#0F4C81] h-3 rounded-full transition-all duration-300"
                                     style={{ width: `${completionPercentage}%` }}
                                 />
                             </div>
@@ -76,7 +76,7 @@ export default function CheckList() {
                                 {tasks.map((task) => (
                                     <div
                                         key={task.id}
-                                        className={`flex justify-between items-start p-2 rounded-md border transition bg-[#f0f2f5] hover:shadow-sm ${task.completed ? "opacity-70" : ""
+                                        className={`flex justify-between items-start p-2 rounded-md border transition bg-[#f0f2f5] hover:shadow-sm ${task.completed ? "opacity-90" : ""
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -84,16 +84,16 @@ export default function CheckList() {
                                                 type="checkbox"
                                                 checked={task.completed}
                                                 onChange={() => toggleTaskCompletion(task.id)}
-                                                className="mt-1 w-4 h-4 accent-[#0f304d]"
+                                                className="mt-1 w-4 h-4 accent-[#0F4C81]"
                                             />
                                             <div>
                                                 <p
-                                                    className={`text-sm font-medium ${task.completed ? "line-through text-gray-400" : "text-gray-800"
+                                                    className={`text-md font-medium ${task.completed ? "line-through text-gray-800" : "text-gray-800"
                                                         }`}
                                                 >
                                                     {task.task}
                                                 </p>
-                                                <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                                <div className="text-md text-gray-500 mt-1 flex items-center gap-2">
                                                     <Calendar size={12} />{" "}
                                                     Added: {new Date(task.createdAt).toLocaleDateString("en-US")}
                                                 </div>
@@ -102,7 +102,7 @@ export default function CheckList() {
 
                                         <button
                                             onClick={() => deleteTask(task.id)}
-                                            className="text-gray-400 hover:text-red-500"
+                                            className="text-gray-400 hover:text-red-500 mt-4"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -137,7 +137,7 @@ export default function CheckList() {
                                     onClick={handleAddTask}
                                     disabled={!newTask.trim()}
                                     className={`w-full text-sm font-medium px-4 py-2 rounded-md transition ${newTask.trim()
-                                            ? "bg-[#0f304d] text-white hover:bg-[#0f304de2]"
+                                            ? "bg-[#0F4C81] text-white  hover:bg-[#0f304de2]"
                                             : "bg-gray-200 text-gray-400 cursor-not-allowed"
                                         }`}
                                 >

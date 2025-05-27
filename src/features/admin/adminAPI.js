@@ -58,12 +58,36 @@ export const adminApi = createApi({
       }),
     }),
 
+     // ✅ New: Get All Users
+    getAllUsers: builder.query({
+      query: () => '/admin/all_users',
+    }),
+
+    // ✅ Delete User by Admin
+    deleteUserByAdmin: builder.mutation({
+      query: ({ userId }) => ({
+        url: `/admin/delete-user/${userId}`,
+        method: 'DELETE',
+      }),
+    }),
+
+   // ✅ New: Get All Vendors
+    getAllVendors: builder.query({
+      query: () => '/admin/all_vendors',
+    }),
+
     // Approve Vendor
     approveVendor: builder.mutation({
       query: ({ vendorId }) => ({
         url: `/admin/approve/${vendorId}`,
         method: 'PUT',
       }),
+    }),
+
+  // Get Pending Vendors
+     // ✅ Add this endpoint:
+    getPendingVendors: builder.query({
+      query: () => '/admin/pending_vendor', // Make sure this matches your backend route
     }),
 
     // Delete Vendor
@@ -83,6 +107,10 @@ export const {
   useVerifyAdminOtpMutation,
   useResendAdminOtpMutation,
   useUpdateAdminProfileMutation,
+  useGetPendingVendorsQuery, // <- Make sure this line is present
+  useGetAllVendorsQuery, // ✅ Added export for use in components
+  useGetAllUsersQuery,
   useApproveVendorMutation,
   useDeleteVendorByAdminMutation,
+  useDeleteUserByAdminMutation, // ✅ New hook
 } = adminApi;

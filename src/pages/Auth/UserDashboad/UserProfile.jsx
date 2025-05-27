@@ -13,7 +13,9 @@ const UserProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const userId = user?._id || user?.id;
+  const userId = user?.id || user?._id;
+  console.log("User ID:", userId);
+
 
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -26,7 +28,7 @@ const UserProfile = () => {
     state: "",
     country: "",
     profilePhoto: "",
-    weddingDate: "", // for countdown tab
+    weddingDate: "",
   });
 
   const [tasks, setTasks] = useState([]);
@@ -47,20 +49,11 @@ const UserProfile = () => {
         profilePhoto: user.profilePhoto || "",
         weddingDate: user.weddingDate || "",
       });
-
-      // Example tasks data for countdown tab
       setTasks([{}, {}, {}, {}, {}]);
       setCompletedTasks(2);
     }
   }, [user]);
 
-  // Profile Tab: just a view of info (can be edited or read-only)
-  const handleProfileUpdate = (e) => {
-    e.preventDefault();
-    console.log("Updated profile:", profile);
-  };
-
-  // Edit Tab: This is the editable profile form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
@@ -96,7 +89,7 @@ const UserProfile = () => {
       dispatch(setCredentials({ token: localStorage.getItem("token"), user: updatedUser }));
       toast.success("Profile updated successfully!");
       setTimeout(() => {
-        setActiveTab("profile"); // switch back to profile tab after update
+        setActiveTab("profile");
       }, 2000);
     } catch (err) {
       console.error("Update failed", err);
@@ -104,77 +97,60 @@ const UserProfile = () => {
     }
   };
 
-  const completionPercentage = tasks.length
-    ? (completedTasks / tasks.length) * 100
-    : 0;
+  const completionPercentage = tasks.length ? (completedTasks / tasks.length) * 100 : 0;
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen ">
+    <div className="flex flex-col lg:flex-row ">
       <div className="flex-1">
-        <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-lg p-6">
-          {/* Tabs */}
-          <div className="flex  border-b mb-6">
+        <div className="max-w-5x rounded-lg  px-1">
+          <div className="flex border-b mb-6">
             {TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`capitalize px-4 py-2 font-medium border-b-2 ${activeTab === tab
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-blue-600"
-                  }`}
+                className={`capitalize m-1 font-medium mt-5  ${activeTab === tab
+                  ? "border-blue-500 text-gray-800"
+                  : "border-transparent text-gray-500 hover:text-black"}`}
               >
                 {tab}
               </button>
             ))}
           </div>
 
-          {/* Profile Tab */}
           {activeTab === "profile" && (
-            <form onSubmit={handleProfileUpdate} className="space-y-6">
+            <form className="space-y-6 p-3">
+              <div className="flex flex-col sm:flex-row justify-center items-center mb-8 gap-6 text-center">
+                <h1 className="block text-sm font-medium mb-1 mt-2">Profile Photo</h1>
+                {profile.profilePhoto ? (
+                  <img
+                    src={profile.profilePhoto}
+                    alt="Profile"
+                    className="w-34 h-34 object-cover rounded-full"
+                  />
+                ) : (
+                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+                    No Photo
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[
-                  ["Your Name", "name", "text"],
-                  ["Email", "email", "email"],
-                  ["Phone", "phone", "text"],
-                  ["Address", "address", "text"],
-                  ["City", "city", "text"],
-                  ["State", "state", "text"],
-                  ["Country", "country", "text"],
-                ].map(([label, key, type]) => (
+                {["name", "email", "phone", "address", "city", "state", "country"].map((key) => (
                   <div key={key}>
-                    <label className="block text-sm font-medium mb-1">{label}</label>
+                    <label className="block text-sm font-medium mb-1 capitalize">{key}</label>
                     <input
-                      type={type}
+                      type={key === "email" ? "email" : "text"}
                       value={profile[key]}
-                      onChange={(e) => setProfile({ ...profile, [key]: e.target.value })}
-                      className="w-full border border-gray-300 p-2 rounded"
                       readOnly
+                      className="w-full border border-gray-300 p-2 rounded"
                     />
                   </div>
                 ))}
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1">Profile Photo</label>
-                  {profile.profilePhoto ? (
-                    <img
-                      src={profile.profilePhoto}
-                      alt="Profile"
-                      className="w-24 h-24 object-cover rounded-full"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-                      No Photo
-                    </div>
-                  )}
-                </div>
               </div>
             </form>
           )}
 
-          {/* Edit Tab */}
           {activeTab === "Edit" && (
-            <form onSubmit={handleEditSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Header and Profile Image */}
+            <form onSubmit={handleEditSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4 mx-2">
               <div className="sm:col-span-2 flex flex-col sm:flex-row justify-center items-center mb-8 gap-6 text-center">
                 <h2 className="text-2xl font-semibold text-gray-800">Edit Profile</h2>
                 <div
@@ -199,14 +175,10 @@ const UserProfile = () => {
                 </div>
               </div>
 
-              {/* Form fields */}
               {Object.entries(profile).map(([key, value]) =>
                 key === "profilePhoto" || key === "weddingDate" ? null : (
                   <div key={key}>
-                    <label
-                      htmlFor={key}
-                      className="block text-sm font-medium text-gray-700 capitalize mb-1"
-                    >
+                    <label htmlFor={key} className="block text-sm font-medium text-gray-700 capitalize mb-1">
                       {key}
                     </label>
                     <input
@@ -223,7 +195,6 @@ const UserProfile = () => {
                 )
               )}
 
-              {/* Submit button */}
               <div className="sm:col-span-2 text-center mt-2">
                 <button
                   type="submit"
@@ -236,26 +207,15 @@ const UserProfile = () => {
             </form>
           )}
 
-          {/* Settings Tab */}
+          {/* SETTINGS */}
+
           {activeTab === "settings" && (
-            <div className="space-y-6">
+            <div className="space-y-6 mx-2">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Change Password</h3>
-                <input
-                  className="w-full mb-2 p-2 border rounded"
-                  type="password"
-                  placeholder="Current Password"
-                />
-                <input
-                  className="w-full mb-2 p-2 border rounded"
-                  type="password"
-                  placeholder="New Password"
-                />
-                <input
-                  className="w-full mb-4 p-2 border rounded"
-                  type="password"
-                  placeholder="Confirm New Password"
-                />
+                <input className="w-full mb-2 p-2 border rounded" type="password" placeholder="Current Password" />
+                <input className="w-full mb-2 p-2 border rounded" type="password" placeholder="New Password" />
+                <input className="w-full mb-4 p-2 border rounded" type="password" placeholder="Confirm New Password" />
                 <button className="bg-blue-600 text-white px-4 py-2 rounded">Update Password</button>
               </div>
               <div className="pt-4 border-t">
@@ -267,33 +227,24 @@ const UserProfile = () => {
               </div>
             </div>
           )}
-
-          {/* Notifications Tab */}
+        {/* NOTIFICATION */}
           {activeTab === "notifications" && (
-            <div className="space-y-4">
-              {[
-                ["Email Notifications", "Get updates and reminders via email."],
-                ["Inquiry Responses", "Be notified when vendors respond."],
-                ["Checklist Reminders", "Stay on track with your to-do list."],
-                ["Marketing Emails", "Receive deals and offers."],
-              ].map(([title, desc]) => (
+            <div className="space-y-4 mx-2">
+              {["Email Notifications", "Inquiry Responses", "Checklist Reminders", "Marketing Emails"].map((title) => (
                 <div className="flex items-center justify-between" key={title}>
                   <div>
                     <label className="font-medium">{title}</label>
-                    <p className="text-sm text-gray-500">{desc}</p>
+                    <p className="text-sm text-gray-500">{`Description for ${title.toLowerCase()}`}</p>
                   </div>
                   <input type="checkbox" className="w-5 h-5" />
                 </div>
               ))}
-              <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
-                Save Notification Settings
-              </button>
+              <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Save Notification Settings</button>
             </div>
           )}
-
-          {/* Countdown Tab */}
+           {/* COUNTDOWN */}
           {activeTab === "countdown" && (
-            <div className="space-y-6">
+            <div className="space-y-6 mx-2">
               <div className="flex items-center">
                 <Calendar className="mr-3 text-pink-500" />
                 <div>
@@ -325,9 +276,7 @@ const UserProfile = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium mb-1">
-                  Tasks Completed: {completedTasks}/{tasks.length}
-                </p>
+                <p className="text-sm font-medium mb-1">Tasks Completed: {completedTasks}/{tasks.length}</p>
                 <div className="w-full bg-gray-200 rounded-full h-4">
                   <div
                     className="bg-green-500 h-4 rounded-full"
@@ -339,8 +288,6 @@ const UserProfile = () => {
           )}
         </div>
       </div>
-
-      {/* Toast notifications container */}
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );

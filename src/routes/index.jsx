@@ -20,8 +20,6 @@ import SuccessfullEvents from '../pages/Home/SuccessfullEvents';
 import Tesstimonials from '../pages/Home/Tesstimonials';
 import HowItWorks from '../pages/Home/HowItWorks';
 
-
-
 // User Auth
 import UserLogin from '../pages/Auth/UserLogin';
 import UserSignup from '../pages/Auth/UserSignup';
@@ -39,14 +37,14 @@ import Inquiry from '../pages/Auth/UserDashboad/Inquiry';
 import SavedVendor from '../pages/Auth/UserDashboad/SavedVendor';
 import CheckList from '../pages/Auth/UserDashboad/CheckList';
 
-//Planning Tools
+// Planning Tools
 import PlanningTools from '../pages/PlanningTools/PlanningTools';
 import WeddingWebsite from '../pages/PlanningTools/WeddingWebsite';
 
-// corporate
+// Corporate
 import Corporate from '../pages/Corporate/Corporate';
 
-//Idea & blogs
+// Idea & Blogs
 import IdeaBlog from '../pages/Idea&Blog/IdeaBlog';
 
 // Wedding Venues
@@ -57,8 +55,10 @@ import HotelPrinceInn from '../pages/WeddingVenues/IneerPages/HotelPrinceInn';
 import HotelPrienceStay from '../pages/WeddingVenues/IneerPages/HotelPrienceStay';
 import HotelCultureByDsy from '../pages/WeddingVenues/IneerPages/HotelCultureByDsy';
 
-//Wedding Vendor
+// Wedding Vendor
 import WeedingVendor from '../pages/WeddingVendors/WeedingVendor';
+import Photographers from '../pages/WeddingVendors/Photographers';
+import Videography from '../pages/WeddingVendors/Videography';
 
 // Vendor Auth
 import VendorSignup from "../pages/Auth/VendorSignup";
@@ -76,6 +76,12 @@ import EditProfiles from '../pages/Vendor/EditProfiles';
 import HiringVendors from '../pages/Vendor/HiringVendors';
 import PackagesAndFaqs from '../pages/Vendor/PackagesAndFaqs';
 import Portfolio from '../pages/Vendor/Portfolio';
+//#################### Vendor Preview Profile components #########################
+import PreviewProfile from '../pages/Vendor/PreviewProfile/PreviewProfile';
+import PreviewProfileScreen from '../pages/Vendor/PreviewProfile/PreviewProfileScreen';
+import SimilarVendors from '../pages/Vendor/PreviewProfile/SimilarVendors';
+import CustomerReviews from '../pages/Vendor/PreviewProfile/CustomerReviews';
+import FaqQuestions from '../pages/Vendor/PreviewProfile/FaqQuestions';
 
 // Admin Dashboard 
 import AdminLogin from '../pages/Auth/AdminLogin';
@@ -87,11 +93,13 @@ import PendingVendorApprovals from "../pages/Admin/PendingApprovals";
 import ReviewModeration from "../pages/Admin/ReviewModeration";
 import ContentManagement from '../pages/Admin/ContentManagement';
 import CategoryManagement from '../pages/Admin/CategoryManagement';
+import InquiryReply from '../pages/Vendor/Inquiries/InquiryReply';
 
 const index = () => {
     return (
         <Router>
             <Routes>
+                {/* Main public routes with MainLayout */}
                 <Route path="/" element={<MainLayout />}>
                     <Route index element={<Home />} />
                     <Route path="/navbar" element={<Navbar />} />
@@ -101,19 +109,21 @@ const index = () => {
                     <Route path='/planning-tools' element={<PlanningTools />} />
                     <Route path="/wedding-website" element={<WeddingWebsite />} />
 
-                    {/* IdeaBlog */}
+                    {/* Idea Blog */}
                     <Route path="/IdeaBlog" element={<IdeaBlog />} />
 
                     {/* Corporate */}
                     <Route path="/corporate" element={<Corporate />} />
 
-                    {/* WeedingVendor */}
+                    {/* Wedding Vendor public page */}
                     <Route path="/wedding-vendor" element={<WeedingVendor />} />
+                    <Route path="/photographers" element={<Photographers />} />
+                    <Route path="/videography" element={<Videography />} />
 
-                    {/* HOME new */}
+                    {/* Home additional pages */}
                     <Route path='/BrowserVenues' element={<BrowserVenues />} />
                     <Route path='/discoverCategories' element={<DiscoverCategories />} />
-                    <Route path='/featurevendors' element={<FeatureVendors />} /> // ✅ Fixed 'featureVendors'
+                    <Route path='/featurevendors' element={<FeatureVendors />} /> {/* ✅ Fixed 'featureVendors' */}
                     <Route path='/HowItWorks' element={<HowItWorks />} />
                     <Route path='/ProjectList' element={<ProjectList />} />
                     <Route path='/SuccessfullEvents' element={<SuccessfullEvents />} />
@@ -128,7 +138,7 @@ const index = () => {
                     <Route path="Hotel-Prience-Stay" element={<HotelPrienceStay />} />
                     <Route path="Hotel-Culture-By-Dsy" element={<HotelCultureByDsy />} />
 
-                    {/*User Auth Flow */}
+                    {/* User Auth Routes */}
                     <Route path="/user/signup" element={<UserSignup />} />
                     <Route path="verify-otp" element={<VerifyOTP />} />
                     <Route path="/user/login" element={<UserLogin />} />
@@ -138,7 +148,7 @@ const index = () => {
                     <Route path="edit-profile" element={<EditProfile />} />
                     <Route path="delete-account" element={<DeleteAccount />} />
 
-                    {/* Vendor Auth Flow */}
+                    {/* Vendor Auth Routes */}
                     <Route path="/vendor-register" element={<VendorSignup />} />
                     <Route path="/vendor/verify-otp" element={<VendorVerifyOTP />} />
                     <Route path="/vendor/login" element={<VendorLogin />} />
@@ -146,11 +156,11 @@ const index = () => {
                     <Route path="/vendor/verify-password-reset" element={<VendorVerifyResetOTP />} />
                     <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
 
-                    {/* Admin Auth Flow */}
+                    {/* Admin Auth Route */}
                     <Route path="admin/login" element={<AdminLogin />} />
-
                 </Route>
-                {/* User Dashboard Layout */}
+
+                {/* User Dashboard Protected Routes */}
                 <Route
                     path="/user"
                     element={
@@ -168,7 +178,7 @@ const index = () => {
                     <Route path="check-list" element={<CheckList />} />
                 </Route>
 
-                {/* Vendor Dashboard Layout */}
+                {/* Vendor Dashboard Protected Routes */}
                 <Route
                     path="/vendor"
                     element={
@@ -184,9 +194,17 @@ const index = () => {
                     <Route path="reviews" element={<Reviews />} />
                     <Route path="packages_and_faqs" element={<PackagesAndFaqs />} />
                     <Route path="portfolio" element={<Portfolio />} />
+                    <Route path="preview_profile" element={<PreviewProfile />} />
+                    <Route path="preview_profilescreen" element={<PreviewProfileScreen />} />
+                    <Route path="similar_vendors" element={<SimilarVendors />} />
+                    <Route path="reviews" element={<Reviews />} />
+                    <Route path="customer_reviews" element={<CustomerReviews />} />
+                    <Route path="faqs_Questions" element={<FaqQuestions />} />
+                    <Route path="inquiry" element={<FaqQuestions />} />
+                    <Route path="inquiryReply" element={<InquiryReply />} />
                 </Route>
 
-                {/* Admin Dashboard Layout */}
+                {/* Admin Dashboard Protected Routes */}
                 <Route
                     path="/admin"
                     element={

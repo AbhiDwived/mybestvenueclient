@@ -117,7 +117,7 @@ const EditProfile = () => {
           </div>
 
           {/* Form Fields */}
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2  gap-4">
             {Object.entries(formData).map(([key, value]) =>
               key === "profilePhoto" ? null : (
                 <div key={key}>
@@ -135,7 +135,7 @@ const EditProfile = () => {
                     onChange={handleChange}
                     className="w-full border bg-gray-100 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder={`Enter ${key}`}
-                    autoComplete="off"
+                  autoComplete="off"
                   />
                 </div>
               )
@@ -160,4 +160,3 @@ const EditProfile = () => {
 };
 
 export default EditProfile;
-

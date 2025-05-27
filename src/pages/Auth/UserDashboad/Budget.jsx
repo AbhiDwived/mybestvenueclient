@@ -44,7 +44,7 @@ export default function Budget() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Section */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="bg-white rounded-lg p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">Wedding Budget</h2>
                 <div className="text-sm">

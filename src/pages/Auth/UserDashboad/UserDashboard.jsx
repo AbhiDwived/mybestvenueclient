@@ -11,13 +11,13 @@ import ProfileTab from "../UserDashboad/UserProfile";
 const tabs = [
     { value: "check-list", label: "Checklist", component: Checklist },
     { value: "budget", label: "Budget", component: Budget },
-    { value: "guest-list", label: "Guest List", component: GuestList },
+    { value: "guest-list", label: "Guest", component: GuestList },
     { value: "saved-vendor", label: "Vendors", component: SavedVendors },
     { value: "inquiry", label: "Inquiries", component: Inquiries },
     { value: "profile", label: "Profile", component: ProfileTab },
 ];
 
-const UserMainSection = ({ profile }) => {
+const UserDashboard = ({ profile }) => {
     const [activeTab, setActiveTab] = useState("check-list");
 
     const weddingDate = profile?.weddingDate ? new Date(profile.weddingDate) : null;
@@ -29,10 +29,10 @@ const UserMainSection = ({ profile }) => {
     const ActiveComponent = tabs.find(tab => tab.value === activeTab)?.component;
 
     return (
-        <main className="flex-1  pb-12">
-            <div className=" mx-4">
+        <div className="">
+            <div className="w-full ">
                 {/* Header */}
-                <div className="flex flex-col lg:flex-row justify-between items-start mb-8">
+                <div className=" p-4">
                     <div>
                         <h1 className="text-3xl font-bold font-playfair text-wedding-dark mb-2">
                             Hello, {profile?.name ? profile.name.split("&")[0] : "Guest"}
@@ -56,28 +56,29 @@ const UserMainSection = ({ profile }) => {
                             <span className="text-xl font-bold text-wedding-dark">{daysUntilWedding}</span>
                         </div>
 
-                        <button
-                            className="px-4 py-2 rounded-md bg-wedding-blush hover:bg-wedding-blush/90 text-wedding-dark transition-colors duration-200"
+                        {/* <button
+                            className="rounded-md bg-wedding-blush hover:bg-wedding-blush/90 text-wedding-dark transition-colors duration-200"
                             onClick={() =>
                                 document.getElementById("profile-section")?.scrollIntoView({ behavior: "smooth" })
                             }
                         >
                             Edit Profile
-                        </button>
+                        </button> */}
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="border-b mb-6">
-                    <div className="flex gap-6 bg-[#f5f6f9] p-1 rounded-md">
+                <div className="mt-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 bg-gray-100 py-2">
                         {tabs.map(({ value, label }) => (
                             <button
                                 key={value}
                                 onClick={() => setActiveTab(value)}
-                                style={{borderRadius:'5px'}}
-                                className={`p-1 px-3 transition-colors duration-200 capitalize ${activeTab === value
-                                        ? "text-[#9ca3af]  bg-white" 
-                                        : "text-gray-500 hover:text-black hover:bg-white"} `}
+                                style={{ borderRadius: '5px' }}
+                                className={`p-2 transition-colors duration-200 capitalize w-40 ${activeTab === value
+                                        ? "text-[#9ca3af]  mx-3"
+                                        : "text-gray-500 hover:text-black hover:bg-white mx-3"
+                                    }`}
                             >
                                 {label}
                             </button>
@@ -85,13 +86,14 @@ const UserMainSection = ({ profile }) => {
                     </div>
                 </div>
 
+
                 {/* Tab Content */}
                 <div>
                     {ActiveComponent && <ActiveComponent />}
                 </div>
             </div>
-        </main>
+        </div>
     );
 };
 
-export default UserMainSection;
+export default UserDashboard;

@@ -157,12 +157,12 @@ export default function WeddingVenuesCity() {
     return (
         <div>
             <div className="py-8 bg-gray-50">
-                <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-12 text-center">
+                <div className="px-4 sm:px-6 lg:px-1 text-center">
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl mb-8 font-playfair font-bold text-[#1A2A3A]">
                         Browse by Venue Type
                     </h2>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 mt-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mt-13">
                         {venueTypes.map((type, idx) => (
                             <div
                                 key={idx}

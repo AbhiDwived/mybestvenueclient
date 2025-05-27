@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
+import { CiImport, CiExport } from "react-icons/ci";
 
 export default function GuestManager() {
     const [guests, setGuests] = useState([]);
@@ -39,10 +40,12 @@ export default function GuestManager() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Guest Table */}
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div className="bg-white rounded-lg  p-6 mb-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-xl font-bold">Guest List</h2>
                                     <div className="flex items-center space-x-4">
+                                        <button   style={{borderRadius:'5px'}} className='bg-gray-200 shadow-2xl text-black px-2 py-1 flex'>Export <CiExport className='m-1' /></button>
+                                        <button   style={{borderRadius:'5px'}} className='bg-gray-200 shadow-2xl text-black px-2 py-1 mx-3 flex'>Import <CiImport className='m-1' /></button>
                                         {['confirmed', 'pending', 'declined'].map(status => (
                                             <div className="flex items-center" key={status}>
                                                 <div className={`w-3 h-3 rounded-full mr-1 ${status === 'confirmed' ? 'bg-green-500' :

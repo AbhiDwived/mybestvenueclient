@@ -9,7 +9,7 @@ const baseQuery = fetchBaseQuery({
   prepareHeaders: (headers, { getState }) => {
     const state = getState();
     const userToken = state.auth?.token;
-    const vendorToken = state.vendorAuth?.token;
+    const vendorToken = state.vendor?.token; // ✅ Changed from vendorAuth to vendor
 
     const token = userToken || vendorToken;
 
@@ -28,7 +28,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   if (result?.error?.status === 401) {
     const state = api.getState();
 
-    if (state.vendorAuth?.isAuthenticated) {
+    if (state.vendor?.isAuthenticated) { // ✅ Changed from vendorAuth to vendor
       api.dispatch(logoutVendor());
       window.location.href = '/vendor/login';
     } else {

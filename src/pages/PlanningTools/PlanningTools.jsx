@@ -67,9 +67,9 @@ const vendorCategories = [
 
 export default function PlanningTools() {
     return (
-        <main className="relative">
+        <div className="relative">
             {/* HEADER SECTION */}
-            <section className="bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] py-16 text-black">
+            <div className="bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] py-16 text-black">
                 <div className="mx-auto text-center px-4 max-w-3xl">
                     <h1 className="text-4xl md:text-5xl font-bold mb-4 font-playfair text-white">
                         Planning Tools
@@ -77,21 +77,21 @@ export default function PlanningTools() {
                     <p className="mb-8 text-white text-base md:text-lg">
                         Everything you need to plan your perfect event from start to finish
                     </p>
-                    <div className="bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2">
+                    <div className="bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2 shadow-lg">
                         <input
                             type="text"
                             placeholder="Search by name or location..."
-                            className="flex-1 border-none focus:outline-none text-gray-800 px-3 py-2 rounded"
+                            className="flex-1 border-none focus-visible:ring-0 text-gray-800 p-2 rounded-md"
                         />
                         <button
                             style={{ borderRadius: '5px' }}
-                            className="bg-[#09365d] hover:bg-[#062945] text-white px-4 py-2"
+                            className="bg-[#09365d] hover:bg-[#062b4b] text-white p-2"
                         >
                             Search Venue
                         </button>
                     </div>
                 </div>
-            </section>
+            </div>
 
             {/* TOOLS SECTION */}
             <section className="bg-gray-50 py-16 text-center">
@@ -166,6 +166,6 @@ export default function PlanningTools() {
                 </div>
             </section>
 
-        </main>
+        </div>
     );
 }

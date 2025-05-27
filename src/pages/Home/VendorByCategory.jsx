@@ -18,7 +18,7 @@ const categories = [
 
 const VendorByCategory = () => {
   return (
-    <div className="bg-[#F9FAFB] py-20 px-15">
+    <div className="bg-[#F9FAFB] py-20 px-2">
       <div className=" sm:px-6 ">
 
         {/* Heading */}

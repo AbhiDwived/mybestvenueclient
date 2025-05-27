@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="bg-[#1A2A3A] w-full p-7 mt-10 text-white font-serif">
+    <footer className="bg-[#1A2A3A] w-full  mt-10 text-white font-serif">
       {/* Main Content */}
       <div className="mx-4  py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
 
@@ -18,49 +18,49 @@ const Footer = () => {
             corporate events, conferences, and special celebrations across India.
           </p>
           <div className="flex space-x-4 mt-4">
-            <a
+            <Link
               href="https://www.facebook.com/share/1ARvjV57x7/"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"
             >
               <FaFacebookF />
-            </a>
-            <a
+            </Link>
+            <Link
               href="https://www.instagram.com/my.bestvenue?igsh=d2ZyY2podmN3cXl4"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"
             >
               <FaInstagram />
-            </a>
-            <a
+            </Link>
+            <Link
               href="https://x.com/mybestvenue"
               className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"
             >
               <FaTwitter />
-            </a>
+            </Link>
           </div>
         </div>
 
         {/* Quick Links */}
-        <div>
+        <div >
           <h5 className="text-lg  font-semibold border-b border-blue-500  pb-1">Quick Links</h5>
           <p className="text-md  ">
             <p className='mt-4'>
-              <Link to="/vendors" style={{ textDecoration: 'none' }} className="text-white ">› Find Vendors</Link>
+              <Link to="/vendors" style={{ textDecoration: 'none', color: '#D1D5DB' }} >› Find Vendors</Link>
             </p>
             <p>
-              <Link to="/wedding-venues" style={{ textDecoration: 'none' }} className="text-white ">› Wedding Venues</Link>
+              <Link to="/wedding-venues" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Wedding Venues</Link>
             </p>
             <p>
-              <Link to="/corporate-events" style={{ textDecoration: 'none' }} className="text-white  ">› Corporate Events</Link>
+              <Link to="/corporate-events" style={{ textDecoration: 'none', color: '#D1D5DB' }} >› Corporate Events</Link>
             </p>
             <p>
-              <Link to="/blog" style={{ textDecoration: 'none' }} className="text-white  ">› Event Blog</Link>
+              <Link to="/blog" style={{ textDecoration: 'none', color: '#D1D5DB' }} >› Event Blog</Link>
             </p>
             <p>
-              <Link to="/tools" style={{ textDecoration: 'none' }} className="text-white">› Planning Tools</Link>
+              <Link to="/tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Planning Tools</Link>
             </p>
           </p>
         </div>
@@ -68,17 +68,17 @@ const Footer = () => {
         {/* Contact Info */}
         <div>
           <h5 className="text-lg font-semibold border-b border-blue-500 mb-4 pb-1">Contact Us</h5>
-          <ul className="text-md p-0 text-gray-200">
+          <ul className="text-md p-0 text-[#D1D5DB]">
             <li><FaLocationDot className="inline mr-2" /> CD-44 Ansal Golf Link Greater Noida, India, Uttar Pradesh code - 201310</li>
             <li className='mt-3'><FaPhone className="inline mr-2" /> 081306 22279</li>
-            <li  className='mt-3'><BiSolidContact className="inline mr-2" />mybestvenue@gmail.com</li>
+            <li className='mt-3'><BiSolidContact className="inline mr-2" />mybestvenue@gmail.com</li>
           </ul>
         </div>
 
         {/* Subscribe */}
         <div>
           <h5 className="text-lg font-semibold border-b border-blue-500 mb-4 pb-1">Subscribe</h5>
-          <p className="text-lg mb-4">
+          <p className="text-lg mb-4 text-[#D1D5DB]">
             Stay updated with the latest venues, event trends, and special offers.
           </p>
           <input
@@ -88,7 +88,7 @@ const Footer = () => {
           />
           <button
             type="submit"
-            style={{borderRadius:'5px'}}
+            style={{ borderRadius: '5px' }}
             className="w-full  bg-[#075fac] hover:bg-[#6B9AC4] px-4 py-2 transition"
           >
             Subscribe

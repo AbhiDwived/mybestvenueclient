@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 
 // Import slices
 import authReducer from '../features/auth/authSlice';
-import vendorReducer from '../features/vendors/vendorSlice';
+import vendorReducer from '../features/vendors/vendorSlice'; // ✅ Vendor slice
 import adminReducer from '../features/admin/adminSlice'; // ✅ Admin slice
 
 // Import RTK Query APIs
@@ -14,7 +14,7 @@ import { adminApi } from '../features/admin/adminAPI';    // ✅ Admin API
 export default configureStore({
   reducer: {
     auth: authReducer,
-    vendorAuth: vendorReducer,
+   vendor: vendorReducer, // ✅ Changed from vendorAuth to vendor
     adminAuth: adminReducer,                             // ✅ Add admin reducer
 
     // RTK Query reducers

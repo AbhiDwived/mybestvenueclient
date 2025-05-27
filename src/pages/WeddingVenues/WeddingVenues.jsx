@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import WeddingVenuesCity from "./WeddingVenuesCity";
-import BrowseVenues from "./BrowserVenues";
+import BrowseVenues from "./BrowseVenues";
 
 export default function WeddingVenues() {
   return (

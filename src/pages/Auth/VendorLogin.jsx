@@ -1,167 +1,130 @@
-import React, { useState } from 'react';
-import { useLoginVendorMutation } from '../../features/vendors/vendorAPI';
-import { useDispatch } from 'react-redux';
-import { setVendorCredentials } from '../../features/vendors/vendorSlice';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { GrContact } from "react-icons/gr";
+import { FaRegCheckCircle } from "react-icons/fa";
+import { RxCrossCircled } from "react-icons/rx";
+import { FaPhoneAlt } from "react-icons/fa";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import {
+  useGetPendingVendorsQuery,
+  useApproveVendorMutation,
+  useDeleteVendorByAdminMutation,
+} from "../../features/admin/adminAPI";
 
+const PendingVendorApprovals = () => {
+  const { data, isLoading, isError } = useGetPendingVendorsQuery();
+  const [approveVendor] = useApproveVendorMutation();
+  const [deleteVendor] = useDeleteVendorByAdminMutation();
 
-const VendorLogin = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [loginVendor, { isLoading }] = useLoginVendorMutation();
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const vendors = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.vendors)
+    ? data.vendors
+    : [];
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const categoryClasses = {
+    Decorator: "bg-purple-100 text-purple-700",
+    Caterer: "bg-pink-100 text-pink-700",
+    "Makeup Artist": "bg-blue-100 text-blue-700",
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleApprove = async (vendorId) => {
     try {
-      const res = await loginVendor(formData).unwrap();
-
-      dispatch(setVendorCredentials(res));
-
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("vendor", JSON.stringify(res.vendor));
-
-      toast.success('Login successful!');
-
-      setTimeout(() => {
-        navigate('/vendor/dashboard');
-      }, 2000);
+      await approveVendor({ vendorId }).unwrap();
+      toast.success("Vendor approved successfully!");
     } catch (err) {
-      toast.error(err?.data?.message || 'Login failed. Please try again.');
+      console.error("Approval failed:", err);
+      toast.error("Error approving vendor.");
     }
   };
 
-  // Function to handle tab click and redirect
-  const handleUserTypeClick = (type) => {
-    if (type === 'couple') {
-      navigate('/user/login'); // Redirect to User Login
-    } else if (type === 'vendor') {
-      navigate('/vendor/login'); // Stay or refresh current page
+  const handleReject = async (vendorId) => {
+    if (window.confirm("Are you sure you want to reject this vendor?")) {
+      try {
+        await deleteVendor({ vendorId }).unwrap();
+        toast.success("Vendor rejected and removed.");
+      } catch (err) {
+        console.error("Rejection failed:", err);
+        toast.error("Error rejecting vendor.");
+      }
     }
   };
+
+  const handleViewDetails = (vendor) => {
+    toast.info(`Viewing details for ${vendor.name}`);
+    // Optionally, you can navigate or show modal here
+  };
+
+  if (isLoading) return <p className="p-4">Loading vendors...</p>;
+  if (isError) return <p className="p-4 text-red-500">Failed to load vendors.</p>;
 
   return (
-    <div>
-      <div className="mt-4 flex items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          {/* Welcome Message */}
-          <h2 className="text-3xl font-bold mb-2 text-center text-gray-900">Welcome Back</h2>
-          <p className="text-center text-gray-600 mb-6">
-            Log in to access your vendor dashboard.
-          </p>
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-full mx-auto bg-white rounded-lg shadow p-2">
+        <h2 className="text-2xl font-bold text-gray-800 mb-1">Pending Vendor Approvals</h2>
+        <p className="text-sm text-gray-500 mb-6">New vendor applications awaiting approval</p>
 
-          <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-            {/* Tabs for switching login type */}
-            <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-md">
-              <button
-                onClick={() => handleUserTypeClick('couple')}
-                style={{ borderRadius: '7px' }}
-                className={`flex-1 py-1 px-4 rounded-md transition-all ${
-                  false ? 'bg-[#fff] text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Couple
-              </button>
-              <button
-                onClick={() => handleUserTypeClick('vendor')}
-                style={{ borderRadius: '7px' }}
-                className={`flex-1 py-1 px-4 rounded-md transition-all ${
-                  true ? 'bg-[#fff] text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Vendor
-              </button>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email Field */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  placeholder="example@email.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0F4C81]"
-                />
-              </div>
-
-              {/* Password Field */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password
-                  </label>
-                  <a href="/vendor/forgot-password" className="text-sm text-[#0F4C81] hover:text-[#0D3F6A] hover:underline">
-                    Forgot password?
-                  </a>
+        {vendors.length === 0 ? (
+          <p className="text-center text-gray-500">No pending vendors.</p>
+        ) : (
+          vendors.map((vendor) => (
+            <div
+              key={vendor.id}
+              className="border rounded-lg p-4 shadow-sm hover:shadow-md transition mb-4"
+            >
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+                <div className="mb-4 md:mb-0">
+                  <h3 className="font-semibold text-lg text-gray-800">
+                    {vendor.name}
+                    <span
+                      className={`ml-2 text-sm px-2 py-1 rounded-full ${
+                        categoryClasses[vendor.category] || "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {vendor.category}
+                    </span>
+                  </h3>
+                  <h6 className="flex items-center text-sm text-gray-600 mt-1 mb-1">
+                    <GrContact className="mr-1" /> {vendor.email}
+                  </h6>
+                  <h6 className="flex items-center text-sm text-gray-600 mt-1 mb-1">
+                    <FaPhoneAlt className="mr-1" /> {vendor.phone}
+                  </h6>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Applied on {new Date(vendor.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
-                <input
-                  id="password"
-                  type="password"
-                  name="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0F4C81]"
-                />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    onClick={() => handleApprove(vendor.id)}
+                    className="bg-green-100 text-green-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-green-200 transition"
+                  >
+                    <FaRegCheckCircle className="mr-1" /> Approve
+                  </button>
+                  <button
+                    onClick={() => handleReject(vendor.id)}
+                    className="bg-red-100 text-red-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-red-200 transition"
+                  >
+                    <RxCrossCircled className="mr-1" /> Reject
+                  </button>
+                  <button
+                    onClick={() => handleViewDetails(vendor)}
+                    className="text-gray-600 text-sm underline hover:text-gray-800 hover:bg-[#DEBF78] p-1 rounded"
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
-
-              {/* Remember Me Checkbox */}
-              <div className="flex items-center space-x-2">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="h-4 w-4 text-[#0F4C81] border-gray-300 rounded focus:ring-[#0F4C81]"
-                />
-                <label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer mx-2">
-                  Remember me
-                </label>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full py-2 px-4 mt-2 text-white font-semibold rounded-md transition-colors mb-4 ${
-                  isLoading
-                    ? 'bg-[#7AA6CE] cursor-not-allowed'
-                    : 'bg-[#0F4C81] hover:bg-[#0D3F6A]'
-                }`}
-              >
-                {isLoading ? 'Logging in...' : 'Log In'}
-              </button>
-            </form>
-
-            {/* Sign Up Link */}
-            <p className="mt-6 text-center text-sm text-gray-600">
-              Don't have an account?{' '}
-              <a href="/vendor-register" className="text-[#0F4C81] font-medium hover:text-[#0D3F6A] hover:underline">
-                Sign Up
-              </a>
-            </p>
-          </div>
-        </div>
-
-        {/* Toast Container */}
-        <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />
+            </div>
+          ))
+        )}
       </div>
+
+      {/* ToastContainer at the end of your component */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 };
 
-export default VendorLogin;
+export default PendingVendorApprovals;
