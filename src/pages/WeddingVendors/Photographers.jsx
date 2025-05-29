@@ -138,7 +138,7 @@ export default function Photographers() {
                 id="home"
                 className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24"
             >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-purple-900/80 to-pink-900/70" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#0a4d87]/90 via-[#0a4d87]/80 to-[#0a4d87]-900/70" />
                 <div
                     className="absolute inset-0"
                     style={{
@@ -148,7 +148,7 @@ export default function Photographers() {
                 <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto">
                     <h1 className="text-5xl md:text-7xl font-bold mb-6">
                         Capturing Life&apos;s
-                        <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        <span className="block bg-gradient-to-r from-white via-[#0a4d70] to-[#0a4d60] bg-clip-text text-transparent">
                             Beautiful Moments
                         </span>
                     </h1>
@@ -337,7 +337,7 @@ export default function Photographers() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
+                            <div className="bg-gradient-to-br from-[#0a4d87] to-[#0a4d60] rounded-2xl p-6 text-white">
                                 <h4 className="text-xl font-bold mb-2">Quick Response Guarantee</h4>
                                 <p className="text-blue-100">I usually respond within 24 hours. For urgent queries, call directly.</p>
                             </div>
