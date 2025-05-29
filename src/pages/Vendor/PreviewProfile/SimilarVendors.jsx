@@ -1,6 +1,6 @@
 import { IoLocationOutline } from "react-icons/io5";
 import { FaStar } from "react-icons/fa";
-import previewProfile01 from "../../../assets/PreviewProfile.png";
+import previewProfile01 from "../../../assets/navImage/previewProfile01.png";
 
 // Sample data (you can map through an array if needed)
 const vendors = [
