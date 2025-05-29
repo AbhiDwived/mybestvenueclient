@@ -64,6 +64,7 @@ import Videography from '../pages/WeddingVendors/Videography';
 import VendorSignup from "../pages/Auth/VendorSignup";
 import VendorVerifyOTP from "../pages/Auth/VendorVerifyOTP";
 import VendorLogin from "../pages/Auth/VendorLogin";
+import NotApproved from '../pages/Auth/VendorNotApproved';
 import VendorForgotPassword from "../pages/Auth/VendorForgotPassword";
 import VendorVerifyResetOTP from "../pages/Auth/VendorVerifyResetOTP";
 import VendorResetPassword from "../pages/Auth/VendorResetPassword";
@@ -149,6 +150,7 @@ const index = () => {
                     <Route path="delete-account" element={<DeleteAccount />} />
 
                     {/* Vendor Auth Routes */}
+                    <Route path="/not-approved" element={<NotApproved />} />
                     <Route path="/vendor-register" element={<VendorSignup />} />
                     <Route path="/vendor/verify-otp" element={<VendorVerifyOTP />} />
                     <Route path="/vendor/login" element={<VendorLogin />} />

@@ -56,8 +56,9 @@ export default function CheckList() {
                     {/* Checklist Section */}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-lg  p-6 mb-6">
+                            <h2 className="text-xl font-bold text-wedding-dark">Wedding Checklist</h2>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold text-wedding-dark">Wedding Checklist</h2>
+
                                 <div className="text-sm text-gray-600">
                                     {completedTasks} of {tasks.length} tasks completed
                                 </div>
@@ -137,8 +138,8 @@ export default function CheckList() {
                                     onClick={handleAddTask}
                                     disabled={!newTask.trim()}
                                     className={`w-full text-sm font-medium px-4 py-2 rounded-md transition ${newTask.trim()
-                                            ? "bg-[#0F4C81] text-white  hover:bg-[#0f304de2]"
-                                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                        ? "bg-[#0F4C81] text-white  hover:bg-[#0f304de2]"
+                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
                                         }`}
                                 >
                                     Add Task

@@ -3,9 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useRegisterVendorMutation } from '../../features/vendors/vendorAPI';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-// Import icons
-import { Eye, EyeOff } from 'react-feather'; // or lucide-react
+import { Eye, EyeOff } from 'react-feather';
 
 const VendorSignup = () => {
   const [formData, setFormData] = useState({
@@ -19,7 +17,8 @@ const VendorSignup = () => {
     termsAccepted: false,
   });
 
-  const [userType, setUserType] = useState('vendor'); // Toggle state
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [userType, setUserType] = useState('vendor');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerVendor] = useRegisterVendorMutation();
@@ -35,7 +34,7 @@ const VendorSignup = () => {
 
   const handleUserTypeSwitch = (type) => {
     if (type === 'couple') {
-      navigate('/user/signup'); // redirect to couple signup
+      navigate('/user/signup');
     } else {
       setUserType('vendor');
     }
@@ -51,7 +50,6 @@ const VendorSignup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (isLoading) return;
 
     if (formData.password !== formData.confirmPassword) {
@@ -67,8 +65,16 @@ const VendorSignup = () => {
     setIsLoading(true);
     const { confirmPassword, ...vendorData } = formData;
 
+    const data = new FormData();
+    Object.entries(vendorData).forEach(([key, value]) => {
+      data.append(key, value);
+    });
+    if (profilePicture) {
+      data.append('profilePicture', profilePicture);
+    }
+
     try {
-      const res = await registerVendor(vendorData).unwrap();
+      const res = await registerVendor(data).unwrap();
       if (!isMounted.current) return;
 
       const vendorId = res?.vendor?._id || res?.vendorId;
@@ -91,42 +97,34 @@ const VendorSignup = () => {
   };
 
   return (
-    <div>
-    <div className=" flex items-center justify-center px-4 mt-6 ">
+    <div className="flex items-center justify-center px-4 mt-6">
       <div className="w-full max-w-md">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-1">Create Vendor Account</h2>
         <p className="text-center text-sm text-gray-500 mb-6">
           Join WeddingWire to showcase your services, connect with engaged couples, and grow your business.
         </p>
 
-        {/* Tab Toggle */}
-        <div className='bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-auto'>
-        <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-md">
-          <button
-            onClick={() => handleUserTypeSwitch('couple')}
-            className={`flex-1 py-1 px-4 rounded-md transition-all ${
-              userType === 'couple'
-                ? 'bg-white text-black'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Couple
-          </button>
-          <button
-            onClick={() => handleUserTypeSwitch('vendor')}
-            className={`flex-1 py-1 px-4 rounded-md transition-all ${
-              userType === 'vendor'
-                ? 'bg-white text-black'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Vendor
-          </button>
-        </div>
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-md">
+            <button
+              onClick={() => handleUserTypeSwitch('couple')}
+              className={`flex-1 py-1 px-4 rounded-md transition-all ${
+                userType === 'couple' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Couple
+            </button>
+            <button
+              onClick={() => handleUserTypeSwitch('vendor')}
+              className={`flex-1 py-1 px-4 rounded-md transition-all ${
+                userType === 'vendor' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Vendor
+            </button>
+          </div>
 
-        <div className="">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Full Name */}
             <div>
               <label htmlFor="contactName" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input
@@ -141,7 +139,6 @@ const VendorSignup = () => {
               />
             </div>
 
-            {/* Business Name */}
             <div>
               <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
               <input
@@ -156,7 +153,6 @@ const VendorSignup = () => {
               />
             </div>
 
-            {/* Vendor Type */}
             <div>
               <label htmlFor="vendorType" className="block text-sm font-medium text-gray-700 mb-1">Vendor Type</label>
               <input
@@ -171,7 +167,6 @@ const VendorSignup = () => {
               />
             </div>
 
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
@@ -186,7 +181,6 @@ const VendorSignup = () => {
               />
             </div>
 
-            {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
               <input
@@ -218,7 +212,6 @@ const VendorSignup = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
-                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -241,10 +234,40 @@ const VendorSignup = () => {
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
-                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            </div>
+
+            {/* Profile Picture Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+              <div className="flex items-center space-x-4">
+                {profilePicture && (
+                  <img
+                    src={URL.createObjectURL(profilePicture)}
+                    alt="Preview"
+                    className="h-16 w-16 rounded-full object-cover border"
+                  />
+                )}
+                <label
+                  htmlFor="profilePicture"
+                  className="cursor-pointer inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 transition"
+                >
+                  Choose File
+                  <input
+                    id="profilePicture"
+                    name="profilePicture"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setProfilePicture(e.target.files[0])}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              {profilePicture && (
+                <p className="mt-2 text-sm text-gray-500">{profilePicture.name}</p>
+              )}
             </div>
 
             {/* Terms Checkbox */}
@@ -269,30 +292,25 @@ const VendorSignup = () => {
               </label>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2 px-4 mt-2 text-white font-semibold rounded-lg transition-colors bg-[#0F4C81] hover:bg-[#0D3F6A] focus:outline-none focus:ring-2 focus:ring-[#0F4C81] opacity-60 disabled:cursor-not-allowed mb-4"
+              className="w-full py-2 px-4 mt-2 text-white font-semibold rounded-lg bg-[#0F4C81] hover:bg-[#0D3F6A] transition focus:outline-none focus:ring-2 focus:ring-[#0F4C81] opacity-60 disabled:cursor-not-allowed mb-4"
             >
               {isLoading ? 'Signing up...' : 'Sign Up'}
             </button>
           </form>
 
-          {/* Already have an account */}
-          <p className=" text-center text-sm text-gray-600 ">
+          <p className="text-center text-sm text-gray-600">
             Already have an account?{' '}
             <Link to="/vendor-login" className="text-[#0F4C81] font-medium hover:text-[#0D3F6A] hover:underline">
               Log In
             </Link>
           </p>
-        </div>
 
-        {/* Toast Container */}
-        <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />
+          <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />
+        </div>
       </div>
-    </div>
-    </div>
     </div>
   );
 };

@@ -6,9 +6,9 @@ import { FiPhone, FiGlobe, FiCalendar } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 
-import Image1 from "../../../assets/navImage/PreviewProfile01.png";
-import image2 from "../../../assets/navImage/vendorManagement003.png";
-import image3 from "../../../assets/navImage/previewProfile003.png";
+import PreviewProfile01 from "../../../assets/navImage/PreviewProfile01.png";
+import vendorManagement003 from "../../../assets/navImage/vendorManagement003.png";
+import previewProfile003 from "../../../assets/navImage/previewProfile003.png";
 
 import PreviewProfileScreen from './PreviewProfileScreen';
 import CustomerReviews from './CustomerReviews';
@@ -46,12 +46,12 @@ const PreviewProfile = () => {
       {/* Images */}
       <div className="mt-6 grid grid-cols-4 gap-2">
         <div className="col-span-4 md:col-span-3">
-          <img src={Image1} alt="Main" className="w-full h-96 object-cover rounded-lg" />
+          <img src={PreviewProfile01} alt="PreviewProfile01" className="w-full h-96 object-cover rounded-lg" />
         </div>
         <div className="hidden md:flex flex-col gap-2">
-          <img src={image2} alt="Side 1" className="w-full h-32 object-cover rounded-lg" />
-          <img src={Image1} alt="Side 2" className="w-full h-32 object-cover rounded-lg" />
-          <img src={image3} alt="Side 3" className="w-full h-32 object-cover rounded-lg" />
+          <img src={vendorManagement003} alt="Side 1" className="w-full h-32 object-cover rounded-lg" />
+          <img src={PreviewProfile01} alt="Side 2" className="w-full h-32 object-cover rounded-lg" />
+          <img src={previewProfile003} alt="Side 3" className="w-full h-32 object-cover rounded-lg" />
         </div>
       </div>
 

@@ -55,29 +55,20 @@ const UserDashboard = ({ profile }) => {
                             <span className="block text-sm font-medium text-gray-600">Days until wedding</span>
                             <span className="text-xl font-bold text-wedding-dark">{daysUntilWedding}</span>
                         </div>
-
-                        {/* <button
-                            className="rounded-md bg-wedding-blush hover:bg-wedding-blush/90 text-wedding-dark transition-colors duration-200"
-                            onClick={() =>
-                                document.getElementById("profile-section")?.scrollIntoView({ behavior: "smooth" })
-                            }
-                        >
-                            Edit Profile
-                        </button> */}
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="mt-8">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 bg-gray-100 py-2">
+                <div className="">
+                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-12 bg-gray-200 py-1">
                         {tabs.map(({ value, label }) => (
                             <button
                                 key={value}
                                 onClick={() => setActiveTab(value)}
                                 style={{ borderRadius: '5px' }}
-                                className={`p-2 transition-colors duration-200 capitalize w-40 ${activeTab === value
-                                        ? "text-[#9ca3af]  mx-3"
-                                        : "text-gray-500 hover:text-black hover:bg-white mx-3"
+                                className={`p-1 transition-colors duration-200 capitalize w-30 ${activeTab === value
+                                    ? "text-black bg-white rounded-2xl shadow-2xl"
+                                    : "text-gray-500 hover:text-black hover:bg-white"
                                     }`}
                             >
                                 {label}

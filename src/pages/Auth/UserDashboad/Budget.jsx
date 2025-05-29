@@ -49,7 +49,7 @@ export default function Budget() {
                 <h2 className="text-xl font-bold">Wedding Budget</h2>
                 <div className="text-sm">
                   <span className="font-medium text-gray-700">Total Budget:</span>{" "}
-                  <span className="font-bold">₹{totalPlanned.toLocaleString()}</span>
+                  <span className="font-bold">Rs{totalPlanned.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -58,8 +58,8 @@ export default function Budget() {
                   <thead>
                     <tr style={{ borderBottom: '1px solid gray' }}>
                       <th className="text-left py-3 px-4">Category</th>
-                      <th className="text-right py-3 px-4">Planned (₹)</th>
-                      <th className="text-right py-3 px-4">Actual (₹)</th>
+                      <th className="text-right py-3 px-4">Planned</th>
+                      <th className="text-right py-3 px-4">Actual</th>
                       <th className="text-right py-3 px-4">Difference</th>
                     </tr>
                   </thead>

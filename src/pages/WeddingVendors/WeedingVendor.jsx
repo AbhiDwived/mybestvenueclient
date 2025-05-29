@@ -141,13 +141,13 @@ export default function WeedingVendor() {
 
       {/* Vendor Tabs */}
       <div className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="w-full  p-5">
           <h2 className="text-3xl font-bold text-center mb-6 font-playfair text-corporate-dark">
             Start Hiring Your Vendors
           </h2>
 
           <div className="flex justify-center mb-8">
-            <div className="inline-flex bg-gray-200 rounded-full overflow-hidden shadow-sm">
+            <div className="inline-flex bg-gray-200 rounded-md overflow-hidde">
               <button
                 onClick={() => setActiveTab('primary')}
                 className={`px-2 py-2 font-medium transition ${activeTab === 'primary'
@@ -169,18 +169,18 @@ export default function WeedingVendor() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 py-2">
             {categories.map(({ title, path, icon: Icon }, idx) => (
               <Link
                 key={idx}
                 to={path}
                 style={{ textDecoration: 'none' }}
-                className="flex items-center p-2 rounded-md transition group hover:bg-blue-100"
+                className="flex items-center rounded-md transition group bg-white py-2 w-full "
               >
-                <div className="p-1 flex items-center justify-center mr-4">
-                  <Icon className="w-10 h-10 text-black bg-gray-300 p-2 rounded-full text-corporate-primary" />
+                <div className=" flex items-center justify-center mr-2 px-3 py-2">
+                  <Icon className="w-9 h-9 text-black bg-gray-100 px-2 rounded-full text-corporate-primary" />
                 </div>
-                <span className="font-medium text-gray-800 group-hover:text-corporate-primary">
+                <span className="font-medium text-gray-800">
                   {title}
                 </span>
               </Link>

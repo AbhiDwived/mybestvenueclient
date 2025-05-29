@@ -158,7 +158,7 @@ const InquiriesSection = () => {
                   <div className="mt-2 flex justify-end">
                     <button
                       className="text-sm text-gray-700 hover:underline "
-                      // onClick={() => setSelectedInquiry(inquiry)}
+                      onClick={() => setSelectedInquiry(inquiry)}
                     >
                       {inquiry.status === 'Replied' ? 'View Details' : 'Reply Now'}
                     </button>

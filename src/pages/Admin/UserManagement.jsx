@@ -119,14 +119,13 @@ const UserManagement = () => {
                     </span>
                   </td>
                   <td className="p-2 text-sm">
-                    {/* Status logic */}
                     {user.role === 'vendor' ? (
-                      user.status === 'Approved' ? (
+                      user.isApproved ? (
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                           Active
                         </span>
                       ) : (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
                           Pending
                         </span>
                       )

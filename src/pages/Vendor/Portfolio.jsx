@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef } from 'react';
 import { LuImagePlus } from "react-icons/lu";
 
@@ -21,7 +19,6 @@ const PortfolioTab = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const fileInputRef = useRef(null);
 
-  // Add or edit image
   const handleAddImageClick = (index = null) => {
     setEditingImageIndex(index);
     fileInputRef.current.accept = 'image/*';
@@ -54,7 +51,6 @@ const PortfolioTab = () => {
     setPortfolioImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Add video
   const handleAddVideoClick = () => {
     fileInputRef.current.accept = 'video/*';
     fileInputRef.current.click();
@@ -70,8 +66,8 @@ const PortfolioTab = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-md shadow font-serif">
-      {/* Hidden file input */}
+    <div className="bg-white p-4 rounded shadow-sm font-family: Georgia, 'Times New Roman', Times, serif;">
+      {/* Hidden File Input */}
       <input
         type="file"
         ref={fileInputRef}
@@ -82,87 +78,86 @@ const PortfolioTab = () => {
             handleVideoChange(e);
           }
         }}
-        className="hidden"
+        className="d-none"
       />
 
       <div className="mb-4">
-        <h2 className="text-xl font-semibold">Portfolio Gallery</h2>
-        <p className="text-sm text-gray-500">Showcase your best work to attract more clients</p>
+        <h2 className="text-xl  font-family: Georgia, 'Times New Roman', Times, serif;">Portfolio Gallery</h2>
+        <p className="text-muted small">Showcase your best work to attract more clients</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Image Grid */}
+      <div className="row g-3">
         {portfolioImages.map((image, index) => (
-          <div key={index} className="relative aspect-square rounded-lg overflow-hidden shadow group">
-            <img
-              src={image}
-              alt={`Portfolio ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleAddImageClick(index)}
-                  className="px-3 py-1 bg-white text-sm text-black rounded hover:bg-gray-100"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleRemoveImage(index)}
-                  className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
-                >
-                  Remove
-                </button>
+          <div key={index} className="col-12 col-md-6 col-lg-4">
+            <div className="position-relative overflow-hidden rounded shadow">
+              <img
+                src={image}
+                alt={`Portfolio ${index + 1}`}
+                className="img-fluid w-100 h-100 object-fit-cover"
+                style={{ aspectRatio: '1 / 1' }}
+              />
+              <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 hover-opacity-100 transition-all">
+                <div className="d-flex gap-2">
+                  <button
+                    onClick={() => handleAddImageClick(index)}
+                    className="btn btn-light btn-sm hover-bg-blue "
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleRemoveImage(index)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         ))}
 
         {/* Add Image Card */}
-        <div
-          onClick={() => handleAddImageClick(null)}
-          className="aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50"
-        >
-          <LuImagePlus className="h-10 w-10 text-gray-400 mb-2" />
-          <span className="text-sm font-medium">Add New Image</span>
-          <span className="text-xs text-gray-500 mt-1">Upload JPG or PNG</span>
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
+            onClick={() => handleAddImageClick(null)}
+            className="border border-2 border-dashed rounded d-flex flex-column align-items-center justify-content-center h-100 py-4 text-center cursor-pointer bg-light"
+            style={{ aspectRatio: '1 / 1' }}
+          >
+            <LuImagePlus size={32} className="text-muted mb-2" />
+            <div className="fw-medium">Add New Image</div>
+            <div className="text-muted small mt-1">Upload JPG or PNG</div>
+          </div>
         </div>
       </div>
 
       {/* Video Section */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold mb-4">Video Showcase</h3>
-        <div>
-          <label htmlFor="video-url" className="block text-sm font-medium text-gray-700">
-            YouTube, Vimeo or Upload Video
-          </label>
-
-          <div className="flex mt-2 ">
-            <input
-              type="text"
-              id="video-url"
-              placeholder="https://youtube.com/watch?v=...  or upload file"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              className="flex-1  px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring focus:border-blue-400 text-sm"
-            />
-            <button
-              type="button"
-              onClick={handleAddVideoClick}
-              className=" px-4 py-2  bg-[#0f4c81] text-white text-sm rounded hover:bg-[#0f4c81]"
-            >
-              Add Video
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-500 mt-1">
-            Add a link to your showreel or best wedding video
-          </p>
+      <div className="mt-5">
+        <h3 className="h6 fw-semibold mb-3">Video Showcase</h3>
+        <label htmlFor="video-url" className="form-label small fw-medium">
+          YouTube, Vimeo or Upload Video
+        </label>
+        <div className="d-flex mb-2">
+          <input
+            type="text"
+            id="video-url"
+            className="form-control form-control-sm me-2"
+            placeholder="https://youtube.com/watch?v=... or upload file"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+          />
+          <button type="button" className="btn btn-sm text-white" onClick={handleAddVideoClick} style={{ display: 'inline', backgroundColor: '#19599A' }}>AddVideo</button>
+          {/* #19599A  bg-[#0f4c81]*/}
         </div>
+        <p className="small text-muted">
+          Add a link to your showreel or best wedding video
+        </p>
       </div>
     </div>
   );
 };
 
 export default PortfolioTab;
+
 
 

@@ -44,25 +44,25 @@ const Footer = () => {
         </div>
 
         {/* Quick Links */}
-        <div >
-          <h5 className="text-lg  font-semibold border-b border-blue-500  pb-1">Quick Links</h5>
-          <p className="text-md  ">
-            <p className='mt-4'>
-              <Link to="/vendors" style={{ textDecoration: 'none', color: '#D1D5DB' }} >› Find Vendors</Link>
-            </p>
-            <p>
-              <Link to="/wedding-venues" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Wedding Venues</Link>
-            </p>
-            <p>
-              <Link to="/corporate-events" style={{ textDecoration: 'none', color: '#D1D5DB' }} >› Corporate Events</Link>
-            </p>
-            <p>
-              <Link to="/blog" style={{ textDecoration: 'none', color: '#D1D5DB' }} >› Event Blog</Link>
-            </p>
-            <p>
-              <Link to="/tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Planning Tools</Link>
-            </p>
-          </p>
+        <div>
+          <h5 className="text-lg font-semibold border-b border-blue-500">Quick Links</h5>
+          <ul style={{marginLeft:'-30px' ,marginTop:'30px'}}>
+            <li>
+              <Link to="/vendors" style={{ textDecoration: 'none', color: '#D1D5DB',}}  >› Find Vendors</Link>
+            </li>
+            <li className='mt-2'>
+              <Link to="/wedding-venues" style={{ textDecoration: 'none', color: '#D1D5DB' }}  >› Wedding Venues</Link>
+            </li>
+            <li className='mt-2'>
+              <Link to="/corporate-events" style={{ textDecoration: 'none', color: '#D1D5DB' }}  >› Corporate Events</Link>
+            </li>
+            <li className='mt-2'>
+              <Link to="/blog" style={{ textDecoration: 'none', color: '#D1D5DB' }}  >› Event Blog</Link>
+            </li>
+            <li className='mt-2'>
+              <Link to="/tools" style={{ textDecoration: 'none', color: 'red', color: '#D1D5DB' }} >› Planning Tools</Link>
+            </li>
+          </ul>
         </div>
 
         {/* Contact Info */}

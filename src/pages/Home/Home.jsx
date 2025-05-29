@@ -1,5 +1,6 @@
 import React from 'react';
 import DiscoverCategories from '../Home/DiscoverCategories';
+// import BrowseVenues from "./BrowseVenues";
 import VendorByCategory from '../Home/VendorByCategory';
 import ProjectList from '../Home/ProjectList';
 import SuccessfulEvents from '../Home/SuccessfullEvents';
@@ -11,6 +12,7 @@ export default function Home() {
   return (
     <div >
       <DiscoverCategories />
+      {/* <BrowseVenues /> */}
       <VendorByCategory />
       <ProjectList />
       <FeaturedVendors/>
