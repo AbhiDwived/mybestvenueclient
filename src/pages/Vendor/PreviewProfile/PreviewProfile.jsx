@@ -4,9 +4,9 @@ import { FiPhone, FiGlobe, FiCalendar } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 
-import PreviewProfileImg from "../../../assets/navImage/PreviewProfile.png";
-import vendorManagement003 from "../../../assets/navImage/vendorManagement003.png";
-import previewProfile003 from "../../../assets/navImage/previewProfile003.png";
+import PreviewProfileImg from "../../../assets/PreviewProfile.png";
+import vendorManagement003 from "../../../assets/vendorManagement003.png";
+import previewProfile003 from "../../../assets/previewProfile003.png";
 
 import PreviewProfileScreen from './PreviewProfileScreen';
 import CustomerReviews from './CustomerReviews';

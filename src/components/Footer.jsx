@@ -18,28 +18,30 @@ const Footer = () => {
             corporate events, conferences, and special celebrations across India.
           </p>
           <div className="flex space-x-4 mt-4">
-            <Link
+            <a
               href="https://www.facebook.com/share/1ARvjV57x7/"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"
             >
               <FaFacebookF />
-            </Link>
-            <Link
+            </a>
+            <a
               href="https://www.instagram.com/my.bestvenue?igsh=d2ZyY2podmN3cXl4"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"
             >
               <FaInstagram />
-            </Link>
-            <Link
+            </a>
+            <a
               href="https://x.com/mybestvenue"
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full text-white"
             >
               <FaTwitter />
-            </Link>
+            </a>
           </div>
         </div>
 
@@ -48,7 +50,7 @@ const Footer = () => {
           <h5 className="text-lg font-semibold border-b border-blue-500">Quick Links</h5>
           <ul style={{marginLeft:'-30px' ,marginTop:'30px'}}>
             <li>
-              <Link to="/vendors" style={{ textDecoration: 'none', color: '#D1D5DB',}}  >› Find Vendors</Link>
+              <Link to="/vendors" style={{ textDecoration: 'none', color: '#D1D5DB' }}  >› Find Vendors</Link>
             </li>
             <li className='mt-2'>
               <Link to="/wedding-venues" style={{ textDecoration: 'none', color: '#D1D5DB' }}  >› Wedding Venues</Link>
@@ -60,7 +62,8 @@ const Footer = () => {
               <Link to="/blog" style={{ textDecoration: 'none', color: '#D1D5DB' }}  >› Event Blog</Link>
             </li>
             <li className='mt-2'>
-              <Link to="/tools" style={{ textDecoration: 'none', color: 'red', color: '#D1D5DB' }} >› Planning Tools</Link>
+              {/* FIXED: Only one color property */}
+              <Link to="/tools" style={{ textDecoration: 'none', color: '#D1D5DB' }} >› Planning Tools</Link>
             </li>
           </ul>
         </div>
