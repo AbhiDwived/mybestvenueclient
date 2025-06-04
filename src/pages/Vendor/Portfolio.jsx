@@ -121,7 +121,7 @@ const PortfolioTab = () => {
         <div className="col-12 col-md-6 col-lg-4">
           <div
             onClick={() => handleAddImageClick(null)}
-            className="border border-2 border-dashed rounded d-flex flex-column align-items-center justify-content-center h-100 py-4 text-center cursor-pointer bg-light"
+            className=" border-2 border-dashed rounded d-flex flex-column align-items-center justify-content-center h-100 py-4 text-center cursor-pointer bg-light"
             style={{ aspectRatio: '1 / 1' }}
           >
             <LuImagePlus size={32} className="text-muted mb-2" />

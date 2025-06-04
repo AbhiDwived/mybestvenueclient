@@ -30,7 +30,7 @@ const AdminLogin = () => {
 
       setTimeout(() => {
         navigate('/admin/dashboard');
-      }, 2000);
+      }, 1000);
     } catch (err) {
       toast.error(err?.data?.message || 'Login failed. Please try again.');
     }
@@ -103,11 +103,10 @@ const AdminLogin = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-2 px-4 mt-2 text-white font-semibold rounded-md transition-colors mb-4 ${
-                isLoading
+              className={`w-full py-2 px-4 mt-2 text-white font-semibold rounded-md transition-colors mb-4 ${isLoading
                   ? 'bg-[#7AA6CE] cursor-not-allowed'
                   : 'bg-[#0F4C81] hover:bg-[#0D3F6A]'
-              }`}
+                }`}
             >
               {isLoading ? 'Logging in...' : 'Log In'}
             </button>

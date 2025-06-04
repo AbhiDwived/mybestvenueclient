@@ -73,91 +73,88 @@ const Navbar = () => {
   const userRole = getUserRole();
 
   const renderUserDropdown = () => (
-    <ul className="absolute right-0 mt-2 w-48 bg-white shadow-lg border rounded z-50">
-      <li>
-        <span className="block px-4 py-2 text-sm font-semibold text-white bg-[#09365d]">
-          {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-        </span>
-      </li>
-      <li>
-        <Link to={`/${userRole}/dashboard`} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-          <FiUser size={16} /> Dashboard
-        </Link>
-      </li>
-      <li>
-        <Link to={`/${userRole}/profile`} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-          <FiSettings size={16} /> My Profile
-        </Link>
-      </li>
-      {userRole === 'user' && (
-        <>
-          <li>
-            <Link to="/user/cart" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiShoppingCart size={16} /> Cart
-            </Link>
-          </li>
-          <li>
-            <Link to="/user/orders" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiPackage size={16} /> My Orders
-            </Link>
-          </li>
-          <li>
-            <Link to="/user/bookings" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiPackage size={16} /> My Bookings
-            </Link>
-          </li>
-        </>
-      )}
-      {userRole === 'vendor' && (
-        <>
-          <li>
-            <Link to="/vendor/services" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiBriefcase size={16} /> My Services
-            </Link>
-          </li>
-          <li>
-            <Link to="/vendor/bookings" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiPackage size={16} /> Bookings
-            </Link>
-          </li>
-          <li>
-            <Link to="/vendor/analytics" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiSettings size={16} /> Analytics
-            </Link>
-          </li>
-        </>
-      )}
-      {userRole === 'admin' && (
-        <>
-          <li>
-            <Link to="/admin/users" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiUsers size={16} /> Manage Users
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/vendors" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiBriefcase size={16} /> Manage Vendors
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/bookings" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiPackage size={16} /> All Bookings
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/settings" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 no-underline">
-              <FiSettings size={16} /> System Settings
-            </Link>
-          </li>
-        </>
-      )}
-      <li><hr className="my-1" /></li>
-      <li>
-        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 flex items-center gap-2">
-          <FiLogOut size={16} /> Logout
-        </button>
-      </li>
-    </ul>
+    <div className='mr-9'>
+      <ul className="absolute p-0 align-middle mt-2 w-43  bg-white shadow-lg border z-50">
+
+        <li>
+          <Link to={`/${userRole}/dashboard`} style={{ textDecoration: 'none' }} className="hover:bg-gray-100 mx-2 p-2 rounded-lg  mt-2 flex items-center gap-2 text-black  ">
+            <FiUser size={16} /> Dashboard
+          </Link>
+        </li>
+        <li>
+          <Link to={`/${userRole}/profile`} style={{ textDecoration: 'none' }} className="hover:bg-gray-100 mx-2 rounded-lg  flex items-center gap-2 text-black  mt-2 py-2 px-2">
+            <FiSettings size={16} />  Profile
+          </Link>
+        </li>
+        {userRole === 'user' && (
+          <>
+            <li>
+              <Link to="/user/cart" style={{ textDecoration: 'none', }} className="hover:bg-gray-100 mx-2 flex items-center gap-2 py-2 text-black p-2 rounded-lg  mt-2 ">
+                <FiShoppingCart size={16} /> Cart
+              </Link>
+            </li>
+            <li>
+              <Link to="/user/orders" style={{ textDecoration: 'none' }} className="hover:bg-gray-100 mx-2  flex items-center gap-2 text-black py-2  p-2 rounded-lg  mt-2 ">
+                <FiPackage size={16} /> My Orders
+              </Link>
+            </li>
+            <li>
+              <Link to="/user/bookings" style={{ textDecoration: 'none' }} className="hover:bg-gray-100 mx-2  flex items-center gap-2 text-black py-2 px-2  rounded-lg  mt-2 ">
+                <FiPackage size={16} /> My Bookings
+              </Link>
+            </li>
+          </>
+        )}
+        {userRole === 'vendor' && (
+          <>
+            <li>
+              <Link to="/vendor/services" style={{ textDecoration: 'none' }} className="flex items-center mx-2 gap-2 text-black  py-2 px-2 hover:bg-gray-100 ">
+                <FiBriefcase size={16} /> My Services
+              </Link>
+            </li>
+            <li>
+              <Link to="/vendor/bookings" style={{ textDecoration: 'none' }} className="flex items-center mx-2 gap-2 text-black  py-2 px-2 hover:bg-gray-100">
+                <FiPackage size={16} /> Bookings
+              </Link>
+            </li>
+            <li>
+              <Link to="/vendor/analytics" style={{ textDecoration: 'none' }} className="flex items-center gap-2 mx-2 text-black py-2 px-2 hover:bg-gray-100">
+                <FiSettings size={16} /> Analytics
+              </Link>
+            </li>
+          </>
+        )}
+        {userRole === 'admin' && (
+          <>
+            <li>
+              <Link to="/admin/users" style={{ textDecoration: 'none' }} className="flex text-black mx-2 items-center gap-2 px-2 py-2 hover:bg-gray-100 ">
+                <FiUsers size={16} /> Manage Users
+              </Link>
+            </li>
+            <li>
+              <Link to="/admin/vendors" style={{ textDecoration: 'none' }} className="flex text-black mx-2 items-center gap-2 px-2 py-2 hover:bg-gray-100 ">
+                <FiBriefcase size={16} /> Manage Vendors
+              </Link>
+            </li>
+            <li>
+              <Link to="/admin/bookings" style={{ textDecoration: 'none' }} className="flex text-black mx-2 items-center gap-2 px-2 py-2 hover:bg-gray-100">
+                <FiPackage size={16} /> All Bookings
+              </Link>
+            </li>
+            <li>
+              <Link to="/admin/settings" style={{ textDecoration: 'none' }} className="flex text-black mx-2 items-center gap-2 px-2 py-2 hover:bg-gray-100">
+                <FiSettings size={16} /> System Settings
+              </Link>
+            </li>
+          </>
+        )}
+        <li className='border-t-1'>
+          <button onClick={handleLogout} className="flex text-red-600 mx-2 items-center gap-2  px-2 py-2 hover:text-red-700">
+            <FiLogOut size={16} className='m' /> Logout
+          </button>
+        </li>
+      </ul>
+    </div>
   );
 
   return (
@@ -173,17 +170,17 @@ const Navbar = () => {
           {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
         </button>
         <nav className="lg:flex items-center space-x-6 ml-auto hidden">
-          <Link to="/wedding-vendor" className="text-black hover:text-[#0F4C81]" style={{ textDecoration: 'none' }}>Vendors</Link>
-          <Link to="/Wedding_Venues" className="text-black" style={{ textDecoration: 'none' }}>Venues</Link>
-          <Link to="/planning-tools" className="text-black" style={{ textDecoration: 'none' }}>Planning Tools</Link>
-          <Link to="/IdeaBlog" className="text-black" style={{ textDecoration: 'none' }}>Ideas & Blogs</Link>
+          <Link to="/wedding-vendor" style={{ textDecoration: 'none', color: 'black' }}>Vendors</Link>
+          <Link to="/Wedding_Venues" style={{ textDecoration: 'none', color: 'black' }}>Venues</Link>
+          <Link to="/planning-tools" style={{ textDecoration: 'none', color: 'black' }}>Planning Tools</Link>
+          <Link to="/IdeaBlog" style={{ textDecoration: 'none', color: 'black' }}>Ideas & Blogs</Link>
           <Link to="/corporate" className="flex items-center gap-1 text-black" style={{ textDecoration: 'none' }}>
             <FiBriefcase /> Corporate
           </Link>
           {!isUserLoggedIn ? (
             <>
-              <Link to="/user/login" className="flex items-center gap-1 text-black hover:text-[#0F4C81]" style={{ textDecoration: 'none' }}>Login</Link>
-              <Link to="/user/signup" className="px-3 py-2 bg-[#09365d] text-white rounded hover:bg-[#0f4c81]" style={{ textDecoration: 'none' }}>Sign Up</Link>
+              <Link to="/user/login" style={{ textDecoration: 'none' }} className="flex items-center gap-1 text-black hover:text-[#0F4C81]">Login</Link>
+              <Link to="/user/signup" style={{ textDecoration: 'none' }} className="px-3 py-2 bg-[#09365d] text-white rounded hover:bg-[#0f4c81]">Sign Up</Link>
             </>
           ) : (
             <div className="relative" ref={profileRef}>
@@ -199,28 +196,28 @@ const Navbar = () => {
         </nav>
       </div>
       {isOpen && (
-        <div className="lg:hidden mt-2 space-y-2 px-4">
-          <Link to="/wedding-vendor" className="block text-gray-700 hover:text-violet-700 no-underline">Vendors</Link>
-          <Link to="/Wedding_Venues" className="block text-gray-700 hover:text-violet-700 no-underline">Venues</Link>
-          <Link to="/planning-tools" className="block text-gray-700 hover:text-violet-700 no-underline">Planning Tools</Link>
-          <Link to="/IdeaBlog" className="block text-gray-700 hover:text-violet-700 no-underline">Ideas & Blogs</Link>
-          <Link to="/corporate" className="flex items-center gap-1 text-gray-700 hover:text-violet-700 no-underline">
+        <div className="lg:hidden mt-2 space-y-2 mx-1">
+          <Link to="/wedding-vendor" style={{ textDecoration: 'none', color: ' black', }} className="block">Vendors</Link>
+          <Link to="/Wedding_Venues" style={{ textDecoration: 'none', color: ' black', }} className="block">Venues</Link>
+          <Link to="/planning-tools" style={{ textDecoration: 'none', color: ' black', }} className="block">Planning Tools</Link>
+          <Link to="/IdeaBlog" style={{ textDecoration: 'none', color: ' black', }} className="block ">Ideas & Blogs</Link>
+          <Link to="/corporate" style={{ textDecoration: 'none', color: ' black', }} className="flex items-center gap-1 text-gray-700 hover:text-violet-700">
             <FiBriefcase /> Corporate
           </Link>
           <hr />
           {!isUserLoggedIn ? (
             <div className="space-y-2">
-              <Link to="/user/login" className="block w-full text-center border border-violet-900 py-2 rounded hover:bg-violet-900 hover:text-white no-underline">Login</Link>
-              <Link to="/user/signup" className="block w-full text-center bg-[#0f4c81] text-white py-2 rounded hover:bg-violet-800 no-underline">Sign Up</Link>
+              <Link to="/user/login" style={{ textDecoration: 'none' }} className="block w-full text-center border border-violet-900 py-2 rounded hover:bg-violet-900 hover:text-white">Login</Link>
+              <Link to="/user/signup" style={{ textDecoration: 'none' }} className="block w-full text-center bg-[#0f4c81] text-white py-2 rounded hover:bg-violet-800">Sign Up</Link>
             </div>
           ) : (
             <div className="space-y-2">
               <div className="p-2 rounded text-white text-center bg-[#09365d]">
                 {getDisplayName()} ({userRole})
               </div>
-              <Link to={`/${userRole}/dashboard`} className="block text-gray-700 hover:text-violet-700 no-underline">Dashboard</Link>
-              <Link to={`/${userRole}/profile`} className="block text-gray-700 hover:text-violet-700 no-underline">Profile</Link>
-              <button onClick={handleLogout} className="w-full text-left text-red-600 hover:text-red-800">Logout</button>
+              <Link to={`/${userRole}/dashboard`} style={{ textDecoration: 'none', color: ' black', }} className="block">Dashboard</Link>
+              <Link to={`/${userRole}/profile`} style={{ textDecoration: 'none', color: ' black', }} className="block">Profile</Link>
+              <button onClick={handleLogout} style={{ textDecoration: 'none' }} className="w-full text-left text-red-600 hover:text-red-800 ">Logout</button>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import { IoLocationOutline } from "react-icons/io5";
 import { FaStar } from "react-icons/fa";
-import previewProfile01 from "../../../assets/navImage/previewProfile01.png";
+import mainProfile from "../../../assets/mainProfile.png";
 
 // Sample data (you can map through an array if needed)
 const vendors = [
@@ -12,7 +12,7 @@ const vendors = [
     rating: 4.7,
     reviews: 86,
     priceRange: "₹15,000 - ₹45,000",
-    image: previewProfile01, // replace with actual image path
+    image: mainProfile, // replace with actual image path
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ const vendors = [
     rating: 4.9,
     reviews: 142,
     priceRange: "₹20,000 - ₹60,000",
-    image: previewProfile01,
+    image: mainProfile,
   },
   {
     id: 3,
@@ -32,7 +32,7 @@ const vendors = [
     rating: 4.6,
     reviews: 68,
     priceRange: "₹12,000 - ₹40,000",
-    image: previewProfile01,
+    image: mainProfile,
   },
 ];
 

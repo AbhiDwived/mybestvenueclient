@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+
+
 const VendorLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loginVendor, { isLoading }] = useLoginVendorMutation();
@@ -21,30 +23,16 @@ const VendorLogin = () => {
     try {
       const res = await loginVendor(formData).unwrap();
 
-      console.log('Vendor login response:', res);
-      console.log('Full vendor object:', res.vendor);
-      console.log('Vendor object keys:', Object.keys(res.vendor || {}));
-
       dispatch(setVendorCredentials(res));
-      localStorage.setItem('token', res.token);
-      localStorage.setItem('vendor', JSON.stringify(res.vendor));
 
-      // Try multiple common approval flags:
-      const isApproved = res.vendor?.isApproved ?? res.vendor?.approved ?? (res.vendor?.status === 'approved');
-
-      console.log('Determined vendor approval status:', isApproved);
-
-      if (!isApproved) {
-        toast.error('Your vendor account is not yet approved by the admin.');
-        navigate('/not-approved'); // Redirect to "not approved" page
-        return;
-      }
+      localStorage.setItem("vendorToken", res.token); // Fixed key
+      localStorage.setItem("vendor", JSON.stringify(res.vendor));
 
       toast.success('Login successful!');
 
       setTimeout(() => {
         navigate('/vendor/dashboard');
-      }, 2000);
+      }, 1000);
     } catch (err) {
       toast.error(err?.data?.message || 'Login failed. Please try again.');
     }

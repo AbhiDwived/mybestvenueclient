@@ -3,7 +3,7 @@ import { FaStar } from 'react-icons/fa';
 
 const Analytics = () => {
   return (
-    <div className="px-4 py-6 sm:px-6 lg:px-12 space-y-6">
+    <div className="px-1 py-6 sm:px-2 lg:px-6 space-y-6">
       {/* Top Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
@@ -21,7 +21,7 @@ const Analytics = () => {
         ))}
 
         {/* Review Score */}
-        <div className="border p-4 rounded shadow-sm bg-white">
+        <div className="border p-1 rounded shadow-sm bg-white">
           <p className="text-sm text-gray-500">Review Score</p>
           <div className="text-2xl font-bold flex flex-col">
             <p>
@@ -39,7 +39,7 @@ const Analytics = () => {
       {/* Chart Panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Profile Visits */}
-        <div className="border rounded p-4 shadow-sm bg-white">
+        <div className="border rounded p-2 shadow-sm bg-white">
           <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">Profile Visits</h2>
           <p className="text-sm text-gray-500 mb-4">Daily views of your profile page</p>
           <div className="w-full h-64 bg-gray-50 rounded-lg border border-gray-100 shadow-inner"></div>
@@ -53,7 +53,7 @@ const Analytics = () => {
         </div>
 
         {/* Inquiry Sources */}
-        <div className="border rounded p-4 shadow-sm bg-white">
+        <div className="border rounded p-2 shadow-sm bg-white">
           <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-1">Inquiry Sources</h2>
           <p className="text-sm text-gray-500 mb-4">Where your inquiries are coming from</p>
           <div className="w-full h-64 bg-gray-100 rounded flex items-center justify-center text-center text-gray-500">
@@ -73,7 +73,7 @@ const Analytics = () => {
       </div>
 
       {/* Location Table */}
-      <div className="border rounded p-4 shadow-sm overflow-x-auto bg-white">
+      <div className="border rounded p-2 shadow-sm overflow-x-auto bg-white">
         <p className="text-lg font-semibold mb-2">Traffic by Location</p>
         <p className="text-sm text-gray-500 mb-4">Where your visitors are based</p>
         <table className="min-w-full text-sm text-left border-t">

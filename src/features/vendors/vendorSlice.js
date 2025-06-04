@@ -2,8 +2,18 @@ import { createSlice } from '@reduxjs/toolkit';
 
 // Load vendor from localStorage if available
 const loadVendorFromStorage = () => {
-  const vendorStr = localStorage.getItem('vendor');
-  return vendorStr ? JSON.parse(vendorStr) : null;
+  try {
+    const vendorStr = localStorage.getItem('vendor');
+    const parsed = vendorStr ? JSON.parse(vendorStr) : null;
+    if (parsed?._id && !parsed.id) {
+      parsed.id = parsed._id;
+    }
+    console.log("parsed",parsed)
+    return parsed;
+  } catch (e) {
+    console.error("Failed to parse vendor data:", e);
+    return null;
+  }
 };
 
 const initialState = {

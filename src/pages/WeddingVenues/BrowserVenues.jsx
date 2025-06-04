@@ -1,19 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { IoIosArrowRoundBack, IoIosArrowRoundForward } from "react-icons/io";
 import { useNavigate } from 'react-router-dom';
 
-const locations = [
+const allLocations = [
   "All India", "Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad",
   "Kolkata", "Pune", "Jaipur", "Udaipur", "Goa", "Ahmedabad", "Lucknow",
   "Chandigarh", "Kochi", "Indore", "Nagpur", "Bhopal", "Patna", "Agra"
 ];
 
-const LocationSlider = ({ onLocationSelect, currentLocation }) => {
+const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) => {
   const navigate = useNavigate();
   const [activeLocation, setActiveLocation] = useState("All India");
   const [scrollIndex, setScrollIndex] = useState(0);
-  const visibleCount = 5;
+  const [visibleCount, setVisibleCount] = useState(5);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setVisibleCount(window.innerWidth < 768 ? 1 : 5);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (currentLocation) {
@@ -27,41 +36,47 @@ const LocationSlider = ({ onLocationSelect, currentLocation }) => {
     navigate(`/locations/${location.replace(/\s+/g, '-').toLowerCase()}`);
   };
 
+  // Filter locations based on searchTerm
+  const filteredLocations = allLocations.filter(loc =>
+    loc.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const maxIndex = Math.max(0, filteredLocations.length - visibleCount);
+
   const handlePrev = () => {
-    setScrollIndex((prev) =>
-      prev === 0 ? locations.length - visibleCount : prev - 1
-    );
+    setScrollIndex((prev) => Math.max(prev - 1, 0));
   };
 
   const handleNext = () => {
-    setScrollIndex((prev) =>
-      prev >= locations.length - visibleCount ? 0 : prev + 1
-    );
+    setScrollIndex((prev) => Math.min(prev + 1, maxIndex));
   };
 
   return (
-    <div className="w-full my-6 ">
+    <div className="w-full my-6 lg:px-20">
       <h5 className="text-xl font-semibold mb-4 text-center font-playfair">
         Browse Venues by Location
       </h5>
 
-      <div className="relative w-full overflow-hidden p-7">
+      <div className="relative w-full overflow-hidden">
         <div
-          className="flex transition-transform duration-300  ease-in-out"
-          style={{ transform: `translateX(-${scrollIndex * 20}%)` }}
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{
+            width: `${(filteredLocations.length / visibleCount) * 100}%`,
+            transform: `translateX(-${(scrollIndex * 100) / filteredLocations.length}%)`,
+          }}
         >
-          {locations.map((location) => (
+          {filteredLocations.map((location) => (
             <div
               key={location}
-              className="flex-shrink-0 w-1/2 sm:w-1/1 md:w-1/2 lg:w-1/5 mx-1"
+              className="flex-shrink-0 px-2"
+              style={{ width: `${100 / filteredLocations.length}%` }}
             >
               <button
                 onClick={() => handleLocationClick(location)}
-                className={`flex items-center justify-center w-70 py-4 px-4 text-sm font-medium transition-colors duration-200 border rounded ${
-                  location === activeLocation
-                    ? 'bg-[#0f4c81] text-white'
-                    : 'bg-white text-gray-700 hover:bg-[#0f4c81] hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c81]'
-                }`}
+                className={`w-full flex items-center justify-center py-4 text-sm font-medium transition-colors duration-200 border rounded ${location === activeLocation
+                  ? 'bg-[#0f4c81] text-white'
+                  : 'bg-white text-gray-700 hover:bg-[#0f4c81] hover:text-gray-900'
+                  }`}
               >
                 <MapPin className="mr-2 h-4 w-4" />
                 {location}
@@ -70,26 +85,32 @@ const LocationSlider = ({ onLocationSelect, currentLocation }) => {
           ))}
         </div>
 
-        {/* Left Arrow */}
-        <button
-          onClick={handlePrev}
-          style={{ borderRadius: '25px' }}
-          className="absolute left-10 top-1/2 -translate-y-1/2 transform bg-white text-gray-600 border rounded-full p-2 shadow-md hover:bg-yellow-100 transition-colors duration-200"
-        >
-          <IoIosArrowRoundBack className="text-lg hover:text-yellow-500" />
-        </button>
+        {filteredLocations.length > visibleCount && (
+          <>
+            {/* Left Arrow */}
+            <button
+              onClick={handlePrev}
+              style={{ borderRadius: '25px' }}
+              className="absolute left-5 top-1/2 -translate-y-1/2 transform bg-white text-gray-600 border rounded-full p-2 shadow-md hover:bg-yellow-100 transition-colors duration-200"
+              aria-label="Scroll left"
+            >
+              <IoIosArrowRoundBack className="text-2xl hover:text-yellow-500" />
+            </button>
 
-        {/* Right Arrow */}
-        <button
-          onClick={handleNext}
-          style={{ borderRadius: '25px' }}
-          className="absolute right-10 top-1/2 -translate-y-1/2 transform bg-white text-gray-600 border rounded-full p-2 shadow-md hover:bg-yellow-100 transition-colors duration-200"
-        >
-          <IoIosArrowRoundForward className="text-lg hover:text-yellow-500" />
-        </button>
+            {/* Right Arrow */}
+            <button
+              onClick={handleNext}
+              style={{ borderRadius: '25px' }}
+              className="absolute right-5 top-1/2 -translate-y-1/2 transform bg-white text-gray-600 border rounded-full p-2 shadow-md hover:bg-yellow-100 transition-colors duration-200"
+              aria-label="Scroll right"
+            >
+              <IoIosArrowRoundForward className="text-2xl hover:text-yellow-500" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-export default LocationSlider;
+export default BrowseVenues;

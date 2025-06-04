@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { GrContact } from "react-icons/gr";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { RxCrossCircled } from "react-icons/rx";
@@ -10,23 +10,58 @@ import {
   useDeleteVendorByAdminMutation,
 } from "../../features/admin/adminAPI";
 
+// Visually distinct pastel color palette
+const DISTINCT_COLORS = [
+  "#FFD6E0", "#D6EFFF", "#D6FFD6", "#FFF5D6", "#E0D6FF",
+  "#FFE0F7", "#D6FFF6", "#FFF0D6", "#F7FFD6", "#FFD6F7",
+  "#D6F7FF", "#F0FFD6", "#FFD6D6", "#D6D6FF", "#F7D6FF",
+];
+
+// Get readable text color for a given background
+function getContrastYIQ(hexcolor) {
+  hexcolor = hexcolor.replace("#", "");
+  const r = parseInt(hexcolor.substr(0,2),16);
+  const g = parseInt(hexcolor.substr(2,2),16);
+  const b = parseInt(hexcolor.substr(4,2),16);
+  const yiq = ((r*299)+(g*587)+(b*114))/1000;
+  return (yiq >= 180) ? "#222" : "#fff";
+}
+
+function getDistinctColor(value, usedMap) {
+  if (!usedMap[value]) {
+    const idx = Object.keys(usedMap).length % DISTINCT_COLORS.length;
+    usedMap[value] = DISTINCT_COLORS[idx];
+  }
+  return usedMap[value];
+}
+
 const PendingVendorApprovals = () => {
   const { data, isLoading, isError } = useGetPendingVendorsQuery();
   const [approveVendor] = useApproveVendorMutation();
   const [deleteVendor] = useDeleteVendorByAdminMutation();
 
-  // 🔒 Defensive check: supports both { vendors: [...] } or raw array
   const vendors = Array.isArray(data)
     ? data
     : Array.isArray(data?.vendors)
     ? data.vendors
     : [];
 
-  const categoryClasses = {
-    Decorator: "bg-purple-100 text-purple-700",
-    Caterer: "bg-pink-100 text-pink-700",
-    "Makeup Artist": "bg-blue-100 text-blue-700",
-  };
+  // Assign distinct colors for category and vendorType
+  const categoryColorMap = useMemo(() => {
+    const map = {};
+    vendors.forEach((v) => {
+      if (v.category) getDistinctColor(v.category, map);
+    });
+    return map;
+  }, [vendors]);
+
+  const vendorTypeColorMap = useMemo(() => {
+    const map = {};
+    vendors.forEach((v) => {
+      if (v.vendorType) getDistinctColor(v.vendorType, map);
+    });
+    return map;
+  }, [vendors]);
 
   const handleApprove = async (vendorId) => {
     try {
@@ -69,16 +104,41 @@ const PendingVendorApprovals = () => {
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center">
                 <div className="mb-4 md:mb-0">
-                  <h3 className="font-semibold text-lg text-gray-800">
-                    {vendor.name}
-                    <span
-                      className={`ml-2 text-sm px-2 py-1 rounded-full ${
-                        categoryClasses[vendor.category] || "bg-gray-200 text-gray-700"
-                      }`}
-                    >
-                      {vendor.category}
-                    </span>
-                  </h3>
+                  <h5 className="font-semibold text-lg text-gray-600 flex items-center gap-2 flex-wrap">
+                    {vendor.businessName && (
+                      <span className="font-bold text-gray-700">{vendor.businessName}</span>
+                    )}
+                    {vendor.category && (
+                      <span
+                        className="ml-2 px-2 py-1 rounded-full"
+                        style={{
+                          fontSize: "7px",
+                          background: categoryColorMap[vendor.category] || "#eee",
+                          color: getContrastYIQ(categoryColorMap[vendor.category] || "#eee"),
+                          fontWeight: 600,
+                          letterSpacing: "0.5px",
+                          border: "1px solid #eee",
+                        }}
+                      >
+                        {vendor.category}
+                      </span>
+                    )}
+                    {vendor.vendorType && (
+                      <span
+                        className="ml-2 text-sm px-2 py-1 rounded-full border"
+                        style={{
+                          fontSize: "9px",
+                          background: vendorTypeColorMap[vendor.vendorType] || "#eee",
+                          color: getContrastYIQ(vendorTypeColorMap[vendor.vendorType] || "#eee"),
+                          fontWeight: 600,
+                          letterSpacing: "0.5px",
+                          border: "1px solid #eee",
+                        }}
+                      >
+                        {vendor.vendorType}
+                      </span>
+                    )}
+                  </h5>
                   <h6 className="flex items-center text-sm text-gray-600 mt-1 mb-1">
                     <GrContact className="mr-1" /> {vendor.email}
                   </h6>

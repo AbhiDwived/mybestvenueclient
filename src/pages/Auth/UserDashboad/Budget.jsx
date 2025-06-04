@@ -47,12 +47,12 @@ export default function Budget() {
             <div className="bg-white rounded-lg p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">Wedding Budget</h2>
-                <div className="text-sm">
-                  <span className="font-medium text-gray-700">Total Budget:</span>{" "}
-                  <span className="font-bold">Rs{totalPlanned.toLocaleString()}</span>
-                </div>
-              </div>
 
+              </div>
+              <div className="text-sm">
+                <span className="font-medium text-gray-700">Total Budget:</span>{" "}
+                <span className="font-bold">Rs{totalPlanned.toLocaleString()}</span>
+              </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full table-auto">
                   <thead>
@@ -81,8 +81,8 @@ export default function Budget() {
                         </td>
                         <td
                           className={`py-3 px-4 text-right font-medium ${item.actual && item.actual > item.planned
-                              ? "text-red-500"
-                              : "text-green-500"
+                            ? "text-red-500"
+                            : "text-green-500"
                             }`}
                         >
                           {item.actual

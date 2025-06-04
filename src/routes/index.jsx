@@ -40,6 +40,10 @@ import CheckList from '../pages/Auth/UserDashboad/CheckList';
 // Planning Tools
 import PlanningTools from '../pages/PlanningTools/PlanningTools';
 import WeddingWebsite from '../pages/PlanningTools/WeddingWebsite';
+import Checklist from '../pages/PlanningTools/Checklist';
+import Guests from '../pages/PlanningTools/Guests';
+import WeddingBudget from '../pages/PlanningTools/WeddingBudget';
+import HashtagGenerator from '../pages/PlanningTools/HashtagGenerator';
 
 // Corporate
 import Corporate from '../pages/Corporate/Corporate';
@@ -71,7 +75,7 @@ import VendorResetPassword from "../pages/Auth/VendorResetPassword";
 
 // Vendor Pages
 import Dashboard from "../pages/Vendor/Dashboard";
-import Inquiries from "../pages/Vendor/Inquiries";
+import Inquiries from "../pages/Vendor/Inquiries/Inquiries";
 import Reviews from "../pages/Vendor/Reviews";
 import EditProfiles from '../pages/Vendor/EditProfiles';
 import HiringVendors from '../pages/Vendor/HiringVendors';
@@ -109,6 +113,10 @@ const index = () => {
                     {/* Planning Tools */}
                     <Route path='/planning-tools' element={<PlanningTools />} />
                     <Route path="/wedding-website" element={<WeddingWebsite />} />
+                    <Route path="/wedding-checklist" element={<Checklist />} />
+                    <Route path="/wedding-guests" element={<Guests />} />
+                    <Route path="/wedding-budget" element={<WeddingBudget />} />
+                    <Route path="/hashtag-generator" element={<HashtagGenerator />} />
 
                     {/* Idea Blog */}
                     <Route path="/IdeaBlog" element={<IdeaBlog />} />

@@ -103,19 +103,25 @@ const UserProfile = () => {
     <div className="flex flex-col lg:flex-row ">
       <div className="flex-1">
         <div className="max-w-5x rounded-lg  px-1">
-          <div className="flex border-b mb-6">
+          <div className="flex flex-wrap border-b mb-6 bg-white">
             {TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`capitalize m-1 font-medium mt-5  ${activeTab === tab
-                  ? "border-blue-500 text-gray-800"
-                  : "border-transparent text-gray-500 hover:text-black"}`}
+                className={`
+        capitalize m-1 sm:m-2 sm:mt-5 py-2 font-medium mt-2
+        transition-colors duration-200 rounded-t
+        ${activeTab === tab
+                    ? " text-gray-800 bg-white"
+                    : " border-transparent text-gray-500  hover:bg-gray-200"}
+        ${'lg:flex-1 text-center'}
+      `}
               >
                 {tab}
               </button>
             ))}
           </div>
+
 
           {activeTab === "profile" && (
             <form className="space-y-6 p-3">
@@ -227,7 +233,7 @@ const UserProfile = () => {
               </div>
             </div>
           )}
-        {/* NOTIFICATION */}
+          {/* NOTIFICATION */}
           {activeTab === "notifications" && (
             <div className="space-y-4 mx-2">
               {["Email Notifications", "Inquiry Responses", "Checklist Reminders", "Marketing Emails"].map((title) => (
@@ -242,7 +248,7 @@ const UserProfile = () => {
               <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Save Notification Settings</button>
             </div>
           )}
-           {/* COUNTDOWN */}
+          {/* COUNTDOWN */}
           {activeTab === "countdown" && (
             <div className="space-y-6 mx-2">
               <div className="flex items-center">

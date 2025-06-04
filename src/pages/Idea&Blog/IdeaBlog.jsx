@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar } from "lucide-react";
 import IdeaBlogHeader from '../../assets/newPics/IdeaBlogHeader.avif';
 import IdeaBlog1 from '../../assets/newPics/IdeaBlog1.avif';
@@ -57,10 +57,24 @@ const articles = [
 ];
 
 export default function IdeaBlog() {
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter logic: category AND search query
+  const filteredArticles = articles
+    .slice(1) // skip the featured article
+    .filter(article => {
+      const matchesCategory = selectedCategory === "All" || article.category === selectedCategory;
+      const matchesSearch =
+        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        article.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+
   return (
     <div>
       {/* Header */}
-      <section className="bg-[#E8EDF3] py-10 text-black">
+      <div className="bg-[#E8EDF3] py-10 text-black">
         <div className="mx-auto text-center px-4 sm:px-6 lg:px-12 max-w-4xl">
           <p className="text-4xl md:text-5xl font-bold mb-4 font-playfair text-black">
             Ideas & Blog
@@ -68,18 +82,24 @@ export default function IdeaBlog() {
           <p className="mb-8 text-gray-800 text-base sm:text-lg">
             Get inspired with our collection of articles, tips, and ideas
           </p>
-          <div className="bg-white rounded-lg flex flex-col sm:flex-row gap-2 shadow">
+          <div className="bg-white text-sm rounded-lg p-2 flex flex-col sm:flex-row gap-2 shadow-lg">
             <input
               type="text"
-              placeholder="Search by name or location..."
-              className="flex-1 border-none focus:outline-none text-gray-800 px-4 py-2 rounded"
+              placeholder="Search by title or description..."
+              className="flex-1 border focus:outline-none  text-gray-800 p-2 rounded-md"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <button className="bg-[#09365d] hover:bg-[#062945] text-white px-4 py-2 rounded">
-              Search Venue
+            <button
+              style={{ borderRadius: '5px' }}
+              className="bg-[#10497a] hover:bg-[#062b4b] text-white px-5"
+              onClick={() => setSearchQuery("")} // Reset search on click
+            >
+              Clear
             </button>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Featured Article */}
       <section className="py-12 bg-white px-4 sm:px-6 lg:px-12">
@@ -113,7 +133,12 @@ export default function IdeaBlog() {
           {categories.map((cat) => (
             <button
               key={cat}
-              className="border px-4 py-1 rounded-full text-sm sm:text-base text-gray-800 hover:text-white hover:bg-[#062945] transition"
+              onClick={() => setSelectedCategory(cat)}
+              style={{borderRadius:'25px', height:'50px'}}
+              className={`border px-4 py-1 text-sm sm:text-base transition ${selectedCategory === cat
+                  ? "bg-[#062945] text-white "
+                  : "text-gray-800 hover:text-white hover:bg-[#062945]"
+                }`}
             >
               {cat}
             </button>
@@ -122,44 +147,46 @@ export default function IdeaBlog() {
 
         {/* Blog Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.slice(1).map((post, idx) => (
-            <div key={idx} className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm">
-              <div className="relative">
-                <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />
-                <span className="absolute top-3 left-4 bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full capitalize">
-                  {post.category}
-                </span>
-              </div>
-
-              <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
-                <div className="mb-4">
-                  <h5 className="text-lg font-playfair font-semibold mb-1 leading-snug">
-                    {post.title}
-                  </h5>
-                  <p className="text-sm text-gray-600 mb-5 mt-2 leading-relaxed">
-                    {post.description}
-                  </p>
-                </div>
-                <div className="border-t pt-3 mt-auto flex justify-between items-center text-sm text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Calendar size={14} />
-                    <span>{post.date}</span>
-                  </div>
-                  <span className="text-black hover:underline cursor-pointer">
-                    Read More
+          {filteredArticles.length > 0 ? (
+            filteredArticles.map((post, idx) => (
+              <div key={idx} className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm">
+                <div className="relative">
+                  <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />
+                  <span className="absolute top-3 left-4 bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full capitalize">
+                    {post.category}
                   </span>
                 </div>
+
+                <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
+                  <div className="mb-4">
+                    <h5 className="text-lg font-playfair font-semibold mb-1 leading-snug">
+                      {post.title}
+                    </h5>
+                    <p className="text-sm text-gray-600 mb-5 mt-2 leading-relaxed">
+                      {post.description}
+                    </p>
+                  </div>
+                  <div className="border-t pt-3 mt-auto flex justify-between items-center text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Calendar size={14} />
+                      <span>{post.date}</span>
+                    </div>
+                    <span className="text-black hover:underline cursor-pointer">
+                      Read More
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-center col-span-full text-gray-600">No articles found for your search.</p>
+          )}
         </div>
       </section>
 
       {/* Load More */}
       <section className="mt-2 mb-8 text-center px-4 sm:px-6 lg:px-12">
-        <button
-          className="inline-block bg-white text-black px-5 py-2 mb-10 border rounded hover:bg-[#09365d] transition-colors duration-300"
-        >
+        <button className="inline-block bg-white text-black px-5 py-2 mb-10 border rounded hover:bg-[#09365d] transition-colors duration-300">
           Load More Articles
         </button>
       </section>

@@ -42,7 +42,7 @@ export default function PackagesAndFaqs() {
   };
 
   return (
-    <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="p-2 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Service Packages Section */}
       <div className="border rounded-lg p-4 shadow-sm">
         <h2 className="text-[14px] font-semibold mb-1 font-serif">Service Packages</h2>

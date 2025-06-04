@@ -14,8 +14,21 @@ import Analytics from './Analytics';
 // import EditCoverPhoto from './EditCoverPhoto';
 import { Link } from 'react-router-dom';
 
+import { useSelector } from 'react-redux';
+
+
+
 
 const Dashboard = () => {
+  const vendor = useSelector((state) => state.vendor.vendor);
+  const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
+  console.log(" Data from store:", vendor);
+
+  if (!isAuthenticated) {
+    return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
+  }
+
+
   // State for active tab
   const [activeTab, setActiveTab] = useState('Overview');
 
@@ -99,90 +112,58 @@ const Dashboard = () => {
     <div className="p-6 bg-white min-h-screen text-gray-800 font-serif">
 
       {/* Header */}
-      {/* <div className="mb-2">
-        <div className="flex justify-between items-center">
+
+      <div className="mb-2 px-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+
+          {/* Left: Title and Subtitle */}
           <div>
-            <h1 className="text-2xl font-bold font-serif">Dream Wedding Photography</h1>
-            <p className="text-sm text-gray-600 font-serif">Photographer • Delhi, India</p>
+            <h1 className="text-xl md:text-2xl font-bold font-serif">
+              {vendor?.businessName || 'Dream Wedding Photography'}
+              {/* {vendorsData.BusinesName } */}
+            </h1>
+            <p className="text-sm text-gray-600 font-serif">
+              {vendor?.vendorType || 'Photographer'} • {vendor?.Address || 'Delhi, India'}
+            </p>
           </div>
 
-          <div className="flex justify-between items-start gap-4">
+          {/* Right: Profile Status + Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex flex-col">
-              <span className="text-black text-sm font-medium font-serif">Profile Status</span>
-              <div className="flex items-center justify-center">
-                <span className="text-green-700 font-bold text-sm font-serif">Active</span>
+              <span className="text-black text-sm font-medium font-serif">
+                Profile Status
+              </span>
+              <div className="flex items-center">
+                <span className="text-green-700 font-bold text-sm font-serif">
+                  {vendor?.status || 'InActive'}
+                </span>
               </div>
             </div>
             <Link to="/vendor/preview_profile">
-              <button className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm">
+              <button className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm w-full sm:w-auto text-center">
                 Preview Profile
               </button>
             </Link>
           </div>
 
         </div>
-      </div> */}
-      <div className="mb-2 px-4">
-  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    
-    {/* Left: Title and Subtitle */}
-    <div>
-      <h1 className="text-xl md:text-2xl font-bold font-serif">
-        Dream Wedding Photography
-      </h1>
-      <p className="text-sm text-gray-600 font-serif">
-        Photographer • Delhi, India
-      </p>
-    </div>
-
-    {/* Right: Profile Status + Button */}
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-      <div className="flex flex-col">
-        <span className="text-black text-sm font-medium font-serif">
-          Profile Status
-        </span>
-        <div className="flex items-center">
-          <span className="text-green-700 font-bold text-sm font-serif">
-            Active
-          </span>
-        </div>
       </div>
-      <Link to="/vendor/preview_profile">
-        <button className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm w-full sm:w-auto text-center">
-          Preview Profile
-        </button>
-      </Link>
-    </div>
-
-  </div>
-</div>
 
 
       {/* Tabs */}
-      {/* <div className="flex flex-wrap justify-center md:justify-start space-x-4 bg-[#f5f8fb] p-2 rounded-md mb-6 text-sm">
+
+      <div className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 bg-[#f5f8fb] p-2 rounded-md mb-6 text-sm">
         {tabs.map((tab, i) => (
           <button
             key={i}
             onClick={() => handleTabClick(tab)}
-            className={`px-3 py-1 rounded-md font-medium ${tab === activeTab ? 'bg-white text-black shadow-sm' : 'text-gray-600'}`}
+            className={`px-3 py-1 rounded-md font-medium whitespace-nowrap ${tab === activeTab ? 'bg-white text-black shadow-sm' : 'text-gray-600'
+              }`}
           >
             {tab}
           </button>
         ))}
-      </div> */}
-      <div className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 bg-[#f5f8fb] p-2 rounded-md mb-6 text-sm">
-  {tabs.map((tab, i) => (
-    <button
-      key={i}
-      onClick={() => handleTabClick(tab)}
-      className={`px-3 py-1 rounded-md font-medium whitespace-nowrap ${
-        tab === activeTab ? 'bg-white text-black shadow-sm' : 'text-gray-600'
-      }`}
-    >
-      {tab}
-    </button>
-  ))}
-</div>
+      </div>
 
 
       {/* Dynamic Content Based on Active Tab */}
@@ -225,15 +206,21 @@ const Dashboard = () => {
                   />
                 )}
                 <div className="mt-4">
+
                   <style jsx>{`
-                    .tooltip {
-                      display: none;
-                    }
-                    .group:hover .tooltip {
-                      display: block;
-                    }
-                  `}</style>
+                     .react-calendar {
+                       width: 100% !important;
+                       max-width: 100%;
+                     }
+                   
+                     .react-calendar__viewContainer,
+                     .react-calendar__month-view {
+                       width: 100%;
+                     }
+                   `}</style>
+
                   <Calendar
+                    className="w-full"
                     value={new Date()}
                     tileClassName={tileClassName}
                     tileContent={({ date, view }) => {
@@ -250,6 +237,7 @@ const Dashboard = () => {
                       ) : null;
                     }}
                   />
+
                 </div>
               </div>
             </div>
@@ -327,7 +315,7 @@ const Dashboard = () => {
       </div>
 
       {activeTab === 'Overview' && (
-        <div className="col-span-2 bg-white p-4 rounded border mt-5">
+        <div className="col-span-2 bg-white p-2 rounded border mt-5">
           <h2 className="text-lg font-semibold mb-2">Upcoming Weddings</h2>
           <p className="text-sm text-gray-500 mb-2">Your Scheduled Bookings</p>
           {upcomingWeddings.map((wedding, index) => (

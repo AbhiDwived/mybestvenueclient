@@ -5,17 +5,16 @@ import VenueNoida1 from '../../assets/VenueNoida1.jpg';
 import VenueNoida2 from '../../assets/VenueNoida2.jpg';
 import VenueNoida3 from '../../assets/VenueNoida3.webp';
 import VenueNoida4 from '../../assets/VenueNoida4.webp';
+
 import { LuHotel } from "react-icons/lu";
-import { IoLocationOutline } from "react-icons/io5";
-import { IoHomeOutline } from "react-icons/io5";
+import { IoLocationOutline, IoHomeOutline } from "react-icons/io5";
 
-
-export default function WeddingVenuesCity() {
+export default function WeddingVenuesCity({ searchTerm = '' }) {
     const navigate = useNavigate();
     const location = useLocation();
 
     const [displayVenues, setDisplayVenues] = useState(3);
-    const [selectedCategory, setSelectedCategory] = useState(null); // for filtering without routing
+    const [selectedCategory, setSelectedCategory] = useState(null);
 
     const venues = [
         {
@@ -150,30 +149,35 @@ export default function WeddingVenuesCity() {
         navigate('/Wedding_Venues_city');
     };
 
-    const filteredVenues = selectedCategory
-        ? venues.filter((venue) => venue.category === selectedCategory)
-        : venues;
+    const filteredVenues = venues.filter((venue) => {
+        const matchesCategory = selectedCategory ? venue.category === selectedCategory : true;
+        const matchesSearch =
+            searchTerm === '' ||
+            venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            venue.location.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
 
     return (
         <div>
-            <div className="py-8 bg-gray-50">
-                <div className="px-4 sm:px-6 lg:px-1 text-center">
+            <div className="bg-gray-50">
+                <div className="mx-0 sm:px-6 p-4 text-center">
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl mb-8 font-playfair font-bold text-[#1A2A3A]">
                         Browse by Venue Type
                     </h2>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mt-13">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-6 p-4">
                         {venueTypes.map((type, idx) => (
                             <div
                                 key={idx}
                                 onClick={() => setSelectedCategory(type.category)}
-                                className={`bg-white shadow-md rounded-lg py-4 px-2 sm:px-4 cursor-pointer hover:shadow-xl transition-shadow ${selectedCategory === type.category ? 'border-2 border-black' : ''
+                                className={`bg-white shadow-md rounded-lg sm:px-4 cursor-pointer hover:shadow-xl transition-shadow ${selectedCategory === type.category ? 'border-2 border-black' : ''
                                     }`}
                             >
-                                <div className="mb-3 text-black bg-gray-200 mx-auto p-3 rounded-full w-12 h-12 flex items-center justify-center text-lg sm:text-xl">
+                                <div className="mt-2 text-black bg-gray-200 mx-auto p-3 rounded-full w-12 h-12 flex items-center justify-center text-lg sm:text-xl">
                                     {type.icon}
                                 </div>
-                                <h6 className="font-semibold mb-1 text-sm sm:text-base text-black">{type.name}</h6>
+                                <p className="font-semibold mb-1 text-sm sm:text-sm p-2 text-black">{type.name}</p>
                                 <p className="text-gray-600 text-xs sm:text-sm">{type.venues}</p>
                             </div>
                         ))}
@@ -225,8 +229,6 @@ export default function WeddingVenuesCity() {
                     ))}
                 </div>
             </div>
-
-
         </div>
     );
 }

@@ -2,7 +2,7 @@ import React from "react";
 
 import { MdOutlineArrowDropDown } from "react-icons/md";
 import { FaStar } from "react-icons/fa";
-import images1 from  "../../assets/navImage/reviewsImage.png";
+import reviewsImage from "../../assets/Images/priya.png";
 
 const reviews = [
   {
@@ -11,7 +11,7 @@ const reviews = [
     comment:
       "Absolutely amazing photography service! The team was professional, creative and captured all our special moments beautifully. Highly recommended!",
     date: "11/20/2023",
-    avatar: images1,
+    avatar: reviewsImage,
   },
   {
     name: "Aditya & Sneha Gupta",
@@ -19,7 +19,7 @@ const reviews = [
     comment:
       "Great photos and good service. They were a bit late to arrive but made up for it with their excellent work. Would recommend with that small caveat.",
     date: "11/15/2023",
-    avatar: images1,
+    avatar: reviewsImage,
   },
   {
     name: "Nikhil & Pooja Verma",
@@ -27,26 +27,26 @@ const reviews = [
     comment:
       "Wonderful experience working with them! They were patient, attentive to our needs, and delivered stunning photos that exceeded our expectations.",
     date: "11/10/2023",
-    avatar: images1,
+    avatar: reviewsImage,
   },
 ];
 
 const ReviewSection = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 font-serif">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-2 font-serif">
       <div className="md:col-span-1 space-y-6">
         {/* Review Summary */}
         <div className="border rounded-lg p-6 shadow">
           <h2 className="text-lg font-semibold mb-2 font-serif">Review Summary</h2>
-          
-<div className="text-4xl font-bold flex flex-col items-center justify-center">
-  <p className="mb-0">4.8</p>
-  <div className="flex space-x-1 ">
-    {[...Array(5)].map((_, i) => (
-      <FaStar key={i} className="text-yellow-500" size={16} />
-    ))}
-  </div>
-</div>
+
+          <div className="text-4xl font-bold flex flex-col items-center justify-center">
+            <p className="mb-0">4.8</p>
+            <div className="flex space-x-1 ">
+              {[...Array(5)].map((_, i) => (
+                <FaStar key={i} className="text-yellow-500" size={16} />
+              ))}
+            </div>
+          </div>
           <div className="text-sm text-gray-500 mb-4 font flex items-center justify-center">Based on 124 reviews</div>
           <div className="space-y-2">
             {[5, 4, 3, 2, 1].map((star) => (
@@ -92,14 +92,20 @@ const ReviewSection = () => {
           {reviews.map((review, index) => (
             <div key={index} className="border-t pt-4">
               <div className="flex items-center gap-4">
+                
                 <div className="bg-gray-100 rounded-full h-10 w-10 overflow-hidden">
-                  <img src={review.avatar} className="h-full w-full" alt="" />
+                  <img
+                    src={review.avatar}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
                 </div>
+
                 <div>
                   <div className="font-medium">{review.name}</div>
                   <div className="flex text-yellow-500">
                     {Array.from({ length: review.rating }, (_, i) => (
-                      <FaStar  key={i} />
+                      <FaStar key={i} />
                     ))}
                   </div>
                 </div>

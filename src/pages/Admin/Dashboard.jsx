@@ -162,7 +162,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="rounded  shadow-sm rounded-full">
+      <div className="shadow-sm rounded-full">
         {activeTab === 'Dashboard' && (
           <div className="col-span-3 bg-white w-full">
             <SubDashboard />
