@@ -1,6 +1,7 @@
+
 import { createSlice } from '@reduxjs/toolkit';
 
-// Load vendor from localStorage if available
+
 const loadVendorFromStorage = () => {
   try {
     const vendorStr = localStorage.getItem('vendor');
@@ -8,7 +9,7 @@ const loadVendorFromStorage = () => {
     if (parsed?._id && !parsed.id) {
       parsed.id = parsed._id;
     }
-    console.log("parsed",parsed)
+    // console.log("parsed",parsed)
     return parsed;
   } catch (e) {
     console.error("Failed to parse vendor data:", e);
@@ -16,10 +17,16 @@ const loadVendorFromStorage = () => {
   }
 };
 
+
+const loadToken = () => localStorage.getItem('vendorToken') || null;
+
+const initialVendor = loadVendorFromStorage();
+const initialToken = loadToken();
+// ##############################
 const initialState = {
-  vendor: loadVendorFromStorage(),
-  token: localStorage.getItem('vendorToken') || null,
-  isAuthenticated: !!localStorage.getItem('vendorToken'),
+  vendor: initialVendor,
+  token: initialToken,
+  isAuthenticated: !!(initialVendor && initialToken),
   loading: false,
   error: null,
 };
@@ -31,7 +38,6 @@ const vendorSlice = createSlice({
     setVendorCredentials: (state, action) => {
       let { token, vendor } = action.payload;
 
-      // Ensure the vendor object always has role: 'vendor'
       if (vendor && vendor.role !== 'vendor') {
         vendor = { ...vendor, role: 'vendor' };
       }
@@ -57,6 +63,10 @@ const vendorSlice = createSlice({
   },
 });
 
-export const { setVendorCredentials, logoutVendor, clearVendorError } = vendorSlice.actions;
+export const {
+  setVendorCredentials,
+  logoutVendor,
+  clearVendorError,
+} = vendorSlice.actions;
 
 export default vendorSlice.reducer;
