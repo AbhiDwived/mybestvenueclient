@@ -14,9 +14,7 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
   const vendorAuth = useSelector((state) => state.vendor || {});
   const adminAuth = useSelector((state) => state.adminAuth || {});
 
-  // Log vendor approval status for debugging
-  console.log('vendorAuth.vendor:', vendorAuth.vendor);
-  console.log('vendorAuth.vendor.isApproved:', vendorAuth.vendor?.isApproved);
+ 
 
   let isAuthenticated = false;
   let currentRole = null;
@@ -33,7 +31,6 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
 
     // Check if vendor is approved
     if (allowedRoles.includes('vendor') && !vendorAuth.vendor.isApproved) {
-      console.log('Vendor is not approved. Redirecting to /not-approved');
       return <Navigate to="/not-approved" replace />;
     }
   }
@@ -43,12 +40,7 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
     currentRole = userAuth.user.role || 'user';
   }
 
-  // Debug logs
-  console.log('userAuth:', userAuth);
-  console.log('vendorAuth:', vendorAuth);
-  console.log('adminAuth:', adminAuth);
-  console.log('isAuthenticated:', isAuthenticated);
-  console.log('currentRole:', currentRole);
+
 
   // Not authenticated, redirect to login page based on first allowed role or default to user login
   if (!isAuthenticated) {

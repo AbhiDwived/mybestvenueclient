@@ -23,10 +23,7 @@ const AdminDashboard = () => {
   const { data: vendorsData, isLoading: vendorsLoading } = useGetAllVendorsQuery();
   const { data: pendingData, isLoading: pendingLoading } = useGetPendingVendorsQuery();
 
-  // 🔍 Log API responses to debug
-  console.log("🧪 Users Data:", usersData);
-  console.log("🧪 Vendors Data:", vendorsData);
-  console.log("🧪 Pending Vendors Data:", pendingData);
+
 
   if (!pendingLoading && !pendingData) {
     console.warn("⚠️ No pending vendor data returned.");
