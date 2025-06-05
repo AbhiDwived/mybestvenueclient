@@ -61,7 +61,7 @@ const FeaturedVendors = () => {
   };
 
   return (
-    <section className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 py-10">
+    <div className=" sm:px-6 md:px-10 lg:mx-4 xl:px-20 py-10">
       <div className="flex flex-col sm:flex-row justify-between  items-start sm:items-center mb-6 gap-4">
         <h1 className="text-gray-800">Featured Vendors</h1>
         <Link to="#" style={{textDecoration:'none'}} className="flex">
@@ -115,7 +115,7 @@ const FeaturedVendors = () => {
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 };
 

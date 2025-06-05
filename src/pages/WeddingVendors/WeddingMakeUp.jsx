@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { FaStar } from 'react-icons/fa';
-import WeVendorr2 from '../../assets/newPics/WeVendor2avif.avif'; // Check your actual filename & path
+import WeVendorr2 from '../../assets/newPics/WeVendor2avif.avif';
 
 const vendorData = [
     {
@@ -65,12 +65,10 @@ export default function WeddingMakeUp() {
     }, [sortType]);
 
     return (
-        <div>
-            
-
+        <>
             {/* Vendor Cards */}
             <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {vendors.map((vendor) => (
+                {vendors.map(vendor => (
                     <div
                         key={vendor.id}
                         className="bg-white border rounded-xl overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300"
@@ -103,6 +101,6 @@ export default function WeddingMakeUp() {
                     </div>
                 ))}
             </div>
-        </div>
+        </>
     );
 }

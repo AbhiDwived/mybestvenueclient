@@ -100,6 +100,11 @@ import ContentManagement from '../pages/Admin/ContentManagement';
 import CategoryManagement from '../pages/Admin/CategoryManagement';
 import InquiryReply from '../pages/Vendor/Inquiries/InquiryReply';
 
+// Location
+import LocationVendors from '../pages/Location/LocationVendor';
+import CategorySelector from '../pages/Location/CategorySelector';
+import VendorListPage from '../pages/Location/VendorListPage';
+
 const index = () => {
     return (
         <Router>
@@ -146,6 +151,12 @@ const index = () => {
                     <Route path="Hotel-Prince-Inn-By" element={<HotelPrinceInn />} />
                     <Route path="Hotel-Prience-Stay" element={<HotelPrienceStay />} />
                     <Route path="Hotel-Culture-By-Dsy" element={<HotelCultureByDsy />} />
+
+                    {/* Location */}
+                    <Route path="locations/:city" element={<LocationVendors />} />
+                    <Route path="category-selector" element={<CategorySelector />} />
+                    <Route path="/vendors/:location/:category" element={<VendorListPage />} />
+
 
                     {/* User Auth Routes */}
                     <Route path="/user/signup" element={<UserSignup />} />

@@ -1,17 +1,16 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import DiscoverImage from "../../assets/newPics/discoverImage.jpg";
 import BrowseVenues from '../WeddingVenues/BrowserVenues';
-
+import LocationVendors from '../Location/LocationVendor'; // Make sure this is correct
 
 const DiscoverCategories = () => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
+  const [selectedCity, setSelectedCity] = useState('All India');
 
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`/vendors?search=${searchTerm}&category=${category}`);
+    // Add logic if you want to filter LocationVendors by category or search term
   };
 
   return (
@@ -19,12 +18,11 @@ const DiscoverCategories = () => {
       <div
         className="relative w-full h-[700px] bg-cover bg-center flex items-center"
         style={{
-          backgroundImage:
-            `linear-gradient(rgba(15, 76, 129, 0.7), rgba(26, 42, 58, 0.8)), url(${DiscoverImage})`,
+          backgroundImage: `linear-gradient(rgba(15, 76, 129, 0.7), rgba(26, 42, 58, 0.8)), url(${DiscoverImage})`,
         }}
       >
-        <div className=" mx-auto px-4 text-center">
-          <h1 className="font-extrabold text-white mb-6 ">
+        <div className="mx-auto px-4 text-center">
+          <h1 className="font-extrabold text-white text-4xl md:text-5xl mb-6">
             Discover Your Perfect Venue
           </h1>
           <p className="text-xl text-white mb-8 max-w-3xl mt-4 mx-auto">
@@ -77,32 +75,39 @@ const DiscoverCategories = () => {
             <button
               type="submit"
               style={{ borderTopRightRadius: '5px', borderBottomRightRadius: '5px' }}
-              className="px-4 py-1  bg-[#0f4c81] text-white font-semibold"
+              className="px-4 py-1 bg-[#0f4c81] text-white font-semibold"
             >
               Search
             </button>
           </form>
 
-          <div className="mt-12 flex flex-wrap justify-center gap-4 ">
-            <Link
-              to="/venues"
+          <div className="mt-12 flex flex-wrap justify-center gap-4">
+            <button
+            style={{borderRadius:'5px'}}
+              onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })}
               className="px-3 py-2 bg-white/10 text-white border border-white rounded-md backdrop-blur-sm hover:text-black hover:bg-white/20 transition-colors"
-              style={{ textDecoration: 'none' }}
             >
               Browse Venues
-            </Link>
-            <Link
-              to="/planning"
-              className="px-3 py-2 bg-[#445D7B]  text-white rounded-md"
-              style={{ textDecoration: 'none' }}
+            </button>
+            <a
+              href="/planning-tools"
+              style={{textDecoration:'none'}}
+              className="px-3 py-2 bg-[#445D7B] text-white rounded-md"
             >
               Planning Tools
-            </Link>
+            </a>
           </div>
         </div>
       </div>
+
+      {/* Section to display location tabs and vendor UI */}
       <div>
-        <BrowseVenues />
+        {/* Other parts of your component */}
+        <BrowseVenues
+          currentLocation={selectedCity}
+          onLocationSelect={setSelectedCity} // directly passing setter
+        />
+
       </div>
     </>
   );

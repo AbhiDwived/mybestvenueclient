@@ -125,7 +125,7 @@ export default function Corporate() {
             />
             <button
               style={{ borderRadius: '5px' }}
-              className="bg-[#10497a] hover:bg-[#062b4b] text-white px-3"
+              className="bg-[#10497a] hover:bg-[#062b4b] text-white px-3 py-2"
             >
               Search Venue
             </button>

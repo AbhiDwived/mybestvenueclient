@@ -92,7 +92,7 @@ export default function IdeaBlog() {
             />
             <button
               style={{ borderRadius: '5px' }}
-              className="bg-[#10497a] hover:bg-[#062b4b] text-white px-5"
+              className="bg-[#10497a] hover:bg-[#062b4b] text-white px-5 py-2"
               onClick={() => setSearchQuery("")} // Reset search on click
             >
               Clear
@@ -102,7 +102,7 @@ export default function IdeaBlog() {
       </div>
 
       {/* Featured Article */}
-      <section className="py-12 bg-white px-4 sm:px-6 lg:px-12">
+      <div className="py-12 bg-white px-4 sm:px-6 lg:px-12">
         <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
           <img
             src={articles[0].image}
@@ -182,7 +182,7 @@ export default function IdeaBlog() {
             <p className="text-center col-span-full text-gray-600">No articles found for your search.</p>
           )}
         </div>
-      </section>
+      </div>
 
       {/* Load More */}
       <section className="mt-2 mb-8 text-center px-4 sm:px-6 lg:px-12">
