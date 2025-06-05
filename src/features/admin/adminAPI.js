@@ -58,7 +58,7 @@ export const adminApi = createApi({
       }),
     }),
 
-     // ✅ New: Get All Users
+    // ✅ Get All Users
     getAllUsers: builder.query({
       query: () => '/admin/all_users',
     }),
@@ -71,7 +71,7 @@ export const adminApi = createApi({
       }),
     }),
 
-   // ✅ New: Get All Vendors
+    // ✅ Get All Vendors
     getAllVendors: builder.query({
       query: () => '/admin/all_vendors',
     }),
@@ -84,10 +84,9 @@ export const adminApi = createApi({
       }),
     }),
 
-  // Get Pending Vendors
-     // ✅ Add this endpoint:
+    // Get Pending Vendors
     getPendingVendors: builder.query({
-      query: () => '/admin/pending_vendor', // Make sure this matches your backend route
+      query: () => '/admin/pending_vendor',
     }),
 
     // Delete Vendor
@@ -97,20 +96,57 @@ export const adminApi = createApi({
         method: 'DELETE',
       }),
     }),
+
+    // ✅ Activity Endpoints — UPDATED to use /activity instead of /admin
+    getRecentActivities: builder.query({
+      query: () => '/activity/recent', // ✅ Updated
+    }),
+
+    getActivityStats: builder.query({
+      query: () => '/activity/stats', // ✅ Updated
+    }),
+
+    searchActivities: builder.query({
+      query: (query) => `/activity/search?query=${encodeURIComponent(query)}`, // ✅ Updated
+    }),
+
+    deleteActivity: builder.mutation({
+      query: ({ id }) => ({
+        url: `/activity/activity/${id}`, // ✅ Use consistent naming
+        method: 'DELETE',
+      }),
+    }),
+
+    bulkDeleteActivities: builder.mutation({
+      query: (body) => ({
+        url: '/activity/bulk-delete', // ✅ Updated
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
-// Export RTK Query hooks
+// Export hooks
 export const {
   useRegisterAdminMutation,
   useLoginAdminMutation,
   useVerifyAdminOtpMutation,
   useResendAdminOtpMutation,
   useUpdateAdminProfileMutation,
-  useGetPendingVendorsQuery, // <- Make sure this line is present
-  useGetAllVendorsQuery, // ✅ Added export for use in components
+
   useGetAllUsersQuery,
+  useDeleteUserByAdminMutation,
+
+  useGetAllVendorsQuery,
+  useGetPendingVendorsQuery,
   useApproveVendorMutation,
   useDeleteVendorByAdminMutation,
-  useDeleteUserByAdminMutation, // ✅ New hook
+
+  // ✅ Activity Hooks
+  useGetRecentActivitiesQuery,
+  useGetActivityStatsQuery,
+  useSearchActivitiesQuery,
+  useDeleteActivityMutation,
+  useBulkDeleteActivitiesMutation,
 } = adminApi;
