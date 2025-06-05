@@ -113,9 +113,10 @@ const VendorManagement = () => {
         ) : (
           paginatedVendors.map((vendor, idx) => (
             <div key={vendor._id || idx} className="border rounded-xl shadow-sm overflow-hidden">
-              {vendor.image ? (
+              {vendor.profilePicture ? (
                 <img
-                  src={vendor.image}
+                  src={`${import.meta.env.VITE_API_URL.replace('/api/v1', '')
+                    }${vendor.profilePicture}`}
                   alt={vendor.name}
                   className="w-full h-64 object-cover"
                 />

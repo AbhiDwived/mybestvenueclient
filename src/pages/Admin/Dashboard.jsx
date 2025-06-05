@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { IoSettingsOutline } from "react-icons/io5";
 import { FaArrowTrendUp } from "react-icons/fa6";
@@ -9,15 +8,73 @@ import PendingApprovals from './PendingApprovals';
 import ReviewModeration from './ReviewModeration';
 import ContentManagement from './ContentManagement';
 
+// 🟢 Import RTK hooks
+import {
+  useGetAllUsersQuery,
+  useGetAllVendorsQuery,
+  useGetPendingVendorsQuery,
+} from '../../features/admin/adminAPI'; // Update path if needed
+
 const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState('Dashboard');
+
+  // 🟡 Fetch admin statistics
+  const { data: usersData, isLoading: usersLoading } = useGetAllUsersQuery();
+  const { data: vendorsData, isLoading: vendorsLoading } = useGetAllVendorsQuery();
+  const { data: pendingData, isLoading: pendingLoading } = useGetPendingVendorsQuery();
+
+  // 🔍 Log API responses to debug
+  console.log("🧪 Users Data:", usersData);
+  console.log("🧪 Vendors Data:", vendorsData);
+  console.log("🧪 Pending Vendors Data:", pendingData);
+
+  if (!pendingLoading && !pendingData) {
+    console.warn("⚠️ No pending vendor data returned.");
+  }
+
+  const tabs = [
+    'Dashboard',
+    'User Management',
+    'Vendor Management',
+    'Pending Approvals',
+    'Review Moderation',
+    'Content Management'
+  ];
+
+  // 🟢 Build cardData with live API counts
   const cardData = [
     {
       title: "Platform Statistics",
       stats: [
-        { label: "Total Users", value: "12,458" },
-        { label: "Total Vendors", value: "1,245" },
-        { label: "Pending Approvals", value: "18", className: "text-yellow-600 font-semibold" },
-        { label: "Total Reviews", value: "8,569" }
+        {
+          label: "Total Users",
+          value: usersLoading
+            ? "Loading..."
+            : Array.isArray(usersData)
+              ? usersData.length
+              : usersData?.users?.length || 0,
+        },
+        {
+          label: "Total Vendors",
+          value: vendorsLoading
+            ? "Loading..."
+            : Array.isArray(vendorsData)
+              ? vendorsData.length
+              : vendorsData?.vendors?.length || 0,
+        },
+        {
+          label: "Pending Approvals",
+          value: pendingLoading
+            ? "Loading..."
+            : Array.isArray(pendingData)
+              ? pendingData.length
+              : pendingData?.vendors?.length || 0,
+          className: "text-yellow-600 font-semibold"
+        },
+        {
+          label: "Total Reviews",
+          value: "8,569" // Replace with live data later
+        }
       ]
     },
     {
@@ -42,16 +99,6 @@ const AdminDashboard = () => {
         ]
       }
     }
-  ];
-
-  const [activeTab, setActiveTab] = useState('Dashboard');
-  const tabs = [
-    'Dashboard',
-    'User Management',
-    'Vendor Management',
-    'Pending Approvals',
-    'Review Moderation',
-    'Content Management'
   ];
 
   return (
@@ -144,16 +191,15 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* Tabs Menu (scrollable horizontally) */}
+      {/* Tabs Menu */}
       <div className="overflow-x-auto">
         <div className="flex space-x-2 min-w-max bg-[#F1F5F9] p-2 rounded-md mb-2 text-sm">
           {tabs.map((tab, i) => (
             <button
               key={i}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-md font-medium whitespace-nowrap ${
-                tab === activeTab ? 'bg-white text-black shadow-sm rounded' : 'text-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-md font-medium whitespace-nowrap ${tab === activeTab ? 'bg-white text-black shadow-sm rounded' : 'text-gray-600'
+                }`}
             >
               {tab}
             </button>
@@ -199,4 +245,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

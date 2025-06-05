@@ -2,17 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const vendorApi = createApi({
   reducerPath: 'vendorApi',
-  baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL,
- prepareHeaders: (headers, { getState }) => {
-      const token = getState().vendor.token;
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-
-  }),
-
+  baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
   endpoints: (builder) => ({
     // Register Vendor
     registerVendor: builder.mutation({
@@ -85,7 +75,6 @@ export const vendorApi = createApi({
         url: `/vendor/update/${vendorId}`,
         method: 'PUT',
         body: profileData,
-        // formData: true,
       }),
     }),
 
@@ -103,20 +92,9 @@ export const vendorApi = createApi({
         url: '/vendor/logout',
         method: 'POST',
       }),
-
-       
     }),
-
-    // Get Vendor BY Id
-       getVendorById: builder.query({
-        query: (vendorId) => ({
-          url: `/vendor/vendorbyId/${vendorId}`,
-          method: 'Post',
-        }),
-      }),
   }),
-})
-
+});
 
 // Export hooks for usage in components
 export const {
@@ -130,5 +108,4 @@ export const {
   useUpdateProfileMutation,
   useDeleteVendorMutation,
   useLogoutVendorMutation,
-  useGetVendorByIdQuery,
 } = vendorApi;
