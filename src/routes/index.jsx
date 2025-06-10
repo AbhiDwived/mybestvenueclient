@@ -81,6 +81,9 @@ import EditProfiles from '../pages/Vendor/EditProfiles';
 import HiringVendors from '../pages/Vendor/HiringVendors';
 import PackagesAndFaqs from '../pages/Vendor/PackagesAndFaqs';
 import Portfolio from '../pages/Vendor/Portfolio';
+import VendorBlog from '../pages/Vendor/VendorBlog';
+import AddBlogPost from '../pages/Vendor/AddBlogPost';
+
 //#################### Vendor Preview Profile components #########################
 import PreviewProfile from '../pages/Vendor/PreviewProfile/PreviewProfile';
 import PreviewProfileScreen from '../pages/Vendor/PreviewProfile/PreviewProfileScreen';
@@ -104,6 +107,7 @@ import InquiryReply from '../pages/Vendor/Inquiries/InquiryReply';
 import LocationVendors from '../pages/Location/LocationVendor';
 import CategorySelector from '../pages/Location/CategorySelector';
 import VendorListPage from '../pages/Location/VendorListPage';
+
 
 const index = () => {
     return (
@@ -137,7 +141,7 @@ const index = () => {
                     {/* Home additional pages */}
                     <Route path='/BrowserVenues' element={<BrowserVenues />} />
                     <Route path='/discoverCategories' element={<DiscoverCategories />} />
-                    <Route path='/featurevendors' element={<FeatureVendors />} /> {/* ✅ Fixed 'featureVendors' */}
+                    <Route path='/featurevendors' element={<FeatureVendors  showAll={true} />} /> {/* ✅ Fixed 'featureVendors' */}
                     <Route path='/HowItWorks' element={<HowItWorks />} />
                     <Route path='/ProjectList' element={<ProjectList />} />
                     <Route path='/SuccessfullEvents' element={<SuccessfullEvents />} />
@@ -223,6 +227,8 @@ const index = () => {
                     <Route path="faqs_Questions" element={<FaqQuestions />} />
                     <Route path="inquiry" element={<FaqQuestions />} />
                     <Route path="inquiryReply" element={<InquiryReply />} />
+                    <Route path="blogs" element={<VendorBlog/>} />
+                    <Route path="add-blog-post" element={<AddBlogPost/>} />
                 </Route>
 
                 {/* Admin Dashboard Protected Routes */}

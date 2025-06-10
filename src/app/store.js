@@ -10,11 +10,12 @@ import { apiSlice } from '../services/api';               // optional
 import { vendorApi } from '../features/vendors/vendorAPI';
 import { authApi } from '../features/auth/authAPI';
 import { adminApi } from '../features/admin/adminAPI';    // ✅ Admin API
+import { blogsApi } from '../features/blogs/blogsAPI';  // Added blogsApi import
 
 export default configureStore({
   reducer: {
     auth: authReducer,
-   vendor: vendorReducer, // ✅ Changed from vendorAuth to vendor
+    vendor: vendorReducer, // ✅ Changed from vendorAuth to vendor
     adminAuth: adminReducer,                             // ✅ Add admin reducer
 
     // RTK Query reducers
@@ -22,6 +23,7 @@ export default configureStore({
     [vendorApi.reducerPath]: vendorApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [adminApi.reducerPath]: adminApi.reducer,            // ✅ Add admin API reducer
+    [blogsApi.reducerPath]: blogsApi.reducer,            // Added blogsApi reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -30,5 +32,6 @@ export default configureStore({
       .concat(apiSlice.middleware)                       // optional
       .concat(vendorApi.middleware)
       .concat(authApi.middleware)
-      .concat(adminApi.middleware),                      // ✅ Add admin API middleware
+      .concat(adminApi.middleware)                      // ✅ Add admin API middleware
+      .concat(blogsApi.middleware),                     // Added blogsApi middleware
 });

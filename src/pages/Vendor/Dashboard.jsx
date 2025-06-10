@@ -11,12 +11,11 @@ import PackagesAndFaqs from './PackagesAndFaqs';
 import Inquiries from './Inquiries/Inquiries';
 import ReviewSection from './Reviews';
 import Analytics from './Analytics';
+import IdeaBlogs from './VendorBlog';
 // import EditCoverPhoto from './EditCoverPhoto';
 import { Link } from 'react-router-dom';
 
 import { useSelector } from 'react-redux';
-
-
 
 
 const Dashboard = () => {
@@ -38,7 +37,7 @@ const Dashboard = () => {
   };
 
   // Define tabs
-  const tabs = ['Overview', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews', 'Analytics'];
+  const tabs = ['Overview', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews', 'Analytics', 'IdeaBlog'];
 
   // State for events and dropdown pickers
   const [events, setEvents] = useState([
@@ -309,6 +308,12 @@ const Dashboard = () => {
         {activeTab === 'Analytics' && (
           <div className="col-span-3 bg-white p-4 rounded border">
             <Analytics />
+
+          </div>
+        )}
+        {activeTab === 'IdeaBlog' && (
+          <div className="col-span-3 bg-white p-4 rounded border">
+            <IdeaBlogs />
 
           </div>
         )}
