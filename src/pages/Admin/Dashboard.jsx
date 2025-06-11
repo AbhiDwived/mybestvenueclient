@@ -26,7 +26,7 @@ const AdminDashboard = () => {
 
 
   if (!pendingLoading && !pendingData) {
-    console.warn("⚠️ No pending vendor data returned.");
+    // console.warn("⚠️ No pending vendor data returned.");
   }
 
   const tabs = [

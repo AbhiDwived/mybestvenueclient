@@ -21,7 +21,6 @@ import { useSelector } from 'react-redux';
 const Dashboard = () => {
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  console.log(" Data from store:", vendor);
 
   if (!isAuthenticated) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
@@ -206,17 +205,7 @@ const Dashboard = () => {
                 )}
                 <div className="mt-4">
 
-                  <style jsx>{`
-                     .react-calendar {
-                       width: 100% !important;
-                       max-width: 100%;
-                     }
-                   
-                     .react-calendar__viewContainer,
-                     .react-calendar__month-view {
-                       width: 100%;
-                     }
-                   `}</style>
+                 
 
                   <Calendar
                     className="w-full"

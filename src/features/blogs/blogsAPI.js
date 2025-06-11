@@ -5,24 +5,31 @@ export const blogsApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_URL + '/blog',
     prepareHeaders: (headers) => {
-      const token = localStorage.getItem('vendorToken'); // or 'adminToken'
-      console.log('Authorization token being used:', token);
+      const token = localStorage.getItem('vendorToken');
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
       return headers;
-    }
+    },
   }),
-  tagTypes: ['Blogs'],
+  tagTypes: ['Blog'],
   endpoints: (builder) => ({
     getAllBlogs: builder.query({
       query: () => '/getallblogs',
-      providesTags: ['Blogs'],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.blogs.map(({ _id }) => ({ type: 'Blog', id: _id })),
+              { type: 'Blog', id: 'LIST' },
+            ]
+          : [{ type: 'Blog', id: 'LIST' }],
+      // ✅ Remove transformResponse - use data as-is
     }),
 
     searchBlogs: builder.query({
       query: (keyword) => `/search?keyword=${encodeURIComponent(keyword)}`,
-      providesTags: ['Blogs'],
+      providesTags: ['Blog'],
+      // ✅ Remove transformResponse
     }),
 
     createBlog: builder.mutation({
@@ -31,42 +38,46 @@ export const blogsApi = createApi({
         method: 'POST',
         body: blogData,
       }),
-      invalidatesTags: ['Blogs'],
+      invalidatesTags: [{ type: 'Blog', id: 'LIST' }],
     }),
 
-    // 🟢 UPDATED
     getBlogById: builder.query({
       query: (id) => `/getblog/${id}`,
-      providesTags: ['Blogs'],
+      // ✅ Remove transformResponse
+      providesTags: (result, error, id) => [{ type: 'Blog', id }],
     }),
 
-    // 🟢 UPDATED
     updateBlog: builder.mutation({
       query: ({ id, updatedData }) => ({
         url: `/updateblog/${id}`,
         method: 'PUT',
         body: updatedData,
       }),
-      invalidatesTags: ['Blogs'],
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Blog', id },
+        { type: 'Blog', id: 'LIST' },
+      ],
     }),
 
-    // 🟢 UPDATED
     deleteBlog: builder.mutation({
       query: (id) => ({
         url: `/deleteblog/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Blogs'],
+      invalidatesTags: (result, error, id) => [
+        { type: 'Blog', id },
+        { type: 'Blog', id: 'LIST' },
+      ],
     }),
 
     getBlogsByCategory: builder.query({
       query: (categoryName) => `/category/${encodeURIComponent(categoryName)}`,
-      providesTags: ['Blogs'],
+      providesTags: ['Blog'],
+      // ✅ Remove transformResponse
     }),
   }),
 });
 
-// Export hooks for usage in functional components
 export const {
   useGetAllBlogsQuery,
   useSearchBlogsQuery,

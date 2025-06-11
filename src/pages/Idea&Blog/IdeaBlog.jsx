@@ -1,68 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calendar } from "lucide-react";
+import { useGetAllBlogsQuery } from '../../features/blogs/blogsAPI';
 import IdeaBlogHeader from '../../assets/newPics/IdeaBlogHeader.avif';
-import IdeaBlog1 from '../../assets/newPics/IdeaBlog1.avif';
-import IdeaBlog2 from '../../assets/newPics/IdeaBlog2.avif';
-import IdeaBlog3 from '../../assets/newPics/IdeaBlog3.avif';
-import IdeaBlog4 from '../../assets/newPics/IdeaBlog4.avif';
-import IdeaBlog5 from '../../assets/newPics/IdeaBlog5.avif';
-
-const categories = ["All", "Planning", "Decoration", "Photography", "Corporate", "Budget", "Food"];
-
-const articles = [
-  {
-    title: "10 Stunning Wedding Decoration Ideas for 2023",
-    description: "Transform your venue with these beautiful decoration ideas that are trending this year.",
-    category: "Decoration",
-    date: "May 15, 2023",
-    author: "Sarah Johnson",
-    image: IdeaBlogHeader,
-    featured: true
-  },
-  {
-    title: "How to Choose the Perfect Wedding Venue",
-    description: "Find the ideal location for your special day with these helpful tips and considerations.",
-    category: "Planning",
-    date: "May 28, 2023",
-    image: IdeaBlog1
-  },
-  {
-    title: "Wedding Photography: Capturing Perfect Moments",
-    description: "Professional photographers share their secrets for stunning wedding photos.",
-    category: "Photography",
-    date: "June 15, 2023",
-    image: IdeaBlog2
-  },
-  {
-    title: "Corporate Events: Making Business Meetings Memorable",
-    description: "Transform ordinary business meetings into extraordinary experiences with these tips.",
-    category: "Corporate",
-    date: "July 10, 2023",
-    image: IdeaBlog3
-  },
-  {
-    title: "Budget-Friendly Wedding Ideas That Look Expensive",
-    description: "Create a luxurious wedding experience without breaking the bank.",
-    category: "Budget",
-    date: "August 5, 2023",
-    image: IdeaBlog4
-  },
-  {
-    title: "Latest Wedding Catering Trends",
-    description: "Explore innovative food and beverage options for your wedding reception",
-    category: "Food",
-    date: "September 12, 2023",
-    image: IdeaBlog5
-  },
-];
 
 export default function IdeaBlog() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Fetch blogs from API
+  const { data, isLoading, isError, error } = useGetAllBlogsQuery();
+
+  // Process API data
+  const blogs = Array.isArray(data) ? data : data?.blogs || [];
+
+  // Format blogs for display
+  const formattedBlogs = useMemo(() => {
+    return blogs.map((blog) => {
+      let imageUrl;
+
+      if (blog.featuredImage) {
+        if (blog.featuredImage.startsWith('http')) {
+          imageUrl = blog.featuredImage;
+        } else if (blog.featuredImage.startsWith('/uploads/')) {
+          // If it already has the full path
+          const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
+          imageUrl = `${baseUrl}${blog.featuredImage}`;
+        } else {
+          // If it's just the filename, construct the full path
+          const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
+          imageUrl = `${baseUrl}/uploads/vendors/${blog.featuredImage}`;
+        }
+      } else {
+        imageUrl = IdeaBlogHeader; // Fallback to default image
+      }
+
+      return {
+        id: blog._id,
+        title: blog.title,
+        description: blog.excerpt || (blog.content ? blog.content.slice(0, 150) + '...' : ''),
+        category: blog.category || 'General',
+        date: new Date(blog.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+        image: imageUrl,
+        author: 'Admin', // You can modify this based on createdBy data
+        featured: false,
+      };
+    });
+  }, [blogs]);
+
+  // Get unique categories from blogs
+  const categories = useMemo(() => {
+    const uniqueCategories = [...new Set(formattedBlogs.map(blog => blog.category))];
+    return ["All", ...uniqueCategories];
+  }, [formattedBlogs]);
+
+  // Featured article (first blog or fallback)
+  const featuredArticle = formattedBlogs.length > 0 ? 
+    { ...formattedBlogs[0], featured: true, author: 'Admin' } : 
+    {
+      title: "Welcome to Our Blog",
+      description: "Discover amazing ideas and tips for your events.",
+      category: "General",
+      date: "Today",
+      author: "Admin",
+      image: IdeaBlogHeader,
+      featured: true
+    };
 
   // Filter logic: category AND search query
-  const filteredArticles = articles
-    .slice(1) // skip the featured article
+  const filteredArticles = formattedBlogs
+    .slice(formattedBlogs.length > 0 ? 1 : 0) // Skip featured article if blogs exist
     .filter(article => {
       const matchesCategory = selectedCategory === "All" || article.category === selectedCategory;
       const matchesSearch =
@@ -70,6 +80,30 @@ export default function IdeaBlog() {
         article.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading blogs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading blogs</p>
+          <p className="text-gray-600">{error?.data?.message || error?.error || 'Something went wrong'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -86,14 +120,14 @@ export default function IdeaBlog() {
             <input
               type="text"
               placeholder="Search by title or description..."
-              className="flex-1 border focus:outline-none  text-gray-800 p-2 rounded-md"
+              className="flex-1 border focus:outline-none text-gray-800 p-2 rounded-md"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button
               style={{ borderRadius: '5px' }}
               className="bg-[#10497a] hover:bg-[#062b4b] text-white px-5 py-2"
-              onClick={() => setSearchQuery("")} // Reset search on click
+              onClick={() => setSearchQuery("")}
             >
               Clear
             </button>
@@ -105,22 +139,26 @@ export default function IdeaBlog() {
       <div className="py-12 bg-white px-4 sm:px-6 lg:px-12">
         <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
           <img
-            src={articles[0].image}
-            alt={articles[0].title}
+            src={featuredArticle.image}
+            alt={featuredArticle.title}
             className="w-full h-[320px] sm:h-[400px] lg:h-[420px] object-cover rounded-lg"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = IdeaBlogHeader;
+            }}
           />
           <div>
             <span className="inline-block bg-blue-900 text-white px-3 py-1 rounded-full text-sm mb-2">
-              {articles[0].category}
+              {featuredArticle.category}
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold mb-2 font-playfair">
-              {articles[0].title}
+              {featuredArticle.title}
             </h2>
-            <p className="text-gray-600 mb-4 text-base sm:text-lg">{articles[0].description}</p>
+            <p className="text-gray-600 mb-4 text-base sm:text-lg">{featuredArticle.description}</p>
             <div className="flex items-center text-sm text-gray-500 mb-4 gap-2 flex-wrap">
               <Calendar size={16} />
-              <span>{articles[0].date}</span>
-              <span>• By {articles[0].author}</span>
+              <span>{featuredArticle.date}</span>
+              <span>• By {featuredArticle.author}</span>
             </div>
             <button className="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800 transition">
               Read Article
@@ -148,10 +186,18 @@ export default function IdeaBlog() {
         {/* Blog Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredArticles.length > 0 ? (
-            filteredArticles.map((post, idx) => (
-              <div key={idx} className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm">
+            filteredArticles.map((post) => (
+              <div key={post.id} className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm">
                 <div className="relative">
-                  <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />
+                  <img 
+                    src={post.image} 
+                    alt={post.title} 
+                    className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = IdeaBlogHeader;
+                    }}
+                  />
                   <span className="absolute top-3 left-4 bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full capitalize">
                     {post.category}
                   </span>
@@ -179,17 +225,21 @@ export default function IdeaBlog() {
               </div>
             ))
           ) : (
-            <p className="text-center col-span-full text-gray-600">No articles found for your search.</p>
+            <p className="text-center col-span-full text-gray-600">
+              {formattedBlogs.length === 0 ? 'No blogs available.' : 'No articles found for your search.'}
+            </p>
           )}
         </div>
       </div>
 
       {/* Load More */}
-      <section className="mt-2 mb-8 text-center px-4 sm:px-6 lg:px-12">
-        <button className="inline-block bg-white text-black px-5 py-2 mb-10 border rounded hover:bg-[#09365d] transition-colors duration-300">
-          Load More Articles
-        </button>
-      </section>
+      {formattedBlogs.length > 6 && (
+        <section className="mt-2 mb-8 text-center px-4 sm:px-6 lg:px-12">
+          <button className="inline-block bg-white text-black px-5 py-2 mb-10 border rounded hover:bg-[#09365d] hover:text-white transition-colors duration-300">
+            Load More Articles
+          </button>
+        </section>
+      )}
     </div>
   );
 }

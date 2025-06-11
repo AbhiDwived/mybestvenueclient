@@ -11,7 +11,6 @@ const EditProfile = () => {
   const dispatch = useDispatch();
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  console.log(" Data from store editttt:", vendor);
   const vendorId = localStorage.getItem('vendorId');
 
   // console.log("vendorId", vendorId)
