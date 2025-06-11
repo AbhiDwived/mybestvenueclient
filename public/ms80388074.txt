@@ -1,0 +1,5 @@
+﻿{
+  "Description": "Domain ownership verification file for Microsoft 365 - place in the website root",
+  "Domain": "mybestvenue.com",
+  "Id": "92654120-8399-48c6-9af9-64e913d49e8e"
+}
