@@ -11,9 +11,13 @@ const EditProfile = () => {
   const dispatch = useDispatch();
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  const vendorId = localStorage.getItem('vendorId');
-
+  console.log(" Data from store editttt:", vendor);
+  const vendorId = vendor?._id || vendor?.id
+  // const vendorId = localStorage.getItem('vendorId');
+ const profileimg = vendor.profilePicture;
+  // console.log("profileimg", profileimg)
   // console.log("vendorId", vendorId)
+  // console.log("vendor", vendor)
 
 
 
@@ -34,6 +38,7 @@ const EditProfile = () => {
   const [contactName, setcontactName] = useState('');
 
   const fileInputRef = useRef(null);
+  const serverURL = "http://localhost:5000/"
 
 
 
@@ -50,8 +55,15 @@ const EditProfile = () => {
       setContactPhone(vendor.phone || '+91 9999999999');
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
-      if (!selectedFile) setCoverImage(vendor.profilePicture || coverimage);
-      // setCoverImage(vendor.profilePicture || coverimage);
+      // if (!selectedFile) {
+      //   setCoverImage(vendor.profilePicture || coverimage);
+      // }
+      if (vendor.profilePicture) {
+        setCoverImage(vendor.profilePicture);
+      } else {
+        setCoverImage(coverimage); // fallback if none from server
+      }
+
     }
   }, [vendor]);
 
@@ -96,6 +108,7 @@ const EditProfile = () => {
     }
 
     if (file) {
+      // const imageUrl = URL.createObjectURL(file);
       const imageUrl = URL.createObjectURL(file);
       setCoverImage(imageUrl);
       setSelectedFile(file);
@@ -107,11 +120,14 @@ const EditProfile = () => {
         const res = await updateProfile({
           // vendorId: vendor._id,
           vendorId,
-          profileData: formData
+          profileData: formData,
+          
+          
         }).unwrap();
 
         const updatedVendor = res.vendor;
         dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
+        setCoverImage(updatedVendor.profilePicture);
 
         alert("Profile image updated successfully");
       } catch (err) {
@@ -124,7 +140,8 @@ const EditProfile = () => {
   if (!isAuthenticated) {
     return <h5 className='text-gray-600 font-bold'>You are not logged in.</h5>;
   }
-
+  // console.log(vendor.profilePicture, 'vendor.profilePicture')
+  // console.log(coverImage, 'coverImage')
   return (
     <div className="font-serif">
       <div className="row g-4">
@@ -174,7 +191,8 @@ const EditProfile = () => {
             <h4>Cover Image</h4>
             <p className="text-muted small">This will be displayed as your profile banner</p>
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
-              <img src={coverImage} className="w-100 h-100 object-fit-cover" alt="Cover" />
+              {/* <img src={"coverImage"} className="w-100 h-100 object-fit-cover" alt="Cover" /> */}
+              {vendor.profilePicture ? <img src={serverURL + coverImage} className="w-100 h-100 object-fit-cover" alt="Cover" /> : <img src={coverImage} className="w-100 h-100 object-fit-cover" alt="Cover" />}
               <div
                 className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
                 style={{ backgroundColor: 'rgba(0,0,0,0.5)', opacity: 0, transition: 'opacity 0.3s ease', cursor: 'pointer' }}

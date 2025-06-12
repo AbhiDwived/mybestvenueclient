@@ -1,76 +1,86 @@
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { FaChevronDown } from "react-icons/fa";
 import { RiCheckboxCircleFill } from "react-icons/ri";
 import InquiryReply from './InquiryReply';
+import { useSelector } from 'react-redux';
 
-const inquiries = [
-  {
-    id: 1,
-    name: 'Arjun & Meera Kumar',
-    message:
-      'Hello, I am interested in your wedding photography services for my wedding on November 15, 2024. Could you please provide more details about your packages?',
-    date: '11/15/2024',
-    received: '12/10/2023',
-    status: 'Replied'
-  },
-  {
-    id: 2,
-    name: 'Karan & Priya Malhotra',
-    message:
-      'Hi, could you please share your availability for January 20, 2024? We are planning a destination wedding in Rajasthan.',
-    date: '1/20/2024',
-    received: '12/15/2023',
-    status: 'Pending'
-  },
-  {
-    id: 3,
-    name: 'Vikram & Nisha Patel',
-    message:
-      'We loved your portfolio! Do you offer videography services as well or only photography?',
-    date: '3/5/2024',
-    received: '12/18/2023',
-    status: 'Pending'
-  }
-];
+import { useUserInquiryListMutation } from "../../../features/vendors/vendorAPI";
 
 const InquiriesSection = () => {
   const [filter, setFilter] = useState('All');
   const [showFilter, setShowFilter] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
 
+  const vendor = useSelector((state) => state.vendor.vendor);
+  const vendorId = vendor?.id;
+
+  const [getInquiries, { data, isLoading, isError }] = useUserInquiryListMutation();
+  const inquiries = data?.modifiedList || [];
+  // console.log("inquiries", inquiries)
+
   const filteredInquiries =
     filter === 'All' ? inquiries : inquiries.filter((i) => i.status === filter);
 
+  useEffect(() => {
+    if (vendorId) {
+      getInquiries({ vendorId });
+    }
+  }, [vendorId, getInquiries]);
+
+  if (isLoading) return <div className="p-4">Loading inquiries...</div>;
+  if (isError) return <div className="p-4 text-red-500">Failed to load inquiries</div>;
+console.log(selectedInquiry,'data came')
   return (
+
     <div className="p-2 grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-50 min-h-screen font-serif">
-      {/* Inquiry Summary */}
+      {/* Summary Section */}
       <div className="space-y-6 col-span-1">
         <div className="bg-white p-4 rounded shadow">
           <h2 className="font-semibold text-lg mb-2">Inquiry Summary</h2>
           <ul className="text-sm space-y-2 mt-2">
             <li className="flex items-center justify-between">
               <p>Total Inquiries</p>
-              <strong className="text-black">3</strong>
+              <strong className="text-black">{inquiries.length}</strong>
             </li>
             <li className="flex items-center justify-between">
               <p>Pending Reply</p>
-              <strong className="text-yellow-500">2</strong>
+              <strong className="text-yellow-500">
+                {inquiries.filter((i) => i.replyStatus === 'Pending').length}
+              </strong>
             </li>
             <li className="flex items-center justify-between">
               <p>Replied</p>
-              <strong className="text-green-500">1</strong>
+              <strong className="text-green-500">
+                {inquiries.filter((i) => i.replyStatus === 'Replied').length}
+              </strong>
             </li>
           </ul>
           <hr className="my-3" />
           <div>
             <p className="text-sm">Response Rate</p>
-            <p className="text-right text-sm font-bold text-gray-600 mb-1">33%</p>
+            <p className="text-right text-sm font-bold text-gray-600 mb-1">
+              {inquiries.length > 0
+                ? `${Math.round(
+                  (inquiries.filter((i) => i.replyStatus === 'Replied').length / inquiries.length) * 100
+                )}%`
+                : '0%'}
+            </p>
             <div className="w-full h-4 bg-gray-200 rounded-full">
-              <div className="h-4 bg-[#0f4c81] rounded-full" style={{ width: '33%' }}></div>
+              <div
+                className="h-4 bg-[#0f4c81] rounded-full"
+                style={{
+                  width: `${inquiries.length > 0
+                    ? (inquiries.filter((i) => i.replyStatus === 'Replied').length / inquiries.length) * 100
+                    : 0
+                    }%`,
+                }}
+              ></div>
             </div>
           </div>
         </div>
 
+        {/* Tips */}
         <div className="bg-white p-4 rounded shadow">
           <h2 className="font-semibold text-lg mb-2">Tips for Responses</h2>
           <ul className="list-disc list-inside text-sm space-y-2 mt-3">
@@ -78,7 +88,7 @@ const InquiriesSection = () => {
               'Respond within 24 hours for best results',
               'Include your pricing and availability',
               'Ask follow-up questions to understand their needs',
-              'Provide a clear call to action (book a call, meet in person)'
+              'Provide a clear call to action (book a call, meet in person)',
             ].map((tip, i) => (
               <li key={i} className="flex items-center">
                 <RiCheckboxCircleFill className="h-4 w-4 text-green-500 mr-2" />
@@ -89,7 +99,7 @@ const InquiriesSection = () => {
         </div>
       </div>
 
-      {/* Client Inquiries */}
+      {/* Inquiry List */}
       <div className="col-span-1 lg:col-span-2">
         {selectedInquiry ? (
           <InquiryReply inquiry={selectedInquiry} onBack={() => setSelectedInquiry(null)} />
@@ -98,9 +108,7 @@ const InquiriesSection = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="font-semibold text-lg">Client Inquiries</h2>
-                <p className="text-sm text-gray-600">
-                  Manage and respond to client messages
-                </p>
+                <p className="text-sm text-gray-600">Manage and respond to client messages</p>
               </div>
               <div className="relative">
                 <button
@@ -128,43 +136,53 @@ const InquiriesSection = () => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              {filteredInquiries.map((inquiry) => (
-                <div
-                  key={inquiry.id}
-                  className={`p-4 border rounded ${
-                    inquiry.status === 'Replied'
-                      ? 'border-green-100 bg-green-50'
-                      : 'border-yellow-200 bg-yellow-50'
-                  }`}
+            {/* Inquiries */}
+            <div className="space-y-4   ">
+              {filteredInquiries.map((inquiry) => {
+                console.log(inquiry,'inq')
+                return <div
+                  key={inquiry._id}
+                  className={`p-4 border rounded ${inquiry.replyStatus === 'Replied'
+                    ? 'border-green-100 bg-green-50'
+                    : 'border-yellow-200 bg-yellow-50'
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium text-md">{inquiry.name}</h3>
                     <span
-                      className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                        inquiry.status === 'Replied'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}
+                      className={`text-xs px-2 py-1 rounded-full font-semibold ${inquiry.replyStatus === 'Replied'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                        }`}
                     >
-                      {inquiry.status}
+                      {inquiry.replyStatus}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{inquiry.message}</p>
+                  <div className="text-sm text-gray-700 mb-2">
+                    {inquiry.userMessage?.[inquiry.userMessage.length - 1]?.message}
+                  </div>
+
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <p>Wedding Date: {inquiry.date}</p>
-                    <p>Received: {inquiry.received}</p>
+                    
                   </div>
                   <div className="mt-2 flex justify-end">
                     <button
-                      className="text-sm text-gray-700 hover:underline "
+                      className="text-sm text-gray-700 hover:underline"
                       onClick={() => setSelectedInquiry(inquiry)}
+                      // onClick={() =>
+                      //   setSelectedInquiry({
+                      //     name: inquiry.name,
+                      //     lastMessage: inquiry.userMessage?.[inquiry.userMessage.length - 1]?.message,
+                      //     fullInquiry: inquiry, // optional if you want full details too
+                      //   })
+                      // }
+
                     >
-                      {inquiry.status === 'Replied' ? 'View Details' : 'Reply Now'}
+                      {inquiry.replyStatus === 'Replied' ? 'View Details' : 'Reply Now'}
                     </button>
                   </div>
                 </div>
-              ))}
+              })}
             </div>
           </div>
         )}
@@ -173,30 +191,4 @@ const InquiriesSection = () => {
   );
 };
 
-// ✅ Placeholder for the InquiryReply Component
-// const InquiryReply = ({ inquiry, onBack }) => (
-//   <div className="bg-white p-4 rounded shadow">
-//     <button
-//       className="text-sm text-blue-600 hover:underline mb-4"
-//       onClick={onBack}
-//     >
-//       ← Back to inquiries
-//     </button>
-//     <h2 className="font-semibold text-lg mb-2">{inquiry.name}</h2>
-//     <p className="text-sm mb-2 text-gray-800">{inquiry.message}</p>
-//     <p className="text-xs text-gray-500 mb-1">Wedding Date: {inquiry.date}</p>
-//     <p className="text-xs text-gray-500 mb-4">Received: {inquiry.received}</p>
-//     <textarea
-//       className="w-full p-2 border rounded text-sm mb-3"
-//       rows="4"
-//       placeholder="Type your reply here..."
-//     ></textarea>
-//     <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-//       Send Reply
-//     </button>
-//   </div>
-// );
-
 export default InquiriesSection;
-
-

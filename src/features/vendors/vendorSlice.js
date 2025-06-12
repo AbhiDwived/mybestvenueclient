@@ -8,7 +8,6 @@ const loadVendorFromStorage = () => {
     if (parsed?._id && !parsed.id) {
       parsed.id = parsed._id;
     }
-    console.log("parsed",parsed)
     return parsed;
   } catch (e) {
     console.error("Failed to parse vendor data:", e);

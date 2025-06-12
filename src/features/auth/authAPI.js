@@ -3,7 +3,17 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const authApi = createApi({
   reducerPath: 'authApi',
-baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
+baseQuery: fetchBaseQuery({ 
+  baseUrl: import.meta.env.VITE_API_URL,
+    prepareHeaders: (headers, { getState }) => {
+  // const token = getState().user?.auth?.token;
+  const token = localStorage.getItem("token");
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  return headers;
+},
+}),
   endpoints: (builder) => ({
     // Register User
     registerUser: builder.mutation({
@@ -90,8 +100,28 @@ baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
       query: () => ({
         url: '/user/logout',
         method: 'POST'
-      })
-    })
+      }),
+      
+    }),
+    // User Inquiries
+ getUserInquiries: builder.mutation({
+  query: (userId) => ({
+    url: '/user/getuser_inquiryList',
+    method: 'POST',
+    body: { userId },
+  }),
+}),
+
+ sendUserReply: builder.mutation({
+  query: ({ vendorId, message, userId }) => ({
+    url: `/user/userInquiryMessage/${userId}`,
+    // url: `/user/user_reply/${encodeURIComponent(userId)}`,
+    method: 'POST',
+    body: { vendorId, message },
+  }),
+}),
+
+
   }),
 });
 
@@ -107,4 +137,6 @@ export const {
   useUpdateProfileMutation,
   useDeleteUserMutation,
   useLogoutUserMutation,
+  useGetUserInquiriesMutation,
+  useSendUserReplyMutation,
 } = authApi;
