@@ -6,7 +6,7 @@ import UserManagement from './UserManagement';
 import VendorManagement from './VendorManagement';
 import PendingApprovals from './PendingApprovals';
 import ReviewModeration from './ReviewModeration';
-import ContentManagement from './ContentManagement';
+import AdminBlogs from './AdminBlogs';
 
 // 🟢 Import RTK hooks
 import {
@@ -35,7 +35,7 @@ const AdminDashboard = () => {
     'Vendor Management',
     'Pending Approvals',
     'Review Moderation',
-    'Content Management'
+    'Blogs'
   ];
 
   // 🟢 Build cardData with live API counts
@@ -231,9 +231,9 @@ const AdminDashboard = () => {
             <ReviewModeration />
           </div>
         )}
-        {activeTab === 'Content Management' && (
+        {activeTab === 'AdminBlogs' && (
           <div className="col-span-3 bg-white w-full">
-            <ContentManagement />
+            <AdminBlogs />
           </div>
         )}
       </div>

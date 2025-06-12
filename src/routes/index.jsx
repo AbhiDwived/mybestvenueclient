@@ -99,7 +99,7 @@ import UserManagement from '../pages/Admin/UserManagement';
 import VendorManagement from '../pages/Admin/VendorManagement';
 import PendingVendorApprovals from "../pages/Admin/PendingApprovals";
 import ReviewModeration from "../pages/Admin/ReviewModeration";
-import ContentManagement from '../pages/Admin/ContentManagement';
+import AdminBlogs from '../pages/Admin/AdminBlogs';
 import CategoryManagement from '../pages/Admin/CategoryManagement';
 import InquiryReply from '../pages/Vendor/Inquiries/InquiryReply';
 
@@ -246,7 +246,7 @@ const index = () => {
                     <Route path="vendor_management" element={<VendorManagement />} />
                     <Route path="pending_vendor_approvals" element={<PendingVendorApprovals />} />
                     <Route path="review_moderation" element={<ReviewModeration />} />
-                    <Route path="content_management" element={<ContentManagement />} />
+                    <Route path="blogs" element={<AdminBlogs />} />
                     <Route path="category_management" element={<CategoryManagement />} />
                 </Route>
             </Routes>

@@ -177,7 +177,7 @@ const SubDashboard = () => {
       detail: '6 entries pending to review',
       action: 'View Content',
       color: 'bg-blue-100 border-blue-300 text-blue-500',
-      onClick: () => navigate('/admin/content_management'),
+      onClick: () => navigate('/admin/blogs'),
     },
   ];
 
