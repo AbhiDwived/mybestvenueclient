@@ -11,10 +11,10 @@ const EditProfile = () => {
   const dispatch = useDispatch();
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  console.log(" Data from store editttt:", vendor);
+  // console.log(" Data from store editttt:", vendor);
   const vendorId = vendor?._id || vendor?.id
   // const vendorId = localStorage.getItem('vendorId');
- const profileimg = vendor.profilePicture;
+  const profileimg = vendor.profilePicture;
   // console.log("profileimg", profileimg)
   // console.log("vendorId", vendorId)
   // console.log("vendor", vendor)
@@ -38,10 +38,10 @@ const EditProfile = () => {
   const [contactName, setcontactName] = useState('');
 
   const fileInputRef = useRef(null);
-  const serverURL = "http://localhost:5000/"
+  const serverURL = "http://localhost:5000"
 
 
-
+  
 
 
   useEffect(() => {
@@ -55,11 +55,9 @@ const EditProfile = () => {
       setContactPhone(vendor.phone || '+91 9999999999');
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
-      // if (!selectedFile) {
-      //   setCoverImage(vendor.profilePicture || coverimage);
-      // }
+
       if (vendor.profilePicture) {
-        setCoverImage(vendor.profilePicture);
+        setCoverImage(vendor.profilePicture || coverimage);
       } else {
         setCoverImage(coverimage); // fallback if none from server
       }
@@ -89,14 +87,14 @@ const EditProfile = () => {
         formData.append("profilePicture", selectedFile);
       }
       const res = await updateProfile({ vendorId, profileData: formData }).unwrap();
-      // console.log("updateProfile response:", res);
+      
 
       const updatedVendor = res.vendor || res;
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
 
       alert("Vendor profile updated successfully");
     } catch (err) {
-      // console.error("Error updating vendor:", err);
+     
       alert("Failed to update vendor");
     }
   };
@@ -108,7 +106,7 @@ const EditProfile = () => {
     }
 
     if (file) {
-      // const imageUrl = URL.createObjectURL(file);
+      
       const imageUrl = URL.createObjectURL(file);
       setCoverImage(imageUrl);
       setSelectedFile(file);
@@ -121,8 +119,8 @@ const EditProfile = () => {
           // vendorId: vendor._id,
           vendorId,
           profileData: formData,
-          
-          
+
+
         }).unwrap();
 
         const updatedVendor = res.vendor;
@@ -140,8 +138,7 @@ const EditProfile = () => {
   if (!isAuthenticated) {
     return <h5 className='text-gray-600 font-bold'>You are not logged in.</h5>;
   }
-  // console.log(vendor.profilePicture, 'vendor.profilePicture')
-  // console.log(coverImage, 'coverImage')
+
   return (
     <div className="font-serif">
       <div className="row g-4">
@@ -191,8 +188,9 @@ const EditProfile = () => {
             <h4>Cover Image</h4>
             <p className="text-muted small">This will be displayed as your profile banner</p>
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
-              {/* <img src={"coverImage"} className="w-100 h-100 object-fit-cover" alt="Cover" /> */}
+
               {vendor.profilePicture ? <img src={serverURL + coverImage} className="w-100 h-100 object-fit-cover" alt="Cover" /> : <img src={coverImage} className="w-100 h-100 object-fit-cover" alt="Cover" />}
+
               <div
                 className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
                 style={{ backgroundColor: 'rgba(0,0,0,0.5)', opacity: 0, transition: 'opacity 0.3s ease', cursor: 'pointer' }}

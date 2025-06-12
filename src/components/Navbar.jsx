@@ -173,7 +173,7 @@ const Navbar = () => {
           <Link to="/wedding-vendor" style={{ textDecoration: 'none', color: 'black' }}>Vendors</Link>
           <Link to="/Wedding_Venues" style={{ textDecoration: 'none', color: 'black' }}>Venues</Link>
           <Link to="/planning-tools" style={{ textDecoration: 'none', color: 'black' }}>Planning Tools</Link>
-          <Link to="/IdeaBlog" style={{ textDecoration: 'none', color: 'black' }}>Ideas & Blogs</Link>
+          <Link to="/IdeaBlog" style={{ textDecoration: 'none', color: 'black' }}>Blogs</Link>
           <Link to="/corporate" className="flex items-center gap-1 text-black" style={{ textDecoration: 'none' }}>
             <FiBriefcase /> Corporate
           </Link>

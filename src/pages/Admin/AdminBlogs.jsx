@@ -4,7 +4,7 @@ import {
   useGetAllBlogsQuery,
   useDeleteBlogMutation,
   useUpdateBlogMutation,
-} from '../../features/blogs/blogsAPI';
+} from '../../features/blogs/adminblogsAPI';
 import { Calendar, Eye, Pencil, Trash } from 'lucide-react';
 
 export default function IdeaBlog() {

@@ -111,7 +111,7 @@ export default function IdeaBlog() {
       <div className="bg-[#E8EDF3] py-10 text-black">
         <div className="mx-auto text-center px-4 sm:px-6 lg:px-12 max-w-4xl">
           <p className="text-4xl md:text-5xl font-bold mb-4 font-playfair text-black">
-            Ideas & Blog
+            Blogs
           </p>
           <p className="mb-8 text-gray-800 text-base sm:text-lg">
             Get inspired with our collection of articles, tips, and ideas
