@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { IoIosArrowForward } from "react-icons/io";
+import { Link } from "react-router-dom";
+
 import image1 from "../../assets/newPics/featuredcard.jpg";
 import image2 from "../../assets/newPics/featuredvendors.jpg";
 import image3 from "../../assets/newPics/featuredVendors1.png";
 import image4 from "../../assets/newPics/featuredVendors02.jpg";
-import { Link } from "react-router-dom";
 
 const vendors = [
   {
@@ -49,9 +50,20 @@ const vendors = [
     reviews: 156,
     price: "₹500 - ₹1,500 per plate",
   },
+  {
+    id: 5,
+    image: image3,
+    category: "Caterer",
+    name: "Delicious Catering",
+    location: "Hyderabad, India",
+    rating: 4.6,
+    reviews: 156,
+    price: "₹500 - ₹1,500 per plate",
+  },
 ];
 
-const FeaturedVendors = () => {
+
+const FeaturedVendors = ({ showAll = false }) => {
   const [favorites, setFavorites] = useState([]);
 
   const toggleFavorite = (id) => {
@@ -59,18 +71,26 @@ const FeaturedVendors = () => {
       prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
     );
   };
+  useEffect(() => {
+    window.scrollTo({ top: 0, category: 'top' })
+  })
+
+  const displayedVendors = showAll ? vendors : vendors.slice(0, 4);
 
   return (
-    <div className=" sm:px-6 md:px-10 lg:mx-4 xl:px-20 py-10">
-      <div className="flex flex-col sm:flex-row justify-between  items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-gray-800">Featured Vendors</h1>
-        <Link to="#" style={{textDecoration:'none'}} className="flex">
-         <p className="text-[#052038] items-center flex"> View All</p> <IoIosArrowForward className="ml-1 mt-1 text-[#052038]" />
-        </Link>
+    <div className=" px-4 md:px-10 lg:mx-4 xl:px-20 py-10">
+      <div className="flex flex- justify-between items-start sm:items-center mb-6 gap-4">
+        <h3 className=" font-semibold text-gray-800 font-serif">Featured Vendors</h3>
+        {!showAll && (
+          <Link style={{ textDecoration: 'none' }} to="/featurevendors" className="flex text-[#052038] hover:underline">
+            <p className="text-[#052038] hover:text-black">View All</p>
+            <IoIosArrowForward className="ml-1 mt-1 text-[#052038]" />
+          </Link>
+        )}
       </div>
 
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {vendors.map((vendor) => (
+        {displayedVendors.map((vendor) => (
           <div
             key={vendor.id}
             className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
@@ -94,7 +114,7 @@ const FeaturedVendors = () => {
             </div>
             <div className="p-4">
               <p className="text-sm text-gray-500 mb-1 font-playfair-display">{vendor.category}</p>
-              <h5 className="text-lg font-semibold text-gray-900 font-serif transition-colors break-words">
+              <h5 className="text-lg font-semibold text-gray-900 font-serif">
                 {vendor.name}
               </h5>
               <div className="flex items-center text-sm text-gray-500 mt-1">
