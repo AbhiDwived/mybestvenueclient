@@ -36,6 +36,8 @@ import Budget from '../pages/Auth/UserDashboad/Budget';
 import Inquiry from '../pages/Auth/UserDashboad/Inquiry';
 import SavedVendor from '../pages/Auth/UserDashboad/SavedVendor';
 import CheckList from '../pages/Auth/UserDashboad/CheckList';
+import Booking from '../pages/Auth/UserDashboad/Booking';
+
 
 // Planning Tools
 import PlanningTools from '../pages/PlanningTools/PlanningTools';
@@ -83,13 +85,14 @@ import PackagesAndFaqs from '../pages/Vendor/PackagesAndFaqs';
 import Portfolio from '../pages/Vendor/Portfolio';
 import VendorBlog from '../pages/Vendor/VendorBlog';
 import AddBlogPost from '../pages/Vendor/AddBlogPost';
-
+import Bookings from '../pages/Vendor/Bookings';
 //#################### Vendor Preview Profile components #########################
 import PreviewProfile from '../pages/Vendor/PreviewProfile/PreviewProfile';
 import PreviewProfileScreen from '../pages/Vendor/PreviewProfile/PreviewProfileScreen';
 import SimilarVendors from '../pages/Vendor/PreviewProfile/SimilarVendors';
 import CustomerReviews from '../pages/Vendor/PreviewProfile/CustomerReviews';
 import FaqQuestions from '../pages/Vendor/PreviewProfile/FaqQuestions';
+import VendorPreviewProfile from '../pages/Vendor/PreviewProfile/VendorPreviewProfile';
 
 // Admin Dashboard 
 import AdminLogin from '../pages/Auth/AdminLogin';
@@ -141,7 +144,7 @@ const index = () => {
                     {/* Home additional pages */}
                     <Route path='/BrowserVenues' element={<BrowserVenues />} />
                     <Route path='/discoverCategories' element={<DiscoverCategories />} />
-                    <Route path='/featurevendors' element={<FeatureVendors  showAll={true} />} /> {/* ✅ Fixed 'featureVendors' */}
+                    <Route path='/featurevendors' element={<FeatureVendors showAll={true} />} /> {/* ✅ Fixed 'featureVendors' */}
                     <Route path='/HowItWorks' element={<HowItWorks />} />
                     <Route path='/ProjectList' element={<ProjectList />} />
                     <Route path='/SuccessfullEvents' element={<SuccessfullEvents />} />
@@ -201,6 +204,7 @@ const index = () => {
                     <Route path="inquiry" element={<Inquiry />} />
                     <Route path="saved-vendor" element={<SavedVendor />} />
                     <Route path="check-list" element={<CheckList />} />
+                    <Route path="booking" element={<Booking />} />
                 </Route>
 
                 {/* Vendor Dashboard Protected Routes */}
@@ -227,8 +231,10 @@ const index = () => {
                     <Route path="faqs_Questions" element={<FaqQuestions />} />
                     <Route path="inquiry" element={<FaqQuestions />} />
                     <Route path="inquiryReply" element={<InquiryReply />} />
-                    <Route path="blogs" element={<VendorBlog/>} />
-                    <Route path="add-blog-post" element={<AddBlogPost/>} />
+                    <Route path="blogs" element={<VendorBlog />} />
+                    <Route path="add-blog-post" element={<AddBlogPost />} />
+                    <Route path="vendorpreview_profile" element={<VendorPreviewProfile />} />
+                    <Route path = "bookings" element = {<Bookings />} />
                 </Route>
 
                 {/* Admin Dashboard Protected Routes */}

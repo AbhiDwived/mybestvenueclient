@@ -154,6 +154,8 @@ const UserSignup = () => {
               />
             </div>
 
+
+
             {/* Password */}
             <div className="relative">
               <label htmlFor="password" className="block text-gray-700 mb-1">Password</label>
@@ -187,8 +189,36 @@ const UserSignup = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {/* Profile Photo Upload with Preview */}
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-1">Profile Picture</label>
+                <>
+                  {/* Preview Image */}
+                  {previewImage && (
+                    <img
+                      src={previewImage}
+                      alt="Profile Preview"
+                      className="w-16 h-16 mb-4 rounded-full object-cover border border-gray-300"
+                    />
+                  )}
+                  {/* File Input */}
+                  <div className="flex flex-col">
+                    <input
+                      id="profilePhoto"
+                      name="profilePhoto"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {formData.profilePhoto && (
+                      <p className="text-sm text-gray-500 mt-1">{formData.profilePhoto.name}</p>
+                    )}
+                  </div>
+                </>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -197,43 +227,6 @@ const UserSignup = () => {
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-
-            {/* Profile Photo Upload with Preview */}
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-1">Profile Picture</label>
-
-              <div className="flex flex-col space-y-2">
-                {/* Preview Image */}
-                {previewImage && (
-                  <img
-                    src={previewImage}
-                    alt="Profile Preview"
-                    className="h-24 w-24 object-cover border border-gray-300"
-                  />
-                )}
-
-                {/* Styled File Input */}
-                <label className="cursor-pointer w-max px-4 py-2 bg-[#0F4C81] text-white text-sm rounded-md hover:bg-[#0D3F6A] transition-all">
-                  Upload Image
-                  <input
-                    id="profilePhoto"
-                    name="profilePhoto"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleChange}
-                    className="hidden"
-                  />
-                </label>
-
-                {/* Filename */}
-                {formData.profilePhoto && (
-                  <p className="text-sm text-gray-500 truncate">
-                    Selected file: {formData.profilePhoto.name}
-                  </p>
-                )}
-              </div>
-            </div>
-
 
             {/* Terms Checkbox */}
             <div className="flex items-center space-x-2 mt-3">
@@ -245,11 +238,11 @@ const UserSignup = () => {
                 onChange={handleChange}
                 className="h-4 w-4 text-[#0F4C81] border-gray-300 rounded focus:ring-[#0F4C81]"
               />
-              <label htmlFor="termsAccepted" className="text-sm text-gray-600 cursor-pointer">
+              <label htmlFor="termsAccepted" className="text-sm text-gray-600 cursor-pointer mx-1">
                 I agree to the{' '}
-                <a href="/terms" className="text-[#0F4C81] hover:underline">Terms of Service</a>{' '}
+                <Link to="/terms" style={{ textDecoration: 'none' }} className="text-[#0F4C81] hover:underline">Terms of Service</Link>{' '}
                 and{' '}
-                <a href="/privacy" className="text-[#0F4C81] hover:underline">Privacy Policy</a>
+                <Link to="/privacy" style={{ textDecoration: 'none' }} className="text-[#0F4C81] hover:underline">Privacy Policy</Link>
               </label>
             </div>
 
@@ -266,7 +259,7 @@ const UserSignup = () => {
           {/* Already have an account */}
           <p className="text-center text-sm text-gray-600 mt-4">
             Already have an account?{' '}
-            <Link to="/user/login" className="text-[#0F4C81] font-medium hover:text-[#0D3F6A] hover:underline">
+            <Link to="/user/login" style={{ textDecoration: 'none' }} className="text-[#0F4C81] font-medium hover:text-[#0D3F6A] hover:underline">
               Log In
             </Link>
           </p>

@@ -1,20 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Bell, Lock, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { useUpdateProfileMutation } from "../../../features/auth/authAPI";
+import {
+  useUpdateProfileMutation,
+  useDeleteUserMutation,
+  useUpdatePasswordMutation,
+} from "../../../features/auth/authAPI";
 import { setCredentials } from "../../../features/auth/authSlice";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
   const authState = useSelector((state) => state.auth);
-  const user = authState.user
-    ? { ...authState.user, _id: authState.user.id }
-    : null;
+  const user = authState.user ? { ...authState.user, _id: authState.user.id } : null;
   const token = authState.token;
   const isAuthenticated = authState.isAuthenticated;
-  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const navigate = useNavigate();
+
+  // Mutation hooks
+  const [deleteUser] = useDeleteUserMutation();
+  const [updatePassword, { isLoading: isUpdatingPassword }] = useUpdatePasswordMutation();
+
+  // Backend URL
+  const backendURL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // Form Data
   const [formData, setFormData] = useState({
@@ -32,18 +43,21 @@ const UserProfile = () => {
   // Preview Image
   const [previewImage, setPreviewImage] = useState(
     user?.profilePhoto
-      ? `${backendURL}/${user.profilePhoto}`
+      ? user.profilePhoto.startsWith("data:") ||
+        user.profilePhoto.startsWith("http")
+        ? user.profilePhoto
+        : `${backendURL}/${user.profilePhoto.replace(/^\/+/, "")}`
       : null
   );
 
-  // Password Change
+  // Password Change State
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  // Notifications
+  // Notifications Toggle
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
     inquiryResponses: true,
@@ -57,6 +71,9 @@ const UserProfile = () => {
 
   // RTK Mutation
   const [triggerUpdateProfile, { isLoading }] = useUpdateProfileMutation();
+
+  // Modal state for delete confirmation
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Calculate days until wedding
   useEffect(() => {
@@ -90,15 +107,16 @@ const UserProfile = () => {
   const handleSaveChanges = async () => {
     try {
       if (!user?._id) {
-        toast.error("❌ User ID is missing. Please log in again.");
+        toast.error("User ID is missing. Please log in again.");
         return;
       }
-
       let finalPayload;
       if (formData.profilePhoto instanceof File) {
         finalPayload = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
-          finalPayload.append(key, value);
+          if (value !== undefined && value !== null) {
+            finalPayload.append(key, value);
+          }
         });
       } else {
         finalPayload = { ...formData };
@@ -114,25 +132,36 @@ const UserProfile = () => {
         _id: response.user.id,
       };
 
-      dispatch(
-        setCredentials({
-          token: localStorage.getItem("token"),
-          user: normalizedUser,
-        })
-      );
+      dispatch(setCredentials({
+        token: localStorage.getItem("token"),
+        user: normalizedUser,
+      }));
 
       if (normalizedUser.profilePhoto) {
-        const photoURL = `${backendURL}/${normalizedUser.profilePhoto}`;
+        const photoURL = normalizedUser.profilePhoto.startsWith("http")
+          ? normalizedUser.profilePhoto
+          : `${backendURL}/${normalizedUser.profilePhoto.replace(/^\/+/, "")}`;
         setPreviewImage(photoURL);
       }
 
-      toast.success("✅ Profile updated successfully!");
+      toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Update failed:", error);
-      toast.error(
-        `❌ Failed to update profile: ${error?.data?.message || "Unknown error"
-        }`
-      );
+      toast.error(`Failed to update profile: ${error?.data?.message || "Unknown error"}`);
+    }
+  };
+
+  // Delete account handler
+  const handleDelete = async () => {
+    try {
+      await deleteUser({ userId: user._id }).unwrap();
+      toast.success("Account deleted successfully!");
+      setTimeout(() => {
+        navigate("/user/login");
+      }, 1000);
+    } catch (err) {
+      toast.error("Failed to delete account.");
+      console.error(err);
     }
   };
 
@@ -144,6 +173,43 @@ const UserProfile = () => {
   // Toggle notifications
   const handleNotificationToggle = (setting) => {
     setNotifications((prev) => ({ ...prev, [setting]: !prev[setting] }));
+  };
+
+  // Handle password update
+  const handlePasswordUpdate = async () => {
+    try {
+      if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+        toast.error("All password fields are required");
+        return;
+      }
+
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        toast.error("New password and confirm password do not match");
+        return;
+      }
+
+      if (passwordData.newPassword.length < 6) {
+        toast.error("New password must be at least 6 characters long");
+        return;
+      }
+
+      await updatePassword({
+        userId: user._id,
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      }).unwrap();
+
+      // Clear password fields
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      toast.success("Password updated successfully!");
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to update password");
+    }
   };
 
   if (!isAuthenticated) {
@@ -181,9 +247,7 @@ const UserProfile = () => {
                   <input
                     type={field === "weddingDate" ? "date" : "text"}
                     value={formData[field]}
-                    onChange={(e) =>
-                      handleInputChange(field, e.target.value)
-                    }
+                    onChange={(e) => handleInputChange(field, e.target.value)}
                     className="w-full mt-1 p-2 border rounded-md"
                   />
                 </div>
@@ -198,9 +262,7 @@ const UserProfile = () => {
                   <input
                     type="text"
                     value={formData[field]}
-                    onChange={(e) =>
-                      handleInputChange(field, e.target.value)
-                    }
+                    onChange={(e) => handleInputChange(field, e.target.value)}
                     className="w-full mt-1 p-2 border rounded-md"
                   />
                 </div>
@@ -214,7 +276,7 @@ const UserProfile = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="w-full mt-1"
+                className="w-full mt-1 border p-2 rounded-md"
               />
             </div>
             <button
@@ -232,28 +294,25 @@ const UserProfile = () => {
             <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-800">
               <Lock className="h-5 w-5" /> Account Settings
             </h2>
-            {["currentPassword", "newPassword", "confirmPassword"].map(
-              (field) => (
-                <div key={field}>
-                  <label className="block text-sm font-medium text-gray-700 capitalize">
-                    {field.replace(/([A-Z])/g, " $1")}
-                  </label>
-                  <input
-                    type="password"
-                    value={passwordData[field]}
-                    onChange={(e) =>
-                      handlePasswordChange(field, e.target.value)
-                    }
-                    className="w-full mt-1 p-2 border rounded-md"
-                  />
-                </div>
-              )
-            )}
+            {["currentPassword", "newPassword", "confirmPassword"].map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-700 capitalize">
+                  {field.replace(/([A-Z])/g, " $1")}
+                </label>
+                <input
+                  type="password"
+                  value={passwordData[field]}
+                  onChange={(e) => handlePasswordChange(field, e.target.value)}
+                  className="w-full mt-1 p-2 border rounded-md"
+                />
+              </div>
+            ))}
             <button
-              onClick={() => toast.info("🔐 Updating password...")}
-              className="bg-[#0F4C81] hover:bg-[#0f4c81ea] text-white px-6 py-2 w-full sm:w-auto rounded-md"
+              onClick={handlePasswordUpdate}
+              disabled={isUpdatingPassword}
+              className="bg-[#0F4C81] hover:bg-[#0f4c81ea] text-white px-6 py-2 w-full sm:w-auto rounded-md disabled:opacity-50"
             >
-              Update Password
+              {isUpdatingPassword ? "Updating..." : "Update Password"}
             </button>
             <hr />
             <div>
@@ -264,11 +323,8 @@ const UserProfile = () => {
                 This will delete your account permanently.
               </p>
               <button
-                onClick={() =>
-                  window.confirm("Are you sure?") &&
-                  toast.info("🗑️ Deleting account...")
-                }
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md"
+                onClick={() => setShowDeleteModal(true)}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
               >
                 Delete Account
               </button>
@@ -299,7 +355,6 @@ const UserProfile = () => {
               Save Notification Settings
             </button>
           </div>
-
           <div className="bg-gradient-to-br from-pink-50 to-purple-50 p-6 rounded-lg shadow-md space-y-4">
             <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-800">
               <Calendar className="h-5 w-5 text-pink-500" /> Wedding Countdown
@@ -333,6 +388,33 @@ const UserProfile = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Confirm Deletion</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to delete your account permanently? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 "
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );

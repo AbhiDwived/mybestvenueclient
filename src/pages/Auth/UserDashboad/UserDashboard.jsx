@@ -7,10 +7,12 @@ import GuestList from "../UserDashboad/GuestList";
 import SavedVendors from "../UserDashboad/SavedVendor";
 import Inquiries from "../UserDashboad/Inquiry";
 import ProfileTab from "../UserDashboad/UserProfile";
+import Booking from "../UserDashboad/Booking";
 
 const tabs = [
     { value: "check-list", label: "Checklist", component: Checklist },
     { value: "budget", label: "Budget", component: Budget },
+    { value: "booking", label: "Booking", component: Booking },
     { value: "guest-list", label: "Guest", component: GuestList },
     { value: "saved-vendor", label: "Vendors", component: SavedVendors },
     { value: "inquiry", label: "Inquiries", component: Inquiries },
@@ -61,15 +63,15 @@ const UserDashboard = ({ profile }) => {
 
                 {/* Tabs */}
                 <div className="lg:mt-7">
-                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-20 gap-3 bg-gray-100 py-1">
+                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-9 lg:grid-cols-20 gap-3 bg-gray-100 py-1">
                         {tabs.map(({ value, label }) => (
                             <button
                                 key={value}
                                 onClick={() => setActiveTab(value)}
                                 style={{ borderRadius: '5px' }}
                                 className={`py-1 transition-colors duration-200 capitalize w-20 ${activeTab === value
-                                        ? "text-[#9ca3af]  "
-                                        : "text-gray-500 hover:text-black hover:bg-white "
+                                    ? "text-[#9ca3af]  "
+                                    : "text-gray-500 hover:text-black hover:bg-white "
                                     }`}
                             >
                                 {label}

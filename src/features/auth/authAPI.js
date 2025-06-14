@@ -78,6 +78,15 @@ baseQuery: fetchBaseQuery({
       }),
     }),
 
+    // Update Password
+    updatePassword: builder.mutation({
+      query: ({ userId, currentPassword, newPassword }) => ({
+        url: `/user/update-password/${userId}`,
+        method: 'PUT',
+        body: { currentPassword, newPassword },
+      }),
+    }),
+
     // Update Profile
     updateProfile: builder.mutation({
       query: ({ userId, profileData }) => ({
@@ -90,7 +99,7 @@ baseQuery: fetchBaseQuery({
     // Delete User
     deleteUser: builder.mutation({
       query: ({ userId }) => ({
-        url: `/user/delete-user/${userId}`,
+        url: `/user/delete/${userId}`,
         method: 'DELETE',
       }),
     }),
@@ -134,6 +143,7 @@ export const {
   useForgotPasswordMutation,
   useVerifyPasswordResetMutation,
   useResetPasswordMutation,
+  useUpdatePasswordMutation,
   useUpdateProfileMutation,
   useDeleteUserMutation,
   useLogoutUserMutation,

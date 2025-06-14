@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiMessageSquare } from "react-icons/fi";
 import { MdOutlineCalendarMonth } from "react-icons/md";
 import DatePicker from 'react-datepicker';
@@ -11,16 +11,20 @@ import PackagesAndFaqs from './PackagesAndFaqs';
 import Inquiries from './Inquiries/Inquiries';
 import ReviewSection from './Reviews';
 import Analytics from './Analytics';
-import IdeaBlogs from './VendorBlog';
-// import EditCoverPhoto from './EditCoverPhoto';
-import { Link } from 'react-router-dom';
-
+import Bookings from './Bookings';
+import VendorProfileModal from "../Vendor/PreviewProfile/VendorPreviewProfile";
 import { useSelector } from 'react-redux';
 
 
+
+
 const Dashboard = () => {
+
+
+  const [showModal, setShowModal] = useState(false);
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
+  console.log(" Data from store:", vendor);
 
   if (!isAuthenticated) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
@@ -36,7 +40,7 @@ const Dashboard = () => {
   };
 
   // Define tabs
-  const tabs = ['Overview', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews', 'Analytics', 'IdeaBlog'];
+  const tabs = ['Overview', 'Bookings', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews', 'Analytics'];
 
   // State for events and dropdown pickers
   const [events, setEvents] = useState([
@@ -95,6 +99,7 @@ const Dashboard = () => {
     }
   ];
 
+
   const upcomingWeddings = [
     {
       name: "Arjun & Meera Kumar",
@@ -105,6 +110,7 @@ const Dashboard = () => {
       date: "Saturday, December 7, 2024",
     }
   ];
+
 
   return (
     <div className="p-6 bg-white min-h-screen text-gray-800 font-serif">
@@ -137,11 +143,16 @@ const Dashboard = () => {
                 </span>
               </div>
             </div>
-            <Link to="/vendor/preview_profile">
-              <button className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm w-full sm:w-auto text-center">
-                Preview Profile
-              </button>
-            </Link>
+
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm w-full sm:w-auto text-center">
+              Preview Profile
+            </button>
+
+            <VendorProfileModal show={showModal} onClose={() => setShowModal(false)} />
+
           </div>
 
         </div>
@@ -205,7 +216,17 @@ const Dashboard = () => {
                 )}
                 <div className="mt-4">
 
-                 
+                  <style jsx>{`
+                     .react-calendar {
+                       width: 100% !important;
+                       max-width: 100%;
+                     }
+                   
+                     .react-calendar__viewContainer,
+                     .react-calendar__month-view {
+                       width: 100%;
+                     }
+                   `}</style>
 
                   <Calendar
                     className="w-full"
@@ -268,6 +289,13 @@ const Dashboard = () => {
             {/* Add Edit Profile form here */}
           </div>
         )}
+        {activeTab === 'Bookings' && (
+          <div className="col-span-3 bg-white   w-full">
+
+            <Bookings />
+
+          </div>
+        )}
 
         {activeTab === 'Portfolio' && (
           <div className="col-span-3 bg-white">
@@ -300,12 +328,6 @@ const Dashboard = () => {
 
           </div>
         )}
-        {activeTab === 'IdeaBlog' && (
-          <div className="col-span-3 bg-white p-4 rounded border">
-            <IdeaBlogs />
-
-          </div>
-        )}
       </div>
 
       {activeTab === 'Overview' && (
@@ -335,11 +357,27 @@ const Dashboard = () => {
                   />
                 </div>
               )}
+
+
+
             </div>
           ))}
         </div>
       )}
+
+
+
+
+      {showModal && (
+        <VendorProfileModal show={showModal} onClose={() => setShowModal(false)} />
+      )}
+
+
+
     </div>
+
+
+
   );
 };
 
