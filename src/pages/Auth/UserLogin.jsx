@@ -8,6 +8,7 @@ import { Eye, EyeOff } from 'react-feather';
 import 'react-toastify/dist/ReactToastify.css';
 
 const UserLogin = () => {
+  window.scrollTo({top:0, category:"top"})
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);

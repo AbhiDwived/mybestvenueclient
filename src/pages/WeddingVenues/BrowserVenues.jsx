@@ -15,6 +15,7 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
   const [activeLocation, setActiveLocation] = useState("All India");
   const [scrollIndex, setScrollIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(5);
+  window.scrollTo({top:0, category:"top"})
 
   useEffect(() => {
     const handleResize = () => {
@@ -47,9 +48,17 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
     loc.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const maxIndex = Math.max(0, filteredLocations.length - visibleCount);
-  const handlePrev = () => setScrollIndex((prev) => Math.max(prev - 1, 0));
-  const handleNext = () => setScrollIndex((prev) => Math.min(prev + 1, maxIndex));
+  const handlePrev = () => {
+    setScrollIndex((prev) =>
+      prev === 0 ? filteredLocations.length - visibleCount : prev - 1
+    );
+  };
+
+  const handleNext = () => {
+    setScrollIndex((prev) =>
+      prev >= filteredLocations.length - visibleCount ? 1 : prev + 1
+    );
+  };
 
   return (
     <div className="w-full my-6 lg:px-20">

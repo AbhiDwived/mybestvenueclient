@@ -24,6 +24,7 @@ const UserSignup = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
+    window.scrollTo({top:0, category:"top"})
     const { name, value, type, checked, files } = e.target;
 
     if (type === 'checkbox') {

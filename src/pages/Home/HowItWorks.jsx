@@ -49,7 +49,7 @@ const HowItWorks = () => {
 
         <div className="mt-10">
           <Link
-            to="/vendors"
+            to="/Wedding_Venues_city"
             style={{textDecoration:'none'}}
             className="inline-block bg-[#0f4c81] text-white px-4 py-2 rounded-md hover:bg-[#0f4c81e7] transition text-md sm:text-base"
           >
@@ -68,18 +68,18 @@ const HowItWorks = () => {
         </p>
         <div className="flex flex-row sm:flex-row justify-center items-center gap-2 mt-4">
           <Link
-            to="/register"
+            to="/user/signup"
              style={{textDecoration:'none'}}
             className="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-100 transition text-md sm:text-base"
           >
             Sign Up Now
           </Link>
           <Link
-            to="/venues"
+            to="/user/login"
              style={{textDecoration:'none'}}
             className="border border-white text-white px-4 py-2 rounded-md hover:bg-white/10 transition text-md sm:text-base"
           >
-            Browse Venues
+            SignIn
           </Link>
         </div>
       </div>

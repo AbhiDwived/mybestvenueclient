@@ -49,6 +49,18 @@ import HashtagGenerator from '../pages/PlanningTools/HashtagGenerator';
 
 // Corporate
 import Corporate from '../pages/Corporate/Corporate';
+import Conference from '../pages/Corporate/Meeting/Conference';
+import Executive from '../pages/Corporate/Meeting/Executive';
+import Training from '../pages/Corporate/Meeting/Training';
+import LargeAuditorium from '../pages/Corporate/Conference/LargeAuditorium';
+import Breakout from '../pages/Corporate/Conference/Breakout';
+import Pannel from '../pages/Corporate/Conference/Pannel';
+import Outdoor from '../pages/Corporate/TeamBilding/Outdoor';
+import Indoor from '../pages/Corporate/TeamBilding/Indoor';
+import Leadership from '../pages/Corporate/TeamBilding/Leadership';
+import AwardNight from '../pages/Corporate/Corporate/AwardNight';
+import Products from '../pages/Corporate/Corporate/Products';
+import Networking from '../pages/Corporate/Corporate/Networking';
 
 // Idea & Blogs
 import IdeaBlog from '../pages/Idea&Blog/IdeaBlog';
@@ -112,6 +124,8 @@ import CategorySelector from '../pages/Location/CategorySelector';
 import VendorListPage from '../pages/Location/VendorListPage';
 
 
+
+
 const index = () => {
     return (
         <Router>
@@ -135,6 +149,18 @@ const index = () => {
 
                     {/* Corporate */}
                     <Route path="/corporate" element={<Corporate />} />
+                    <Route path="/conference" element={<Conference />} />
+                    <Route path="/executive" element={<Executive />} />
+                    <Route path="/training" element={<Training />} />
+                    <Route path="/large-auditorium" element={<LargeAuditorium />} />
+                    <Route path="/breakout-room" element={<Breakout />} />
+                    <Route path="/pannel-discussion" element={<Pannel />} />
+                    <Route path="/outdoor" element={<Outdoor />} />
+                    <Route path="/indoor" element={<Indoor />} />
+                    <Route path="/leadership" element={<Leadership />} />
+                    <Route path="/award-night" element={<AwardNight />} />
+                    <Route path="/products" element={<Products />} />
+                    <Route path="/networking" element={<Networking />} />
 
                     {/* Wedding Vendor public page */}
                     <Route path="/wedding-vendor" element={<WeedingVendor />} />
@@ -234,7 +260,7 @@ const index = () => {
                     <Route path="blogs" element={<VendorBlog />} />
                     <Route path="add-blog-post" element={<AddBlogPost />} />
                     <Route path="vendorpreview_profile" element={<VendorPreviewProfile />} />
-                    <Route path = "bookings" element = {<Bookings />} />
+                    <Route path="bookings" element={<Bookings />} />
                 </Route>
 
                 {/* Admin Dashboard Protected Routes */}
