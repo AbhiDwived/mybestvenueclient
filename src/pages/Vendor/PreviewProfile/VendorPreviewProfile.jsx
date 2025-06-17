@@ -10,7 +10,8 @@ import { FiFacebook, FiTwitter, FiShield } from "react-icons/fi";
 import { BsInstagram } from "react-icons/bs";
 import { FaCreditCard } from "react-icons/fa6";
 import { useSelector } from 'react-redux';
-const VendorProfileModal = ({ show, onClose }) => {
+
+const VendorPreviewProfile = ({ show, onClose }) => {
 
     // const [coverImage, setCoverImage] = useState("");
     const serverURL = "http://localhost:5000"
@@ -109,7 +110,16 @@ const VendorProfileModal = ({ show, onClose }) => {
                         <ul className="text-sm space-y-1 text-gray-700" style={{ paddingLeft: "20px" }}>
                             <li><span className="inline-block align-middle">< MdEmail /></span> <span className="inline-block align-middle">{vendor.email || "dsyhosp@gmail.com"}</span></li>
                             <li><span className="inline-block align-middle">< FaPhoneAlt /></span> <span className="inline-block align-middle">{vendor.phone || "dsyhosp@gmail.com"}</span></li>
-                            <li><span className="inline-block align-middle">< IoLocationOutline /></span> <span className="inline-block align-middle">{vendor.address || "dsyhosp@gmail.com"}</span></li>
+                            <li>
+                                <span className="inline-block align-middle">< IoLocationOutline /></span> 
+                                <span className="inline-block align-middle">
+                                    {vendor.address ? (
+                                        typeof vendor.address === 'object' ? 
+                                            `${vendor.address.street || ''}, ${vendor.address.city || ''}, ${vendor.address.state || ''} ${vendor.address.zipCode || ''}`
+                                            : vendor.address
+                                    ) : "Delhi, India"}
+                                </span>
+                            </li>
                             <Link to="https://mybestvenue.com" ><li><span className="inline-block align-middle">< FiGlobe /></span> <span className="inline-block align-middle text-[#0f4c81]"> MyBest Venue</span></li></Link>
 
                         </ul>
@@ -261,4 +271,4 @@ const VendorProfileModal = ({ show, onClose }) => {
     );
 };
 
-export default VendorProfileModal;
+export default VendorPreviewProfile;

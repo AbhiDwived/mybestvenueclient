@@ -12,24 +12,17 @@ import Inquiries from './Inquiries/Inquiries';
 import ReviewSection from './Reviews';
 import Analytics from './Analytics';
 import Bookings from './Bookings';
-import VendorProfileModal from "../Vendor/PreviewProfile/VendorPreviewProfile";
+import VendorPreviewProfile from "./PreviewProfile/VendorPreviewProfile";
 import { useSelector } from 'react-redux';
 
-
-
-
 const Dashboard = () => {
-
-
   const [showModal, setShowModal] = useState(false);
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  console.log(" Data from store:", vendor);
 
   if (!isAuthenticated) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
   }
-
 
   // State for active tab
   const [activeTab, setActiveTab] = useState('Overview');
@@ -99,7 +92,6 @@ const Dashboard = () => {
     }
   ];
 
-
   const upcomingWeddings = [
     {
       name: "Arjun & Meera Kumar",
@@ -111,12 +103,10 @@ const Dashboard = () => {
     }
   ];
 
-
   return (
     <div className="p-6 bg-white min-h-screen text-gray-800 font-serif">
 
       {/* Header */}
-
       <div className="mb-2 px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 
@@ -124,7 +114,6 @@ const Dashboard = () => {
           <div>
             <h1 className="text-xl md:text-2xl font-bold font-serif">
               {vendor?.businessName || 'Dream Wedding Photography'}
-              {/* {vendorsData.BusinesName } */}
             </h1>
             <p className="text-sm text-gray-600 font-serif">
               {vendor?.vendorType || 'Photographer'} • {vendor?.Address || 'Delhi, India'}
@@ -144,23 +133,20 @@ const Dashboard = () => {
               </div>
             </div>
 
-
             <button
               onClick={() => setShowModal(true)}
               className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm w-full sm:w-auto text-center">
               Preview Profile
             </button>
 
-            <VendorProfileModal show={showModal} onClose={() => setShowModal(false)} />
+            <VendorPreviewProfile show={showModal} onClose={() => setShowModal(false)} />
 
           </div>
 
         </div>
       </div>
 
-
       {/* Tabs */}
-
       <div className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 bg-[#f5f8fb] p-2 rounded-md mb-6 text-sm">
         {tabs.map((tab, i) => (
           <button
@@ -173,7 +159,6 @@ const Dashboard = () => {
           </button>
         ))}
       </div>
-
 
       {/* Dynamic Content Based on Active Tab */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -215,8 +200,8 @@ const Dashboard = () => {
                   />
                 )}
                 <div className="mt-4">
-
-                  <style jsx>{`
+                  <style>
+                    {`
                      .react-calendar {
                        width: 100% !important;
                        max-width: 100%;
@@ -226,7 +211,8 @@ const Dashboard = () => {
                      .react-calendar__month-view {
                        width: 100%;
                      }
-                   `}</style>
+                   `}
+                  </style>
 
                   <Calendar
                     className="w-full"
@@ -278,22 +264,14 @@ const Dashboard = () => {
           </>
         )}
 
-
-
-        {/* Add similar conditional rendering for other tabs */}
         {activeTab === 'Edit Profile' && (
           <div className="col-span-3 bg-white   w-full">
-
             <EditProfile />
-            {/* <EditCoverPhoto/> */}
-            {/* Add Edit Profile form here */}
           </div>
         )}
         {activeTab === 'Bookings' && (
           <div className="col-span-3 bg-white   w-full">
-
             <Bookings />
-
           </div>
         )}
 
@@ -305,7 +283,6 @@ const Dashboard = () => {
 
         {activeTab === 'Packages & FAQs' && (
           <div className="col-span-3 bg-white ">
-
             <PackagesAndFaqs />
           </div>
         )}
@@ -325,7 +302,6 @@ const Dashboard = () => {
         {activeTab === 'Analytics' && (
           <div className="col-span-3 bg-white p-4 rounded border">
             <Analytics />
-
           </div>
         )}
       </div>
@@ -348,7 +324,6 @@ const Dashboard = () => {
               </div>
               <button className="border border-gray-300 rounded px-4 py-1">Contact Client</button>
 
-              {/* Dropdown DatePicker */}
               {showDatePickerForWedding === index && (
                 <div className="absolute top-full left-0 z-10 mt-1 shadow-lg bg-white p-2 rounded">
                   <DatePicker
@@ -357,27 +332,11 @@ const Dashboard = () => {
                   />
                 </div>
               )}
-
-
-
             </div>
           ))}
         </div>
       )}
-
-
-
-
-      {showModal && (
-        <VendorProfileModal show={showModal} onClose={() => setShowModal(false)} />
-      )}
-
-
-
     </div>
-
-
-
   );
 };
 

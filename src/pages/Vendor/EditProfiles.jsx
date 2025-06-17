@@ -31,7 +31,7 @@ const EditProfile = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [website, setWebsite] = useState('');
-  const [coverImage, setCoverImage] = useState(coverimage);
+  const [coverImage, setCoverImage] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [contactName, setcontactName] = useState('');
 
@@ -53,17 +53,11 @@ const EditProfile = () => {
       setContactPhone(vendor.phone || '+91 9999999999');
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
-
-      if (vendor.profilePicture) {
-        setCoverImage(vendor.profilePicture || coverimage);
-      } else {
-        setCoverImage(coverimage); // fallback if none from server
-      }
-
+      setCoverImage(vendor.profilePicture || null);
     }
   }, [vendor]);
 
-  const prepareFormData = (file) => {
+  const prepareFormData = (imageFile = null) => {
     const formData = new FormData();
     formData.append("businessName", businessName);
     formData.append("vendorType", category);
@@ -82,8 +76,17 @@ const EditProfile = () => {
     formData.append("isApproved", true);
     formData.append("contactName", contactName);
 
-    if (file) {
-      formData.append("profilePicture", file);
+    // If a new image file is provided, use it
+    if (imageFile) {
+      formData.append("profilePicture", imageFile);
+    }
+    // If there's a selected file but no new image file provided, use the selected file
+    else if (selectedFile) {
+      formData.append("profilePicture", selectedFile);
+    }
+    // If there's an existing image URL, preserve it
+    else if (vendor.profilePicture) {
+      formData.append("profilePicture", vendor.profilePicture);
     }
 
     return formData;
@@ -95,10 +98,14 @@ const EditProfile = () => {
     if (!vendorId) return alert("Vendor ID missing.");
 
     try {
-      const formData = prepareFormData(selectedFile); // include image if selected
-
+      const formData = prepareFormData();
       const res = await updateProfile({ vendorId, profileData: formData }).unwrap();
       const updatedVendor = res.vendor || res;
+
+      // Only update the image state if a new image was actually returned
+      if (updatedVendor.profilePicture && updatedVendor.profilePicture !== coverImage) {
+        setCoverImage(updatedVendor.profilePicture);
+      }
 
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
       alert("Vendor Record updated successfully");
@@ -113,22 +120,31 @@ const EditProfile = () => {
       return;
     }
 
-    const imageUrl = URL.createObjectURL(file);
-    setCoverImage(imageUrl);
-    setSelectedFile(file);
-
     try {
-      const formData = prepareFormData(file); // send full data + image
+      // Create a local preview immediately
+      const localPreview = URL.createObjectURL(file);
+      setSelectedFile(file);
+      setCoverImage(localPreview);
 
+      // Prepare and send the update
+      const formData = prepareFormData(file);
       const res = await updateProfile({ vendorId, profileData: formData }).unwrap();
-      const updatedVendor = res.vendor;
+      const updatedVendor = res.vendor || res;
+      
+      // Update with the server path
+      if (updatedVendor.profilePicture) {
+        setCoverImage(updatedVendor.profilePicture);
+        setSelectedFile(null); // Clear selected file after successful upload
+      }
+      
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
-      setCoverImage(updatedVendor.profilePicture);
-
       alert("Profile image updated successfully");
     } catch (err) {
       console.error("Error uploading image:", err);
       alert("Failed to update profile image");
+      // Revert to previous image on error
+      setCoverImage(vendor.profilePicture || null);
+      setSelectedFile(null);
     }
   };
 
@@ -189,8 +205,15 @@ const EditProfile = () => {
             <h4>Cover Image</h4>
             <p className="text-muted small">This will be displayed as your profile banner</p>
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
-
-              {vendor.profilePicture ? <img src={serverURL + coverImage} className="w-100 h-100 object-fit-cover" alt="Cover" /> : <img src={coverImage} className="w-100 h-100 object-fit-cover" alt="Cover" />}
+              <img 
+                src={coverImage ? (coverImage.startsWith('data:') ? coverImage : `${serverURL}${coverImage}`) : coverimage} 
+                className="w-100 h-100 object-fit-cover" 
+                alt="Cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = coverimage; // Fallback to default image
+                }}
+              />
 
               <div
                 className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
@@ -241,7 +264,7 @@ const EditProfile = () => {
                 <RiCheckboxCircleLine color='green' size={20} /><span className='ms-2'>Portfolio (6/8)</span>
               </li>
               <li className="d-flex align-items-center mb-2">
-                <FaExclamationCircle color='#ffff4d' size={20} /><span className='ms-2'>FAQs (2/5 recommended)</span>
+                <RiCheckboxCircleLine color='green' size={20} /><span className='ms-2'>FAQs (2/5 recommended)</span>
               </li>
             </ul>
           </div>

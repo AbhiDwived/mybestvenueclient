@@ -55,14 +55,13 @@ const checklistData = {
 };
 
 
-
 const WeddingChecklist = () => {
   const navigate = useNavigate();
   const [completedTasks, setCompletedTasks] = useState([]);
-
+  window.scrollTo({ top: 0, category: "top" })
   const totalTasks = Object.values(checklistData).flat().length;
   const progress = Math.round((completedTasks.length / totalTasks) * 100);
- window.scrollTo({ top: 0, category: "top" })
+
   const toggleTask = (task) => {
     setCompletedTasks((prev) =>
       prev.includes(task)
@@ -70,6 +69,7 @@ const WeddingChecklist = () => {
         : [...prev, task]
     );
   };
+
 
   return (
     <>
@@ -97,7 +97,7 @@ const WeddingChecklist = () => {
 
       <div className=" mx-auto p-3 bg-gray-100">
         {/* Progress Header */}
-        <div className=" bg-amber-50 mx-80">
+        <div className=" bg-amber-50 ">
           <div className="bg-gray-50 p-6 rounded shadow-md mb-6">
             <h2 className="text-xl font-semibold text-center text-green-700">
               ✓ Your Progress

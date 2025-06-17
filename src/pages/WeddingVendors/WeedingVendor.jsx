@@ -52,7 +52,7 @@ export default function WeddingVendor() {
   const location = useLocation();
   const initialCategory = location.state?.category || null;
   const combinedCategories = [...vendorCategories, ...additionalServices];
-
+  window.scrollTo({ top: 0, category: "top" })
   // Filtered categories based on active tab and search term
   const filteredCategories = searchTerm
     ? combinedCategories.filter(({ title }) =>
@@ -152,7 +152,6 @@ export default function WeddingVendor() {
             </div>
           </div>
 
-          {/* Category Grid */}
           {/* Category Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 py-2 lg:ml-10">
             {filteredCategories.length > 0 ? (
