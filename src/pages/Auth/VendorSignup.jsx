@@ -101,7 +101,7 @@ const VendorSignup = () => {
       <div className="w-full max-w-md">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-1">Create Vendor Account</h2>
         <p className="text-center text-sm text-gray-500 mb-6">
-          Join WeddingWire to showcase your services, connect with engaged couples, and grow your business.
+          Join myBestVenue to showcase your services, connect with engaged couples, and grow your business.
         </p>
 
         <div className="bg-white p-8 rounded-lg shadow-md">

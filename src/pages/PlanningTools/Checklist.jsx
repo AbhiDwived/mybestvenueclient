@@ -62,7 +62,7 @@ const WeddingChecklist = () => {
 
   const totalTasks = Object.values(checklistData).flat().length;
   const progress = Math.round((completedTasks.length / totalTasks) * 100);
-
+ window.scrollTo({ top: 0, category: "top" })
   const toggleTask = (task) => {
     setCompletedTasks((prev) =>
       prev.includes(task)

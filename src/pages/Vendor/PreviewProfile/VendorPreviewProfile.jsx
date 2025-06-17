@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaFacebookF, FaInstagram, FaLinkedinIn, FaPhoneAlt, FaCheckCircle } from 'react-icons/fa';
+import {  FaLinkedinIn, FaPhoneAlt,  } from 'react-icons/fa';
 import { MdEmail } from "react-icons/md";
 import { IoLocationOutline } from "react-icons/io5";
 import { HiOutlineCalendar } from 'react-icons/hi';
@@ -9,8 +9,21 @@ import { Link } from 'react-router-dom';
 import { FiFacebook, FiTwitter, FiShield } from "react-icons/fi";
 import { BsInstagram } from "react-icons/bs";
 import { FaCreditCard } from "react-icons/fa6";
+import { useSelector } from 'react-redux';
 const VendorProfileModal = ({ show, onClose }) => {
+
+    // const [coverImage, setCoverImage] = useState("");
+    const serverURL = "http://localhost:5000"
+
+    const vendor = useSelector((state) => state.vendor.vendor);
+    const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
+
+    // console.log(" Data from store editttt:", vendor);
+    // console.log(" Data from servvvv:", vendor.serviceAreas);
     if (!show) return null;
+    if (!isAuthenticated) {
+        return <h5 className='text-gray-600 font-bold'>You are not logged in.</h5>;
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex justify-center items-center z-50 p-4 font-serif">
@@ -28,23 +41,32 @@ const VendorProfileModal = ({ show, onClose }) => {
                     {/* Top Section - Flex in row on md */}
                     <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
                         {/* Profile Image */}
-                        <div className="w-24 h-24 rounded-full bg-gray-200 flex-shrink-0" />
+
+
+
+                        <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                            {vendor?.profilePicture ? (
+                                <img
+                                    src={`${serverURL}${vendor.profilePicture}`}
+                                    alt="Vendor"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">No Image</div>
+                            )}
+                        </div>
+
 
                         {/* Details */}
                         <div className="flex-1 space-y-2">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                <h2 className="text-2xl font-semibold text-gray-900">DSY Hospitality Private limited</h2>
-                                {/* <div className="flex space-x-2 mt-2 sm:mt-0 ">
-                                    <span className="text-sm px-3 py-1 rounded-full bg-[#0f4c81] text-white">Active</span>
-                                    <span className="text-sm px-3 py-1 rounded-full bg-white text-green-700 flex items-center gap-1 border-2 border-green">
-                                        <FiShield className="text-green-600" size={16} />
-                                        Verified
-                                    </span>
-                                    <span className="text-sm px-3 py-1 rounded-full  text-[#0f4c81] border-2 border-[#0f4c81]">Approved</span>
-                                </div> */}
+                                <h2 className="text-2xl font-semibold text-gray-900">  {vendor.businessName || " DSY Hospitality Private limited"}</h2>
+
                                 <div className="flex flex-wrap justify-start gap-2 mt-2 sm:mt-0 w-full">
-                                    <span className="text-sm px-3 py-1 rounded-full bg-[#0f4c81] text-white whitespace-nowrap">
-                                        Active
+                                    <span className="text-sm px-3 py-1 rounded-full text-white whitespace-nowrap "
+                                        style={{ backgroundColor: vendor.status === "Active" ? "#34C759" : "#0f4c81" }}
+                                    >
+                                        {vendor.status || "InActive"}
                                     </span>
 
                                     <span className="text-sm px-3 py-1 rounded-full bg-white text-green-700 flex items-center gap-1 border-2 border-green-600 whitespace-nowrap">
@@ -59,8 +81,8 @@ const VendorProfileModal = ({ show, onClose }) => {
 
                             </div>
 
-                            <p className="text-md text-gray-500">Hospitality</p>
-                            <p className="text-md text-gray-600">Contact: Navneet Yadav</p>
+                            <p className="text-md text-gray-500">{vendor.vendorType || "Hospitality"}</p>
+                            <p className="text-md text-gray-600">Contact: {vendor.phone || "Navneet Yadav"}</p>
 
                             <div className="flex items-center text-md text-gray-500">
                                 <HiOutlineCalendar className="mr-1" />
@@ -73,6 +95,7 @@ const VendorProfileModal = ({ show, onClose }) => {
 
                     {/* Description at the bottom from full start */}
                     <p className="text-md text-gray-700 text-left font-serif">
+                        {vendor.description || "DSY Hospitality Private limited is a leading provider of"}
                         Premium hospitality services for weddings and corporate events. We specialize in creating
                         memorable experiences with our professional team and state-of-the-art facilities.
                     </p>
@@ -84,9 +107,9 @@ const VendorProfileModal = ({ show, onClose }) => {
                     <div className="border p-4 rounded">
                         <h4 className="font-bold text-md mb-2">Contact Information</h4>
                         <ul className="text-sm space-y-1 text-gray-700" style={{ paddingLeft: "20px" }}>
-                            <li><span className="inline-block align-middle">< MdEmail /></span> <span className="inline-block align-middle">dsyhosp@gmail.com</span></li>
-                            <li><span className="inline-block align-middle">< FaPhoneAlt /></span> <span className="inline-block align-middle">dsyhosp@gmail.com</span></li>
-                            <li><span className="inline-block align-middle">< IoLocationOutline /></span> <span className="inline-block align-middle">dsyhosp@gmail.com</span></li>
+                            <li><span className="inline-block align-middle">< MdEmail /></span> <span className="inline-block align-middle">{vendor.email || "dsyhosp@gmail.com"}</span></li>
+                            <li><span className="inline-block align-middle">< FaPhoneAlt /></span> <span className="inline-block align-middle">{vendor.phone || "dsyhosp@gmail.com"}</span></li>
+                            <li><span className="inline-block align-middle">< IoLocationOutline /></span> <span className="inline-block align-middle">{vendor.address || "dsyhosp@gmail.com"}</span></li>
                             <Link to="https://mybestvenue.com" ><li><span className="inline-block align-middle">< FiGlobe /></span> <span className="inline-block align-middle text-[#0f4c81]"> MyBest Venue</span></li></Link>
 
                         </ul>
@@ -94,10 +117,28 @@ const VendorProfileModal = ({ show, onClose }) => {
                     <div className="border p-4 rounded">
                         <h4 className=" text-md mb-2 font-bold text-black-500 ">Service Areas</h4>
                         <div className="flex flex-wrap gap-2 text-sm">
-                            <span className="bg-gray-100 px-2 py-1 rounded">Noida</span>
-                            <span className="bg-gray-100 px-2 py-1 rounded">Greater Noida</span>
-                            <span className="bg-gray-100 px-2 py-1 rounded">Delhi</span>
-                            <span className="bg-gray-100 px-2 py-1 rounded">Gurgaon</span>
+                            {/* {(vendor?.serviceAreas?.length > 0 ? vendor.serviceAreas : ["Noida", "Greater Noida", "Delhi", "Gurgaon"]).map(
+                                (area, index) => (
+                                    <span key={index} className="bg-gray-100 px-2 py-1 rounded">
+                                        {area}
+                                    </span>
+                                )
+                            )} */}
+                            {(
+                                vendor?.serviceAreas?.length > 0
+                                    ? vendor.serviceAreas.flatMap(area =>
+                                        area.includes(',')
+                                            ? area.split(',').map(city => city.trim())
+                                            : [area.trim()]
+                                    )
+                                    : ["Noida", "Greater Noida", "Delhi", "Gurgaon"]
+                            ).map((area, index) => (
+                                <span key={index} className="bg-gray-100 px-2 py-1 rounded">
+                                    {area}
+                                </span>
+                            ))}
+
+
                         </div>
                     </div>
                 </div>
@@ -156,29 +197,26 @@ const VendorProfileModal = ({ show, onClose }) => {
                 </div>
 
 
+                {/* Licenses & Certifications */}
 
                 <div className="border p-4 rounded">
                     <h4 className="font-bold text-md mb-2 text-gray-800">Licenses & Certifications</h4>
 
-                    <div className="flex flex-wrap text-sm">
-                        <div className="flex items-center w-1/2 mb-2 text-lg">
-                            <FiShield size={20} color='green' className="mr-1" />
-                            <span>Food Safety License</span>
-                        </div>
-                        <div className="flex items-center w-1/2 mb-2 text-lg">
-                            <FiShield size={20} color='green' className="mr-1 " />
-                            <span>Event Management Certification</span>
-                        </div>
-                        <div className="flex items-center w-1/2 mb-2 text-lg">
-                            <FiShield size={20} color='green' className="mr-1 " />
-                            <span>Safety Compliance</span>
-                        </div>
-                        <div className="flex items-center w-1/2 mb-2 text-lg">
-                            <FiShield size={20} color='green' className="mr-1 " />
-                            <span>Health & Sanitation Certificate</span>
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        {[
+                            "Food Safety License",
+                            "Event Management Certification",
+                            "Safety Compliance",
+                            "Health & Sanitation Certificate",
+                        ].map((item, index) => (
+                            <div key={index} className="flex items-center text-base sm:text-lg">
+                                <FiShield className="text-green-600 mr-2 text-base sm:text-lg" />
+                                <span>{item}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
+
 
 
                 {/* Social Media */}
@@ -196,9 +234,26 @@ const VendorProfileModal = ({ show, onClose }) => {
                 <div className="border p-4 rounded">
                     <h4 className="font-medium text-sm mb-2 text-gray-800">Gallery</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {[1, 2, 3, 4].map((i) => (
+                        {/* {[1, 2, 3, 4].map((i) => (
                             <div key={i} className="w-full h-45 bg-gray-200 rounded" />
-                        ))}
+                        ))} */}
+                        {(() => {
+                            const galleryImages = vendor?.galleryImages || [];
+                            const hasGallery = galleryImages.length > 0;
+
+                            const imagesToShow = hasGallery
+                                ? galleryImages.slice(0, 4)
+                                : Array(4).fill(vendor?.profilePicture || '/default-profile.jpg');
+
+                            return imagesToShow.map((img, index) => (
+                                <img
+                                    key={index}
+                                    src={`http://localhost:5000${img}`}
+                                    alt={`Gallery ${index + 1}`}
+                                    className="w-full h-45 object-cover rounded"
+                                />
+                            ));
+                        })()}
                     </div>
                 </div>
             </div>

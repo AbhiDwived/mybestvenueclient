@@ -1,150 +1,308 @@
-import { useState, useEffect } from 'react';
-import { FaStar, FaArrowLeft, FaArrowRight, FaCalendarAlt } from 'react-icons/fa';
-import CoEvent from '../../assets/newPics/CoEvent.avif';
-import CoEvent2 from '../../assets/newPics/CoEvent2.avif';
-import CoEvent3 from '../../assets/newPics/CoEvent3.avif';
+import { useRef, useState } from 'react';
+import { Calendar, Star, MapPin, Users } from 'lucide-react';
+import { IoArrowBackOutline, IoArrowForwardSharp } from "react-icons/io5";
 
 const events = [
     {
         id: '1',
         title: 'Corporate Annual Conference',
-        location: 'Delhi, Grand Hyatt',
-        date: 'March 15, 2025',
-        image: CoEvent,
+        date: '2024-09-12',
+        location: 'Taj Palace, Delhi',
+        attendees: 300,
         rating: 4.8,
-        attendees: 450
+        image: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04',
+        description: 'A formal corporate event focusing on annual performance, goals, and networking.',
+        venue: 'Taj Palace',
+        organizer: 'XYZ Corp',
+        budget: '₹20 Lakhs',
+        highlights: ['Keynote speeches', 'Workshops', 'Networking'],
     },
     {
         id: '2',
-        title: 'Tech Startup Summit',
-        location: 'Mumbai, Taj Hotels',
-        date: 'January 22, 2025',
-        image: CoEvent2,
+        title: 'Tech Leadership Summit',
+        date: '2024-10-05',
+        location: 'JW Marriott, Bangalore',
+        attendees: 450,
         rating: 4.7,
-        attendees: 320
+        image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df',
+        description: 'Summit for tech leaders to share industry trends and innovations.',
+        venue: 'JW Marriott',
+        organizer: 'TechNext',
+        budget: '₹30 Lakhs',
+        highlights: ['Tech talks', 'Leadership panels', 'Networking dinner'],
     },
     {
         id: '3',
-        title: 'Luxury Wedding Reception',
-        location: 'Jaipur, Royal Palace',
-        date: 'December 10, 2024',
-        image: CoEvent3,
-        rating: 5.0,
-        attendees: 280
+        title: 'Finance Growth Conclave',
+        date: '2024-08-20',
+        location: 'ITC Grand Chola, Chennai',
+        attendees: 220,
+        rating: 4.5,
+        image: 'https://images.unsplash.com/photo-1591696205602-2f950c417cb9',
+        description: 'A conference on financial strategies and growth planning.',
+        venue: 'ITC Grand Chola',
+        organizer: 'Finverse Group',
+        budget: '₹18 Lakhs',
+        highlights: ['Financial planning', 'Investor meetups', 'Workshops'],
+    },
+    {
+        id: '4',
+        title: 'Women in Business Forum',
+        date: '2024-11-15',
+        location: 'Hyatt Regency, Mumbai',
+        attendees: 280,
+        rating: 4.9,
+        image: 'https://images.unsplash.com/photo-1603201667442-07f6d2c9c78e',
+        description: 'Empowering women leaders through networking and learning.',
+        venue: 'Hyatt Regency',
+        organizer: 'SheLeads India',
+        budget: '₹25 Lakhs',
+        highlights: ['Panel discussions', 'Mentorship', 'Startup showcase'],
+    },
+    {
+        id: '5',
+        title: 'Green Business Expo',
+        date: '2024-12-01',
+        location: 'Eco Convention Centre, Hyderabad',
+        attendees: 400,
+        rating: 4.6,
+        image: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4',
+        description: 'Promoting sustainable business practices and green technologies.',
+        venue: 'Eco Convention Centre',
+        organizer: 'GreenIndia Org',
+        budget: '₹22 Lakhs',
+        highlights: ['Eco booths', 'Product demos', 'CSR Talks'],
+    },
+    {
+        id: '6',
+        title: 'Retail Innovation Meet',
+        date: '2025-01-18',
+        location: 'The Leela, Gurgaon',
+        attendees: 320,
+        rating: 4.4,
+        image: 'https://images.unsplash.com/photo-1559027615-1ecc6a834ad0',
+        description: 'A gathering of retail experts and innovators discussing the future of retail.',
+        venue: 'The Leela',
+        organizer: 'RetailX India',
+        budget: '₹28 Lakhs',
+        highlights: ['Retail tech', 'Product demos', 'Expert panels'],
+    },
+    {
+        id: '7',
+        title: 'Startup Pitch & Connect',
+        date: '2024-07-25',
+        location: 'WeWork, Pune',
+        attendees: 180,
+        rating: 4.2,
+        image: 'https://images.unsplash.com/photo-1573166364302-5b4b42e525e6',
+        description: 'Early-stage startups pitch ideas to investors and mentors.',
+        venue: 'WeWork',
+        organizer: 'Startup Ignite',
+        budget: '₹10 Lakhs',
+        highlights: ['Live pitching', 'Investor Q&A', 'Funding advice'],
+    },
+    {
+        id: '8',
+        title: 'Marketing Leaders Meetup',
+        date: '2024-08-10',
+        location: 'Ritz Carlton, Bangalore',
+        attendees: 260,
+        rating: 4.6,
+        image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d',
+        description: 'Sharing strategies, tools, and trends for modern marketing.',
+        venue: 'Ritz Carlton',
+        organizer: 'Brand360',
+        budget: '₹24 Lakhs',
+        highlights: ['Workshops', 'Roundtables', 'Tech showcases'],
+    },
+    {
+        id: '9',
+        title: 'Annual HR Excellence Awards',
+        date: '2025-02-22',
+        location: 'Grand Hyatt, Goa',
+        attendees: 500,
+        rating: 4.9,
+        image: 'https://images.unsplash.com/photo-1573496529574-be85d6a60704',
+        description: 'Celebrating top-performing HR teams and individuals.',
+        venue: 'Grand Hyatt',
+        organizer: 'HR World',
+        budget: '₹35 Lakhs',
+        highlights: ['Award ceremony', 'Gala dinner', 'Live performances'],
+    },
+    {
+        id: '10',
+        title: 'Logistics & Supply Chain Forum',
+        date: '2025-03-05',
+        location: 'Vivanta, Ahmedabad',
+        attendees: 310,
+        rating: 4.3,
+        image: 'https://images.unsplash.com/photo-1551836022-4c4c79ecde16',
+        description: 'Focused on innovation and efficiency in logistics and supply chain.',
+        venue: 'Vivanta',
+        organizer: 'ChainLink India',
+        budget: '₹20 Lakhs',
+        highlights: ['Case studies', 'Product demos', 'Vendor networking'],
     },
 ];
 
 const SuccessfullEvents = () => {
-    const [startIndex, setStartIndex] = useState(0);
-    const [visibleCount, setVisibleCount] = useState(3);
-    const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 640);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const carouselRef = useRef(null);
 
-    useEffect(() => {
-        const handleResize = () => {
-            const width = window.innerWidth;
-            setIsSmallScreen(width < 640);
-            if (width < 640) setVisibleCount(1);
-            else if (width < 1024) setVisibleCount(2);
-            else setVisibleCount(3);
-        };
-
-        handleResize();
-
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    const handlePrev = () => {
-        setStartIndex((prevIndex) =>
-            prevIndex === 0 ? events.length - visibleCount : prevIndex - 1
-        );
+    const scrollLeft = () => {
+        carouselRef.current.scrollBy({ left: -320, behavior: 'smooth' });
     };
 
-    const handleNext = () => {
-        setStartIndex((prevIndex) =>
-            prevIndex + visibleCount >= events.length ? 0 : prevIndex + 1
-        );
+    const scrollRight = () => {
+        carouselRef.current.scrollBy({ left: 320, behavior: 'smooth' });
     };
-
-    const visibleEvents = events.slice(startIndex, startIndex + visibleCount);
 
     return (
-        <section className="py-16 bg-gray-100">
-            <div className="mx-auto">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-4 font-playfair-display">
-                        Previous Successful Events
-                    </h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">
-                        Take a look at some of our most successful events that we've helped organize at our partnered venues.
-                    </p>
-                </div>
-
-                <div className="relative flex items-center sm:px-6 lg:px-8">
-                    {/* Left Arrow - show only on small screens */}
-                    {isSmallScreen && (
-                        <button
-                            onClick={handlePrev}
-                            style={{ borderRadius: '25px' }}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white text-gray-800 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
-                        >
-                            <FaArrowLeft className="w-4 h-4" />
-                        </button>
-                    )}
-
-                    {/* Cards Container */}
-                    <div className="flex p-3 w-full gap-4 justify-center overflow-hidden transition-all duration-500 ease-in-out">
-                        {visibleEvents.map((event) => (
-                            <div
-                                key={event.id}
-                                className="w-full max-w-md bg-white rounded-xl shadow-sm overflow-hidden flex-shrink-0 border border-gray-100"
-                            >
-                                <div className="relative h-56 w-full overflow-hidden">
-                                    <img
-                                        src={event.image}
-                                        alt={event.title}
-                                        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                                    />
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                                        <h3 className="text-xl font-semibold text-white font-playfair-display">
-                                            {event.title}
-                                        </h3>
-                                        <p className="text-white/90 text-sm">{event.location}</p>
-                                    </div>
-                                </div>
-
-                                <div className="p-4">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <div className="flex items-center text-[#0F4C81]">
-                                            <FaCalendarAlt className="h-4 w-4 mr-1" />
-                                            <span className="text-md text-[#0F4C81]">{event.date}</span>
-                                        </div>
-                                        <div className="flex items-center">
-                                            <FaStar className="h-4 w-4 text-yellow-500 mr-1" />
-                                            <span className="text-sm font-semibold">{event.rating}</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-gray-600">
-                                        Successful event with {event.attendees} attendees
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
+        <>
+            <div className="py-16 ">
+                <div className="sm:mx-5">
+                    {/* Heading */}
+                    <div className="text-center mb-12">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-corporate-dark mb-4 font-playfair">
+                            Previous Successful Events
+                        </h2>
+                        <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
+                            Take a look at some of our most successful events that we've helped organize at our partnered venues.
+                        </p>
                     </div>
 
-                    {/* Right Arrow - show only on small screens */}
-                    {isSmallScreen && (
+                    {/* Carousel Wrapper */}
+                    <div className="relative lg:mx-16 p-2">
+                        {/* Left Scroll Button */}
                         <button
-                            onClick={handleNext}
+                            onClick={scrollLeft}
                             style={{ borderRadius: '25px' }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white text-gray-800 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
+                            className="flex absolute left-2 top-1/3 transform -translate-y-1/2 z-10 bg-white hover:bg-yellow-100 p-2  "
                         >
-                            <FaArrowRight className="w-4 h-4" />
+                            <IoArrowBackOutline />
                         </button>
-                    )}
+
+                        {/* Carousel */}
+                        <div
+                            ref={carouselRef}
+                            className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 no-scrollbar "
+                        >
+                            {events.map((event) => (
+                                <div
+                                    key={event.id}
+                                    className=" min-w-[360px] sm:min-w-[362px] mx-2 lg:min-w-[443px] grid grid-cols-1 snap-start bg-white border rounded-lg  hover:shadow-lg transition cursor-pointer"
+                                    onClick={() => setSelectedEvent(event)}
+                                >
+                                    {/* Event Image */}
+                                    <div className="relative h-48 sm:h-56 w-full overflow-hidden rounded-t-lg">
+                                        <img
+                                            src={event.image}
+                                            alt={event.title}
+                                            className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                                        />
+                                        <div className="absolute bottom-0 bg-gradient-to-t from-black/80 to-transparent w-full p-4">
+                                            <h3 className="text-base sm:text-lg font-semibold text-white">{event.title}</h3>
+                                            <p className="text-xs sm:text-sm text-white">{event.venue}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Event Info */}
+                                    <div className="p-4">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="flex items-center text-corporate-primary text-xs sm:text-sm">
+                                                <Calendar className="h-4 w-4 mr-1" />
+                                                {event.date}
+                                            </div>
+                                            <div className="flex items-center text-xs sm:text-sm">
+                                                <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                                                <span className="font-semibold">{event.rating}</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs sm:text-sm text-gray-600">Attended by {event.attendees} people</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Right Scroll Button */}
+                        <button
+                            onClick={scrollRight}
+                            style={{ borderRadius: '25px' }}
+                            className="flex absolute right-2 top-1/3 transform -translate-y-1/2 z-10 bg-white hover:bg-yellow-100 p-2  "
+                        >
+                            <IoArrowForwardSharp className="text-black" />
+                        </button>
+                    </div>
                 </div>
             </div>
-        </section>
+
+            {/* Modal */}
+            {selectedEvent && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-2">
+                    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
+                        <button
+                            onClick={() => setSelectedEvent(null)}
+                            className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
+                        >
+                            ✕
+                        </button>
+                        <h4 className="text-xl sm:text-2xl font-bold text-corporate-dark mb-4">{selectedEvent.title}</h4>
+                        <div className="h-48 sm:h-64 mb-4">
+                            <img
+                                src={selectedEvent.image}
+                                alt={selectedEvent.title}
+                                className="w-full h-full object-cover rounded"
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <div className="flex items-center space-x-2 text-sm">
+                                <Calendar className="h-5 w-5 text-corporate-primary" />
+                                <span>{selectedEvent.date}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-sm">
+                                <MapPin className="h-5 w-5 text-corporate-primary" />
+                                <span>{selectedEvent.location}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-sm">
+                                <Users className="h-5 w-5 text-corporate-primary" />
+                                <span>{selectedEvent.attendees} attendees</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-sm">
+                                <Star className="h-5 w-5 text-yellow-500" />
+                                <span>{selectedEvent.rating}/5</span>
+                            </div>
+                        </div>
+                        <p className="mb-4 text-sm sm:text-base">{selectedEvent.description}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2  gap-x-10 mb-4 text-gray-800">
+                            <div>
+                                <h5 className="font-semibold text-base mb-1">Venue</h5>
+                                <p className="text-sm">{selectedEvent.venue}</p>
+                            </div>
+                            <div>
+                                <h5 className="font-semibold text-base mb-1">Organizer</h5>
+                                <p className="text-sm">{selectedEvent.organizer}</p>
+                            </div>
+                            <div>
+                                <h5 className="font-semibold text-base mb-1">Budget</h5>
+                                <p className="text-sm">{selectedEvent.budget}</p>
+                            </div>
+                        </div>
+
+
+                        {selectedEvent.highlights?.length > 0 && (
+                            <div>
+                                <h3 className="font-semibold text-base sm:text-lg mb-2">Event Highlights</h3>
+                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
+                                    {selectedEvent.highlights.map((item, idx) => (
+                                        <li key={idx}>{item}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 

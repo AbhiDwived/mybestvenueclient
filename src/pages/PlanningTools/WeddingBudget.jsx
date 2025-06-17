@@ -9,7 +9,8 @@ const initialExpenses = [
 
 const BudgetTracker = () => {
   const navigate = useNavigate();
-
+  window.scrollTo({ top: 0, category: "top" })
+  
   const [totalBudget, setTotalBudget] = useState(() => {
     const saved = localStorage.getItem("totalBudget");
     return saved ? JSON.parse(saved) : 50000;

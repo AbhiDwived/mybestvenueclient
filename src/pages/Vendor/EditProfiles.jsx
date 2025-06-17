@@ -15,9 +15,7 @@ const EditProfile = () => {
   const vendorId = vendor?._id || vendor?.id
   // const vendorId = localStorage.getItem('vendorId');
   const profileimg = vendor.profilePicture;
-  // console.log("profileimg", profileimg)
-  // console.log("vendorId", vendorId)
-  // console.log("vendor", vendor)
+  
 
 
 
@@ -28,7 +26,7 @@ const EditProfile = () => {
   const [businessName, setBusinessName] = useState('');
   const [category, setCategory] = useState('');
   const [businessDescription, setBusinessDescription] = useState('');
-  const [location, setLocation] = useState('');
+  const [serviceAreas, setServiceAreas] = useState([]);
   const [priceRange, setPriceRange] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -41,7 +39,7 @@ const EditProfile = () => {
   const serverURL = "http://localhost:5000"
 
 
-  
+
 
 
   useEffect(() => {
@@ -49,7 +47,7 @@ const EditProfile = () => {
       setBusinessName(vendor.businessName || 'Dream Wedding Photography');
       setCategory(vendor.vendorType || 'Photography');
       setBusinessDescription(vendor.description || 'This is a sample description.');
-      setLocation(vendor.address || 'New Delhi, India');
+      setServiceAreas(vendor.serviceAreas || 'New Delhi, India');
       setPriceRange(vendor.pricing || '10000 - 50000');
       setContactEmail(vendor.email || 'mybestvenuehelp@gmail.com');
       setContactPhone(vendor.phone || '+91 9999999999');
@@ -65,75 +63,78 @@ const EditProfile = () => {
     }
   }, [vendor]);
 
-  const handleSave = async () => {
-    if (!vendorId) {
-      alert("Vendor ID missing.");
-      return;
+  const prepareFormData = (file) => {
+    const formData = new FormData();
+    formData.append("businessName", businessName);
+    formData.append("vendorType", category);
+    formData.append("description", businessDescription);
+
+    const formattedServiceAreas = Array.isArray(serviceAreas)
+      ? serviceAreas.join(",")
+      : serviceAreas;
+    formData.append("serviceAreas", formattedServiceAreas);
+
+    formData.append("pricing", priceRange);
+    formData.append("email", contactEmail);
+    formData.append("phone", contactPhone);
+    formData.append("website", website);
+    formData.append("termsAccepted", true);
+    formData.append("isApproved", true);
+    formData.append("contactName", contactName);
+
+    if (file) {
+      formData.append("profilePicture", file);
     }
+
+    return formData;
+  };
+
+
+
+  const handleSave = async () => {
+    if (!vendorId) return alert("Vendor ID missing.");
+
     try {
-      const formData = new FormData();
-      formData.append("businessName", businessName);
-      formData.append("vendorType", category); // check backend expects "vendorType"
-      formData.append("description", businessDescription);
-      formData.append("address", location);
-      formData.append("pricing", priceRange);
-      formData.append("email", contactEmail);
-      formData.append("phone", contactPhone);
-      formData.append("website", website);
-      formData.append("termsAccepted", true);
-      formData.append("isApproved", true);
-      formData.append("contactName", contactName);
-      if (selectedFile) {
-        formData.append("profilePicture", selectedFile);
-      }
+      const formData = prepareFormData(selectedFile); // include image if selected
+
       const res = await updateProfile({ vendorId, profileData: formData }).unwrap();
-      
-
       const updatedVendor = res.vendor || res;
-      dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
 
-      alert("Vendor profile updated successfully");
+      dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
+      alert("Vendor Record updated successfully");
     } catch (err) {
-     
+      console.error(err);
       alert("Failed to update vendor");
     }
   };
-
   const handleImageChange = async (file) => {
-    if (!vendorId) {
-      alert("Unable to update image. Vendor ID missing.");
+    if (!vendorId || !file) {
+      alert("Unable to update image. Vendor ID or file missing.");
       return;
     }
 
-    if (file) {
-      
-      const imageUrl = URL.createObjectURL(file);
-      setCoverImage(imageUrl);
-      setSelectedFile(file);
+    const imageUrl = URL.createObjectURL(file);
+    setCoverImage(imageUrl);
+    setSelectedFile(file);
 
-      try {
-        const formData = new FormData();
-        formData.append("profilePicture", file);
+    try {
+      const formData = prepareFormData(file); // send full data + image
 
-        const res = await updateProfile({
-          // vendorId: vendor._id,
-          vendorId,
-          profileData: formData,
+      const res = await updateProfile({ vendorId, profileData: formData }).unwrap();
+      const updatedVendor = res.vendor;
+      dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
+      setCoverImage(updatedVendor.profilePicture);
 
-
-        }).unwrap();
-
-        const updatedVendor = res.vendor;
-        dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
-        setCoverImage(updatedVendor.profilePicture);
-
-        alert("Profile image updated successfully");
-      } catch (err) {
-        // console.error("Error uploading image:", err);
-        alert("Failed to update profile image");
-      }
+      alert("Profile image updated successfully");
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      alert("Failed to update profile image");
     }
   };
+
+
+
+
 
   if (!isAuthenticated) {
     return <h5 className='text-gray-600 font-bold'>You are not logged in.</h5>;
@@ -169,7 +170,7 @@ const EditProfile = () => {
               </div>
               <div className="mb-3">
                 <label className="form-label">Location</label>
-                <input type="text" className="form-control" value={location} onChange={(e) => setLocation(e.target.value)} />
+                <input type="text" className="form-control" value={serviceAreas} onChange={(e) => setServiceAreas(e.target.value)} />
               </div>
               <div className="mb-3">
                 <label className="form-label">Price Range</label>
@@ -207,6 +208,7 @@ const EditProfile = () => {
                 type="file"
                 accept=".png, .jpg, .jpeg"
                 ref={fileInputRef}
+                // onChange={(e) => handleImageChange(e.target.files[0])}
                 onChange={(e) => handleImageChange(e.target.files[0])}
                 className="d-none"
               />

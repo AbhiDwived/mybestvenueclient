@@ -24,7 +24,7 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="font-serif">
+    <div className="font-serif">
       {/* How It Works Section */}
       <div className="py-14 sm:py-16 px-4 bg-white text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">How It Works</h2>
@@ -32,11 +32,11 @@ const HowItWorks = () => {
           Planning your event is easy with MyBestVenue. Find and book the perfect venue in just a few steps.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:mx-16">
           {steps.map((step) => (
             <div
               key={step.number}
-              className="bg-white rounded-lg shadow-sm p-6 border hover:shadow-md transition duration-300"
+              className="bg-white rounded-lg hover:shadow-lg p-6 border transition duration-300"
             >
               <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-lg sm:text-xl font-semibold text-blue-900 mb-4">
                 {step.number}
@@ -83,7 +83,7 @@ const HowItWorks = () => {
           </Link>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

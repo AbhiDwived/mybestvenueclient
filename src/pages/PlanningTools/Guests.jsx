@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 const GuestList = () => {
   const navigate = useNavigate();
-
+  window.scrollTo({ top: 0, category: "top" })
   const [guests, setGuests] = useState(() => {
     const stored = localStorage.getItem("guests");
     return stored ? JSON.parse(stored) : [

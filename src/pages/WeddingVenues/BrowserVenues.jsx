@@ -4,7 +4,7 @@ import { IoIosArrowRoundBack, IoIosArrowRoundForward } from "react-icons/io";
 import { useNavigate, useParams } from 'react-router-dom';
 
 const allLocations = [
-  "All India", "Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad",
+  "All India", "Noida", "Greater Noida", "Old Delhi", "Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad",
   "Kolkata", "Pune", "Jaipur", "Udaipur", "Goa", "Ahmedabad", "Lucknow",
   "Chandigarh", "Kochi", "Indore", "Nagpur", "Bhopal", "Patna", "Agra"
 ];
@@ -15,7 +15,7 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
   const [activeLocation, setActiveLocation] = useState("All India");
   const [scrollIndex, setScrollIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(5);
-  window.scrollTo({top:0, category:"top"})
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -36,6 +36,7 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
     if (fromProp || fromURL) {
       setActiveLocation(fromProp || fromURL);
     }
+    window.scrollTo({ top: 0, category: "top" })
   }, [currentLocation, urlCity]);
 
   const handleLocationClick = (location) => {
@@ -56,7 +57,7 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
 
   const handleNext = () => {
     setScrollIndex((prev) =>
-      prev >= filteredLocations.length - visibleCount ? 1 : prev + 1
+      prev >= filteredLocations.length - visibleCount ? 0 : prev + 1
     );
   };
 
@@ -101,19 +102,20 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
               onClick={handlePrev}
               aria-label="Scroll left"
               style={{ borderRadius: '25px' }}
-              className="absolute left-5 top-1/2 -translate-y-1/2 bg-white text-gray-600 border p-2 shadow-md hover:bg-yellow-100"
+              className="group absolute left-5 top-1/2 -translate-y-1/2 bg-white text-gray-600 border p-2 shadow-md hover:bg-yellow-100 transition"
             >
-              <IoIosArrowRoundBack className="text-2xl hover:text-yellow-500" />
+              <IoIosArrowRoundBack className="text-2xl  transition" />
             </button>
             <button
               onClick={handleNext}
               aria-label="Scroll right"
               style={{ borderRadius: '25px' }}
-              className="absolute right-5 top-1/2 -translate-y-1/2 bg-white text-gray-600 border p-2 shadow-md hover:bg-yellow-100"
+              className="group absolute right-5 top-1/2 -translate-y-1/2 bg-white text-gray-600 border p-2 shadow-md hover:bg-yellow-100 transition"
             >
-              <IoIosArrowRoundForward className="text-2xl hover:text-yellow-500" />
+              <IoIosArrowRoundForward className="text-2xl  transition" />
             </button>
           </>
+
         )}
       </div>
     </div>

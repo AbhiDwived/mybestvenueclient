@@ -189,13 +189,18 @@ const AdminDashboard = () => {
       </div>
 
       {/* Tabs Menu */}
-      <div className="overflow-x-auto">
-        <div className="flex space-x-2 min-w-max bg-[#F1F5F9] p-2 rounded-md mb-2 text-sm">
+      <div className="lg:mt-7 p-">
+        <div style={{borderRadius:'5px'}}
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8  bg-gray-200 py-1 px-1"
+        >
           {tabs.map((tab, i) => (
             <button
               key={i}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-md font-medium whitespace-nowrap ${tab === activeTab ? 'bg-white text-black shadow-sm rounded' : 'text-gray-600'
+              style={{borderRadius:'5px'}}
+              className={` py-2 rounded-md font-medium whitespace-nowrap text-xs sm:text-sm transition ${tab === activeTab
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-gray-600 hover:bg-white/80'
                 }`}
             >
               {tab}
@@ -203,6 +208,7 @@ const AdminDashboard = () => {
           ))}
         </div>
       </div>
+
 
       {/* Tab Content */}
       <div className="shadow-sm rounded-full">

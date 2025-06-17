@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
-import { FaHashtag, FaSyncAlt, FaRegCopy,  } from "react-icons/fa";
+import { FaHashtag, FaSyncAlt, FaRegCopy, } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const popularHashtags = [
@@ -15,14 +15,14 @@ export default function HashtagGenerator() {
   const [firstName, setFirstName] = useState("John");
   const [partnerName, setPartnerName] = useState("Sarah");
   const [weddingDate, setWeddingDate] = useState("");
+  window.scrollTo({ top: 0, category: "top" })
 
-  
   return (
     <>
       <div className="bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] py-16 text-black">
         <div className="mx-auto text-left  px-4 max-w-3xl">
           <Link to={navigate("/planning-tools")}
-            style={{textDecoration:'none'}}
+            style={{ textDecoration: 'none' }}
             className="text-white flex items-center mx-auto gap-1"
           >
             <span className="text-2xl leading-none">
@@ -37,7 +37,7 @@ export default function HashtagGenerator() {
           <p className="mb-8 text-white text-base md:text-lg">
             Create a unique hashtag for your wedding day
           </p>
-          
+
         </div>
       </div>
 

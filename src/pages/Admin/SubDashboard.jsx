@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { HiOutlineUser } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
-
-// Import RTK Query hook
 import {
   useGetAllUsersQuery,
   useGetPendingVendorsQuery,
@@ -10,7 +8,6 @@ import {
   useGetRecentActivitiesQuery,
 } from '../../features/admin/adminAPI';
 
-// Charting library
 import {
   LineChart,
   Line,
@@ -22,7 +19,6 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-// Utility to get activity color
 const getColor = (type = '') => {
   if (type.includes('Vendor')) return 'yellow';
   if (type.includes('User')) return 'green';
@@ -34,12 +30,9 @@ const getColor = (type = '') => {
 const SubDashboard = () => {
   const navigate = useNavigate();
 
-  // RTK Queries
   const { data: usersData, isLoading: usersLoading } = useGetAllUsersQuery();
   const { data: pendingVendorsData } = useGetPendingVendorsQuery();
   const { data: vendorsData, isLoading: vendorsLoading } = useGetAllVendorsQuery();
-
-  // ✅ Use RTK Query hook for recent activities
   const {
     data: activityData,
     isLoading: activityLoading,
@@ -48,10 +41,8 @@ const SubDashboard = () => {
     isError,
   } = useGetRecentActivitiesQuery();
 
-  // Format activity data with time ago logic
   const formattedActivity = useMemo(() => {
     if (!isSuccess || !activityData?.activities) return [];
-
     return activityData.activities.map(act => {
       const diff = Date.now() - new Date(act.createdAt).getTime();
       const mins = Math.floor(diff / 60000);
@@ -59,9 +50,8 @@ const SubDashboard = () => {
         mins < 60
           ? `${mins} minutes ago`
           : mins < 1440
-          ? `${Math.floor(mins / 60)} hours ago`
-          : `${Math.floor(mins / 1440)} days ago`;
-
+            ? `${Math.floor(mins / 60)} hours ago`
+            : `${Math.floor(mins / 1440)} days ago`;
       return {
         ...act,
         time,
@@ -70,14 +60,12 @@ const SubDashboard = () => {
     });
   }, [activityData, isSuccess]);
 
-  // Log any query errors
   useEffect(() => {
     if (isError && activityError) {
       console.error('Failed to fetch recent activity:', activityError);
     }
   }, [isError, activityError]);
 
-  // Generate last 30 days
   const getLast30Days = () => {
     const days = [];
     for (let i = 29; i >= 0; i--) {
@@ -88,7 +76,6 @@ const SubDashboard = () => {
     return days;
   };
 
-  // Analytics data
   const analyticsData = useMemo(() => {
     const last30 = getLast30Days();
     const userCounts = Object.fromEntries(last30.map(date => [date, 0]));
@@ -118,7 +105,6 @@ const SubDashboard = () => {
     }));
   }, [usersData, vendorsData]);
 
-  // Recent Users
   const recentUsers = useMemo(() => {
     return (
       usersData?.users
@@ -138,7 +124,6 @@ const SubDashboard = () => {
     );
   }, [usersData]);
 
-  // Categories
   const categories = useMemo(() => {
     const counts = {};
     vendorsData?.vendors?.forEach(v => {
@@ -147,7 +132,6 @@ const SubDashboard = () => {
     });
 
     const total = vendorsData?.vendors?.length || 1;
-
     return Object.entries(counts)
       .map(([name, count]) => ({
         name,
@@ -156,7 +140,6 @@ const SubDashboard = () => {
       .sort((a, b) => b.percent - a.percent);
   }, [vendorsData]);
 
-  // Tasks
   const tasks = [
     {
       title: 'Vendor Approvals',
@@ -190,14 +173,14 @@ const SubDashboard = () => {
   };
 
   return (
-    <div className="space-y-4 text-sm text-gray-800 font-serif">
-      {/* Chart + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white p-4 rounded shadow-sm">
+    <div className="space-y-4 text-sm text-gray-800 font-serif p-2 sm:p-4">
+      {/* Top Section: Chart + Activity */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="md:col-span-1 lg:col-span-2 bg-white p-4 rounded shadow-sm">
           <h2 className="font-semibold text-md mb-1">Daily Activity Overview</h2>
           <p className="text-gray-500 text-xs mb-4">User registrations and vendor signups over the last 30 days</p>
-          <div className="h-100">
-            <ResponsiveContainer width="100%" height="80%">
+          <div className="h-[200px] md:h-[300px] lg:h-[400px]">
+            <ResponsiveContainer width="100%" height="100%" style={{marginLeft:'-50px'}} minWidth={320}>
               <LineChart data={analyticsData}>
                 <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
@@ -219,12 +202,10 @@ const SubDashboard = () => {
           ) : formattedActivity.length === 0 ? (
             <p className="text-xs text-gray-400">No recent activity found.</p>
           ) : (
-            <ul className="space-y-3 text-xs m-2 pl-0">
+            <ul className="space-y-3 text-xs m-2 pl-0 overflow-auto max-h-[300px]">
               {formattedActivity.map((item, i) => (
                 <li key={i} className="relative pl-3">
-                  <span
-                    className={`absolute left-0 top-1 w-0.5 h-12 rounded ${colorMap[item.color]}`}
-                  />
+                  <span className={`absolute left-0 top-1 w-0.5 h-12 rounded ${colorMap[item.color]}`} />
                   <div className="border-gray-200 m-2">
                     <p className="text-[13px] font-medium mb-0">{item.type}</p>
                     <p className="text-gray-500 mb-0">{item.description}</p>
@@ -243,10 +224,9 @@ const SubDashboard = () => {
         </div>
       </div>
 
-      {/* Bottom Cards */}
+      {/* Bottom Section: Users, Tasks, Categories */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Recent Users or Vendors */}
-        <div className="bg-white rounded-lg shadow border p-4 max-w-md w-full mx-auto">
+        <div className="bg-white rounded-lg shadow border p-4 w-full">
           <h2 className="text-xl font-semibold text-gray-800">Recent Users or Vendors</h2>
           <p className="text-sm text-gray-500 mb-4">Newly registered users or vendors</p>
           <div className="space-y-4">
@@ -299,16 +279,15 @@ const SubDashboard = () => {
           </button>
         </div>
 
-        {/* Pending Tasks */}
-        <div className="bg-white p-2 rounded shadow-sm">
+        <div className="bg-white p-3 rounded shadow-sm w-full">
           <h2 className="font-semibold text-md mb-2">Pending Tasks</h2>
           <p className="text-gray-500 text-xs mb-2">Items that need your attention</p>
-          <ul className="text-xs space-y-3 pl-0">
+          <ul className="text-xs space-y-3" style={{marginLeft:'-35px'}} minWidth={320}>
             {tasks.map((task, i) => (
               <li key={i} className={`p-2 border-l-4 ${task.color} rounded shadow-sm`}>
                 <p className="font-medium text-sm">{task.title}</p>
                 <p className="text-gray-600 text-xs">{task.detail}</p>
-                <button className="text-blue-700 text-xs underline mt-1" onClick={task.onClick}>
+                <button className="text-blue-700 text-xs nav-Link mt-1" onClick={task.onClick}>
                   {task.action}
                 </button>
               </li>
@@ -316,10 +295,9 @@ const SubDashboard = () => {
           </ul>
         </div>
 
-        {/* Popular Categories */}
-        <div className="bg-white p-2 rounded shadow-sm">
+        <div className="bg-white p-3 rounded shadow-sm w-full">
           <h2 className="font-semibold text-md mb-2">Popular Categories</h2>
-          <ul className="space-y-3 text-xs pl-0">
+          <ul className="space-y-3 text-xs pl-0"  style={{marginLeft:'-35px'}} minWidth={320}>
             {vendorsLoading ? (
               <div>Loading...</div>
             ) : !categories || categories.length === 0 ? (

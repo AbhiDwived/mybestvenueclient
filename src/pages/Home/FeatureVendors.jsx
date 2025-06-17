@@ -78,7 +78,7 @@ const FeaturedVendors = ({ showAll = false }) => {
   const displayedVendors = showAll ? vendors : vendors.slice(0, 4);
 
   return (
-    <div className=" px-4 md:px-10 lg:mx-4 xl:px-20 py-10">
+    <div className="lg:mx-16 px-4 md:px-10 xl:px-20 py-10">
       <div className="flex flex- justify-between items-start sm:items-center mb-6 gap-4">
         <h3 className=" font-semibold text-gray-800 font-serif">Featured Vendors</h3>
         {!showAll && (

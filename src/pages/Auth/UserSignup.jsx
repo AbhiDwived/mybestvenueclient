@@ -92,7 +92,7 @@ const UserSignup = () => {
       <div className="w-full max-w-md">
         <h2 className="text-3xl font-bold mb-1 text-center text-gray-800">Create User Account</h2>
         <p className="text-center text-sm text-gray-500 mb-6">
-          Join WeddingWire to access wedding planning tools and connect with vendors.
+          Join myBestVenue to access wedding planning tools and connect with vendors.
         </p>
 
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-auto">

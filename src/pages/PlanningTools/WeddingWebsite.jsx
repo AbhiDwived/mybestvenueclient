@@ -15,6 +15,8 @@ export default function WeddingWebsite() {
     rsvpEmail: "rsvp@yourwedding.com",
   });
 
+  window.scrollTo({ top: 0, category: "top" })
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));

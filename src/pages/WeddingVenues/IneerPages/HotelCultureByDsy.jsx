@@ -73,7 +73,7 @@ export default function HotelCultureByDsy() {
             <h2 className="text-lg font-semibold">About</h2>
             <div className="flex flex-col sm:flex-row p-3 gap-2">
               <p className="flex items-center gap-1 text-sm sm:text-base font-light">
-                <CiFlag1 /> On Weedingwire.in since 2024
+                <CiFlag1 /> On mybestvenue.in since 2024
               </p>
               <p className="text-sm sm:text-base font-light">
                 Last update: November 2025
