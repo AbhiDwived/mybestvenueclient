@@ -51,7 +51,7 @@ export default function CheckList() {
 
     return (
         <div className="flex min-h-screen ">
-            <section className="flex-grow ">
+            <div className="flex-grow ">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Checklist Section */}
                     <div className="lg:col-span-2">
@@ -147,7 +147,7 @@ export default function CheckList() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         </div>
     );
 }

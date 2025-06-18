@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { IoIosArrowForward } from "react-icons/io";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import image1 from "../../assets/newPics/featuredcard.jpg";
 import image2 from "../../assets/newPics/featuredvendors.jpg";
@@ -65,12 +65,19 @@ const vendors = [
 
 const FeaturedVendors = ({ showAll = false }) => {
   const [favorites, setFavorites] = useState([]);
+  const navigate = useNavigate();
 
-  const toggleFavorite = (id) => {
+  const toggleFavorite = (e, id) => {
+    e.stopPropagation(); // Prevent card click when clicking favorite button
     setFavorites((prev) =>
       prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
     );
   };
+
+  const handleVendorClick = (vendor) => {
+    navigate('/preview-profile');
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, category: 'top' })
   })
@@ -93,7 +100,8 @@ const FeaturedVendors = ({ showAll = false }) => {
         {displayedVendors.map((vendor) => (
           <div
             key={vendor.id}
-            className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden"
+            className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
+            onClick={() => handleVendorClick(vendor)}
           >
             <div className="relative group">
               <img
@@ -102,7 +110,7 @@ const FeaturedVendors = ({ showAll = false }) => {
                 className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
               />
               <button
-                onClick={() => toggleFavorite(vendor.id)}
+                onClick={(e) => toggleFavorite(e, vendor.id)}
                 className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-gray-800"
               >
                 {favorites.includes(vendor.id) ? (

@@ -66,6 +66,7 @@ const ConferenceRooms = () => {
         }
     ];
 
+    window.scrollTo({ top: 0, category: "top" })
     const renderStars = (rating) => (
         <div className="flex items-center gap-1">
             <FiStar className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -75,10 +76,10 @@ const ConferenceRooms = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
-            <div className="lg:mx-16 px-4 sm:px-6 lg:px-8">
+            <div className="lg:mx-10 px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <Link to="/corporate" style={{textDecoration:"none", width:'250px'}} className="flex items-center  hover:text-gray-800 transition-colors mb-6 border py-2 text-black rounded-md">
+                    <Link to="/corporate" style={{ textDecoration: "none", width: '250px' }} className="flex items-center  hover:text-gray-800 transition-colors mb-6 border py-2 text-black rounded-md">
                         <FiArrowLeft className="w-4 h-4 mx-3" />
                         Back to Corporate Services
                     </Link>
@@ -132,8 +133,8 @@ const ConferenceRooms = () => {
                                         <span
                                             key={index}
                                             className={`px-2 py-1 text-xs rounded-md ${feature.includes('+')
-                                                    ? 'bg-gray-200 text-gray-700'
-                                                    : 'bg-gray-100 text-gray-600'
+                                                ? 'bg-gray-200 text-gray-700'
+                                                : 'bg-gray-100 text-gray-600'
                                                 }`}
                                         >
                                             {feature}
@@ -143,10 +144,10 @@ const ConferenceRooms = () => {
 
                                 {/* Action Buttons */}
                                 <div className="flex gap-2">
-                                    <button variant="outline" style={{borderRadius:"5px"}} className="flex-1 text-sm hover:bg-gray-50">
+                                    <button variant="outline" style={{ borderRadius: "5px" }} className="flex-1 text-sm hover:bg-gray-50">
                                         View Details
                                     </button>
-                                    <button style={{borderRadius:"5px"}} className="flex-1 py-2 text-sm text-white bg-[#0F4C81] hover:bg-[#0F4C81]">
+                                    <button style={{ borderRadius: "5px" }} className="flex-1 py-2 text-sm text-white bg-[#0F4C81] hover:bg-[#0F4C81]">
                                         Book Now
                                     </button>
                                 </div>

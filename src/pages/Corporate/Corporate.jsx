@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Briefcase, Users, CalendarDays, LayoutGrid } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import Corporate1 from '../../assets/newPics/Corporate1.avif';
 import Corporate2 from '../../assets/newPics/Corporate2.avif';
@@ -21,18 +21,6 @@ const tabs = [
   { key: "events", label: "Corporate Events", icon: CalendarDays },
 ];
 
-{/* <Route path="/conference" element={<Conference />} />
-                    <Route path="/executive" element={<Executive />} />
-                    <Route path="/training" element={<Training />} />
-                    <Route path="/large-auditorium" element={<LargeAuditorium />} />
-                    <Route path="/breakout-room" element={<Breakout />} />
-                    <Route path="/pannel-discussion" element={<Pannel />} />
-                    <Route path="/outdoor" element={<Outdoor />} />
-                    <Route path="/indoor" element={<Indoor />} />
-                    <Route path="/leadership" element={<Leadership />} />
-                    <Route path="/award-night" element={<AwardNight />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/networking" element={<Networking />} /> */}
 const services = {
   meeting: [
     {
@@ -105,7 +93,7 @@ const services = {
       title: "Product Launches",
       description: "Showcase new products with impressive setups and media coverage.",
       image: CoEvent2,
-      navigate: "products"
+      navigate: "/products"
     },
     {
       title: "Networking Events",
@@ -117,9 +105,18 @@ const services = {
 };
 
 export default function Corporate() {
-  const [selectedTab, setSelectedTab] = useState("meeting");
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+
+  // Load selectedTab from localStorage or fallback to default
+  const [selectedTab, setSelectedTab] = useState(() => {
+    return localStorage.getItem("selectedCorporateTab") || "meeting";
+  });
+
+  // Save selectedTab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("selectedCorporateTab", selectedTab);
+  }, [selectedTab]);
 
   const filteredServices = services[selectedTab].filter((item) =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -165,17 +162,18 @@ export default function Corporate() {
         </div>
 
         {/* Tabs */}
-        <div className="flex text-center justify-baseline flex-wrap mb-10 bg-gray-300 rounded-md">
+        <div className="flex lg:gap-9 flex-wrap mb-10 bg-gray-300 rounded-md">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setSelectedTab(tab.key)}
+              style={{borderRadius:'5px'}}
               className={`flex items-center justify-center px-4 py-2 transition 
-                w-full sm:w-1/2 md:w-1/3 lg:w-1/4
-                rounded-md
+                w-full sm:w-1/2 md:w-1/3 lg:w-1/5  m-1
+                
                 ${selectedTab === tab.key
                   ? "bg-white text-blue-900 font-semibold"
-                  : "text-gray-700 hover:bg-gray-100"}`}
+                  : "text-gray-700 hover:bg-gray-100 "}`}
             >
               <tab.icon size={16} className="mx-2" />
               <span className="text-sm">{tab.label}</span>
@@ -191,9 +189,9 @@ export default function Corporate() {
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-68 object-cover p-4 rounded-[30px]"
+                  className="w-full h-68 object-cover p-3 rounded-[30px]"
                 />
-                <div className="px-4">
+                <div className="px-3">
                   <h5 className="font-semibold text-lg mb-2 text-gray-800">{item.title}</h5>
                   <p className="text-sm text-gray-600 mb-4">{item.description}</p>
                   <button
@@ -225,7 +223,7 @@ export default function Corporate() {
           </p>
           <div className="flex justify-center">
             <div className="bg-white text-black rounded-lg px-6 py-2">
-              <button className="font-semibold">Contact Us</button>
+              <Link to="/contactUs" style={{textDecoration:'none'}} className="font-semibold text-black">Contact Us</Link>
             </div>
           </div>
         </div>

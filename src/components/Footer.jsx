@@ -41,10 +41,10 @@ const Footer = () => {
         </div>
 
         {/* Quick Links */}
-        <div className="hidden sm:hidden md:block">
+        <div className="hidden sm:hidden md:block mt-1">
           <h5 className="text-lg font-semibold border-b border-blue-500">Quick Links</h5>
-          <ul >
-            <li ><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
+          <ul  style={{marginLeft:'-30px'}}>
+            <li className='mt-7'><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
             <li className='mt-2'><Link to="/planning-tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Wedding Venues</Link></li>
             <li className='mt-2'><Link to="/corporate" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Corporate Events</Link></li>
             <li className='mt-2'><Link to="/IdeaBlog" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Event Blog</Link></li>

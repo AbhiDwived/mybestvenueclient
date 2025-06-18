@@ -7,7 +7,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../features/auth/authSlice';
 import { logoutVendor } from '../features/vendors/vendorSlice';
 import { logout as logoutAdmin } from '../features/admin/adminSlice';
-
+import MyBestVenues from '../assets/Images/My BestVenues.png'
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [profileDropdown, setProfileDropdown] = useState(false);
@@ -158,16 +158,13 @@ const Navbar = () => {
   );
 
   return (
-    <header className="bg-white px-4 py-3 shadow-sm w-full">
+    <header className="bg-white px-4 py- shadow-sm w-full">
       <div className="mx-auto flex justify-between items-center w-full">
         <Link to="/" className="flex items-center" style={{ textDecoration: 'none' }}>
-          <h3 className="text-xl font-bold text-gray-800">
-            <span className="text-black">My</span>
-            <span className="text-[#0F4C81]">BestVenue</span>
-          </h3>
+          <img className='h-18 ' src={MyBestVenues} alt="logo" srcset="" />
         </Link>
         <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden text-gray-700 focus:outline-none">
-          {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          {isOpen ? <FiX size={24}  /> : <FiMenu size={24}/>}
         </button>
         <nav className="lg:flex items-center space-x-6 ml-auto hidden">
           <Link to="/wedding-vendor" style={{ textDecoration: 'none', color: 'black' }}>Vendors</Link>

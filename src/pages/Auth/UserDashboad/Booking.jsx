@@ -67,19 +67,19 @@ const BookingBudget = () => {
   ];
 
   return (
-    <div className="min-h-screen p-4 md:p-6">
-      <div className="lg:mx-16">
+    <div className="min-h-screen p-2 mt-3 md:p-6 lg:mx-3">
+      <div className="">
         {/* Header */}
         <div className="text-center space-y-2 ">
-          <h5 className="font-bold mb-3 text-gray-800 flex items-left  gap-2">
-            <DollarSign className="h-6 w-7 " />
+          <h3 className="font-bold mb-3 text-gray-800 flex items-left  gap-2">
+            <DollarSign className="h-7 w-7 " />
             Booking Budget Summary
-          </h5>
+          </h3>
 
         </div>
 
         {/* Budget Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 shadow-md p-3 rounded-md">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 shadow-md p-2 rounded-md">
           <div className="bg-blue-50 border border-blue-200 rounded-lg transition-shadow p-6 text-center">
             <div className="text-3xl font-bold text-blue-600">₹{totalPlanned.toLocaleString()}</div>
             <div className="text-sm mt-1">Total Planned</div>

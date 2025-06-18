@@ -31,10 +31,9 @@ const UserDashboard = ({ profile }) => {
   const ActiveComponent = tabs.find((tab) => tab.value === activeTab)?.component;
 
   return (
-    <div className="">
       <div className="w-full">
         {/* Header */}
-        <div className="p-4">
+        <div className="p-2">
           <div>
             <h1 className="text-3xl font-bold font-playfair text-wedding-dark mb-2">
               Hello, {profile?.name ? profile.name.split("&")[0] : "Guest"}
@@ -61,7 +60,7 @@ const UserDashboard = ({ profile }) => {
         </div>
 
         {/* Tabs */}
-        <div className="lg:mt-7 p-4">
+        <div className="lg:mt-7 p-2">
           <div
             style={{ borderRadius: "5px" }}
             className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-9 lg:grid-cols-18 gap-3 bg-gray-200 py-1 px-2"
@@ -85,7 +84,6 @@ const UserDashboard = ({ profile }) => {
         {/* Tab Content */}
         <div>{ActiveComponent && <ActiveComponent />}</div>
       </div>
-    </div>
   );
 };
 

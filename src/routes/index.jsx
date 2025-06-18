@@ -122,7 +122,7 @@ import InquiryReply from '../pages/Vendor/Inquiries/InquiryReply';
 import LocationVendors from '../pages/Location/LocationVendor';
 import CategorySelector from '../pages/Location/CategorySelector';
 import VendorListPage from '../pages/Location/VendorListPage';
-
+import ContactUs from '../pages/Corporate/ContactUs';
 
 
 
@@ -161,6 +161,7 @@ const index = () => {
                     <Route path="/award-night" element={<AwardNight />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/networking" element={<Networking />} />
+                    <Route path="/contactUs" element={<ContactUs />} />
 
                     {/* Wedding Vendor public page */}
                     <Route path="/wedding-vendor" element={<WeedingVendor />} />
@@ -209,6 +210,7 @@ const index = () => {
                     <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
                     <Route path="/vendor/verify-password-reset" element={<VendorVerifyResetOTP />} />
                     <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
+                    <Route path="preview-profile" element={<PreviewProfile />} />
 
                     {/* Admin Auth Route */}
                     <Route path="admin/login" element={<AdminLogin />} />
@@ -249,7 +251,6 @@ const index = () => {
                     <Route path="reviews" element={<Reviews />} />
                     <Route path="packages_and_faqs" element={<PackagesAndFaqs />} />
                     <Route path="portfolio" element={<Portfolio />} />
-                    <Route path="preview_profile" element={<PreviewProfile />} />
                     <Route path="preview_profilescreen" element={<PreviewProfileScreen />} />
                     <Route path="similar_vendors" element={<SimilarVendors />} />
                     <Route path="reviews" element={<Reviews />} />
