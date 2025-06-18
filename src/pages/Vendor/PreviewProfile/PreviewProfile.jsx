@@ -105,7 +105,9 @@ const PreviewProfile = () => {
 
 
         {/* Booking Form  */}
-        <form className="max-w-2xl mx-auto border rounded-lg p-6 shadow-sm bg-white text-sm grid gap-4 sm:grid-cols-2">
+        
+        <form className="mx-auto border rounded-lg p-4 sm:p-6 md:p-8 shadow-sm bg-white text-sm grid gap-4 sm:grid-cols-2 w-full max-w-screen-sm">
+
           <h3 className="font-semibold text-xl sm:col-span-2">Book Your Service</h3>
 
           <label className="sm:col-span-2">
@@ -133,7 +135,7 @@ const PreviewProfile = () => {
             <input type="number" placeholder="e.g. 150" className="w-full border rounded px-3 py-2" />
           </label>
 
-          <label className="sm:col-span-2">
+          <label>
             <span className="block mb-1">Preferred Venue</span>
             <input type="text" placeholder="Venue or City" className="w-full border rounded px-3 py-2" />
           </label>
@@ -238,9 +240,3 @@ const PreviewProfile = () => {
 };
 
 export default PreviewProfile;
-
-
-
-
-
-
