@@ -64,6 +64,7 @@ import Networking from '../pages/Corporate/Corporate/Networking';
 
 // Idea & Blogs
 import IdeaBlog from '../pages/Idea&Blog/IdeaBlog';
+import PublicBlogDetails from '../pages/Blog/PublicBlogDetails';
 
 // Wedding Venues
 import WeddingVenues from '../pages/WeddingVenues/WeddingVenues';
@@ -147,7 +148,7 @@ const index = () => {
 
                     {/* Idea Blog */}
                     <Route path="/IdeaBlog" element={<IdeaBlog />} />
-                    <Route path="/blogs/:id" element={<BlogDetails />} />
+                    <Route path="/blogs/:id" element={<PublicBlogDetails />} />
 
                     {/* Corporate */}
                     <Route path="/corporate" element={<Corporate />} />

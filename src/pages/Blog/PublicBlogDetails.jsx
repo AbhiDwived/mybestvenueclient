@@ -1,0 +1,153 @@
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useGetBlogByIdQuery } from '../../features/blogs/blogsAPI';
+import { Calendar, ArrowLeft, Clock, Tag, User } from 'lucide-react';
+
+export default function PublicBlogDetails() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { data, isLoading, isError, error } = useGetBlogByIdQuery(id);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+          <p className="text-red-700 font-medium">Error: {error?.data?.message || 'Failed to load blog'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || !data.blog) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50">
+        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-md">
+          <p className="text-yellow-700 font-medium">Blog not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  const blog = data.blog;
+
+  // Format the date
+  const formattedDate = new Date(blog.createdAt).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Format read time (assuming 200 words per minute)
+  const wordCount = blog.content.split(/\s+/).length;
+  const readTime = Math.ceil(wordCount / 200);
+
+  // Construct image URL
+  let imageUrl;
+  if (blog.featuredImage) {
+    if (blog.featuredImage.startsWith('http')) {
+      imageUrl = blog.featuredImage;
+    } else {
+      const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
+      imageUrl = `${baseUrl}${blog.featuredImage}`;
+    }
+  } else {
+    imageUrl = 'https://via.placeholder.com/1200x600?text=No+Image';
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="group flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mb-8"
+        >
+          <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+          <span className="font-medium">Back to Blogs</span>
+        </button>
+
+        {/* Blog Header */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
+          {/* Featured Image */}
+          <div className="relative h-[400px] overflow-hidden">
+            <img
+              src={imageUrl}
+              alt={blog.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://via.placeholder.com/1200x600?text=Image+Error';
+              }}
+            />
+            {blog.category && (
+              <div className="absolute top-6 right-6">
+                <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                  {blog.category}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="p-8">
+            {/* Title */}
+            <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+              {blog.title}
+            </h1>
+
+            {/* Meta Information */}
+            <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-8">
+              <div className="flex items-center">
+                <Calendar size={18} className="mr-2 text-blue-600" />
+                <span>{formattedDate}</span>
+              </div>
+              <div className="flex items-center">
+                <Clock size={18} className="mr-2 text-blue-600" />
+                <span>{readTime} min read</span>
+              </div>
+              <div className="flex items-center">
+                <User size={18} className="mr-2 text-blue-600" />
+                <span>Admin</span>
+              </div>
+              {blog.category && (
+                <div className="flex items-center">
+                  <Tag size={18} className="mr-2 text-blue-600" />
+                  <span>{blog.category}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Blog Excerpt */}
+            {blog.excerpt && (
+              <div className="mb-8">
+                <blockquote className="text-lg text-gray-700 italic border-l-4 border-blue-500 pl-6 py-2 bg-blue-50 rounded-r-lg">
+                  {blog.excerpt}
+                </blockquote>
+              </div>
+            )}
+
+            {/* Blog Content */}
+            <div className="prose prose-lg max-w-none">
+              <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                {blog.content.split('\n').map((paragraph, index) => (
+                  paragraph.trim() && (
+                    <p key={index} className="mb-4">
+                      {paragraph}
+                    </p>
+                  )
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 
