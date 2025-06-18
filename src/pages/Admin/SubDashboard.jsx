@@ -282,7 +282,7 @@ const SubDashboard = () => {
         <div className="bg-white p-3 rounded shadow-sm w-full">
           <h2 className="font-semibold text-md mb-2">Pending Tasks</h2>
           <p className="text-gray-500 text-xs mb-2">Items that need your attention</p>
-          <ul className="text-xs space-y-3" style={{marginLeft:'-35px'}} minWidth={320}>
+          <ul className="text-xs space-y-3" style={{marginLeft:'-35px', minWidth: '320px'}}>
             {tasks.map((task, i) => (
               <li key={i} className={`p-2 border-l-4 ${task.color} rounded shadow-sm`}>
                 <p className="font-medium text-sm">{task.title}</p>
@@ -297,7 +297,7 @@ const SubDashboard = () => {
 
         <div className="bg-white p-3 rounded shadow-sm w-full">
           <h2 className="font-semibold text-md mb-2">Popular Categories</h2>
-          <ul className="space-y-3 text-xs pl-0"  style={{marginLeft:'-35px'}} minWidth={320}>
+          <ul className="space-y-3 text-xs pl-0" style={{marginLeft:'-35px', minWidth: '320px'}}>
             {vendorsLoading ? (
               <div>Loading...</div>
             ) : !categories || categories.length === 0 ? (

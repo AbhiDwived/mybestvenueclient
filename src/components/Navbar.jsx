@@ -161,7 +161,12 @@ const Navbar = () => {
     <header className="bg-white px-4 py- shadow-sm w-full">
       <div className="mx-auto flex justify-between items-center w-full">
         <Link to="/" className="flex items-center" style={{ textDecoration: 'none' }}>
-          <img className='h-18 ' src={MyBestVenues} alt="logo" srcset="" />
+          <img
+            className="h-12 w-auto"
+            src={MyBestVenues}
+            alt="My Best Venues"
+            srcSet={`${MyBestVenues} 1x, ${MyBestVenues} 2x`}
+          />
         </Link>
         <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden text-gray-700 focus:outline-none">
           {isOpen ? <FiX size={24}  /> : <FiMenu size={24}/>}

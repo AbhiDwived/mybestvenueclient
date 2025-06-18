@@ -117,6 +117,7 @@ import ReviewModeration from "../pages/Admin/ReviewModeration";
 import AdminAddBlogPost from '../pages/Admin/AdminAddBlogPost';
 import CategoryManagement from '../pages/Admin/CategoryManagement';
 import InquiryReply from '../pages/Vendor/Inquiries/InquiryReply';
+import BlogDetails from '../pages/Admin/BlogDetails';
 
 // Location
 import LocationVendors from '../pages/Location/LocationVendor';
@@ -279,9 +280,9 @@ const index = () => {
                     <Route path="vendor_management" element={<VendorManagement />} />
                     <Route path="pending_vendor_approvals" element={<PendingVendorApprovals />} />
                     <Route path="review_moderation" element={<ReviewModeration />} />
-                    {/* <Route path="blogs" element={<AdminBlogs />} /> */}
                     <Route path="category_management" element={<CategoryManagement />} />
                     <Route path="add-blog-post" element={<AdminAddBlogPost />} />
+                    <Route path="blogs/:id" element={<BlogDetails />} />
                 </Route>
             </Routes>
         </Router>

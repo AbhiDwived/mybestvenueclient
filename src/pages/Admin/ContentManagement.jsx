@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   useGetAllBlogsQuery,
   useDeleteBlogMutation,
@@ -173,32 +173,36 @@ export default function IdeaBlog() {
                 className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm"
               >
                 <div className="relative">
-                  <img
-                    src={post.image}
-                    alt={post.title}
-                    className="w-full h-48 object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = 'https://via.placeholder.com/400x200?text=Image+Error';
-                    }}
-                  />
+                  <Link to={`/admin/blogs/${post.id}`}>
+                    <img
+                      src={post.image}
+                      alt={post.title}
+                      className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/400x200?text=Image+Error';
+                      }}
+                    />
+                  </Link>
                   <span className="absolute top-3 left-4 bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full capitalize">
                     {post.category}
                   </span>
                 </div>
                 <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
                   <div className="mb-4">
-                    <h5 className="text-lg font-semibold mb-1">{post.title}</h5>
+                    <Link 
+                      to={`/admin/blogs/${post.id}`}
+                      className="hover:text-blue-600 transition-colors"
+                    >
+                      <h5 className="text-lg font-semibold mb-1">{post.title}</h5>
+                    </Link>
                     <p className="text-sm text-gray-600 mt-2">{post.description}</p>
                   </div>
                   <div className="flex justify-between gap-2 mb-3">
                     <button
                       className="py-2 px-3 bg-blue-100 text-blue-800 rounded-md flex items-center gap-1"
-                      onClick={() => {
-                        setSelectedBlog(post);
-                        setEditMode(false);
-                      }}
+                      onClick={() => navigate(`/admin/blogs/${post.id}`)}
                     >
                       <Eye size={16} /> View
                     </button>
