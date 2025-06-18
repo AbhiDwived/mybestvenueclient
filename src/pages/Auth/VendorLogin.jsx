@@ -84,7 +84,7 @@ const VendorLogin = () => {
                   false ? 'bg-[#fff] text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Couple
+                User
               </button>
               <button
                 onClick={() => handleUserTypeClick('vendor')}
