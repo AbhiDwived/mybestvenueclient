@@ -4,7 +4,7 @@ import {
   useGetAllBlogsQuery,
   useDeleteBlogMutation,
   useUpdateBlogMutation,
-} from '../../features/blogs/blogsAPI';
+} from '../../features/blogs/adminblogsAPI';
 import { Calendar, Eye, Pencil, Trash } from 'lucide-react';
 
 export default function IdeaBlog() {
@@ -156,7 +156,7 @@ export default function IdeaBlog() {
           <p className="text-gray-600">Create and manage blog posts</p>
         </div>
         <button
-          onClick={() => navigate('/vendor/add-blog-post')}
+          onClick={() => navigate('/admin/add-blog-post')}
           className="bg-[#00478F] text-white px-4 py-2 rounded text-sm flex items-center gap-2" 
         >
           <Pencil size={16} /> New Blog Post
