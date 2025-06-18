@@ -2,8 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { Calendar } from "lucide-react";
 import { useGetAllBlogsQuery } from '../../features/blogs/blogsAPI';
 import IdeaBlogHeader from '../../assets/newPics/IdeaBlogHeader.avif';
+import { useNavigate } from 'react-router-dom';
 
 export default function IdeaBlog() {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -50,6 +52,11 @@ export default function IdeaBlog() {
       };
     });
   }, [blogs]);
+
+  // Handle navigation to blog details
+  const handleReadBlog = (blogId) => {
+    navigate(`/blogs/${blogId}`);
+  };
 
   // Get unique categories from blogs
   const categories = useMemo(() => {
@@ -137,11 +144,14 @@ export default function IdeaBlog() {
 
       {/* Featured Article */}
       <div className="py-12 bg-white px-4 sm:px-6 lg:px-12">
-        <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
+        <div 
+          className="grid md:grid-cols-2 gap-8 items-center mb-12 cursor-pointer group"
+          onClick={() => formattedBlogs.length > 0 && handleReadBlog(featuredArticle.id)}
+        >
           <img
             src={featuredArticle.image}
             alt={featuredArticle.title}
-            className="w-full h-[320px] sm:h-[400px] lg:h-[420px] object-cover rounded-lg"
+            className="w-full h-[320px] sm:h-[400px] lg:h-[420px] object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = IdeaBlogHeader;
@@ -151,7 +161,7 @@ export default function IdeaBlog() {
             <span className="inline-block bg-blue-900 text-white px-3 py-1 rounded-full text-sm mb-2">
               {featuredArticle.category}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2 font-playfair">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 font-playfair group-hover:text-blue-900 transition-colors">
               {featuredArticle.title}
             </h2>
             <p className="text-gray-600 mb-4 text-base sm:text-lg">{featuredArticle.description}</p>
@@ -187,12 +197,16 @@ export default function IdeaBlog() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredArticles.length > 0 ? (
             filteredArticles.map((post) => (
-              <div key={post.id} className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm">
-                <div className="relative">
+              <div 
+                key={post.id} 
+                className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-pointer group"
+                onClick={() => handleReadBlog(post.id)}
+              >
+                <div className="relative overflow-hidden">
                   <img 
                     src={post.image} 
                     alt={post.title} 
-                    className="w-full h-48 object-cover"
+                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = IdeaBlogHeader;
@@ -205,7 +219,7 @@ export default function IdeaBlog() {
 
                 <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
                   <div className="mb-4">
-                    <h5 className="text-lg font-playfair font-semibold mb-1 leading-snug">
+                    <h5 className="text-lg font-playfair font-semibold mb-1 leading-snug group-hover:text-blue-900 transition-colors">
                       {post.title}
                     </h5>
                     <p className="text-sm text-gray-600 mb-5 mt-2 leading-relaxed">
@@ -217,8 +231,8 @@ export default function IdeaBlog() {
                       <Calendar size={14} />
                       <span>{post.date}</span>
                     </div>
-                    <span className="text-black hover:underline cursor-pointer">
-                      Read More
+                    <span className="text-blue-900 font-medium group-hover:text-blue-700 transition-colors">
+                      Read More →
                     </span>
                   </div>
                 </div>
