@@ -3,9 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
   useGetAllBlogsQuery,
   useDeleteBlogMutation,
-  useUpdateBlogMutation,
 } from '../../features/blogs/adminblogsAPI';
-import { Calendar, Eye, Pencil, Trash } from 'lucide-react';
+import { Calendar, Eye, Pencil, Trash, X } from 'lucide-react';
+import EditBlogPost from './EditBlogPost';
+import DOMPurify from 'dompurify';
 
 export default function ContentManagement() {
   const navigate = useNavigate();
@@ -13,32 +14,20 @@ export default function ContentManagement() {
     refetchOnMountOrArgChange: true
   });
   const [deleteBlog, { isLoading: isDeleting }] = useDeleteBlogMutation();
-  const [updateBlog] = useUpdateBlogMutation();
 
   const [deletingId, setDeletingId] = useState(null);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [localBlogs, setLocalBlogs] = useState([]);
 
-  // Editable Fields
-  const [editedTitle, setEditedTitle] = useState('');
-  const [editedExcerpt, setEditedExcerpt] = useState('');
-  const [editedContent, setEditedContent] = useState('');
-  const [editedCategory, setEditedCategory] = useState('');
-  const [editedImage, setEditedImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState('');
-
-  const blogCategories = [
-    'General',
-    'Wedding Tips',
-    'Technology',
-    'Travel',
-    'Lifestyle',
-    'Health',
-  ];
-
   // Format blogs and build correct image URLs
   const blogs = Array.isArray(data) ? data : data?.blogs || [];
+
+  // Function to strip HTML tags and get plain text
+  const stripHtml = (html) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+  };
 
   // Update localBlogs when data changes
   React.useEffect(() => {
@@ -56,11 +45,15 @@ export default function ContentManagement() {
           imageUrl = 'https://via.placeholder.com/400x200?text=No+Image';
         }
 
+        // Get plain text content for description
+        const plainContent = stripHtml(blog.content);
+        const description = blog.excerpt || (plainContent ? plainContent.slice(0, 150) + '...' : '');
+
         return {
           id: blog._id,
           title: blog.title,
           excerpt: blog.excerpt || '',
-          description: blog.excerpt || (blog.content ? blog.content.slice(0, 150) + '...' : ''),
+          description,
           category: blog.category || 'General',
           date: new Date(blog.createdAt).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -102,84 +95,12 @@ export default function ContentManagement() {
 
   const handleEditBlog = (blog) => {
     setSelectedBlog(blog);
-    setEditedTitle(blog.title);
-    setEditedExcerpt(blog.excerpt);
-    setEditedContent(blog.fullContent);
-    setEditedCategory(blog.category);
-    setPreviewImage(blog.image);
     setEditMode(true);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setEditedImage(file);
-      setPreviewImage(URL.createObjectURL(file));
-    }
-  };
-
-  const closeModal = () => {
-    setEditMode(false);
-    setSelectedBlog(null);
-    setEditedTitle('');
-    setEditedExcerpt('');
-    setEditedContent('');
-    setEditedCategory('');
-    setEditedImage(null);
-    setPreviewImage('');
-  };
-
-  const handleSaveChanges = async () => {
-    if (!editedTitle.trim() || !editedExcerpt.trim() || !editedContent.trim()) {
-      alert('Please fill in all required fields.');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('title', editedTitle);
-    formData.append('excerpt', editedExcerpt);
-    formData.append('content', editedContent);
-    formData.append('category', editedCategory);
-
-    if (editedImage) {
-      formData.append('image', editedImage);
-    }
-
-    try {
-      // Create optimistic update
-      const optimisticBlog = {
-        ...selectedBlog,
-        title: editedTitle,
-        excerpt: editedExcerpt,
-        description: editedExcerpt,
-        category: editedCategory,
-        fullContent: editedContent,
-        image: editedImage ? previewImage : selectedBlog.image,
-      };
-
-      // Update local state immediately
-      setLocalBlogs(prev => 
-        prev.map(blog => 
-          blog.id === selectedBlog.id ? optimisticBlog : blog
-        )
-      );
-
-      // Close modal before API call
-      closeModal();
-
-      // Make API call
-      await updateBlog({ id: selectedBlog.id, updatedData: formData }).unwrap();
-    } catch (err) {
-      console.error('Failed to update blog:', err);
-      alert('Failed to save changes: ' + (err?.data?.message || 'Unknown error'));
-      
-      // Revert optimistic update on error
-      setLocalBlogs(prev => 
-        prev.map(blog => 
-          blog.id === selectedBlog.id ? selectedBlog : blog
-        )
-      );
-    }
+  const handleEditSuccess = () => {
+    // Refetch the blogs data
+    window.location.reload();
   };
 
   return (
@@ -252,138 +173,34 @@ export default function ContentManagement() {
                       onClick={() => handleDelete(post.id)}
                       disabled={isDeleting && deletingId === post.id}
                     >
-                      <Trash size={16} />
-                      {isDeleting && deletingId === post.id ? 'Deleting...' : 'Delete'}
+                      <Trash size={16} /> Delete
                     </button>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Calendar size={14} className="mr-1" />
+                    {post.date}
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-center col-span-full text-gray-600">No articles found.</p>
+            <div className="col-span-full text-center py-10">
+              <p className="text-gray-500">No blog posts found.</p>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Modal for View/Edit */}
-      {selectedBlog && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => e.target === e.currentTarget && closeModal()}
-        >
-          <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">
-              {editMode ? 'Edit Blog' : 'View Blog'}
-            </h2>
-
-            {editMode ? (
-              <>
-                {/* Edit Mode */}
-                <label className="block mb-2 font-medium">Title *</label>
-                <input
-                  type="text"
-                  value={editedTitle}
-                  onChange={(e) => setEditedTitle(e.target.value)}
-                  className="w-full mb-4 p-2 border rounded"
-                />
-
-                <label className="block mb-2 font-medium">Excerpt (max 300 chars) *</label>
-                <input
-                  type="text"
-                  value={editedExcerpt}
-                  onChange={(e) => setEditedExcerpt(e.target.value)}
-                  maxLength={300}
-                  className="w-full mb-4 p-2 border rounded"
-                />
-
-                <label className="block mb-2 font-medium">Content *</label>
-                <textarea
-                  rows="8"
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  className="w-full mb-4 p-2 border rounded"
-                ></textarea>
-
-                <label className="block mb-2 font-medium">Category *</label>
-                <select
-                  value={editedCategory}
-                  onChange={(e) => setEditedCategory(e.target.value)}
-                  className="w-full mb-4 p-2 border rounded"
-                >
-                  {blogCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-
-                <label className="block mb-2 font-medium">Image Upload</label>
-                <div className="mb-4">
-                  <input type="file" accept="image/*" onChange={handleImageChange} />
-                  {previewImage && (
-                    <img
-                      src={previewImage}
-                      alt="Preview"
-                      className="mt-2 w-full h-auto max-h-60 object-contain border rounded"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/400x200?text=Image+Error';
-                      }}
-                    />
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveChanges}
-                    className="bg-green-600 text-white px-4 py-2 rounded"
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    onClick={closeModal}
-                    className="bg-gray-500 text-white px-4 py-2 rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* View Mode */}
-                <div className="mb-4">
-                  <h3 className="font-semibold text-lg">{selectedBlog.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{selectedBlog.category}</p>
-                </div>
-                {selectedBlog.image && (
-                  <img
-                    src={selectedBlog.image}
-                    alt={selectedBlog.title}
-                    className="w-full h-auto max-h-60 object-contain mb-4 rounded"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = 'https://via.placeholder.com/400x200?text=Image+Error';
-                    }}
-                  />
-                )}
-                <div className="mb-4">
-                  <h4 className="font-medium mb-2">Excerpt:</h4>
-                  <p className="text-gray-700">{selectedBlog.excerpt}</p>
-                </div>
-                <div className="mb-4">
-                  <h4 className="font-medium mb-2">Content:</h4>
-                  <p className="text-gray-700 whitespace-pre-wrap">{selectedBlog.fullContent}</p>
-                </div>
-                <button
-                  onClick={() => setSelectedBlog(null)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded"
-                >
-                  Close
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+      {/* Edit Blog Modal */}
+      {editMode && selectedBlog && (
+        <EditBlogPost
+          blog={selectedBlog}
+          onClose={() => {
+            setEditMode(false);
+            setSelectedBlog(null);
+          }}
+          onSuccess={handleEditSuccess}
+        />
       )}
     </>
   );

@@ -1,20 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCreateBlogMutation } from "../../features/blogs/adminblogsAPI";
-import { Calendar, Image as ImageIcon, Loader, X } from 'lucide-react';
+import { useUpdateBlogMutation } from "../../features/blogs/adminblogsAPI";
+import { Image as ImageIcon, Loader, X } from 'lucide-react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-export default function AdminAddBlogPost() {
+export default function EditBlogPost({ blog, onClose, onSuccess }) {
   const navigate = useNavigate();
-  const [createBlog, { isLoading }] = useCreateBlogMutation();
+  const [updateBlog, { isLoading }] = useUpdateBlogMutation();
 
-  const [title, setTitle] = useState("");
-  const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState("");
-  const [category, setCategory] = useState("General");
+  const [title, setTitle] = useState(blog.title);
+  const [excerpt, setExcerpt] = useState(blog.excerpt);
+  const [content, setContent] = useState(blog.fullContent);
+  const [category, setCategory] = useState(blog.category);
   const [image, setImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState("");
+  const [previewImage, setPreviewImage] = useState(blog.image);
 
   const blogCategories = [
     'General',
@@ -51,16 +51,13 @@ export default function AdminAddBlogPost() {
         formData.append('image', image);
       }
 
-      await createBlog(formData).unwrap();
-      navigate('/admin/dashboard');
+      await updateBlog({ id: blog.id, updatedData: formData }).unwrap();
+      onSuccess?.();
+      onClose?.();
     } catch (err) {
-      console.error('Failed to create blog:', err);
-      alert('Failed to create blog: ' + (err?.data?.message || 'Unknown error'));
+      console.error('Failed to update blog:', err);
+      alert('Failed to update blog: ' + (err?.data?.message || 'Unknown error'));
     }
-  };
-
-  const handleClose = () => {
-    navigate(-1);
   };
 
   return (
@@ -73,14 +70,14 @@ export default function AdminAddBlogPost() {
         <div className="relative bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           {/* Close Button */}
           <button
-            onClick={handleClose}
+            onClick={onClose}
             className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
           >
             <X size={24} className="text-gray-500 hover:text-gray-700" />
           </button>
 
           <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">Create New Blog Post</h1>
+            <h1 className="text-2xl font-bold mb-6">Edit Blog Post</h1>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title Input */}
@@ -184,7 +181,7 @@ export default function AdminAddBlogPost() {
                           type="button"
                           onClick={() => {
                             setImage(null);
-                            setPreviewImage("");
+                            setPreviewImage(blog.image); // Reset to original image
                           }}
                           className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
@@ -224,7 +221,7 @@ export default function AdminAddBlogPost() {
               <div className="flex justify-end space-x-4">
                 <button
                   type="button"
-                  onClick={handleClose}
+                  onClick={onClose}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   Cancel
@@ -237,10 +234,10 @@ export default function AdminAddBlogPost() {
                   {isLoading ? (
                     <>
                       <Loader className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                      Publishing...
+                      Saving...
                     </>
                   ) : (
-                    'Publish Blog'
+                    'Save Changes'
                   )}
                 </button>
               </div>
@@ -250,4 +247,4 @@ export default function AdminAddBlogPost() {
       </div>
     </div>
   );
-}
+} 

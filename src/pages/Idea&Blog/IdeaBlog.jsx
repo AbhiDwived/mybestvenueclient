@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar } from "lucide-react";
-import { useGetAllBlogsQuery } from '../../features/blogs/blogsAPI';
+import { useGetAllBlogsQuery } from '../../features/blogs/adminblogsAPI';
 import IdeaBlogHeader from '../../assets/newPics/IdeaBlogHeader.avif';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,11 +11,11 @@ export default function IdeaBlog() {
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 6;
   
-  // Fetch blogs from API
-  const { data, isLoading, isError, error } = useGetAllBlogsQuery();
+  // Fetch blogs from Admin API
+  const { data: adminBlogsData, isLoading, isError, error } = useGetAllBlogsQuery();
 
-  // Process API data
-  const blogs = Array.isArray(data) ? data : data?.blogs || [];
+  // Process API data - ensure we're using the admin blogs structure
+  const blogs = adminBlogsData?.blogs || [];
 
   // Format blogs for display
   const formattedBlogs = useMemo(() => {
@@ -23,16 +23,13 @@ export default function IdeaBlog() {
       let imageUrl;
 
       if (blog.featuredImage) {
-        // Check if it's already a full URL (including ImageKit URLs)
+        // Check if it's already a full URL
         if (blog.featuredImage.startsWith('http')) {
           imageUrl = blog.featuredImage;
-        } else if (blog.featuredImage.startsWith('/blog-images/')) {
-          // If it's an ImageKit path without the full URL, construct the full URL
-          const imageKitEndpoint = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
-          imageUrl = `${imageKitEndpoint}${blog.featuredImage}`;
         } else {
-          // For any other case, use the URL as is (ImageKit should provide full URLs)
-          imageUrl = blog.featuredImage;
+          // For admin blog images, use the full URL from the server
+          const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
+          imageUrl = `${baseUrl}${blog.featuredImage}`;
         }
       } else {
         imageUrl = IdeaBlogHeader; // Fallback to default image
@@ -57,7 +54,7 @@ export default function IdeaBlog() {
 
   // Handle navigation to blog details
   const handleReadBlog = (blogId) => {
-    navigate(`/blogs/${blogId}`);
+    navigate(`/blog/${blogId}`);
   };
 
   // Get unique categories from blogs

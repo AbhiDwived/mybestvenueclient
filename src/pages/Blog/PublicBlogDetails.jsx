@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetBlogByIdQuery } from '../../features/blogs/blogsAPI';
+import { useGetBlogByIdQuery } from '../../features/blogs/adminblogsAPI';
 import { Calendar, ArrowLeft, Clock, Tag, User } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 export default function PublicBlogDetails() {
   const { id } = useParams();
@@ -46,7 +47,7 @@ export default function PublicBlogDetails() {
   });
 
   // Format read time (assuming 200 words per minute)
-  const wordCount = blog.content.split(/\s+/).length;
+  const wordCount = blog.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
   const readTime = Math.ceil(wordCount / 200);
 
   // Construct image URL
@@ -61,6 +62,16 @@ export default function PublicBlogDetails() {
   } else {
     imageUrl = 'https://via.placeholder.com/1200x600?text=No+Image';
   }
+
+  // Sanitize and render HTML content
+  const createMarkup = (html) => {
+    return {
+      __html: DOMPurify.sanitize(html, {
+        ADD_TAGS: ['iframe'],
+        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
+      })
+    };
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -114,7 +125,7 @@ export default function PublicBlogDetails() {
               </div>
               <div className="flex items-center">
                 <User size={18} className="mr-2 text-blue-600" />
-                <span>Admin</span>
+                <span>{blog.createdBy?.name || 'Admin'}</span>
               </div>
               {blog.category && (
                 <div className="flex items-center">
@@ -135,15 +146,10 @@ export default function PublicBlogDetails() {
 
             {/* Blog Content */}
             <div className="prose prose-lg max-w-none">
-              <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                {blog.content.split('\n').map((paragraph, index) => (
-                  paragraph.trim() && (
-                    <p key={index} className="mb-4">
-                      {paragraph}
-                    </p>
-                  )
-                ))}
-              </div>
+              <div 
+                className="text-[#0d1a3b] leading-relaxed blog-content [&_a]:text-[#0d1a3b] [&_a]:underline hover:[&_a]:text-[#102b6d]"
+                dangerouslySetInnerHTML={createMarkup(blog.content)}
+              />
             </div>
           </div>
         </div>
