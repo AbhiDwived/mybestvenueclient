@@ -119,7 +119,7 @@ import AdminAddBlogPost from '../pages/Admin/AdminAddBlogPost';
 import CategoryManagement from '../pages/Admin/CategoryManagement';
 import InquiryReply from '../pages/Vendor/Inquiries/InquiryReply';
 import BlogDetails from '../pages/Admin/BlogDetails';
-
+import Contact from '../pages/Admin/Contact';
 // Location
 import LocationVendors from '../pages/Location/LocationVendor';
 import CategorySelector from '../pages/Location/CategorySelector';
@@ -285,6 +285,7 @@ const index = () => {
                     <Route path="category_management" element={<CategoryManagement />} />
                     <Route path="add-blog-post" element={<AdminAddBlogPost />} />
                     <Route path="blogs/:id" element={<BlogDetails />} />
+                    <Route path="contact" element={<Contact />} />
                 </Route>
             </Routes>
         </Router>

@@ -17,19 +17,17 @@ export const blogsApi = createApi({
     getAllBlogs: builder.query({
       query: () => '/getallblogs',
       providesTags: (result) =>
-        result
+        result?.blogs
           ? [
               ...result.blogs.map(({ _id }) => ({ type: 'Blog', id: _id })),
               { type: 'Blog', id: 'LIST' },
             ]
           : [{ type: 'Blog', id: 'LIST' }],
-      // ✅ Remove transformResponse - use data as-is
     }),
 
     searchBlogs: builder.query({
       query: (keyword) => `/search?keyword=${encodeURIComponent(keyword)}`,
       providesTags: ['Blog'],
-      // ✅ Remove transformResponse
     }),
 
     createBlog: builder.mutation({
@@ -43,7 +41,6 @@ export const blogsApi = createApi({
 
     getBlogById: builder.query({
       query: (id) => `/getblog/${id}`,
-      // ✅ Remove transformResponse
       providesTags: (result, error, id) => [{ type: 'Blog', id }],
     }),
 
@@ -57,6 +54,30 @@ export const blogsApi = createApi({
         { type: 'Blog', id },
         { type: 'Blog', id: 'LIST' },
       ],
+      async onQueryStarted({ id, updatedData }, { dispatch, queryFulfilled }) {
+        try {
+          const { data: updatedBlog } = await queryFulfilled;
+          
+          dispatch(
+            blogsApi.util.updateQueryData('getBlogById', id, (draft) => {
+              Object.assign(draft, updatedBlog);
+            })
+          );
+          
+          dispatch(
+            blogsApi.util.updateQueryData('getAllBlogs', undefined, (draft) => {
+              if (draft?.blogs) {
+                const index = draft.blogs.findIndex(blog => blog._id === id);
+                if (index !== -1) {
+                  draft.blogs[index] = updatedBlog;
+                }
+              }
+            })
+          );
+        } catch {
+          // If the update fails, the invalidatesTags will handle cache invalidation
+        }
+      },
     }),
 
     deleteBlog: builder.mutation({
@@ -73,7 +94,6 @@ export const blogsApi = createApi({
     getBlogsByCategory: builder.query({
       query: (categoryName) => `/category/${encodeURIComponent(categoryName)}`,
       providesTags: ['Blog'],
-      // ✅ Remove transformResponse
     }),
   }),
 });

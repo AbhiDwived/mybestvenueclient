@@ -149,6 +149,7 @@ const SuccessfullEvents = () => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const carouselRef = useRef(null);
 
+
     const scrollLeft = () => {
         carouselRef.current.scrollBy({ left: -320, behavior: 'smooth' });
     };
@@ -177,7 +178,7 @@ const SuccessfullEvents = () => {
                         <button
                             onClick={scrollLeft}
                             style={{ borderRadius: '25px' }}
-                            className="flex absolute left-2 top-1/3 transform -translate-y-1/2 z-10 bg-white hover:bg-yellow-100 p-2  "
+                            className="flex absolute  left-2 top-1/3 transform -translate-y-1/2 z-10 bg-white hover:bg-yellow-100 p-2  "
                         >
                             <IoArrowBackOutline />
                         </button>
@@ -185,7 +186,11 @@ const SuccessfullEvents = () => {
                         {/* Carousel */}
                         <div
                             ref={carouselRef}
-                            className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 no-scrollbar "
+                            className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4
+        [&::-webkit-scrollbar]:hidden /* Hide scrollbar for Chrome, Safari */
+        [-ms-overflow-style: none] /* Hide scrollbar for Internet Explorer and Edge */
+        [scrollbar-width: none] /* Hide scrollbar for Firefox */
+    "
                         >
                             {events.map((event) => (
                                 <div

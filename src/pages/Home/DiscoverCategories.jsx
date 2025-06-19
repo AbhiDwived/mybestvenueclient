@@ -2,7 +2,7 @@ import { useState } from 'react';
 import DiscoverImage from "../../assets/newPics/discoverImage.jpg";
 import BrowseVenues from '../WeddingVenues/BrowserVenues';
 import LocationVendors from '../Location/LocationVendor'; // Make sure this is correct
-
+import { Link } from 'react-router-dom';
 const DiscoverCategories = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
@@ -82,13 +82,13 @@ const DiscoverCategories = () => {
           </form>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">
-            <button
-            style={{borderRadius:'5px'}}
+            <Link to='/contactUs'
+            style={{borderRadius:'5px', textDecoration:'none'}}
               onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })}
               className="px-3 py-2 bg-white/10 text-white border border-white rounded-md backdrop-blur-sm hover:text-black hover:bg-white/20 transition-colors"
             >
-              Browse Venues
-            </button>
+              Contact Us
+            </Link>
             <a
               href="/planning-tools"
               style={{textDecoration:'none'}}

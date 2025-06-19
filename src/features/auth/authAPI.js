@@ -130,6 +130,14 @@ baseQuery: fetchBaseQuery({
   }),
 }),
 
+  //UserContact---POST
+  submitContactForm: builder.mutation({
+    query: (userData) => ({
+      url: "/user/contact",
+      method: "POST",
+      body: userData,
+    }),
+  }),
 
   }),
 });
@@ -149,4 +157,5 @@ export const {
   useLogoutUserMutation,
   useGetUserInquiriesMutation,
   useSendUserReplyMutation,
+  useSubmitContactFormMutation,
 } = authApi;

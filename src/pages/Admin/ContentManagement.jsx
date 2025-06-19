@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   useGetAllBlogsQuery,
@@ -7,15 +7,18 @@ import {
 } from '../../features/blogs/adminblogsAPI';
 import { Calendar, Eye, Pencil, Trash } from 'lucide-react';
 
-export default function IdeaBlog() {
+export default function ContentManagement() {
   const navigate = useNavigate();
-  const { data, isLoading, isError, error } = useGetAllBlogsQuery();
+  const { data, isLoading, isError, error } = useGetAllBlogsQuery(undefined, {
+    refetchOnMountOrArgChange: true
+  });
   const [deleteBlog, { isLoading: isDeleting }] = useDeleteBlogMutation();
-  const [updateBlog, { isLoading: isUpdating }] = useUpdateBlogMutation();
+  const [updateBlog] = useUpdateBlogMutation();
 
   const [deletingId, setDeletingId] = useState(null);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [localBlogs, setLocalBlogs] = useState([]);
 
   // Editable Fields
   const [editedTitle, setEditedTitle] = useState('');
@@ -37,37 +40,39 @@ export default function IdeaBlog() {
   // Format blogs and build correct image URLs
   const blogs = Array.isArray(data) ? data : data?.blogs || [];
 
-  const formattedBlogs = useMemo(() => {
-    return blogs.map((blog) => {
-      let imageUrl;
-
-      if (blog.featuredImage) {
-        if (blog.featuredImage.startsWith('http')) {
-          imageUrl = blog.featuredImage;
+  // Update localBlogs when data changes
+  React.useEffect(() => {
+    if (blogs.length > 0) {
+      const formattedData = blogs.map((blog) => {
+        let imageUrl;
+        if (blog.featuredImage) {
+          if (blog.featuredImage.startsWith('http')) {
+            imageUrl = blog.featuredImage;
+          } else {
+            const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
+            imageUrl = `${baseUrl}${blog.featuredImage}`;
+          }
         } else {
-          // ✅ Backend already provides correct path like "/uploads/vendors/filename.jpg"
-          const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
-          imageUrl = `${baseUrl}${blog.featuredImage}`; // Just concatenate base + path
+          imageUrl = 'https://via.placeholder.com/400x200?text=No+Image';
         }
-      } else {
-        imageUrl = 'https://via.placeholder.com/400x200?text=No+Image';
-      }
 
-      return {
-        id: blog._id,
-        title: blog.title,
-        excerpt: blog.excerpt || '',
-        description: blog.excerpt || (blog.content ? blog.content.slice(0, 150) + '...' : ''),
-        category: blog.category || 'General',
-        date: new Date(blog.createdAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
-        image: imageUrl,
-        fullContent: blog.content,
-      };
-    });
+        return {
+          id: blog._id,
+          title: blog.title,
+          excerpt: blog.excerpt || '',
+          description: blog.excerpt || (blog.content ? blog.content.slice(0, 150) + '...' : ''),
+          category: blog.category || 'General',
+          date: new Date(blog.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+          image: imageUrl,
+          fullContent: blog.content,
+        };
+      });
+      setLocalBlogs(formattedData);
+    }
   }, [blogs]);
 
   if (isLoading)
@@ -85,6 +90,8 @@ export default function IdeaBlog() {
     setDeletingId(id);
     try {
       await deleteBlog(id).unwrap();
+      // Update local state after successful deletion
+      setLocalBlogs(prev => prev.filter(blog => blog.id !== id));
     } catch (err) {
       console.error('Failed to delete blog:', err);
       alert('Failed to delete blog: ' + (err?.data?.message || err.error || 'Unknown error'));
@@ -99,7 +106,7 @@ export default function IdeaBlog() {
     setEditedExcerpt(blog.excerpt);
     setEditedContent(blog.fullContent);
     setEditedCategory(blog.category);
-    setPreviewImage(blog.image); // This uses the correct image URL now
+    setPreviewImage(blog.image);
     setEditMode(true);
   };
 
@@ -135,15 +142,43 @@ export default function IdeaBlog() {
     formData.append('category', editedCategory);
 
     if (editedImage) {
-      formData.append('featuredImage', editedImage);
+      formData.append('image', editedImage);
     }
 
     try {
-      await updateBlog({ id: selectedBlog.id, updatedData: formData }).unwrap();
+      // Create optimistic update
+      const optimisticBlog = {
+        ...selectedBlog,
+        title: editedTitle,
+        excerpt: editedExcerpt,
+        description: editedExcerpt,
+        category: editedCategory,
+        fullContent: editedContent,
+        image: editedImage ? previewImage : selectedBlog.image,
+      };
+
+      // Update local state immediately
+      setLocalBlogs(prev => 
+        prev.map(blog => 
+          blog.id === selectedBlog.id ? optimisticBlog : blog
+        )
+      );
+
+      // Close modal before API call
       closeModal();
+
+      // Make API call
+      await updateBlog({ id: selectedBlog.id, updatedData: formData }).unwrap();
     } catch (err) {
       console.error('Failed to update blog:', err);
       alert('Failed to save changes: ' + (err?.data?.message || 'Unknown error'));
+      
+      // Revert optimistic update on error
+      setLocalBlogs(prev => 
+        prev.map(blog => 
+          blog.id === selectedBlog.id ? selectedBlog : blog
+        )
+      );
     }
   };
 
@@ -166,8 +201,8 @@ export default function IdeaBlog() {
       {/* Blog Cards */}
       <div className="py-12 bg-white">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {formattedBlogs.length > 0 ? (
-            formattedBlogs.map((post) => (
+          {localBlogs.length > 0 ? (
+            localBlogs.map((post) => (
               <div
                 key={post.id}
                 className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm"
@@ -301,10 +336,9 @@ export default function IdeaBlog() {
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveChanges}
-                    disabled={isUpdating}
-                    className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                    className="bg-green-600 text-white px-4 py-2 rounded"
                   >
-                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                    Save Changes
                   </button>
                   <button
                     onClick={closeModal}
@@ -346,7 +380,7 @@ export default function IdeaBlog() {
                 >
                   Close
                 </button>
-                </>
+              </>
             )}
           </div>
         </div>

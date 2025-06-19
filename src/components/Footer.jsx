@@ -43,7 +43,7 @@ const Footer = () => {
         {/* Quick Links */}
         <div className="hidden sm:hidden md:block mt-1">
           <h5 className="text-lg font-semibold border-b border-blue-500">Quick Links</h5>
-          <ul  style={{marginLeft:'-30px'}}>
+          <ul style={{ marginLeft: '-30px' }}>
             <li className='mt-7'><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
             <li className='mt-2'><Link to="/planning-tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Wedding Venues</Link></li>
             <li className='mt-2'><Link to="/corporate" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Corporate Events</Link></li>
@@ -52,29 +52,34 @@ const Footer = () => {
           </ul>
         </div>
         <AccordionSection title="Quick Links">
-          <ul  className="text-[#D1D5DB]">
-            <li><Link to="/wedding-vendor" style={{textDecoration:'none', color: '#D1D5DB'}}>› Find Vendors</Link></li>
-            <li className='mt-2'><Link to="/planning-tools" style={{textDecoration:'none', color: '#D1D5DB'}}>› Wedding Venues</Link></li>
-            <li className='mt-2'><Link to="/corporate" style={{textDecoration:'none', color: '#D1D5DB'}}>› Corporate Events</Link></li>
-            <li className='mt-2'><Link to="/IdeaBlog" style={{textDecoration:'none', color: '#D1D5DB'}}>› Event Blog</Link></li>
-            <li className='mt-2'><Link to="/planning-tools" style={{textDecoration:'none', color: '#D1D5DB'}}>› Planning Tools</Link></li>
+          <ul className="text-[#D1D5DB]">
+            <li><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
+            <li className='mt-2'><Link to="/planning-tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Wedding Venues</Link></li>
+            <li className='mt-2'><Link to="/corporate" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Corporate Events</Link></li>
+            <li className='mt-2'><Link to="/IdeaBlog" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Event Blog</Link></li>
+            <li className='mt-2'><Link to="/planning-tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Planning Tools</Link></li>
           </ul>
         </AccordionSection>
 
         {/* Contact Info */}
         <div className="hidden sm:hidden md:block">
-          <h5 className="text-lg font-semibold border-b border-blue-500 mb-4 pb-1">Contact Us</h5>
+          <h5 className="text-lg font-semibold border-b  border-blue-500 mb-4 pb-1"> <Link to='/contactUs' style={{textDecoration:'none', color:'white'}}>Contact Us</Link></h5>
           <ul className="text-md p-0 text-[#D1D5DB]">
-            <li className='sm:text-[#D1D5DB] text-sm '><Link to="https://www.google.com/maps/search/?api=1&query=A-223,+Sector-151,+Near-148+metro+station,+Greater+Noida,+Uttar+Pradesh+201310" target="_blank" rel="noopener noreferrer" style={{textDecoration:'none', color: '#D1D5DB'}}><FaLocationDot className="inline mr-2 " style={{textDecoration:'none', color: '#D1D5DB'}} />A-230, Sector-151, Near-148 metro station, Greater Noida, India, Uttar Pradesh code - 201310</Link></li>
-            <li className="mt-3"><Link to="tel:08130622279" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" />081306 22279</Link></li>
+            <li className='sm:text-[#D1D5DB] text-sm '><Link to="https://www.google.com/maps/dir/?api=1&destination=A-223%2C+Sector+151%2C+Noida%2C+Uttar+Pradesh+201310" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaLocationDot className="inline mr-2 " style={{ textDecoration: 'none', color: '#D1D5DB' }} />A-230, Sector-151, Near-148 metro station, Greater Noida, India, Uttar Pradesh code - 201310</Link></li>
+            <li className="mt-3"><Link to="tel:9990555740" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" /> +91 9990555740</Link></li>
             <li className="mt-3"><Link to="mailto:mybestvenue@gmail.com" style={{ textDecoration: 'none', color: '#D1D5DB' }}><BiSolidContact className="inline mr-2" />mybestvenue@gmail.com</Link></li>
           </ul>
         </div>
-        <AccordionSection title="Contact Us">
+        <AccordionSection Link to='/contactUs' title="Contact Us">
           <ul className="sm:text-[#D1D5DB] text-sm ">
-            <li><Link to="https://www.google.com/maps/search/?api=1&query=A-223,+Sector-151,+Near-148+metro+station,+Greater+Noida,+Uttar+Pradesh+201310" target="_blank" rel="noopener noreferrer" style={{textDecoration:'none', color: '#D1D5DB'}}><FaLocationDot className="inline mr-2 " />A-230, Sector-151, Near-148 metro, Greater Noida</Link></li>
-            <li className="mt-2"><Link to="tel:08130622279" style={{textDecoration:'none', color: '#D1D5DB'}}><FaPhone className="inline mr-2" />081306 22279</Link></li>
-            <li className="mt-2"><Link to="mailto:mybestvenue@gmail.com" style={{textDecoration:'none', color: '#D1D5DB'}}><BiSolidContact className="inline mr-2" />mybestvenue@gmail.com</Link></li>
+            <li><Link to='https://www.google.com/maps/dir/?api=1&destination=A-223%2C+Sector+151%2C+Noida%2C+Uttar+Pradesh+201310' target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none' }}
+              className="inline-block transition text-black duration-300">
+              A-230, Sector-151, Near-148 metro station, Greater Noida, India, <br /> Uttar Pradesh code - 201310
+            </Link></li>
+            <li className="mt-2"><Link to="tel:9990555740" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" /> +91 9990555740</Link></li>
+            <li className="mt-2"><Link to="mailto:mybestvenue@gmail.com" style={{ textDecoration: 'none', color: '#D1D5DB' }}><BiSolidContact className="inline mr-2" />mybestvenue@gmail.com</Link></li>
           </ul>
         </AccordionSection>
 
@@ -96,9 +101,9 @@ const Footer = () => {
       <div className="border-gray-700 text-sm text-[#D1D5DB] py-4 px-3 flex flex-col md:flex-row justify-between items-center max-w-8xl mx-auto">
         <p>© 2025 MyBestVenue. All rights reserved.</p>
         <div className="flex space-x-5 mt-2 md:mt-0 text-md text-[#D1D5DB]">
-          <Link to="/terms" style={{textDecoration:'none', color: '#D1D5DB'}} className="text-[#D1D5DB]">Terms</Link>
-          <Link to="/privacy" style={{textDecoration:'none', color: '#D1D5DB'}} className="text-[#D1D5DB]">Privacy</Link>
-          <Link to="/cookies" style={{textDecoration:'none', color: '#D1D5DB'}} className="text-[#D1D5DB]">Cookies</Link>
+          <Link to="/terms" style={{ textDecoration: 'none', color: '#D1D5DB' }} className="text-[#D1D5DB]">Terms</Link>
+          <Link to="/privacy" style={{ textDecoration: 'none', color: '#D1D5DB' }} className="text-[#D1D5DB]">Privacy</Link>
+          <Link to="/cookies" style={{ textDecoration: 'none', color: '#D1D5DB' }} className="text-[#D1D5DB]">Cookies</Link>
         </div>
       </div>
     </footer>

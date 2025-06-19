@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IoSettingsOutline } from "react-icons/io5";
 import { FaArrowTrendUp } from "react-icons/fa6";
 import SubDashboard from './SubDashboard';
@@ -7,6 +7,7 @@ import VendorManagement from './VendorManagement';
 import PendingApprovals from './PendingApprovals';
 import ReviewModeration from './ReviewModeration';
 import ContentManagement from './ContentManagement';
+import Contact from './Contact';
 
 // 🟢 Import RTK hooks
 import {
@@ -16,14 +17,20 @@ import {
 } from '../../features/admin/adminAPI'; // Update path if needed
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [activeTab, setActiveTab] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load activeTab from localStorage after component mounts
+  useEffect(() => {
+    const savedTab = localStorage.getItem('adminActiveTab') || 'Dashboard';
+    setActiveTab(savedTab);
+    setIsInitialized(true);
+  }, []);
 
   // 🟡 Fetch admin statistics
   const { data: usersData, isLoading: usersLoading } = useGetAllUsersQuery();
   const { data: vendorsData, isLoading: vendorsLoading } = useGetAllVendorsQuery();
   const { data: pendingData, isLoading: pendingLoading } = useGetPendingVendorsQuery();
-
-
 
   if (!pendingLoading && !pendingData) {
     // console.warn("⚠️ No pending vendor data returned.");
@@ -35,7 +42,8 @@ const AdminDashboard = () => {
     'Vendor Management',
     'Pending Approvals',
     'Review Moderation',
-    'Content Management'
+    'Content Management',
+    'Contacts'
   ];
 
   // 🟢 Build cardData with live API counts
@@ -97,6 +105,15 @@ const AdminDashboard = () => {
       }
     }
   ];
+
+  // Show loading screen until we know which tab to display
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex justify-center items-center bg-gray-50">
+        <p className="text-gray-600">Loading admin panel...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6 text-gray-800 space-y-6 font-serif">
@@ -189,16 +206,19 @@ const AdminDashboard = () => {
       </div>
 
       {/* Tabs Menu */}
-      <div className="lg:mt-7 p-">
-        <div style={{borderRadius:'5px'}}
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8  bg-gray-200 py-1 px-1"
+      <div className="lg:mt-7">
+        <div style={{ borderRadius: '5px' }}
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 bg-gray-200 py-1 px-1"
         >
           {tabs.map((tab, i) => (
             <button
               key={i}
-              onClick={() => setActiveTab(tab)}
-              style={{borderRadius:'5px'}}
-              className={` py-2 rounded-md font-medium whitespace-nowrap text-xs sm:text-sm transition ${tab === activeTab
+              onClick={() => {
+                setActiveTab(tab);
+                localStorage.setItem('adminActiveTab', tab); // Persist tab selection
+              }}
+              style={{ borderRadius: '5px' }}
+              className={`py-2 rounded-md font-medium whitespace-nowrap text-xs sm:text-sm transition ${tab === activeTab
                   ? 'bg-white text-black shadow-sm'
                   : 'text-gray-600 hover:bg-white/80'
                 }`}
@@ -209,9 +229,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-
       {/* Tab Content */}
-      <div className="shadow-sm rounded-full">
+      <div className="shadow-sm rounded-lg overflow-hidden">
         {activeTab === 'Dashboard' && (
           <div className="col-span-3 bg-white w-full">
             <SubDashboard />
@@ -240,6 +259,11 @@ const AdminDashboard = () => {
         {activeTab === 'Content Management' && (
           <div className="col-span-3 bg-white w-full">
             <ContentManagement />
+          </div>
+        )}
+        {activeTab === 'Contacts' && (
+          <div className="col-span-3 bg-white w-full">
+            <Contact />
           </div>
         )}
       </div>

@@ -124,12 +124,23 @@ export const adminApi = createApi({
         body,
       }),
     }),
+
+       //UserContact---Get
+       getAllMessage: builder.query({
+        query: ({ page = 1, limit = 10 }) => ({
+          url: "/user/contacts",
+          method: "GET",
+          params: { page, limit },
+        }),
+      }),
+
   }),
 });
 
 // Export hooks
 export const {
   useRegisterAdminMutation,
+  useGetAllMessageQuery,
   useLoginAdminMutation,
   useVerifyAdminOtpMutation,
   useResendAdminOtpMutation,

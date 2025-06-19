@@ -8,6 +8,8 @@ export default function IdeaBlog() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
   
   // Fetch blogs from API
   const { data, isLoading, isError, error } = useGetAllBlogsQuery();
@@ -21,16 +23,16 @@ export default function IdeaBlog() {
       let imageUrl;
 
       if (blog.featuredImage) {
+        // Check if it's already a full URL (including ImageKit URLs)
         if (blog.featuredImage.startsWith('http')) {
           imageUrl = blog.featuredImage;
-        } else if (blog.featuredImage.startsWith('/uploads/')) {
-          // If it already has the full path
-          const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
-          imageUrl = `${baseUrl}${blog.featuredImage}`;
+        } else if (blog.featuredImage.startsWith('/blog-images/')) {
+          // If it's an ImageKit path without the full URL, construct the full URL
+          const imageKitEndpoint = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT;
+          imageUrl = `${imageKitEndpoint}${blog.featuredImage}`;
         } else {
-          // If it's just the filename, construct the full path
-          const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
-          imageUrl = `${baseUrl}/uploads/vendors/${blog.featuredImage}`;
+          // For any other case, use the URL as is (ImageKit should provide full URLs)
+          imageUrl = blog.featuredImage;
         }
       } else {
         imageUrl = IdeaBlogHeader; // Fallback to default image
@@ -47,7 +49,7 @@ export default function IdeaBlog() {
           day: 'numeric',
         }),
         image: imageUrl,
-        author: 'Admin', // You can modify this based on createdBy data
+        author: blog.createdBy?.name || 'Admin',
         featured: false,
       };
     });
@@ -66,7 +68,7 @@ export default function IdeaBlog() {
 
   // Featured article (first blog or fallback)
   const featuredArticle = formattedBlogs.length > 0 ? 
-    { ...formattedBlogs[0], featured: true, author: 'Admin' } : 
+    { ...formattedBlogs[0], featured: true } : 
     {
       title: "Welcome to Our Blog",
       description: "Discover amazing ideas and tips for your events.",
@@ -79,7 +81,6 @@ export default function IdeaBlog() {
 
   // Filter logic: category AND search query
   const filteredArticles = formattedBlogs
-    .slice(formattedBlogs.length > 0 ? 1 : 0) // Skip featured article if blogs exist
     .filter(article => {
       const matchesCategory = selectedCategory === "All" || article.category === selectedCategory;
       const matchesSearch =
@@ -87,6 +88,11 @@ export default function IdeaBlog() {
         article.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
+  const paginatedArticles = filteredArticles.slice(0, page * ITEMS_PER_PAGE);
+  const hasMore = page * ITEMS_PER_PAGE < filteredArticles.length;
 
   // Loading state
   if (isLoading) {
@@ -129,12 +135,18 @@ export default function IdeaBlog() {
               placeholder="Search by title or description..."
               className="flex-1 border focus:outline-none text-gray-800 p-2 rounded-md"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1); // Reset page when searching
+              }}
             />
             <button
               style={{ borderRadius: '5px' }}
               className="bg-[#10497a] hover:bg-[#062b4b] text-white px-5 py-2"
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                setSearchQuery("");
+                setPage(1); // Reset page when clearing search
+              }}
             >
               Clear
             </button>
@@ -143,10 +155,11 @@ export default function IdeaBlog() {
       </div>
 
       {/* Featured Article */}
+      {formattedBlogs.length > 0 && (
       <div className="py-12 bg-white px-4 sm:px-6 lg:px-12">
         <div 
           className="grid md:grid-cols-2 gap-8 items-center mb-12 cursor-pointer group"
-          onClick={() => formattedBlogs.length > 0 && handleReadBlog(featuredArticle.id)}
+            onClick={() => handleReadBlog(featuredArticle.id)}
         >
           <img
             src={featuredArticle.image}
@@ -181,9 +194,13 @@ export default function IdeaBlog() {
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setPage(1); // Reset page when changing category
+                }}
               style={{borderRadius:'25px', height:'50px'}}
-              className={`border px-4 py-1 text-sm sm:text-base transition ${selectedCategory === cat
+                className={`border px-4 py-1 text-sm sm:text-base transition ${
+                  selectedCategory === cat
                   ? "bg-[#062945] text-white "
                   : "text-gray-800 hover:text-white hover:bg-[#062945]"
                 }`}
@@ -195,8 +212,8 @@ export default function IdeaBlog() {
 
         {/* Blog Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredArticles.length > 0 ? (
-            filteredArticles.map((post) => (
+            {paginatedArticles.length > 0 ? (
+              paginatedArticles.map((post) => (
               <div 
                 key={post.id} 
                 className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-pointer group"
@@ -245,11 +262,15 @@ export default function IdeaBlog() {
           )}
         </div>
       </div>
+      )}
 
       {/* Load More */}
-      {formattedBlogs.length > 6 && (
+      {hasMore && (
         <section className="mt-2 mb-8 text-center px-4 sm:px-6 lg:px-12">
-          <button className="inline-block bg-white text-black px-5 py-2 mb-10 border rounded hover:bg-[#09365d] hover:text-white transition-colors duration-300">
+          <button 
+            onClick={() => setPage(prev => prev + 1)}
+            className="inline-block bg-white text-black px-5 py-2 mb-10 border rounded hover:bg-[#09365d] hover:text-white transition-colors duration-300"
+          >
             Load More Articles
           </button>
         </section>
