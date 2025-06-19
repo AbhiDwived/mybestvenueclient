@@ -112,7 +112,7 @@ const VendorSignup = () => {
                 userType === 'couple' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Couple
+              User
             </button>
             <button
               onClick={() => handleUserTypeSwitch('vendor')}

@@ -99,10 +99,10 @@ const UserSignup = () => {
           {/* Tabs */}
           <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-md">
             <button
-              onClick={() => handleTabClick('couple')}
+              onClick={() => handleTabClick('user')}
               className={`flex-1 py-1 px-4 rounded-md transition-all ${userType === 'couple' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
-              Couple
+              User
             </button>
             <button
               onClick={() => handleTabClick('vendor')}

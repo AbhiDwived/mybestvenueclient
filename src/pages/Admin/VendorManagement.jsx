@@ -42,9 +42,11 @@ const VendorManagement = () => {
   const allVendors = vendorsData?.vendors || [];
 
   const filteredVendors = allVendors.filter((vendor) => {
-    const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = vendor.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         vendor.businessName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const normalizedCategory = vendor.category?.toLowerCase().replace(/\s/g, "");
+    const normalizedCategory = vendor.category?.toLowerCase().replace(/\s/g, "") || 
+                             vendor.vendorType?.toLowerCase().replace(/\s/g, "");
     const selectedCatNormalized = selectedCategory.toLowerCase().replace(/\s/g, "");
     const matchesCategory =
       selectedCategory === "All Categories" || normalizedCategory === selectedCatNormalized;
@@ -56,14 +58,14 @@ const VendorManagement = () => {
   const paginatedVendors = filteredVendors.slice(startIdx, startIdx + vendorsPerPage);
   const totalPages = Math.ceil(filteredVendors.length / vendorsPerPage);
 
-  const handleView = (vendor) => alert(`Viewing profile: ${vendor.name}`);
-  const handleEdit = (vendor) => alert(`Editing vendor: ${vendor.name}`);
+  const handleView = (vendor) => alert(`Viewing profile: ${vendor.businessName || vendor.name}`);
+  const handleEdit = (vendor) => alert(`Editing vendor: ${vendor.businessName || vendor.name}`);
 
   const handleDelete = async (vendor) => {
-    if (window.confirm(`Delete ${vendor.name}?`)) {
+    if (window.confirm(`Delete ${vendor.businessName || vendor.name}?`)) {
       try {
         await deleteVendor({ vendorId: vendor._id }).unwrap();
-        alert(`Deleted vendor: ${vendor.name}`);
+        alert(`Deleted vendor: ${vendor.businessName || vendor.name}`);
 
         // Refresh page or ideally trigger refetch
         setCurrentPage(1); // Optional: reset to first page
@@ -115,10 +117,13 @@ const VendorManagement = () => {
             <div key={vendor._id || idx} className="border rounded-xl shadow-sm overflow-hidden">
               {vendor.profilePicture ? (
                 <img
-                  src={`${import.meta.env.VITE_API_URL.replace('/api/v1', '')
-                    }${vendor.profilePicture}`}
-                  alt={vendor.name}
+                  src={vendor.profilePicture}
+                  alt={vendor.businessName || vendor.name}
                   className="w-full h-64 object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/default-profile.jpg';
+                  }}
                 />
               ) : (
                 <div className="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-400 text-lg">
@@ -137,13 +142,13 @@ const VendorManagement = () => {
                       overflow: "hidden",
                       minHeight: "3rem", // two-line height space
                     }}
-                    title={vendor.name}
+                    title={vendor.businessName || vendor.name}
                   >
-                    {vendor.name}
+                    {vendor.businessName || vendor.name}
                   </h3>
 
                   <span className="text-xs px-2 py-1 bg-[#0f4c81] text-white rounded-full">
-                    {vendor.category}
+                    {vendor.vendorType || vendor.category}
                   </span>
                 </div>
 
@@ -152,7 +157,9 @@ const VendorManagement = () => {
                   <span>
                     {vendor.rating ?? "N/A"} ({vendor.reviews ?? 0})
                   </span>
-                  <span className="ml-2 text-gray-500">{vendor.location ?? ""}</span>
+                  <span className="ml-2 text-gray-500">
+                    {vendor.serviceAreas?.[0] || vendor.location || ""}
+                  </span>
                 </div>
 
                 <p className="text-sm text-gray-700 mb-3">{vendor.description ?? ""}</p>

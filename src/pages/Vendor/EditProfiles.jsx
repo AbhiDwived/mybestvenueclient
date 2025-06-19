@@ -131,7 +131,7 @@ const EditProfile = () => {
       const res = await updateProfile({ vendorId, profileData: formData }).unwrap();
       const updatedVendor = res.vendor || res;
       
-      // Update with the server path
+      // Update with the ImageKit URL
       if (updatedVendor.profilePicture) {
         setCoverImage(updatedVendor.profilePicture);
         setSelectedFile(null); // Clear selected file after successful upload
@@ -206,7 +206,7 @@ const EditProfile = () => {
             <p className="text-muted small">This will be displayed as your profile banner</p>
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
               <img 
-                src={coverImage ? (coverImage.startsWith('data:') ? coverImage : `${serverURL}${coverImage}`) : coverimage} 
+                src={coverImage || coverimage} 
                 className="w-100 h-100 object-fit-cover" 
                 alt="Cover"
                 onError={(e) => {
@@ -231,7 +231,6 @@ const EditProfile = () => {
                 type="file"
                 accept=".png, .jpg, .jpeg"
                 ref={fileInputRef}
-                // onChange={(e) => handleImageChange(e.target.files[0])}
                 onChange={(e) => handleImageChange(e.target.files[0])}
                 className="d-none"
               />

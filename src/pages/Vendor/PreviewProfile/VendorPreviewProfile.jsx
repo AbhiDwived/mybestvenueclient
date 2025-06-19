@@ -48,9 +48,13 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                         <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                             {vendor?.profilePicture ? (
                                 <img
-                                    src={`${serverURL}${vendor.profilePicture}`}
+                                    src={vendor.profilePicture}
                                     alt="Vendor"
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/default-profile.jpg';
+                                    }}
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">No Image</div>
@@ -258,9 +262,13 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                             return imagesToShow.map((img, index) => (
                                 <img
                                     key={index}
-                                    src={`http://localhost:5000${img}`}
+                                    src={img}
                                     alt={`Gallery ${index + 1}`}
                                     className="w-full h-45 object-cover rounded"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/default-profile.jpg';
+                                    }}
                                 />
                             ));
                         })()}
