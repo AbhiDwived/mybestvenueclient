@@ -12,7 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^45.2.0",
+    "@ckeditor/ckeditor5-build-classic": "^37.1.0",
     "@ckeditor/ckeditor5-react": "^6.2.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -29,11 +29,11 @@
     "dotenv": "^16.5.0",
     "lucide-react": "^0.507.0",
     "moment": "^2.30.1",
-    "react": "^19.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-calendar": "^5.1.0",
     "react-chartjs-2": "^5.3.0",
     "react-datepicker": "^8.3.0",
-    "react-dom": "^19.1.0",
     "react-dropzone": "^14.3.8",
     "react-feather": "^2.0.10",
     "react-icons": "^5.5.0",
