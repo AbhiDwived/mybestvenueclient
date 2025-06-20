@@ -1,11 +1,10 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FaChevronDown } from "react-icons/fa";
 import { RiCheckboxCircleFill } from "react-icons/ri";
 import InquiryReply from './InquiryReply';
 import { useSelector } from 'react-redux';
-
-import { useUserInquiryListMutation } from "../../../features/vendors/vendorAPI";
+import { useUserInquiryListQuery } from "../../../features/vendors/vendorAPI";
+import { toast } from 'react-toastify';
 
 const InquiriesSection = () => {
   const [filter, setFilter] = useState('All');
@@ -13,26 +12,50 @@ const InquiriesSection = () => {
   const [selectedInquiry, setSelectedInquiry] = useState(null);
 
   const vendor = useSelector((state) => state.vendor.vendor);
-  const vendorId = vendor?.id;
-
-  const [getInquiries, { data, isLoading, isError }] = useUserInquiryListMutation();
+  
+  const { data, isLoading, isError, error, refetch } = useUserInquiryListQuery(undefined, {
+    // The query will use the auth token from the state, so we don't need to pass vendorId
+    refetchOnMountOrArgChange: true
+  });
+  
   const inquiries = data?.modifiedList || [];
-  // console.log("inquiries", inquiries)
 
   const filteredInquiries =
-    filter === 'All' ? inquiries : inquiries.filter((i) => i.status === filter);
+    filter === 'All' ? inquiries : inquiries.filter((i) => i.replyStatus === filter);
 
-  useEffect(() => {
-    if (vendorId) {
-      getInquiries({ vendorId });
-    }
-  }, [vendorId, getInquiries]);
+  if (!vendor) {
+    return (
+      <div className="p-4 text-red-500 text-center">
+        Please log in to view inquiries
+      </div>
+    );
+  }
 
-  if (isLoading) return <div className="p-4">Loading inquiries...</div>;
-  if (isError) return <div className="p-4 text-red-500">Failed to load inquiries</div>;
-console.log(selectedInquiry,'data came')
+  if (isLoading) {
+    return (
+      <div className="p-4 flex items-center justify-center min-h-[200px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    const errorMessage = error?.data?.message || 'Failed to load inquiries';
+    toast.error(errorMessage);
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-500 mb-4">{errorMessage}</p>
+        <button 
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   return (
-
     <div className="p-2 grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-50 min-h-screen font-serif">
       {/* Summary Section */}
       <div className="space-y-6 col-span-1">
@@ -102,7 +125,10 @@ console.log(selectedInquiry,'data came')
       {/* Inquiry List */}
       <div className="col-span-1 lg:col-span-2">
         {selectedInquiry ? (
-          <InquiryReply inquiry={selectedInquiry} onBack={() => setSelectedInquiry(null)} />
+          <InquiryReply 
+            inquiry={selectedInquiry} 
+            onBack={() => setSelectedInquiry(null)} 
+          />
         ) : (
           <div className="bg-white p-4 rounded shadow">
             <div className="flex items-center justify-between mb-4">
@@ -137,52 +163,45 @@ console.log(selectedInquiry,'data came')
             </div>
 
             {/* Inquiries */}
-            <div className="space-y-4   ">
-              {filteredInquiries.map((inquiry) => {
-                console.log(inquiry,'inq')
-                return <div
-                  key={inquiry._id}
-                  className={`p-4 border rounded ${inquiry.replyStatus === 'Replied'
-                    ? 'border-green-100 bg-green-50'
-                    : 'border-yellow-200 bg-yellow-50'
-                    }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-md">{inquiry.name}</h3>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full font-semibold ${inquiry.replyStatus === 'Replied'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                    >
-                      {inquiry.replyStatus}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-700 mb-2">
-                    {inquiry.userMessage?.[inquiry.userMessage.length - 1]?.message}
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    
-                  </div>
-                  <div className="mt-2 flex justify-end">
-                    <button
-                      className="text-sm text-gray-700 hover:underline"
-                      onClick={() => setSelectedInquiry(inquiry)}
-                      // onClick={() =>
-                      //   setSelectedInquiry({
-                      //     name: inquiry.name,
-                      //     lastMessage: inquiry.userMessage?.[inquiry.userMessage.length - 1]?.message,
-                      //     fullInquiry: inquiry, // optional if you want full details too
-                      //   })
-                      // }
-
-                    >
-                      {inquiry.replyStatus === 'Replied' ? 'View Details' : 'Reply Now'}
-                    </button>
-                  </div>
+            <div className="space-y-4">
+              {filteredInquiries.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No inquiries found
                 </div>
-              })}
+              ) : (
+                filteredInquiries.map((inquiry) => (
+                  <div
+                    key={inquiry._id}
+                    className={`p-4 border rounded ${inquiry.replyStatus === 'Replied'
+                      ? 'border-green-100 bg-green-50'
+                      : 'border-yellow-200 bg-yellow-50'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-medium text-md">{inquiry.name}</h3>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full font-semibold ${inquiry.replyStatus === 'Replied'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-yellow-100 text-yellow-700'
+                          }`}
+                      >
+                        {inquiry.replyStatus}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-700 mb-2">
+                      {inquiry.userMessage?.[inquiry.userMessage.length - 1]?.message}
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        className="text-sm text-gray-700 hover:underline"
+                        onClick={() => setSelectedInquiry(inquiry)}
+                      >
+                        {inquiry.replyStatus === 'Replied' ? 'View Details' : 'Reply Now'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

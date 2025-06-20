@@ -17,7 +17,7 @@ import MyBestVenues from '../assets/Images/My BestVenues.png';
 const Navbar = () => {
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [profileDropdown, setProfileDropdown] = useState(false);
-  const [mobileDropdown, setMobileDropdown] = useState(false); // ✅ Moved to top-level
+  const [mobileDropdown, setMobileDropdown] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,6 +88,49 @@ const Navbar = () => {
     </Link>
   );
 
+  const renderProfileLinks = () => {
+    const role = getUserRole();
+
+    return (
+      <div className="py-2">
+        {renderLink(`/${role}/dashboard`, <FiUser size={16} />, 'Dashboard')}
+        {renderLink(`/${role}/profile`, <FiSettings size={16} />, 'Profile')}
+
+        {role === 'user' && (
+          <>
+            {renderLink('/user/cart', <FiShoppingCart size={16} />, 'Cart')}
+            {renderLink('/user/orders', <FiPackage size={16} />, 'Orders')}
+            {renderLink('/user/bookings', <FiPackage size={16} />, 'Bookings')}
+          </>
+        )}
+        {role === 'vendor' && (
+          <>
+            {renderLink('/vendor/services', <FiBriefcase size={16} />, 'Services')}
+            {renderLink('/vendor/bookings', <FiPackage size={16} />, 'Bookings')}
+            {renderLink('/vendor/analytics', <FiSettings size={16} />, 'Analytics')}
+          </>
+        )}
+        {role === 'admin' && (
+          <>
+            {renderLink('/admin/users', <FiUsers size={16} />, 'Users')}
+            {renderLink('/admin/vendors', <FiBriefcase size={16} />, 'Vendors')}
+            {renderLink('/admin/bookings', <FiPackage size={16} />, 'All Bookings')}
+            {renderLink('/admin/settings', <FiSettings size={16} />, 'Settings')}
+          </>
+        )}
+
+        <hr className="my-2" />
+
+        <button
+          onClick={handleLogout}
+          className="w-100 text-start text-danger border-0 bg-transparent d-flex align-items-center gap-2 px-2 py-1"
+        >
+          <RiLogoutCircleLine /> Logout
+        </button>
+      </div>
+    );
+  };
+
   const renderMobileLinks = () => {
     const role = getUserRole();
 
@@ -99,6 +142,7 @@ const Navbar = () => {
         {renderLink('/IdeaBlog', <FiPackage size={16} />, 'Blogs')}
         {renderLink('/corporate', <FiPackage size={16} />, 'Corporate')}
         <hr />
+
         {!isUserLoggedIn ? (
           <>
             <Link to="/user/login" onClick={handleLinkClick} className="btn border w-100 mb-2">
@@ -106,8 +150,8 @@ const Navbar = () => {
             </Link>
             <Link
               to="/user/signup"
-              className="btn text-white w-49"
-              style={{ backgroundColor: '#0f4c81' }}
+              className="btn text-white w-100"
+              style={{ backgroundColor: '#0F4C81' }}
             >
               Sign Up
             </Link>
@@ -116,7 +160,7 @@ const Navbar = () => {
           <>
             <button
               onClick={() => setMobileDropdown(!mobileDropdown)}
-              className="btn btn-secondary w-100 d-flex justify-content-between align-items-center"
+              className="btn btn-secondary w-100 d-flex justify-content-between align-items-center d-lg-none mb-2"
             >
               {getDisplayName()}
               <span>{mobileDropdown ? <RiArrowDropDownFill /> : <IoMdArrowDropleft />}</span>
@@ -149,14 +193,13 @@ const Navbar = () => {
                     {renderLink('/admin/settings', <FiSettings size={16} />, 'Settings')}
                   </>
                 )}
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    className="w-100 text-start text-danger mt-2 mx-2 border-0 bg-transparent d-flex align-items-center gap-1"
-                  >
-                    <RiLogoutCircleLine /> Logout
-                  </button>
-                </li>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-100 text-start text-danger mt-2 border-0 bg-transparent d-flex align-items-center gap-1"
+                >
+                  <RiLogoutCircleLine className='mx-2' /> Logout
+                </button>
               </ul>
             )}
           </>
@@ -172,54 +215,49 @@ const Navbar = () => {
           <img src={MyBestVenues} alt="logo" className="h-14" />
         </Link>
 
-        <div className="d-flex d-lg-none ">
+        <div className="d-flex d-lg-none">
           <Button
-
             variant="outline-secondary"
             className="me-2 mb-2 border-0"
             onClick={() => setShowOffcanvas(true)}
             aria-label="Open menu"
           >
-            <FiMenu className='' size={25} />
+            <FiMenu className="" size={25} />
           </Button>
         </div>
-
         <nav className="d-none d-lg-flex align-items-center gap-4">
-          {renderLink('/wedding-vendor', <FiBriefcase size={16} />, 'Vendors')}
-          {renderLink('/Wedding_Venues', <FiUser size={16} />, 'Venues')}
-          {renderLink('/planning-tools', <FiSettings size={16} />, 'Planning Tools')}
-          {renderLink('/IdeaBlog', <FiPackage size={16} />, 'Blogs')}
-          {renderLink('/corporate', <FiPackage size={16} />, 'Corporate')}
+          {renderLink('/wedding-vendor', 'Vendors')}
+          {renderLink('/Wedding_Venues', 'Venues')}
+          {renderLink('/planning-tools', 'Planning Tools')}
+          {renderLink('/IdeaBlog', 'Blogs')}
+          {renderLink('/corporate', 'Corporate')}
+
           {!isUserLoggedIn ? (
             <>
               <Link to="/user/login" className="text-black text-decoration-none">Login</Link>
-              <Link to="/user/signup" className="btn btn-primary">Sign Up</Link>
+              <Link to="/user/signup" className="btn text-white" style={{ backgroundColor: '#0F4C81' }}>Sign Up</Link>
             </>
           ) : (
-            <div className="relative" ref={profileRef}>
+            <div className="position-relative" ref={profileRef}>
               <button
                 onClick={() => setProfileDropdown(!profileDropdown)}
-                className="px-4 py-2 text-white rounded hover:bg-[#0f4c81] flex items-center gap-2 bg-[#09365d]"
+                className="btn d-flex align-items-center gap-2"
+                style={{ backgroundColor: '#09365d', color: 'white' }}
               >
-                <FiUser size={16} /> {getDisplayName()}
+                <FiUser size={16} />
+                {getDisplayName()}
+                <RiArrowDropDownFill size={20} />
               </button>
+
               {profileDropdown && (
                 <div
+                  className="position-absolute end-0 mt-2 bg-white rounded shadow border"
                   style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: 0,
-                    marginTop: '0.5rem',
-                    backgroundColor: 'white',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '0.375rem',
                     zIndex: 1000,
-                    minWidth: '200px',
-                    padding: '0.5rem'
+                    minWidth: '220px',
                   }}
                 >
-                  {renderMobileLinks()}
+                  {renderProfileLinks()}
                 </div>
               )}
             </div>
@@ -231,7 +269,7 @@ const Navbar = () => {
         show={showOffcanvas}
         onHide={() => setShowOffcanvas(false)}
         placement="start"
-        style={{ width: '60vw' }} // 👈 sets 50% viewport width
+        style={{ width: '60vw' }}
       >
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>
@@ -240,7 +278,6 @@ const Navbar = () => {
         </Offcanvas.Header>
         <Offcanvas.Body>{renderMobileLinks()}</Offcanvas.Body>
       </Offcanvas>
-
     </header>
   );
 };

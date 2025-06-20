@@ -1,10 +1,63 @@
 import React from "react";
-import { Heart, MapPin, Star } from "lucide-react";
+import { Heart, MapPin, Star, ExternalLink } from "lucide-react";
+import { useGetSavedVendorsQuery, useUnsaveVendorMutation } from "../../../features/savedVendors/savedVendorAPI";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
-export default function SavedVendor({ savedVendors = [], removeSavedVendor }) {
+export default function SavedVendor() {
+    const { isAuthenticated } = useSelector((state) => state.auth);
+    
+    // RTK Query hooks
+    const { 
+        data: savedVendorsData, 
+        isLoading, 
+        isError, 
+        error,
+        refetch 
+    } = useGetSavedVendorsQuery(undefined, {
+        skip: !isAuthenticated,
+    });
+    
+    const [unsaveVendor, { isLoading: isUnsaving }] = useUnsaveVendorMutation();
+
+    // Extract data from API response
+    const savedVendors = savedVendorsData?.data || [];
+
+    // Handle unsave vendor
+    const handleRemoveSavedVendor = async (vendorId) => {
+        try {
+            await unsaveVendor(vendorId).unwrap();
+            toast.success("Vendor removed from favorites");
+        } catch (err) {
+            toast.error(`Error removing vendor: ${err.data?.message || 'Unknown error'}`);
+        }
+    };
+
+    // Show loading state
+    if (isLoading) {
+        return <div className="flex justify-center items-center min-h-screen">Loading saved vendors...</div>;
+    }
+
+    // Show error state
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="text-center">
+                    <p className="text-red-500 mb-2">Error loading saved vendors</p>
+                    <button 
+                        onClick={() => refetch()}
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex min-h-screen">
-            <section>
+            <section className="w-full">
                 <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                     <h2 className="text-xl font-bold mb-6">Saved Vendors</h2>
 
@@ -19,8 +72,9 @@ export default function SavedVendor({ savedVendors = [], removeSavedVendor }) {
                                             className="w-full h-48 object-cover"
                                         />
                                         <button
-                                            onClick={() => removeSavedVendor(vendor.id)}
-                                            className="absolute top-2 right-2 bg-white p-1.5 rounded-full text-red-500 hover:text-red-700"
+                                            onClick={() => handleRemoveSavedVendor(vendor.id)}
+                                            disabled={isUnsaving}
+                                            className="absolute top-2 right-2 bg-white p-1.5 rounded-full text-red-500 hover:text-red-700 disabled:opacity-50"
                                         >
                                             <Heart size={18} fill="currentColor" />
                                         </button>
@@ -87,5 +141,5 @@ export default function SavedVendor({ savedVendors = [], removeSavedVendor }) {
                 </div>
             </section>
         </div>
-    )
+    );
 }

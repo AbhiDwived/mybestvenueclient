@@ -1,46 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { CiImport, CiExport } from "react-icons/ci";
+import { toast } from 'react-toastify';
+import { useGetUserGuestsQuery, useAddGuestMutation, useUpdateGuestStatusMutation, useDeleteGuestMutation } from '../../../features/guests/guestAPI';
 
 export default function GuestManager() {
-    const [guests, setGuests] = useState([]);
+    const { data: guestData, isLoading, isError, error } = useGetUserGuestsQuery();
+    const [addGuest, { isLoading: isAdding }] = useAddGuestMutation();
+    const [updateGuestStatus, { isLoading: isUpdating }] = useUpdateGuestStatusMutation();
+    const [deleteGuest, { isLoading: isDeleting }] = useDeleteGuestMutation();
+    
     const [newGuest, setNewGuest] = useState({ name: '', email: '', phone: '', status: 'pending' });
+    const [guests, setGuests] = useState([]);
 
-    // ✅ Load guests from localStorage on component mount
+    // Update local state when API data changes
     useEffect(() => {
-        const storedGuests = localStorage.getItem("guests");
-        if (storedGuests) {
-            setGuests(JSON.parse(storedGuests));
+        if (guestData && guestData.data) {
+            setGuests(guestData.data);
         }
-    }, []);
+    }, [guestData]);
 
-    // ✅ Save guests to localStorage whenever guests state changes
+    // Display error if API request fails
     useEffect(() => {
-        localStorage.setItem("guests", JSON.stringify(guests));
-    }, [guests]);
+        if (isError) {
+            toast.error(`Error: ${error?.data?.message || 'Failed to load guests'}`);
+        }
+    }, [isError, error]);
 
-    const updateGuestStatus = (id, status) => {
-        setGuests(guests.map(g => g.id === id ? { ...g, status } : g));
+    const handleUpdateGuestStatus = async (guestId, status) => {
+        try {
+            await updateGuestStatus({ guestId, status }).unwrap();
+            toast.success('Guest status updated successfully');
+        } catch (err) {
+            console.error('Update status error:', err);
+            toast.error(`Error: ${err?.data?.message || 'Failed to update guest status'}`);
+        }
     };
 
-    const deleteGuest = (id) => {
-        setGuests(guests.filter(g => g.id !== id));
+    const handleDeleteGuest = async (guestId) => {
+        try {
+            await deleteGuest(guestId).unwrap();
+            toast.success('Guest deleted successfully');
+        } catch (err) {
+            toast.error(`Error: ${err?.data?.message || 'Failed to delete guest'}`);
+        }
     };
 
-    const handleAddGuest = () => {
-        const id = Date.now().toString();
-        setGuests([...guests, { ...newGuest, id }]);
-        setNewGuest({ name: '', email: '', phone: '', status: 'pending' });
+    const handleAddGuest = async () => {
+        if (!newGuest.name || (!newGuest.email && !newGuest.phone)) {
+            toast.warning('Please provide name and either email or phone number');
+            return;
+        }
+
+        try {
+            await addGuest(newGuest).unwrap();
+            setNewGuest({ name: '', email: '', phone: '', status: 'pending' });
+            toast.success('Guest added successfully');
+        } catch (err) {
+            toast.error(`Error: ${err?.data?.message || 'Failed to add guest'}`);
+        }
     };
+
+    // Display loading state
+    if (isLoading && !guests.length) {
+        return (
+            <div className="flex min-h-screen justify-center items-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-3">Loading guests...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen">
-            <main className="flex-1  pb-12">
+            <main className="flex-1 pb-12">
                 <div className="">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Guest Table */}
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-lg  p-4 mb-6">
+                            <div className="bg-white rounded-lg p-4 mb-6">
                                 <h2 className="text-xl font-bold flex">Guest List</h2>
                                 <div className="flex items-center justify-between mb-6 mt-3">
                                     <div className="flex items-center space-x-4">
@@ -59,53 +99,60 @@ export default function GuestManager() {
                                 </div>
 
                                 <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr style={{ borderBottom: '1px solid gray' }}>
-                                                <th className="text-left py-3 px-2">Name</th>
-                                                <th className="text-left py-3 px-4">Contact</th>
-                                                <th className="text-center py-3 px-4">Status</th>
-                                                <th className="text-right py-3 px-4">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {guests.map((guest) => (
-                                                <tr key={guest.id} style={{ borderBottom: '1px solid gray' }}>
-                                                    <td className="py-3 px-2">{guest.name}</td>
-                                                    <td className="py-3 px-4">
-                                                        <div>{guest.email}</div>
-                                                        <div className="text-sm text-gray-500">{guest.phone}</div>
-                                                    </td>
-                                                    <td className="py-3 px-1 text-center">
-                                                        <select
-                                                            value={guest.status}
-                                                            onChange={(e) => updateGuestStatus(guest.id, e.target.value)}
-                                                            className={`rounded-md px-2 py-1 text-sm ${guest.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                                guest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                                    'bg-red-100 text-red-800'
-                                                                }`}
-                                                        >
-                                                            <option value="pending">Pending</option>
-                                                            <option value="confirmed">Confirmed</option>
-                                                            <option value="declined">Declined</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="py-3 px-5">
-                                                        <button
-                                                            className="text-red-500 hover:text-red-700"
-                                                            onClick={() => deleteGuest(guest.id)}
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </td>
+                                    {guests.length === 0 ? (
+                                        <div className="text-center py-6 text-gray-500">
+                                            No guests added yet. Add your first guest using the form.
+                                        </div>
+                                    ) : (
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr style={{ borderBottom: '1px solid gray' }}>
+                                                    <th className="text-left py-3 px-2">Name</th>
+                                                    <th className="text-left py-3 px-4">Contact</th>
+                                                    <th className="text-center py-3 px-4">Status</th>
+                                                    <th className="text-right py-3 px-4">Actions</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {guests.map((guest) => (
+                                                    <tr key={guest._id} style={{ borderBottom: '1px solid gray' }}>
+                                                        <td className="py-3 px-2">{guest.name}</td>
+                                                        <td className="py-3 px-4">
+                                                            <div>{guest.email}</div>
+                                                            <div className="text-sm text-gray-500">{guest.phone}</div>
+                                                        </td>
+                                                        <td className="py-3 px-1 text-center">
+                                                            <select
+                                                                value={guest.status}
+                                                                onChange={(e) => handleUpdateGuestStatus(guest._id, e.target.value)}
+                                                                disabled={isUpdating}
+                                                                className={`rounded-md px-2 py-1 text-sm ${guest.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                                    guest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                        'bg-red-100 text-red-800'
+                                                                    }`}
+                                                            >
+                                                                <option value="pending">Pending</option>
+                                                                <option value="confirmed">Confirmed</option>
+                                                                <option value="declined">Declined</option>
+                                                            </select>
+                                                        </td>
+                                                        <td className="py-3 px-5">
+                                                            <button
+                                                                className="text-red-500 hover:text-red-700"
+                                                                onClick={() => handleDeleteGuest(guest._id)}
+                                                                disabled={isDeleting}
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
                                 </div>
                             </div>
                         </div>
-
 
                         {/* Sidebar */}
                         <div className="lg:col-span-1">
@@ -145,10 +192,10 @@ export default function GuestManager() {
                                     </div>
                                     <button
                                         onClick={handleAddGuest}
-                                        disabled={!newGuest.name || (!newGuest.email && !newGuest.phone)}
+                                        disabled={isAdding || !newGuest.name || (!newGuest.email && !newGuest.phone)}
                                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md disabled:bg-gray-300"
                                     >
-                                        Add Guest
+                                        {isAdding ? 'Adding...' : 'Add Guest'}
                                     </button>
                                 </div>
                             </div>

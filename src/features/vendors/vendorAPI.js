@@ -103,7 +103,8 @@ export const vendorApi = createApi({
         method: 'POST',
       }),
     }),
- // Get Vendor BY Id
+
+    // Get Vendor BY Id
     getVendorById: builder.query({
       query: (vendorId) => ({
         url: `/vendor/vendorbyId/${vendorId}`,
@@ -111,20 +112,26 @@ export const vendorApi = createApi({
       }),
     }),
 
-    // add vinquiry reply
-    userInquiryList: builder.mutation({
-      query: ({ vendorId }) => ({
-        url: '/vendor/getVendorRepliedinquiryList',
-        method: 'POST',
-        body: {vendorId},
+    // Get vendor inquiry list
+    userInquiryList: builder.query({
+      query: (vendorId) => ({
+        url: `/vendor/replied-inquiries`,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }),
+      providesTags: ['Inquiries'],
     }),
+
+    // Handle user inquiry reply
     userInquiryReply: builder.mutation({
-      query: ({ userId, messageId ,vendorId,message}) => ({
-        url: `/vendor/senduser_inquiryReply/${vendorId}`,
+      query: ({ userId, messageId, vendorId, message }) => ({
+        url: `/vendor/inquiry-reply/${vendorId}`,
         method: 'POST',
-        body: { message, userId ,messageId},
+        body: { message, userId, messageId },
       }),
+      invalidatesTags: ['Inquiries'],
     }),
   })
 });
@@ -143,7 +150,7 @@ export const {
   useUpdateProfileMutation,
   useDeleteVendorMutation,
   useLogoutVendorMutation,
-    useGetVendorByIdQuery,
-  useUserInquiryListMutation,
+  useGetVendorByIdQuery,
+  useUserInquiryListQuery,
   useUserInquiryReplyMutation,
 } = vendorApi;

@@ -1,9 +1,40 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, Plus, DollarSign } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, Plus, DollarSign, Trash2 } from 'lucide-react';
+import { useGetUserBookingsQuery, useCreateBookingMutation, useDeleteBookingMutation, useGetAvailableVendorsQuery } from '../../../features/bookings/bookingAPI';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 const BookingBudget = () => {
-  const [bookings, setBookings] = useState([]);
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  
+  // RTK Query hooks
+  const { 
+    data: bookingData, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useGetUserBookingsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  
+  const [createBooking, { isLoading: isCreating }] = useCreateBookingMutation();
+  const [deleteBooking, { isLoading: isDeleting }] = useDeleteBookingMutation();
+  const { data: vendorsData, isLoading: isLoadingVendors } = useGetAvailableVendorsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  // Extract data from API response
+  const bookings = bookingData?.data?.bookings || [];
+  const totalPlanned = bookingData?.data?.totalPlanned || 0;
+  const totalSpent = bookingData?.data?.totalSpent || 0;
+  const totalBookingsCount = bookingData?.data?.totalBookingsCount || 0;
+  const remaining = totalPlanned - totalSpent;
+  const availableVendors = vendorsData?.data || [];
+
+  // Form state
   const [formData, setFormData] = useState({
+    vendorId: '',
     vendorName: '',
     eventType: '',
     eventDate: '',
@@ -13,10 +44,12 @@ const BookingBudget = () => {
     plannedAmount: '',
   });
 
-  const totalPlanned = bookings.reduce((sum, booking) => sum + booking.plannedAmount, 0);
-  const totalSpent = bookings.reduce((sum, booking) => sum + (booking.spentAmount || 0), 0);
-  const remaining = totalPlanned - totalSpent;
-  const totalBookingsCount = bookings.length;
+  // Show error if API request fails
+  useEffect(() => {
+    if (isError) {
+      toast.error(`Error loading bookings: ${error?.data?.message || 'Unknown error'}`);
+    }
+  }, [isError, error]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -25,31 +58,65 @@ const BookingBudget = () => {
     }));
   };
 
-  const handleAddBooking = () => {
-    if (formData.vendorName && formData.eventType && formData.plannedAmount) {
-      const newBooking = {
-        id: Date.now().toString(),
-        vendorName: formData.vendorName,
-        eventType: formData.eventType,
-        eventDate: formData.eventDate,
-        eventTime: formData.eventTime,
-        venue: formData.venue,
-        guestCount: parseInt(formData.guestCount) || 0,
-        plannedAmount: parseFloat(formData.plannedAmount) || 0,
-        spentAmount: 0
-      };
-      setBookings(prev => [...prev, newBooking]);
+  // Update vendor name when vendor ID changes
+  const handleVendorChange = (vendorId) => {
+    const selectedVendor = availableVendors.find(vendor => vendor._id === vendorId);
+    if (selectedVendor) {
+      setFormData(prev => ({
+        ...prev,
+        vendorId,
+        vendorName: selectedVendor.businessName || selectedVendor.name
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        vendorId: '',
+        vendorName: ''
+      }));
+    }
+  };
 
-      // Reset form
-      setFormData({
-        vendorName: '',
-        eventType: '',
-        eventDate: '',
-        eventTime: '',
-        venue: '',
-        guestCount: '',
-        plannedAmount: ''
-      });
+  const handleAddBooking = async () => {
+    if (formData.vendorName && formData.eventType && formData.plannedAmount) {
+      try {
+        await createBooking({
+          vendorId: formData.vendorId || null,
+          vendorName: formData.vendorName,
+          eventType: formData.eventType,
+          eventDate: formData.eventDate || null,
+          eventTime: formData.eventTime || null,
+          venue: formData.venue || '',
+          guestCount: parseInt(formData.guestCount) || 0,
+          plannedAmount: parseFloat(formData.plannedAmount) || 0,
+        }).unwrap();
+        
+        // Reset form
+        setFormData({
+          vendorId: '',
+          vendorName: '',
+          eventType: '',
+          eventDate: '',
+          eventTime: '',
+          venue: '',
+          guestCount: '',
+          plannedAmount: ''
+        });
+        
+        toast.success('Booking added successfully');
+      } catch (err) {
+        toast.error(`Error adding booking: ${err.data?.message || 'Unknown error'}`);
+      }
+    } else {
+      toast.warning('Please fill in all required fields');
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId) => {
+    try {
+      await deleteBooking(bookingId).unwrap();
+      toast.success('Booking deleted successfully');
+    } catch (err) {
+      toast.error(`Error deleting booking: ${err.data?.message || 'Unknown error'}`);
     }
   };
 
@@ -65,6 +132,11 @@ const BookingBudget = () => {
     'Accommodation',
     'Other'
   ];
+
+  // Show loading state
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen">Loading bookings...</div>;
+  }
 
   return (
     <div className="min-h-screen p-2 mt-3 md:p-6 lg:mx-3">
@@ -108,15 +180,35 @@ const BookingBudget = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label htmlFor="vendorName" className="block text-sm font-medium text-gray-700">
-                  Vendor Name *
+                  Vendor *
                 </label>
-                <input
-                  id="vendorName"
-                  placeholder="e.g. Dream Photography"
-                  value={formData.vendorName}
-                  onChange={(e) => handleInputChange('vendorName', e.target.value)}
+                <select
+                  id="vendorId"
+                  value={formData.vendorId}
+                  onChange={(e) => handleVendorChange(e.target.value)}
                   className="w-full px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
-                />
+                >
+                  <option value="">Select a vendor</option>
+                  {isLoadingVendors ? (
+                    <option disabled>Loading vendors...</option>
+                  ) : (
+                    availableVendors.map(vendor => (
+                      <option key={vendor._id} value={vendor._id}>
+                        {vendor.businessName || vendor.name}
+                      </option>
+                    ))
+                  )}
+                  <option value="custom">Other (Enter manually)</option>
+                </select>
+                {formData.vendorId === 'custom' && (
+                  <input
+                    id="vendorName"
+                    placeholder="Enter vendor name"
+                    value={formData.vendorName}
+                    onChange={(e) => handleInputChange('vendorName', e.target.value)}
+                    className="w-full mt-2 px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                  />
+                )}
               </div>
 
               <div className="space-y-2">
@@ -216,12 +308,13 @@ const BookingBudget = () => {
 
             <button
               onClick={handleAddBooking}
+              disabled={isCreating}
               style={{ borderRadius: '5px' }}
-              className="bg-[#0F4C81] text-white px-8 py-2 rounded-lg transition-all duration-300 transform hover:scale-105"
+              className="bg-[#0F4C81] text-white px-8 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:bg-gray-400 disabled:transform-none"
             >
               <span className="flex items-center">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Booking
+                {isCreating ? 'Adding...' : 'Add Booking'}
               </span>
             </button>
           </div>
@@ -239,19 +332,31 @@ const BookingBudget = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {bookings.map(booking => (
-                <div key={booking.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div key={booking._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow relative">
+                  <button 
+                    onClick={() => handleDeleteBooking(booking._id)}
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                   <h4 className="font-semibold text-gray-800">{booking.vendorName}</h4>
                   <p className="text-sm text-purple-600 font-medium">{booking.eventType}</p>
                   {booking.eventDate && (
                     <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> {booking.eventDate}
+                      <Calendar className="h-3 w-3" /> {new Date(booking.eventDate).toLocaleDateString()}
                     </p>
                   )}
                   {booking.venue && <p className="text-sm text-gray-600">{booking.venue}</p>}
-                  <div className="pt-2 border-t border-gray-100">
+                  <div className="pt-2 border-t border-gray-100 mt-2">
                     <p className="text-sm font-semibold text-green-600">
                       Planned: ₹{booking.plannedAmount.toLocaleString()}
                     </p>
+                    {booking.spentAmount > 0 && (
+                      <p className="text-sm font-semibold text-purple-600">
+                        Spent: ₹{booking.spentAmount.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}

@@ -1,53 +1,76 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Trash2 } from "lucide-react";
+import { useGetUserChecklistQuery, useAddChecklistTaskMutation, useToggleTaskCompletionMutation, useDeleteChecklistTaskMutation } from "../../../features/checklist/checklistAPI";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 export default function CheckList() {
     const [newTask, setNewTask] = useState("");
-    const [tasks, setTasks] = useState([]);
+    const { isAuthenticated } = useSelector((state) => state.auth);
+    
+    // RTK Query hooks
+    const { 
+        data: checklistData, 
+        isLoading, 
+        isError, 
+        error,
+        refetch 
+    } = useGetUserChecklistQuery(undefined, {
+        skip: !isAuthenticated,
+    });
+    
+    const [addTask, { isLoading: isAdding }] = useAddChecklistTaskMutation();
+    const [toggleTask, { isLoading: isToggling }] = useToggleTaskCompletionMutation();
+    const [deleteTask, { isLoading: isDeleting }] = useDeleteChecklistTaskMutation();
 
-    // Load tasks from localStorage on mount
+    // Extract data from API response
+    const tasks = checklistData?.data?.items || [];
+    const completedTasks = checklistData?.data?.completedCount || 0;
+    const totalTasks = checklistData?.data?.totalCount || 0;
+
+    // Calculate completion percentage
+    const completionPercentage = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // Show error if API request fails
     useEffect(() => {
-        const storedTasks = localStorage.getItem("tasks");
-        if (storedTasks) {
-            setTasks(JSON.parse(storedTasks));
+        if (isError) {
+            toast.error(`Error loading checklist: ${error?.data?.message || 'Unknown error'}`);
         }
-    }, []);
+    }, [isError, error]);
 
-    // Save tasks to localStorage whenever updated
-    useEffect(() => {
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-    }, [tasks]);
-
-    const handleAddTask = () => {
+    const handleAddTask = async () => {
         if (!newTask.trim()) return;
 
-        const newItem = {
-            id: Date.now(),
-            task: newTask.trim(),
-            completed: false,
-            createdAt: new Date().toISOString(),
-        };
-
-        setTasks((prev) => [...prev, newItem]);
-        setNewTask("");
+        try {
+            await addTask(newTask.trim()).unwrap();
+            setNewTask("");
+            toast.success("Task added successfully");
+        } catch (err) {
+            toast.error(`Error adding task: ${err.data?.message || 'Unknown error'}`);
+        }
     };
 
-    const toggleTaskCompletion = (id) => {
-        setTasks((prev) =>
-            prev.map((task) =>
-                task.id === id ? { ...task, completed: !task.completed } : task
-            )
-        );
+    const handleToggleTaskCompletion = async (id) => {
+        try {
+            await toggleTask(id).unwrap();
+        } catch (err) {
+            toast.error(`Error updating task: ${err.data?.message || 'Unknown error'}`);
+        }
     };
 
-    const deleteTask = (id) => {
-        setTasks((prev) => prev.filter((task) => task.id !== id));
+    const handleDeleteTask = async (id) => {
+        try {
+            await deleteTask(id).unwrap();
+            toast.success("Task deleted successfully");
+        } catch (err) {
+            toast.error(`Error deleting task: ${err.data?.message || 'Unknown error'}`);
+        }
     };
 
-    const completedTasks = tasks.filter((t) => t.completed).length;
-    const completionPercentage = tasks.length
-        ? Math.round((completedTasks / tasks.length) * 100)
-        : 0;
+    // Show loading state
+    if (isLoading) {
+        return <div className="flex justify-center items-center min-h-screen">Loading checklist...</div>;
+    }
 
     return (
         <div className="flex min-h-screen ">
@@ -59,7 +82,7 @@ export default function CheckList() {
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-bold text-wedding-dark">Wedding Checklist</h2>
                                 <div className="text-sm text-gray-600">
-                                    {completedTasks} of {tasks.length} tasks completed
+                                    {completedTasks} of {totalTasks} tasks completed
                                 </div>
                             </div>
 
@@ -73,41 +96,49 @@ export default function CheckList() {
 
                             {/* Task List */}
                             <div className="space-y-4">
-                                {tasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className={`flex justify-between items-start p-2 rounded-md border transition bg-[#f0f2f5] hover:shadow-sm ${task.completed ? "opacity-90" : ""
-                                            }`}
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={task.completed}
-                                                onChange={() => toggleTaskCompletion(task.id)}
-                                                className="mt-1 w-4 h-4 accent-[#0F4C81]"
-                                            />
-                                            <div>
-                                                <p
-                                                    className={`text-md font-medium ${task.completed ? "line-through text-gray-800" : "text-gray-800"
-                                                        }`}
-                                                >
-                                                    {task.task}
-                                                </p>
-                                                <div className="text-md text-gray-500 mt-1 flex items-center gap-2">
-                                                    <Calendar size={12} />{" "}
-                                                    Added: {new Date(task.createdAt).toLocaleDateString("en-US")}
+                                {tasks.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-500">
+                                        No tasks added yet. Add your first task!
+                                    </div>
+                                ) : (
+                                    tasks.map((task) => (
+                                        <div
+                                            key={task._id}
+                                            className={`flex justify-between items-start p-2 rounded-md border transition bg-[#f0f2f5] hover:shadow-sm ${task.completed ? "opacity-90" : ""
+                                                }`}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={task.completed}
+                                                    onChange={() => handleToggleTaskCompletion(task._id)}
+                                                    disabled={isToggling}
+                                                    className="mt-1 w-4 h-4 accent-[#0F4C81]"
+                                                />
+                                                <div>
+                                                    <p
+                                                        className={`text-md font-medium ${task.completed ? "line-through text-gray-800" : "text-gray-800"
+                                                            }`}
+                                                    >
+                                                        {task.task}
+                                                    </p>
+                                                    <div className="text-md text-gray-500 mt-1 flex items-center gap-2">
+                                                        <Calendar size={12} />{" "}
+                                                        Added: {new Date(task.createdAt).toLocaleDateString("en-US")}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <button
-                                            onClick={() => deleteTask(task.id)}
-                                            className="text-gray-400 hover:text-red-500 mt-4"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                ))}
+                                            <button
+                                                onClick={() => handleDeleteTask(task._id)}
+                                                disabled={isDeleting}
+                                                className="text-gray-400 hover:text-red-500 mt-4"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
@@ -135,13 +166,13 @@ export default function CheckList() {
 
                                 <button
                                     onClick={handleAddTask}
-                                    disabled={!newTask.trim()}
-                                    className={`w-full text-sm font-medium px-4 py-2 rounded-md transition ${newTask.trim()
+                                    disabled={!newTask.trim() || isAdding}
+                                    className={`w-full text-sm font-medium px-4 py-2 rounded-md transition ${newTask.trim() && !isAdding
                                             ? "bg-[#0F4C81] text-white  hover:bg-[#0f304de2]"
                                             : "bg-gray-200 text-gray-400 cursor-not-allowed"
                                         }`}
                                 >
-                                    Add Task
+                                    {isAdding ? "Adding..." : "Add Task"}
                                 </button>
                             </div>
                         </div>
