@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaStar, FaRegHeart, FaMapMarkerAlt } from 'react-icons/fa';
 import { FiPhone, FiGlobe, FiCalendar } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
@@ -19,11 +19,16 @@ import { FaArrowLeft } from "react-icons/fa";
 
 const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   return (
     <div className="mx-auto px-2 py-3 font-serif">
-      <button className='flex items-center text-gray-800 px-2 py-2 rounded border border-gray-400 mb-2
-      hover:bg-[#DEBF78]'>
+      <button 
+        className='flex items-center text-gray-800 px-2 py-2 rounded border border-gray-400 mb-2 hover:bg-[#DEBF78]'
+        onClick={() => window.history.back()}
+      >
         <FaArrowLeft className='mr-2' /> Back to Vendor
       </button>
       {/* Header */}
@@ -80,11 +85,13 @@ const PreviewProfile = () => {
         </div>
 
         {/* Save Button */}
-        <div className="ml-auto md:ml-0 md:self-start">
-          <button className="flex items-center text-sm text-gray-700 border px-3 py-2 rounded hover:bg-[#DEBF78]">
-            <FaRegHeart className="mr-2" /> Save
-          </button>
-        </div>
+       
+          <div className="absolute sm:top-35 sm:right-8 right-4">
+    <button className="flex items-center text-sm text-gray-700 border px-3 py-2 rounded hover:bg-[#DEBF78]">
+      <FaRegHeart className="mr-2" /> Save
+    </button> 
+  </div>
+
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mt-6">
@@ -145,7 +152,7 @@ const PreviewProfile = () => {
             <textarea rows="3" placeholder="Tell us more about your event..." className="w-full border rounded px-3 py-2" />
           </label>
 
-          <button type="submit" className="sm:col-span-2 w-full bg-black text-white py-2 rounded hover:bg-gray-800">
+          <button type="submit" className="sm:col-span-2 w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-gray-800">
             Book Now
           </button>
         </form>
@@ -166,7 +173,7 @@ const PreviewProfile = () => {
       </div>
 
       {/* Main Grid: Left = tab content, Right = fixed form/info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
 
         {/* Left side: Tabbed content */}
         <div className="md:col-span-2 space-y-6">
@@ -201,15 +208,15 @@ const PreviewProfile = () => {
                 <label className="block mb-1">Message</label>
                 <textarea rows="3" placeholder="Tell us about your wedding and requirements..." className="w-full border rounded px-3 py-2" />
               </div>
-              <button type="submit" className="w-full bg-black text-white py-2 rounded hover:bg-gray-800">Send Inquiry</button>
+              <button type="submit" className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">Send Inquiry</button>
             </form>
           </div>
 
 
           {/* Contact Info */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white w-full">
+          <div className="border rounded-lg p-4 shadow-sm bg-white w-full ">
             <h3 className="font-semibold text-lg mb-4">Contact Information</h3>
-            <ul className="text-gray-700 text-sm space-y-3">
+            <ul className="text-gray-700 text-sm space-y-3 " style={{paddingLeft: '20px'}}>
               <li className="flex items-start gap-2">
                 <FiPhone className="mt-1 shrink-0" />
                 <span>+91 98765 43210</span>
@@ -240,3 +247,9 @@ const PreviewProfile = () => {
 };
 
 export default PreviewProfile;
+
+
+
+
+
+

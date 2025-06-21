@@ -193,7 +193,7 @@ export default function GuestManager() {
                                     <button
                                         onClick={handleAddGuest}
                                         disabled={isAdding || !newGuest.name || (!newGuest.email && !newGuest.phone)}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md disabled:bg-gray-300"
+                                        className="w-full bg-[#0D3F6A] hover:bg-[#0D3F6A] text-white font-medium py-2 px-4 rounded-md disabled:bg-gray-300"
                                     >
                                         {isAdding ? 'Adding...' : 'Add Guest'}
                                     </button>

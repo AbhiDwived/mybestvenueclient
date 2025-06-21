@@ -3,19 +3,20 @@ import { FaCamera } from 'react-icons/fa';
 
 
 const PreviewProfileScreen = () => {
+  window.scrollTo({ top: 0, category: "top" })
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 ">
         {/* Left Section */}
         <div className="lg:col-span-4 space-y-6">
           {/* About */}
-          <section>
+          <div>
             <h2 className="text-xl font-semibold mb-2">About Dream Wedding Photography</h2>
             <p className="text-gray-700 text-sm md:text-base">
               Capturing your special moments with creativity and passion. Our team of experienced photographers specializes in candid wedding photography,
               traditional portraits, and creative pre-wedding shoots. We use state-of-the-art equipment to ensure your memories are preserved in the highest quality.
             </p>
-          </section>
+          </div>
 
           {/* Services */}
           <section>

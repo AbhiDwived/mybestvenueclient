@@ -11,6 +11,9 @@ import Home from '../pages/Home/Home';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+// Footer
+import Terms from '../components/Terms';
+
 import FeatureVendors from '../pages/Home/FeatureVendors';
 import DiscoverCategories from '../pages/Home/DiscoverCategories';
 import BrowserVenues from '../pages/WeddingVenues/BrowserVenues';
@@ -39,13 +42,7 @@ import CheckList from '../pages/Auth/UserDashboad/CheckList';
 import Booking from '../pages/Auth/UserDashboad/Booking';
 
 
-// Planning Tools
-import PlanningTools from '../pages/PlanningTools/PlanningTools';
-import WeddingWebsite from '../pages/PlanningTools/WeddingWebsite';
-import Checklist from '../pages/PlanningTools/Checklist';
-import Guests from '../pages/PlanningTools/Guests';
-import WeddingBudget from '../pages/PlanningTools/WeddingBudget';
-import HashtagGenerator from '../pages/PlanningTools/HashtagGenerator';
+
 
 // Corporate
 import Corporate from '../pages/Corporate/Corporate';
@@ -128,6 +125,7 @@ import ContactUs from '../pages/Corporate/ContactUs';
 
 
 
+
 const index = () => {
     return (
         <Router>
@@ -138,13 +136,12 @@ const index = () => {
                     <Route path="/navbar" element={<Navbar />} />
                     <Route path="/footer" element={<Footer />} />
 
-                    {/* Planning Tools */}
-                    <Route path='/planning-tools' element={<PlanningTools />} />
-                    <Route path="/wedding-website" element={<WeddingWebsite />} />
-                    <Route path="/wedding-checklist" element={<Checklist />} />
-                    <Route path="/wedding-guests" element={<Guests />} />
-                    <Route path="/wedding-budget" element={<WeddingBudget />} />
-                    <Route path="/hashtag-generator" element={<HashtagGenerator />} />
+
+                    {/* Footer */}
+                    <Route path='/terms' element={<Terms />} />
+
+
+                   
 
                     {/* Idea Blog */}
                     <Route path="/IdeaBlog" element={<IdeaBlog />} />

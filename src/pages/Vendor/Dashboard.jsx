@@ -19,30 +19,24 @@ const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePickerForWedding, setShowDatePickerForWedding] = useState(null);
 
   if (!isAuthenticated) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
   }
 
-  // State for active tab
-  const [activeTab, setActiveTab] = useState('Overview');
+  const tabs = ['Overview', 'Bookings', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews', 'Analytics'];
 
-  // Function to handle tab click
+  const [events, setEvents] = useState([
+    { date: new Date('2024-11-15'), name: 'Arjun & Meera Kumar Wedding' },
+  ]);
+
   const handleTabClick = (tab) => {
     setActiveTab(tab);
   };
 
-  // Define tabs
-  const tabs = ['Overview', 'Bookings', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews', 'Analytics'];
-
-  // State for events and dropdown pickers
-  const [events, setEvents] = useState([
-    { date: new Date('2024-11-15'), name: 'Arjun & Meera Kumar Wedding' },
-  ]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showDatePickerForWedding, setShowDatePickerForWedding] = useState(null);
-
-  // Handle date selection for adding events
   const handleDateSelect = (date) => {
     setEvents(prev => [...prev, { date, name: 'Custom Event' }]);
     setShowDatePicker(false);
@@ -60,36 +54,16 @@ const Dashboard = () => {
     }
   };
 
-  // Sample data for different tabs
+  // Sample data
   const activities = [
     {
       name: 'Arjun & Meera Kumar',
       date: '12/10/2023',
-      message: 'Hello, I am interested in your wedding photography services for my wedding on November 15, 2024. Could...',
+      message: 'Hello, I am interested in your wedding photography services...',
       status: 'Replied',
       statusColor: 'text-green-600',
     },
-    {
-      name: 'Karan & Priya Malhotra',
-      date: '12/15/2023',
-      message: 'Hi, could you please share your availability for January 20, 2024? We are planning a destination wedding in...',
-      status: 'Pending Reply',
-      statusColor: 'text-yellow-600',
-    },
-    {
-      name: 'Vikram & Nisha Patel',
-      date: '12/18/2023',
-      message: 'We loved your portfolio! Do you offer videography services as well or only photography?',
-      status: 'Pending Reply',
-      statusColor: 'text-yellow-600',
-    },
-    {
-      name: 'Rahul & Anjali Sharma',
-      date: '11/20/2023',
-      message: 'Absolutely amazing photography service! The team was professional, creative and captured all our special...',
-      rating: '★★★★★',
-      ratingColor: 'text-yellow-500'
-    }
+    // ... other activities
   ];
 
   const upcomingWeddings = [
@@ -104,55 +78,45 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="p-6 bg-white min-h-screen text-gray-800 font-serif">
-
+    <div className="p-2 sm:p-6 bg-white min-h-screen text-gray-800 font-serif">
       {/* Header */}
-      <div className="mb-2 px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-
-          {/* Left: Title and Subtitle */}
+      <div className="mb-2 px-2 sm:px-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold font-serif">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold font-serif">
               {vendor?.businessName || 'Dream Wedding Photography'}
             </h1>
-            <p className="text-sm text-gray-600 font-serif">
+            <p className="text-xs sm:text-sm text-gray-600 font-serif">
               {vendor?.vendorType || 'Photographer'} • {vendor?.Address || 'Delhi, India'}
             </p>
           </div>
 
-          {/* Right: Profile Status + Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex flex-col w-full sm:w-auto sm:flex-row sm:items-center gap-2 sm:gap-3">
             <div className="flex flex-col">
-              <span className="text-black text-sm font-medium font-serif">
+              <span className="text-black text-xs sm:text-sm font-medium font-serif">
                 Profile Status
               </span>
-              <div className="flex items-center">
-                <span className="text-green-700 font-bold text-sm font-serif">
-                  {vendor?.status || 'InActive'}
-                </span>
-              </div>
+              <span className="text-green-700 font-bold text-xs sm:text-sm font-serif">
+                {vendor?.status || 'InActive'}
+              </span>
             </div>
 
             <button
               onClick={() => setShowModal(true)}
-              className="bg-[#0f4c81] text-white px-4 py-2 rounded text-sm w-full sm:w-auto text-center">
+              className="bg-[#0f4c81] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded text-xs sm:text-sm w-full sm:w-auto text-center">
               Preview Profile
             </button>
-
-            <VendorPreviewProfile show={showModal} onClose={() => setShowModal(false)} />
-
           </div>
-
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 bg-[#f5f8fb] p-2 rounded-md mb-6 text-sm">
+      <div className="flex flex-wrap justify-start gap-1 sm:gap-2 bg-[#f5f8fb] p-1 sm:p-2 rounded-md mb-4 sm:mb-6 text-xs sm:text-sm overflow-x-auto">
         {tabs.map((tab, i) => (
           <button
             key={i}
             onClick={() => handleTabClick(tab)}
-            className={`px-3 py-1 rounded-md font-medium whitespace-nowrap ${tab === activeTab ? 'bg-white text-black shadow-sm' : 'text-gray-600'
+            className={`px-2 sm:px-3 py-1 rounded-md font-medium whitespace-nowrap ${tab === activeTab ? 'bg-white text-black shadow-sm' : 'text-gray-600'
               }`}
           >
             {tab}
@@ -160,38 +124,43 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Dynamic Content Based on Active Tab */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Content Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {activeTab === 'Overview' && (
           <>
             {/* Performance Overview */}
-            <div className="col-span-2 bg-gray-50 p-4 rounded border">
-              <h2 className="text-lg font-semibold mb-4">Performance Overview</h2>
-              <p className="text-sm text-gray-500 mb-6">Your profile performance in the last 30 days</p>
+            <div className="col-span-2 bg-gray-50 p-3 sm:p-4 rounded border">
+              <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Performance Overview</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">Your profile performance in the last 30 days</p>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4  mb-4 sm:mb-6">
                 {[
                   { label: 'Profile Views', value: '1250', change: '+15%' },
                   { label: 'Inquiries', value: '28', change: '+8%' },
                   { label: 'Booking Rate', value: '35%', change: '+5%' },
                   { label: 'Review Score', value: '4.8', change: '+0.2' },
                 ].map((item, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded shadow text-center">
-                    <p className="text-sm text-gray-500">{item.label}</p>
-                    <p className="text-2xl font-bold">
-                      {item.value} <span className="text-green-500 text-sm">{item.change}</span>
+                  <div key={idx} className="bg-white p-2 sm:p-4 rounded shadow text-center">
+                    <p className="text-xs sm:text-sm text-gray-500">{item.label}</p>
+                    <p className="text-lg sm:text-2xl font-bold">
+                      {item.value} <span className="text-green-500 text-xs sm:text-sm">{item.change}</span>
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div className="bg-white p-4 rounded shadow">
+              {/* Calendar Section */}
+              <div className="bg-white p-3 sm:p-4 rounded shadow">
                 <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-medium">Monthly Profile Views</p>
-                  <button onClick={() => setShowDatePicker(!showDatePicker)} className="text-[#0f4c81] flex items-center gap-1 text-sm font-medium">
-                    <MdOutlineCalendarMonth size={20} /> Add Event
+                  <p className="text-xs sm:text-sm font-medium">Monthly Profile Views</p>
+                  <button
+                    onClick={() => setShowDatePicker(!showDatePicker)}
+                    className="text-[#0f4c81] flex items-center gap-1 text-xs sm:text-sm font-medium"
+                  >
+                    <MdOutlineCalendarMonth size={16} className="sm:w-5 sm:h-5" /> Add Event
                   </button>
                 </div>
+
                 {showDatePicker && (
                   <DatePicker
                     selected={null}
@@ -199,23 +168,10 @@ const Dashboard = () => {
                     inline
                   />
                 )}
-                <div className="mt-4">
-                  <style>
-                    {`
-                     .react-calendar {
-                       width: 100% !important;
-                       max-width: 100%;
-                     }
-                   
-                     .react-calendar__viewContainer,
-                     .react-calendar__month-view {
-                       width: 100%;
-                     }
-                   `}
-                  </style>
 
+                <div className="mt-4">
                   <Calendar
-                    className="w-full"
+                    className="w-full text-xs sm:text-sm"
                     value={new Date()}
                     tileClassName={tileClassName}
                     tileContent={({ date, view }) => {
@@ -232,29 +188,26 @@ const Dashboard = () => {
                       ) : null;
                     }}
                   />
-
                 </div>
               </div>
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-gray-50 p-2 rounded border">
-              <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-              <p className="text-sm text-gray-500 mb-2">Latest inquiries and reviews</p>
+            <div className="bg-gray-50 p-2 sm:p-4 rounded border">
+              <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Recent Activity</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mb-2">Latest inquiries and reviews</p>
 
-              <div className="space-y-4 text-sm">
+              <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
                 {activities.map((activity, idx) => (
-                  <div key={idx} className="relative pl-8">
-                    <FiMessageSquare className="absolute top-1 left-0 text-gray-400 w-5 h-5" />
+                  <div key={idx} className="relative pl-6 sm:pl-8">
+                    <FiMessageSquare className="absolute top-1 left-0 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
                     <p className="font-medium text-gray-800">{activity.name}</p>
                     <p className="text-xs text-gray-400 mb-1">{activity.date}</p>
-                    {activity.rating ? (
-                      <p><span className={`${activity.ratingColor}`}>{activity.rating}</span> {activity.message}</p>
-                    ) : (
-                      <p className="mb-1 text-gray-700">{activity.message}</p>
-                    )}
+                    <p className="mb-1 text-gray-700">{activity.message}</p>
                     {activity.status && (
-                      <span className={`${activity.statusColor} text-xs font-medium`}>{activity.status}</span>
+                      <span className={`${activity.statusColor} text-xs font-medium`}>
+                        {activity.status}
+                      </span>
                     )}
                     <hr className="mt-3 border-gray-200" />
                   </div>
@@ -264,65 +217,37 @@ const Dashboard = () => {
           </>
         )}
 
-        {activeTab === 'Edit Profile' && (
-          <div className="col-span-3 bg-white   w-full">
-            <EditProfile />
-          </div>
-        )}
-        {activeTab === 'Bookings' && (
-          <div className="col-span-3 bg-white   w-full">
-            <Bookings />
-          </div>
-        )}
-
-        {activeTab === 'Portfolio' && (
-          <div className="col-span-3 bg-white">
-            <PortfolioTab />
-          </div>
-        )}
-
-        {activeTab === 'Packages & FAQs' && (
-          <div className="col-span-3 bg-white ">
-            <PackagesAndFaqs />
-          </div>
-        )}
-
-        {activeTab === 'Inquiries' && (
-          <div className="col-span-3 bg-white ">
-            <Inquiries />
-          </div>
-        )}
-
-        {activeTab === 'Reviews' && (
-          <div className="col-span-3 bg-white ">
-            <ReviewSection />
-          </div>
-        )}
-
-        {activeTab === 'Analytics' && (
-          <div className="col-span-3 bg-white p-4 rounded border">
-            <Analytics />
-          </div>
-        )}
+        {/* Other tabs content */}
+        {activeTab === 'Edit Profile' && <div className="col-span-3"><EditProfile /></div>}
+        {activeTab === 'Bookings' && <div className="col-span-3"><Bookings /></div>}
+        {activeTab === 'Portfolio' && <div className="col-span-3"><PortfolioTab /></div>}
+        {activeTab === 'Packages & FAQs' && <div className="col-span-3"><PackagesAndFaqs /></div>}
+        {activeTab === 'Inquiries' && <div className="col-span-3"><Inquiries /></div>}
+        {activeTab === 'Reviews' && <div className="col-span-3"><ReviewSection /></div>}
+        {activeTab === 'Analytics' && <div className="col-span-3"><Analytics /></div>}
       </div>
 
+      {/* Upcoming Weddings Section */}
       {activeTab === 'Overview' && (
-        <div className="col-span-2 bg-white p-2 rounded border mt-5">
-          <h2 className="text-lg font-semibold mb-2">Upcoming Weddings</h2>
-          <p className="text-sm text-gray-500 mb-2">Your Scheduled Bookings</p>
+        <div className="col-span-2 bg-white p-2 sm:p-4 rounded border mt-4 sm:mt-5">
+          <h2 className="text-base sm:text-lg font-semibold mb-2">Upcoming Weddings</h2>
+          <p className="text-xs sm:text-sm text-gray-500 mb-2">Your Scheduled Bookings</p>
+
           {upcomingWeddings.map((wedding, index) => (
-            <div key={index} className="flex items-center space-x-4 border p-4 rounded mb-2 relative">
+            <div key={index} className="flex items-center space-x-2 sm:space-x-4 border p-2 sm:p-4 rounded mb-2 relative">
               <span
-                className="text-gray-800 cursor-pointer"
+                className="text-gray-800 cursor-pointer mt-6"
                 onClick={() => setShowDatePickerForWedding(index === showDatePickerForWedding ? null : index)}
               >
-                <MdOutlineCalendarMonth size={40} />
+                <MdOutlineCalendarMonth size={16} className="sm:w-5 sm:h-5" />
               </span>
               <div className="flex-1">
-                <p className="font-medium">{wedding.name}</p>
-                <p className="text-sm text-gray-500">{wedding.date}</p>
+                <p className="text-sm sm:text-base">{wedding.name.slice(0, 11) + "..."}</p>
+                <p className="text-xs sm:text-sm text-gray-500">{wedding.date}</p>
               </div>
-              <button className="border border-gray-300 rounded px-4 py-1">Contact Client</button>
+              <button className="border border-gray-300 rounded px-2 sm:px-4 py-1 text-xs sm:text-sm">
+                Contact Client
+              </button>
 
               {showDatePickerForWedding === index && (
                 <div className="absolute top-full left-0 z-10 mt-1 shadow-lg bg-white p-2 rounded">
@@ -336,6 +261,8 @@ const Dashboard = () => {
           ))}
         </div>
       )}
+
+      <VendorPreviewProfile show={showModal} onClose={() => setShowModal(false)} />
     </div>
   );
 };

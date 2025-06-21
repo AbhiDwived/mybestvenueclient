@@ -1,34 +1,37 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const authApi = createApi({
-  reducerPath: 'authApi',
-baseQuery: fetchBaseQuery({ 
-  baseUrl: import.meta.env.VITE_API_URL,
+  reducerPath: "authApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: import.meta.env.VITE_API_URL,
     prepareHeaders: (headers, { getState }) => {
-  // const token = getState().user?.auth?.token;
-  const token = localStorage.getItem("token");
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-  return headers;
-},
-}),
+      const token = localStorage.getItem("token");
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
   endpoints: (builder) => ({
     // Register User
     registerUser: builder.mutation({
       query: (userData) => ({
-        url: '/user/register',
-        method: 'POST',
+        url: "/user/register",
+        method: "POST",
         body: userData,
       }),
+    }),
+
+    //getUserProfile
+    getUserProfile: builder.query({
+      query: () => `user/`,
     }),
 
     // Verify OTP after registration
     verifyOtp: builder.mutation({
       query: ({ userId, otp }) => ({
-        url: '/user/verify-otp',
-        method: 'POST',
+        url: "/user/verify-otp",
+        method: "POST",
         body: { userId, otp },
       }),
     }),
@@ -36,8 +39,8 @@ baseQuery: fetchBaseQuery({
     // Resend OTP for registration
     resendOtp: builder.mutation({
       query: ({ userId }) => ({
-        url: '/user/resend-otp',
-        method: 'POST',
+        url: "/user/resend-otp",
+        method: "POST",
         body: { userId },
       }),
     }),
@@ -45,8 +48,8 @@ baseQuery: fetchBaseQuery({
     // Login User
     loginUser: builder.mutation({
       query: (credentials) => ({
-        url: '/user/login',
-        method: 'POST',
+        url: "/user/login",
+        method: "POST",
         body: credentials,
       }),
     }),
@@ -54,8 +57,8 @@ baseQuery: fetchBaseQuery({
     // Forgot Password
     forgotPassword: builder.mutation({
       query: (emailData) => ({
-        url: '/user/forgot_password',
-        method: 'POST',
+        url: "/user/forgot_password",
+        method: "POST",
         body: emailData,
       }),
     }),
@@ -63,8 +66,8 @@ baseQuery: fetchBaseQuery({
     // Verify OTP for password reset
     verifyPasswordReset: builder.mutation({
       query: ({ userId, otp }) => ({
-        url: '/user/verify_password_reset',
-        method: 'POST',
+        url: "/user/verify_password_reset",
+        method: "POST",
         body: { userId, otp },
       }),
     }),
@@ -72,8 +75,8 @@ baseQuery: fetchBaseQuery({
     // Reset Password
     resetPassword: builder.mutation({
       query: ({ userId, newPassword }) => ({
-        url: '/user/reset_password',
-        method: 'POST',
+        url: "/user/reset_password",
+        method: "POST",
         body: { userId, newPassword },
       }),
     }),
@@ -82,7 +85,7 @@ baseQuery: fetchBaseQuery({
     updatePassword: builder.mutation({
       query: ({ userId, currentPassword, newPassword }) => ({
         url: `/user/update-password/${userId}`,
-        method: 'PUT',
+        method: "PUT",
         body: { currentPassword, newPassword },
       }),
     }),
@@ -91,7 +94,7 @@ baseQuery: fetchBaseQuery({
     updateProfile: builder.mutation({
       query: ({ userId, profileData }) => ({
         url: `/user/update-profile/${userId}`,
-        method: 'PUT',
+        method: "PUT",
         body: profileData,
       }),
     }),
@@ -100,45 +103,43 @@ baseQuery: fetchBaseQuery({
     deleteUser: builder.mutation({
       query: ({ userId }) => ({
         url: `/user/delete/${userId}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
     }),
 
     // Logout User
     logoutUser: builder.mutation({
       query: () => ({
-        url: '/user/logout',
-        method: 'POST'
+        url: "/user/logout",
+        method: "POST",
       }),
-      
     }),
     // User Inquiries
- getUserInquiries: builder.mutation({
-  query: (userId) => ({
-    url: '/user/getuser_inquiryList',
-    method: 'POST',
-    body: { userId },
-  }),
-}),
-
- sendUserReply: builder.mutation({
-  query: ({ vendorId, message, userId }) => ({
-    url: `/user/userInquiryMessage/${userId}`,
-    // url: `/user/user_reply/${encodeURIComponent(userId)}`,
-    method: 'POST',
-    body: { vendorId, message },
-  }),
-}),
-
-  //UserContact---POST
-  submitContactForm: builder.mutation({
-    query: (userData) => ({
-      url: "/user/contact",
-      method: "POST",
-      body: userData,
+    getUserInquiries: builder.mutation({
+      query: (userId) => ({
+        url: "/user/getuser_inquiryList",
+        method: "POST",
+        body: { userId },
+      }),
     }),
-  }),
 
+    sendUserReply: builder.mutation({
+      query: ({ vendorId, message, userId }) => ({
+        url: `/user/userInquiryMessage/${userId}`,
+        // url: `/user/user_reply/${encodeURIComponent(userId)}`,
+        method: "POST",
+        body: { vendorId, message },
+      }),
+    }),
+
+    //UserContact---POST
+    submitContactForm: builder.mutation({
+      query: (userData) => ({
+        url: "/user/contact",
+        method: "POST",
+        body: userData,
+      }),
+    }),
   }),
 });
 
@@ -158,4 +159,5 @@ export const {
   useGetUserInquiriesMutation,
   useSendUserReplyMutation,
   useSubmitContactFormMutation,
+  useGetUserProfileQuery ,
 } = authApi;

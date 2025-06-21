@@ -138,7 +138,6 @@ const Navbar = () => {
       <div className="space-y-3">
         {renderLink('/wedding-vendor', <FiBriefcase size={16} />, 'Vendors')}
         {renderLink('/Wedding_Venues', <FiUser size={16} />, 'Venues')}
-        {renderLink('/planning-tools', <FiSettings size={16} />, 'Planning Tools')}
         {renderLink('/IdeaBlog', <FiPackage size={16} />, 'Blogs')}
         {renderLink('/corporate', <FiPackage size={16} />, 'Corporate')}
         <hr />
@@ -228,7 +227,6 @@ const Navbar = () => {
         <nav className="d-none d-lg-flex align-items-center gap-4">
           {renderLink('/wedding-vendor', 'Vendors')}
           {renderLink('/Wedding_Venues', 'Venues')}
-          {renderLink('/planning-tools', 'Planning Tools')}
           {renderLink('/IdeaBlog', 'Blogs')}
           {renderLink('/corporate', 'Corporate')}
 

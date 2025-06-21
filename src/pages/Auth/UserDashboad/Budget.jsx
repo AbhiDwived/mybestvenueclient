@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useGetUserBudgetQuery, useAddBudgetItemMutation, useUpdateBudgetItemMutation, useDeleteBudgetItemMutation } from '../../../features/budget/budgetAPI';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { MdDelete } from "react-icons/md";
 
 export default function Budget() {
   // Local state for new budget item form
@@ -94,7 +95,7 @@ export default function Budget() {
               </div>
               <div className="text-sm">
                 <span className="font-medium text-gray-700">Total Budget:</span>{" "}
-                <span className="font-bold">Rs{totalPlanned.toLocaleString()}</span>
+                <span className="font-bold">Rs {totalPlanned.toLocaleString()}</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full table-auto">
@@ -111,20 +112,20 @@ export default function Budget() {
                     {budget.map((item) => (
                       <tr key={item._id} style={{ borderBottom: '1px solid gray' }}>
                         <td className="py-3 px-4">{item.category}</td>
-                        <td className="py-3 px-4 text-right">{item.planned.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-4 ">{item.planned.toLocaleString()}</td>
+                        <td className="py-3 px-4 ">
                           <input
                             type="number"
                             value={item.actual || ""}
                             onChange={(e) =>
                               updateActualBudget(item._id, Number(e.target.value))
                             }
-                            className="w-24 text-right border rounded px-2 py-1"
+                            className="w-24  border rounded px-2 py-1"
                             min={0}
                           />
                         </td>
                         <td
-                          className={`py-3 px-4 text-right font-medium ${item.actual && item.actual > item.planned
+                          className={`py-3 px-4  font-medium ${item.actual && item.actual > item.planned
                             ? "text-red-500"
                             : "text-green-500"
                             }`}
@@ -133,13 +134,13 @@ export default function Budget() {
                             ? (item.planned - item.actual).toLocaleString()
                             : "-"}
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-4 ">
                           <button
                             onClick={() => handleDeleteItem(item._id)}
                             className="text-red-500 hover:text-red-700"
                             disabled={isDeletingItem}
                           >
-                            Delete
+                            <MdDelete size={25} />
                           </button>
                         </td>
                       </tr>
@@ -155,10 +156,10 @@ export default function Budget() {
                   <tfoot>
                     <tr className="border-t-2 border-gray-300 font-bold">
                       <td className="py-3 px-4">Total</td>
-                      <td className="py-3 px-4 text-right">{totalPlanned.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-right">{totalActual.toLocaleString()}</td>
+                      <td className="py-3 px-4">{totalPlanned.toLocaleString()}</td>
+                      <td className="py-3 px-4 ">{totalActual.toLocaleString()}</td>
                       <td
-                        className={`py-3 px-4 text-right ${budgetRemaining < 0 ? "text-red-500" : "text-green-500"
+                        className={`py-3 px-4 ${budgetRemaining < 0 ? "text-red-500" : "text-green-500"
                           }`}
                       >
                         {budgetRemaining.toLocaleString()}
@@ -214,7 +215,7 @@ export default function Budget() {
                 <button
                   onClick={handleAddBudgetItem}
                   disabled={!newBudgetItem.category || newBudgetItem.planned <= 0 || isAddingItem}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-medium py-2 px-4 rounded-md"
+                  className="w-full bg-[#0D3F6A] hover:bg-[#0D3F6A] disabled:bg-gray-300 text-white font-medium py-2 px-4 rounded-md"
                 >
                   {isAddingItem ? "Adding..." : "Add Budget Item"}
                 </button>
@@ -232,7 +233,7 @@ export default function Budget() {
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Spent:</span>
-                  <span className="font-bold">₹{totalActual.toLocaleString()}</span>
+                  <span className="font-bold ">₹{totalActual.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between border-t border-gray-300 pt-2">

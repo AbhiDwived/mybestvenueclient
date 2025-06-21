@@ -133,6 +133,66 @@ export const vendorApi = createApi({
       }),
       invalidatesTags: ['Inquiries'],
     }),
+    
+    addservicesPackage: builder.mutation({
+      query: ({ vendorId, packageName, services, description, price, offerPrice }) => ({
+        url: `/vendor/addservicesPackage`,
+        method: 'POST',
+        body: { vendorId, packageName, services, description, price, offerPrice },
+      }),
+    }),
+
+
+    updateservicesPackage: builder.mutation({
+      query: ({ packageId, ...data }) => ({
+        url: `/vendor/updateservicesPackage/${packageId}`,
+        method: 'PUT',
+        body: data,
+      }),
+    }),
+
+
+    vendorservicesPackageList: builder.mutation({
+      query: ({ vendorId }) => ({
+        url: `/vendor/vendorservicesPackageList/${vendorId}`,
+        method: 'GET',
+
+      }),
+    }),
+     deleteServicePackages: builder.mutation({
+      query: ({ packageId }) => ({
+        url: `/vendor/updateservicesPackage/${packageId}`,
+        method: 'DELETE',
+
+      }),
+    }),
+    addFaq: builder.mutation({
+      query: ({ vendorId, question, answer}) => ({
+        url: `/vendor/addfaq`,
+        method: 'POST',
+        body: { vendorId, question, answer},
+      }),
+    }),
+    getVendorsFaqs: builder.mutation({
+      query: ({ vendorId,}) => ({
+        url: `/vendor/getfaqsbyVendor/${vendorId}`,
+        method: 'GET',
+        
+      }),
+    }),
+    
+    // Get vendor bookings list
+    getVendorBookingsList: builder.query({
+      query: (vendorId) => ({
+        url: `/booking/getvendorBookings/${vendorId}`,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+      providesTags: ['Bookings'],
+    }),
+    
   })
 });
 
@@ -153,4 +213,11 @@ export const {
   useGetVendorByIdQuery,
   useUserInquiryListQuery,
   useUserInquiryReplyMutation,
+  useAddFaqMutation,
+  useGetVendorsFaqsMutation,
+  useAddservicesPackageMutation,
+  useUpdateservicesPackageMutation,
+  useVendorservicesPackageListMutation,
+  useDeleteServicePackagesMutation,
+  useGetVendorBookingsListQuery,
 } = vendorApi;

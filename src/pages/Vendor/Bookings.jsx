@@ -4,78 +4,67 @@ import { IoEyeOutline } from "react-icons/io5";
 import { ImCross } from "react-icons/im";
 import { FiCheckCircle } from "react-icons/fi";
 import { BsExclamationCircle } from "react-icons/bs";
+import { } from "../../features/bookings/bookingAPI";
+import { useSelector, useDispatch } from 'react-redux';
+import { useGetVendorBookingsListQuery } from "../../features/vendors/vendorAPI";
 
-const bookings = [
-  {
-    id: 1,
-    name: 'Arjun & Meera Kumar',
-    status: 'Pending',
-    date: '2024-11-15 at 10:00 AM',
-    location: 'Grand Palace Hotel, Delhi',
-    event: 'Wedding',
-    guests: 200,
-    price: '75,000'
-  },
-  {
-    id: 2,
-    name: 'Rohan & Priya Sharma',
-    status: 'Pending',
-    date: '2024-12-07 at 6:00 PM',
-    location: 'Beach Resort, Goa',
-    event: 'Engagement',
-    guests: 80,
-    price: '45,000'
-  },
-  {
-    id: 3,
-    name: 'Corporate Solutions Ltd',
-    status: 'Completed',
-    date: '2024-10-25 at 9:00 AM',
-    location: 'Convention Center, Mumbai',
-    event: 'Corporate Event',
-    guests: 300,
-    price: '60,000'
-  },
-  {
-    id: 4,
-    name: 'Corporate Solutions Ltd',
-    status: 'Confirmed',
-    date: '2024-10-25 at 9:00 AM',
-    location: 'Convention Center, Mumbai',
-    event: 'Corporate Event',
-    guests: 300,
-    price: '60,000'
-  }
-];
 
-const statusColors = {
-  Confirmed: { class: "bg-green-100 text-green-800", icon: <FiCheckCircle size={16} /> },
-  Pending: { class: "bg-yellow-100 text-yellow-800", icon: <BsExclamationCircle size={16} /> },
-  Completed: { class: "bg-blue-100 text-blue-800", icon: <FiCheckCircle size={16} /> }
-};
 
-const overviewStats = {
-  total: bookings.length,
-  pending: bookings.filter(b => b.status === 'Pending').length,
-  confirmed: bookings.filter(b => b.status === 'Confirmed').length,
-  completed: bookings.filter(b => b.status === 'Completed').length
-};
 
 export default function BookingManagement() {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
+  const [isEditMode, setIsEditMode] = useState(false);
+
+
+
+
+  const vendor = useSelector((state) => state.vendor.vendor);
+  const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
+  const vendorId = vendor?.id;
+
+
+  const { data, isLoading, error } = useGetVendorBookingsListQuery(vendorId);
+  const bookings = data?.data?.bookings || [];
+  console.log("bookings", bookings);
+
+  const statusColors = {
+    confirmed: { class: "bg-green-100 text-green-800", icon: <FiCheckCircle size={16} /> },
+    pending: { class: "bg-yellow-100 text-yellow-800", icon: <BsExclamationCircle size={16} /> },
+    completed: { class: "bg-blue-100 text-blue-800", icon: <FiCheckCircle size={16} /> }
+  };
+
+
+  const overviewStats = {
+    total: bookings.length,
+    pending: bookings.filter(b => b.status?.toLowerCase() === 'pending').length,
+    confirmed: bookings.filter(b => b.status?.toLowerCase() === 'confirmed').length,
+    completed: bookings.filter(b => b.status?.toLowerCase() === 'completed').length
+  };
+
+
 
   const filteredBookings = bookings.filter((booking) => {
-    const matchesName = booking.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesName = booking.user.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All Status' || booking.status === statusFilter;
     return matchesName && matchesStatus;
   });
+
+
+
+
 
   const handleSave = () => {
     setShowModal(false);
     alert("Booking saved successfully!");
   };
+  if (!bookings.length) {
+    return <p className="text-center mt-10 text-gray-500">No bookings found</p>;
+  }
+
+  if (isLoading) return <p className="text-center mt-10">Loading bookings...</p>;
+  if (error) return <p className="text-center mt-10 text-red-500">Failed to fetch bookings</p>;
 
   return (
     <div className="p-2 bg-gray-50 min-h-screen sm:m-6">
@@ -143,7 +132,7 @@ export default function BookingManagement() {
           {/* Top Row: Name and Actions */}
           <div className="flex justify-between items-start flex-wrap md:flex-nowrap mb-2  sm:justify-center sm:items-center">
             <div className="items-center justify-between inline sm:flex  ">
-              <span className="text-[10px] sm:text-[20px]  font-semibold text-gray-800">{booking.name}</span>
+              <span className="text-[10px] sm:text-[20px]  font-semibold text-gray-800">{booking.user.name || "Navneet"}</span>
               <div className="inline ">
                 <div className={`flex justify-center gap-1 w-[80px] sm:mx-2 sm:w-[100px] py-1 items-center-safe rounded  text-[10px]  sm:text-[12px]   ${statusColors[booking.status]?.class}`}>
                   <span className={`  font-medium     `}>
@@ -159,7 +148,12 @@ export default function BookingManagement() {
                 <IoEyeOutline className="w-[12px] sm:w-[15px]" />
               </button>
               <button className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300" title="Edit">
-                <FaRegEdit className="w-[12px] sm:w-[15px]" />
+                <FaRegEdit className="w-[12px] sm:w-[15px]" 
+                onClick={() => {
+     setIsEditMode(true);
+    setShowModal(true);
+  }}
+                />
               </button>
               <select className="border border-gray-300 rounded-md text-[8px] sm:text-[10px] sm:w-[100px] w-[80px]">
                 <option value="pending">Pending</option>
@@ -174,19 +168,22 @@ export default function BookingManagement() {
             <div>
               <div className="text-sm text-gray-600 flex items-center gap-2 mb-1">
                 <FaCalendarAlt className="text-gray-500" />
-                {booking.date}
+
+                {new Date(booking.eventDate).toLocaleDateString()} at {booking.eventTime}
               </div>
               <div className="text-sm text-gray-500">
-                Event: {booking.event} | Guests: {booking.guests}
+
+                Event: {booking.eventType} | Guests: {booking.guestCount}
               </div>
             </div>
             <div className="flex flex-row gap-2 justify-between">
               <div className="p-2 text-sm flex items-center gap-1">
                 <FaMapMarkerAlt className="text-gray-600" />
-                <span className="text-gray-700 font-medium">{booking.location}</span>
+                <span className="text-gray-700 font-medium">{booking.venue}</span>
               </div>
               <div className="p-2 text-sm font-semibold text-gray-700">
-                ₹{booking.price}
+
+                ₹{booking.plannedAmount?.toLocaleString("en-IN") || 0}
               </div>
             </div>
           </div>
@@ -258,7 +255,7 @@ export default function BookingManagement() {
                   onClick={handleSave}
                   className="bg-[#19599A] text-white px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded hover:bg-[#19599A]"
                 >
-                  Save
+                  {isEditMode ? "Update" : "Save"}
                 </button>
               </div>
             </div>
