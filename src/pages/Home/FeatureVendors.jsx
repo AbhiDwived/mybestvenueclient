@@ -3,72 +3,15 @@ import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { IoIosArrowForward } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
-
-import image1 from "../../assets/newPics/featuredcard.jpg";
-import image2 from "../../assets/newPics/featuredvendors.jpg";
-import image3 from "../../assets/newPics/featuredVendors1.png";
-import image4 from "../../assets/newPics/featuredVendors02.jpg";
-
-const vendors = [
-  {
-    id: 1,
-    image: image1,
-    category: "Photographer",
-    name: "Dream Wedding Photography",
-    location: "Delhi, India",
-    rating: 4.8,
-    reviews: 124,
-    price: "₹10,000 - ₹50,000",
-  },
-  {
-    id: 2,
-    image: image2,
-    category: "Venue",
-    name: "Royal Palace Banquet",
-    location: "Mumbai, India",
-    rating: 4.5,
-    reviews: 87,
-    price: "₹1,00,000 - ₹5,00,000",
-  },
-  {
-    id: 3,
-    image: image3,
-    category: "Makeup Artist",
-    name: "Glam Makeup Studio",
-    location: "Bangalore, India",
-    rating: 4.9,
-    reviews: 215,
-    price: "₹5,000 - ₹25,000",
-  },
-  {
-    id: 4,
-    image: image4,
-    category: "Caterer",
-    name: "Delicious Catering",
-    location: "Hyderabad, India",
-    rating: 4.6,
-    reviews: 156,
-    price: "₹500 - ₹1,500 per plate",
-  },
-  {
-    id: 5,
-    image: image3,
-    category: "Caterer",
-    name: "Delicious Catering",
-    location: "Hyderabad, India",
-    rating: 4.6,
-    reviews: 156,
-    price: "₹500 - ₹1,500 per plate",
-  },
-];
-
+import { useGetAllVendorsQuery } from "../../features/admin/adminAPI";
 
 const FeaturedVendors = ({ showAll = false }) => {
   const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
+  const { data: vendorsData, isLoading, error } = useGetAllVendorsQuery();
 
   const toggleFavorite = (e, id) => {
-    e.stopPropagation(); // Prevent card click when clicking favorite button
+    e.stopPropagation();
     setFavorites((prev) =>
       prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
     );
@@ -79,15 +22,37 @@ const FeaturedVendors = ({ showAll = false }) => {
   };
 
   useEffect(() => {
-    window.scrollTo({ top: 0, category: 'top' })
-  })
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
-  const displayedVendors = showAll ? vendors : vendors.slice(0, 4);
+  if (isLoading) {
+    return <div className="text-center py-10">Loading vendors...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">Error loading vendors: {error.message}</div>;
+  }
+
+  // Format vendors data according to our display needs
+  const formattedVendors = vendorsData?.vendors?.map(vendor => ({
+    id: vendor._id,
+    image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
+    category: vendor.vendorType,
+    name: vendor.businessName,
+    location: vendor.serviceAreas?.[0] || `${vendor.address?.city || ''}, ${vendor.address?.state || 'India'}`,
+    rating: 4.5, // This should come from reviews when implemented
+    reviews: 0, // This should come from reviews when implemented
+    price: vendor.pricingRange ? 
+      `₹${vendor.pricingRange.min?.toLocaleString()} - ₹${vendor.pricingRange.max?.toLocaleString()}` : 
+      'Price on request'
+  })) || [];
+
+  const displayedVendors = showAll ? formattedVendors : formattedVendors.slice(0, 4);
 
   return (
     <div className="lg:mx-16 px-4 md:px-10 xl:px-20 py-10">
       <div className="flex flex- justify-between items-start sm:items-center mb-6 gap-4">
-        <h3 className=" font-semibold text-gray-800 font-serif">Featured Vendors</h3>
+        <h3 className="font-semibold text-gray-800 font-serif">Featured Vendors</h3>
         {!showAll && (
           <Link style={{ textDecoration: 'none' }} to="/featurevendors" className="flex text-[#052038] hover:underline">
             <p className="text-[#052038] hover:text-black">View All</p>
@@ -105,7 +70,7 @@ const FeaturedVendors = ({ showAll = false }) => {
           >
             <div className="relative group">
               <img
-                src={vendor.image}
+                src={vendor.image || 'default-vendor-image.jpg'} // Add a default image path
                 alt={vendor.name}
                 className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
               />
