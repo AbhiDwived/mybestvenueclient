@@ -107,8 +107,8 @@ export const vendorApi = createApi({
     // Get Vendor BY Id
     getVendorById: builder.query({
       query: (vendorId) => ({
-        url: `/vendor/vendorbyId/${vendorId}`,
-        method: 'POST',
+        url: `/vendor/vendor/${vendorId}`,
+        method: 'GET',
       }),
     }),
 

@@ -18,7 +18,7 @@ const FeaturedVendors = ({ showAll = false }) => {
   };
 
   const handleVendorClick = (vendor) => {
-    navigate('/preview-profile');
+    navigate(`/preview-profile/${vendor.id}`);
   };
 
   useEffect(() => {

@@ -4,7 +4,8 @@ import { FiPhone, FiGlobe, FiCalendar } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 import { HiOutlineCalendar } from "react-icons/hi";
-
+import { useParams } from 'react-router-dom';
+import { useGetVendorByIdQuery } from '../../../features/vendors/vendorAPI';
 
 import mainProfile from "../../../assets/mainProfile.png";
 import vendorManagementPic from "../../../assets/vendorManagementPic.png";
@@ -19,9 +20,26 @@ import { FaArrowLeft } from "react-icons/fa";
 
 const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
+  const { vendorId } = useParams();
+  const { data: vendor, isLoading, error } = useGetVendorByIdQuery(vendorId);
+  const [isSaved, setIsSaved] = useState(false);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  if (isLoading) {
+    return <div className="text-center py-10">Loading vendor details...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">Error loading vendor: {error.message}</div>;
+  }
+
+  const handleSave = () => {
+    setIsSaved(!isSaved);
+    // TODO: Implement save vendor functionality
+  };
 
   return (
     <div className="mx-auto px-2 py-3 font-serif">
@@ -38,57 +56,66 @@ const PreviewProfile = () => {
       <div className="border rounded-lg p-4 shadow-sm bg-white flex flex-col md:flex-row md:items-start gap-4">
         {/* Profile Image */}
         <img
-          src={mainProfile}
-          alt="profile"
+          src={vendor?.profilePicture || mainProfile}
+          alt={vendor?.businessName}
           className="w-40 h-40 rounded-full object-cover"
         />
 
         {/* Content */}
         <div className="flex-1 space-y-1">
-          <h2 className="text-xl font-bold text-gray-800">Dream Wedding Photography</h2>
-          <p className="text-sm text-gray-500">Wedding Photography</p>
+          <h2 className="text-xl font-bold text-gray-800">{vendor?.businessName}</h2>
+          <p className="text-sm text-gray-500">{vendor?.vendorType}</p>
 
           {/* Rating & Location */}
           <div className="flex flex-wrap items-center gap-2 text-md text-gray-600 mt-1">
             <span className="flex items-center font-medium">
-              <FaStar className="mr-1"   color={"#FACC15"}size={22}/> 4.8 <span className="ml-1 text-gray-400">(124 reviews)</span>
+              <FaStar className="mr-1" color={"#FACC15"} size={22}/> 
+              {vendor?.rating || '4.8'} 
+              <span className="ml-1 text-gray-400">({vendor?.reviews?.length || '0'} reviews)</span>
             </span>
             <span>·</span>
-            <span><IoLocationOutline className="inline-block" /> Delhi, India</span>
+            <span>
+              <IoLocationOutline className="inline-block" /> 
+              {vendor?.address?.city}, {vendor?.address?.state || 'India'}
+            </span>
           </div>
 
       
           <div className="flex flex-wrap justify-start gap-2 mt-2 sm:mt-0 w-full">
-            <span className="text-sm px-3 py-1 rounded-full text-white whitespace-nowrap "
-              style={{ backgroundColor: status === "Active" ? "#34C759" : "#0f4c81" }}
+            <span className="text-sm px-3 py-1 rounded-full text-white whitespace-nowrap"
+              style={{ backgroundColor: vendor?.isActive ? "#34C759" : "#0f4c81" }}
             >
-              {/* {vendor.status || "InActive"} */}
-              Active
+              {vendor?.isActive ? "Active" : "Inactive"}
             </span>
 
-            <span className="text-sm px-3 py-1 rounded-full bg-white text-green-700 flex items-center gap-1 border-2 border-green-600 whitespace-nowrap">
-              <FiShield className="text-green-600" size={16} />
-              Verified
-            </span>
+            {vendor?.isVerified && (
+              <span className="text-sm px-3 py-1 rounded-full bg-white text-green-700 flex items-center gap-1 border-2 border-green-600 whitespace-nowrap">
+                <FiShield className="text-green-600" size={16} />
+                Verified
+              </span>
+            )}
 
-            <span className="text-sm px-3 py-1 rounded-full text-[#0f4c81] border-2 border-[#0f4c81] whitespace-nowrap">
-              Approved
-            </span>
+            {vendor?.isApproved && (
+              <span className="text-sm px-3 py-1 rounded-full text-[#0f4c81] border-2 border-[#0f4c81] whitespace-nowrap">
+                Approved
+              </span>
+            )}
           </div>
 
           {/* Description */}
           <p className="text-md text-gray-500 mt-2">
-            We are passionate photographers specializing in capturing the most precious moments of your wedding day.
-            With over 10 years of experience, we create timeless memories that you'll cherish forever. Our team uses
-            state-of-the-art equipment and creative techniques to deliver stunning photographs that tell your unique love story.
+            {vendor?.description || 'No description available'}
           </p>
         </div>
 
         {/* Save Button */}
        
           <div className="absolute sm:top-35 sm:right-8 right-4">
-    <button className="flex items-center text-sm text-gray-700 border px-3 py-2 rounded hover:bg-[#DEBF78]">
-      <FaRegHeart className="mr-2" /> Save
+    <button 
+      className="flex items-center text-sm text-gray-700 border px-3 py-2 rounded hover:bg-[#DEBF78]"
+      onClick={handleSave}
+    >
+      <FaRegHeart className={isSaved ? "text-red-500 mr-2" : "mr-2"} /> Save
     </button> 
   </div>
 
@@ -99,11 +126,11 @@ const PreviewProfile = () => {
         <div className="md:col-span-2 bg-white p-4 rounded shadow">
           <h3 className="text-lg font-semibold mb-4">Photo Gallery</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {(vendor?.galleryImages || [1, 2, 3, 4, 5, 6]).map((image, i) => (
               <img
                 key={i}
-                src={secondProfile}
-                alt={"mainProfile not found"}
+                src={typeof image === 'object' ? image.url : secondProfile}
+                alt={`Gallery image ${i + 1}`}
                 className="rounded object-cover w-full h-60"
               />
             ))}
@@ -216,32 +243,36 @@ const PreviewProfile = () => {
           {/* Contact Info */}
           <div className="border rounded-lg p-4 shadow-sm bg-white w-full ">
             <h3 className="font-semibold text-lg mb-4">Contact Information</h3>
-            <ul className="text-gray-700 text-sm space-y-3 " style={{paddingLeft: '20px'}}>
+            <ul className="text-gray-700 text-sm space-y-3" style={{paddingLeft: '20px'}}>
               <li className="flex items-start gap-2">
                 <FiPhone className="mt-1 shrink-0" />
-                <span>+91 98765 43210</span>
+                <span>{vendor?.phone || 'Contact number not available'}</span>
               </li>
               <li className="flex items-start gap-2">
                 <HiOutlineMail className="mt-1 shrink-0" />
-                <span className="break-all">info@dreamwedding.com</span>
+                <span className="break-all">{vendor?.email || 'Email not available'}</span>
               </li>
               <li className="flex items-start gap-2">
                 <FiGlobe className="mt-1 shrink-0" />
-                <span className="break-all">www.dreamweddingphotography.com</span>
+                <span className="break-all">{vendor?.website || 'Website not available'}</span>
               </li>
               <li className="flex items-start gap-2">
                 <IoLocationOutline className="mt-1 shrink-0" />
-                <span>Delhi, India</span>
+                <span>
+                  {vendor?.address?.city && vendor?.address?.state 
+                    ? `${vendor.address.city}, ${vendor.address.state}`
+                    : 'Location not available'}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <FiCalendar className="mt-1 shrink-0" />
-                <span>Available for 2023–2024 weddings</span>
+                <span>Available for bookings</span>
               </li>
             </ul>
           </div>
         </div>
       </div>
-      <SimilarVendors />
+      <SimilarVendors vendorType={vendor?.vendorType} currentVendorId={vendorId} />
     </div>
   );
 };
