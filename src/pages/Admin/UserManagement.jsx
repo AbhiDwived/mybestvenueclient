@@ -9,10 +9,22 @@ const UserManagement = () => {
   const usersData = Array.isArray(usersDataRaw) ? usersDataRaw : usersDataRaw?.users || [];
   const vendorsData = Array.isArray(vendorsDataRaw) ? vendorsDataRaw : vendorsDataRaw?.vendors || [];
 
+  // Combine and format data with proper date handling
   const combinedData = [
-    ...usersData.map(user => ({ ...user, role: 'user' })),
-    ...vendorsData.map(vendor => ({ ...vendor, role: 'vendor' }))
-  ];
+    ...usersData.map(user => ({ 
+      ...user, 
+      role: 'user',
+      sortDate: new Date(user.createdAt).getTime(),
+      displayName: user.name
+    })),
+    ...vendorsData.map(vendor => ({ 
+      ...vendor, 
+      role: 'vendor',
+      sortDate: new Date(vendor.appliedDate || vendor.createdAt).getTime(),
+      displayName: vendor.businessName || vendor.name,
+      vendorType: vendor.vendorType || vendor.category || '-' // Fallback to category if vendorType not available
+    }))
+  ].sort((a, b) => b.sortDate - a.sortDate); // Sort by date, newest first
 
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -30,8 +42,9 @@ const UserManagement = () => {
         : isUser;
 
     const matchesSearch =
-      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.businessName || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     return shouldInclude && matchesSearch;
   });
@@ -45,18 +58,24 @@ const UserManagement = () => {
     setCurrentPage(1);
   };
 
-  const handleView = (user) => alert(`Viewing profile: ${user.name}`);
-  const handleEdit = (user) => alert(`Editing profile: ${user.name}`);
+  const handleView = (user) => alert(`Viewing profile: ${user.displayName}`);
+  const handleEdit = (user) => alert(`Editing profile: ${user.displayName}`);
   const handleDelete = (user) => {
-    if (window.confirm(`Delete ${user.name}?`)) {
-      alert(`Deleted: ${user.name}`);
+    if (window.confirm(`Delete ${user.displayName}?`)) {
+      alert(`Deleted: ${user.displayName}`);
     }
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     const d = new Date(dateString);
-    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    return d.toLocaleDateString(undefined, { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (usersLoading || vendorsLoading) return <p className="p-4">Loading users and vendors...</p>;
@@ -70,7 +89,7 @@ const UserManagement = () => {
       <div className="flex justify-between items-center mb-4 relative">
         <input
           type="text"
-          placeholder="Search users or vendors..."
+          placeholder="Search by name, business name, or email..."
           className="w-1/3 px-3 py-2 border rounded-md text-sm"
           value={searchTerm}
           onChange={handleSearchChange}
@@ -94,12 +113,12 @@ const UserManagement = () => {
         <table className="w-full table-auto border-collapse">
           <thead>
             <tr className="bg-gray-100 text-left text-gray-600 rounded-full">
-              <th className="p-2">Name</th>
+              <th className="p-2">Name/Business</th>
               <th className="p-2">Email</th>
               <th className="p-2">Role</th>
               <th className="p-2">Status</th>
               <th className="p-2">Date Joined</th>
-              <th className="p-2">Category</th>
+              <th className="p-2">Vendor Type</th>
               <th className="p-2">Actions</th>
             </tr>
           </thead>
@@ -111,7 +130,14 @@ const UserManagement = () => {
             ) : (
               paginatedUsers.map((user, idx) => (
                 <tr key={user._id || idx} className="border-b hover:bg-gray-50">
-                  <td className="p-2 font-medium">{user.name}</td>
+                  <td className="p-2">
+                    <div>
+                      <span className="font-medium">{user.displayName}</span>
+                      {user.role === 'vendor' && user.name && user.name !== user.businessName && (
+                        <span className="text-xs text-gray-500 block">Owner: {user.name}</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="p-2 text-sm text-gray-700">{user.email || "-"}</td>
                   <td className="p-2">
                     <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs capitalize">
@@ -140,15 +166,19 @@ const UserManagement = () => {
                     )}
                   </td>
                   <td className="p-2 text-sm">
-                    {user.role === 'vendor' 
-                      ? formatDate(user.appliedDate)
-                      : formatDate(user.createdAt)}
+                    {formatDate(user.role === 'vendor' ? user.appliedDate || user.createdAt : user.createdAt)}
                   </td>
-                  <td className="p-2 text-sm">{user.role === 'vendor' ? (user.category || "-") : "-"}</td>
-                  <td className=" text-gray-600">
-                    <button onClick={() => handleView(user)} title="View"><FaEye className="inline w-4 h-4" /></button>
-                    <button onClick={() => handleEdit(user)} title="Edit"><FaPen className="inline w-4 h-4 mx-4" /></button>
-                    <button onClick={() => handleDelete(user)} title="Delete"><FaTrash className="inline w-4 h-4 text-red-500" /></button>
+                  <td className="p-2 text-sm">{user.role === 'vendor' ? user.vendorType : "-"}</td>
+                  <td className="text-gray-600">
+                    <button onClick={() => handleView(user)} className="p-1 hover:bg-gray-100 rounded" title="View">
+                      <FaEye className="inline w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleEdit(user)} className="p-1 hover:bg-gray-100 rounded mx-2" title="Edit">
+                      <FaPen className="inline w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(user)} className="p-1 hover:bg-gray-100 rounded" title="Delete">
+                      <FaTrash className="inline w-4 h-4 text-red-500" />
+                    </button>
                   </td>
                 </tr>
               ))
