@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 
 // Import slices
 import authReducer from '../features/auth/authSlice';
@@ -21,8 +22,9 @@ import { bookingApi } from '../features/bookings/bookingAPI';  // Booking API
 import { checklistApi } from '../features/checklist/checklistAPI';  // Checklist API
 import { savedVendorApi } from '../features/savedVendors/savedVendorAPI';  // Saved Vendor API
 import { guestApi } from '../features/guests/guestAPI';  // Guest API
+import { subscriberApi } from '../features/subscribers/subscriberAPI';
 
-export default configureStore({
+export const store = configureStore({
   reducer: {
     auth: authReducer,
     vendor: vendorReducer, // ✅ Changed from vendorAuth to vendor
@@ -44,6 +46,7 @@ export default configureStore({
     [checklistApi.reducerPath]: checklistApi.reducer,    // Checklist API reducer
     [savedVendorApi.reducerPath]: savedVendorApi.reducer, // Saved Vendor API reducer
     [guestApi.reducerPath]: guestApi.reducer,            // Guest API reducer
+    [subscriberApi.reducerPath]: subscriberApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -58,5 +61,8 @@ export default configureStore({
       .concat(bookingApi.middleware)                    // Booking API middleware
       .concat(checklistApi.middleware)                  // Checklist API middleware
       .concat(savedVendorApi.middleware)                // Saved Vendor API middleware
-      .concat(guestApi.middleware),                     // Guest API middleware
+      .concat(guestApi.middleware)                     // Guest API middleware
+      .concat(subscriberApi.middleware),
 });
+
+setupListeners(store.dispatch);

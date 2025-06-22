@@ -8,6 +8,7 @@ import PendingApprovals from './PendingApprovals';
 import ReviewModeration from './ReviewModeration';
 import ContentManagement from './ContentManagement';
 import Contact from './Contact';
+import SubscriberManagement from './SubscriberManagement';
 
 // 🟢 Import RTK hooks
 import {
@@ -43,6 +44,7 @@ const AdminDashboard = () => {
     'Pending Approvals',
     'Review Moderation',
     'Content Management',
+    'Subscribers',
     'Contacts'
   ];
 
@@ -259,6 +261,11 @@ const AdminDashboard = () => {
         {activeTab === 'Content Management' && (
           <div className="col-span-3 bg-white w-full">
             <ContentManagement />
+          </div>
+        )}
+        {activeTab === 'Subscribers' && (
+          <div className="col-span-3 bg-white w-full">
+            <SubscriberManagement />
           </div>
         )}
         {activeTab === 'Contacts' && (
