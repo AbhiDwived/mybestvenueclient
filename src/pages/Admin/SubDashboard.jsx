@@ -20,11 +20,36 @@ import {
 } from 'recharts';
 
 const getColor = (type = '') => {
-  if (type.includes('Vendor')) return 'yellow';
-  if (type.includes('User')) return 'green';
-  if (type.includes('Review')) return 'red';
-  if (type.includes('Blog')) return 'blue';
+  const typeLC = type.toLowerCase();
+  if (typeLC.includes('vendor')) return 'yellow';
+  if (typeLC.includes('user')) return 'green';
+  if (typeLC.includes('review')) return 'red';
+  if (typeLC.includes('blog')) return 'blue';
+  if (typeLC.includes('booking')) return 'purple';
+  if (typeLC.includes('inquiry')) return 'orange';
   return 'gray';
+};
+
+const colorMap = {
+  green: 'bg-green-500',
+  yellow: 'bg-yellow-400',
+  blue: 'bg-blue-500',
+  red: 'bg-red-500',
+  purple: 'bg-purple-500',
+  orange: 'bg-orange-500',
+  gray: 'bg-gray-400',
+};
+
+const formatTimeAgo = (date) => {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  if (hours > 0) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  if (mins > 0) return `${mins} ${mins === 1 ? 'minute' : 'minutes'} ago`;
+  return 'Just now';
 };
 
 const SubDashboard = () => {
@@ -42,27 +67,33 @@ const SubDashboard = () => {
   } = useGetRecentActivitiesQuery();
 
   const formattedActivity = useMemo(() => {
-    if (!isSuccess || !activityData?.activities) return [];
-    return activityData.activities.map(act => {
-      const diff = Date.now() - new Date(act.createdAt).getTime();
-      const mins = Math.floor(diff / 60000);
-      const time =
-        mins < 60
-          ? `${mins} minutes ago`
-          : mins < 1440
-            ? `${Math.floor(mins / 60)} hours ago`
-            : `${Math.floor(mins / 1440)} days ago`;
-      return {
-        ...act,
-        time,
-        color: getColor(act.type),
-      };
-    });
+    console.log('Activity Data:', activityData);
+    console.log('Is Success:', isSuccess);
+    
+    if (!isSuccess || !activityData?.activities) {
+      console.log('No activities found or query not successful');
+      return [];
+    }
+    
+    const formatted = activityData.activities
+      .map(act => {
+        const formattedActivity = {
+          ...act,
+          time: formatTimeAgo(act.createdAt),
+          color: getColor(act.type)
+        };
+        console.log('Formatted activity:', formattedActivity);
+        return formattedActivity;
+      })
+      .slice(0, 10);
+      
+    console.log('Final formatted activities:', formatted);
+    return formatted;
   }, [activityData, isSuccess]);
 
   useEffect(() => {
-    if (isError && activityError) {
-      console.error('Failed to fetch recent activity:', activityError);
+    if (isError) {
+      console.error('Activity Error:', activityError);
     }
   }, [isError, activityError]);
 
@@ -164,14 +195,6 @@ const SubDashboard = () => {
     },
   ];
 
-  const colorMap = {
-    green: 'bg-green-500',
-    yellow: 'bg-yellow-400',
-    blue: 'bg-blue-500',
-    red: 'bg-red-500',
-    gray: 'bg-gray-400',
-  };
-
   return (
     <div className="space-y-4 text-sm text-gray-800 font-serif p-2 sm:p-4">
       {/* Top Section: Chart + Activity */}
@@ -198,25 +221,29 @@ const SubDashboard = () => {
           <h2 className="font-semibold text-md mb-1">Recent Activity</h2>
           <p className="text-gray-500 text-xs mb-4">Latest actions on the platform</p>
           {activityLoading ? (
-            <p>Loading...</p>
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
           ) : formattedActivity.length === 0 ? (
-            <p className="text-xs text-gray-400">No recent activity found.</p>
+            <div className="flex flex-col items-center justify-center h-40">
+              <p className="text-gray-400">No recent activity found</p>
+            </div>
           ) : (
-            <ul className="space-y-3 text-xs m-2 pl-0 overflow-auto max-h-[300px]">
+            <div className="space-y-4 overflow-auto max-h-[400px] pr-2">
               {formattedActivity.map((item, i) => (
-                <li key={i} className="relative pl-3">
-                  <span className={`absolute left-0 top-1 w-0.5 h-12 rounded ${colorMap[item.color]}`} />
-                  <div className="border-gray-200 m-2">
-                    <p className="text-[13px] font-medium mb-0">{item.type}</p>
-                    <p className="text-gray-500 mb-0">{item.description}</p>
-                    <p className="text-gray-400 text-[11px]">{item.time}</p>
+                <div key={i} className="relative pl-4 border-l-2 hover:bg-gray-50 p-2 rounded transition-colors">
+                  <div className={`absolute left-[-5px] top-3 w-2.5 h-2.5 rounded-full ${colorMap[item.color]}`} />
+                  <div>
+                    <p className="font-medium text-sm text-gray-900">{item.type}</p>
+                    <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+                    <p className="text-gray-400 text-xs mt-1">{item.time}</p>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
           <button
-            className="mt-4 w-full text-gray-800 border border-[#0f4c81] rounded py-1.5 text-xs hover:bg-[#DEBF78] transition"
+            className="mt-4 w-full text-gray-800 border border-[#0f4c81] rounded py-1.5 text-xs hover:bg-[#DEBF78] transition duration-200"
             onClick={() => navigate('/admin/activity_logs')}
           >
             View All Activity

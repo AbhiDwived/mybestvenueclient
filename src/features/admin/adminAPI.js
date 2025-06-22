@@ -134,6 +134,11 @@ export const adminApi = createApi({
         }),
       }),
 
+    // Get vendor counts by location
+    getVendorCountsByLocation: builder.query({
+      query: (location) => `/admin/vendor-counts/${location}`,
+    }),
+
   }),
 });
 
@@ -160,4 +165,6 @@ export const {
   useSearchActivitiesQuery,
   useDeleteActivityMutation,
   useBulkDeleteActivitiesMutation,
+
+  useGetVendorCountsByLocationQuery,
 } = adminApi;

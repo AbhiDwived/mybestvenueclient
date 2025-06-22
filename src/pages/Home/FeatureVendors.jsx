@@ -39,12 +39,16 @@ const FeaturedVendors = ({ showAll = false }) => {
     image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
     category: vendor.vendorType,
     name: vendor.businessName,
-    location: vendor.serviceAreas?.[0] || `${vendor.address?.city || ''}, ${vendor.address?.state || 'India'}`,
+    location: vendor.serviceAreas?.length > 0 
+      ? vendor.serviceAreas[0]
+      : vendor.address?.city && vendor.address?.state
+        ? `${vendor.address.city}, ${vendor.address.state}`
+        : vendor.address?.city || vendor.address?.state || 'Location not specified',
     rating: 4.5, // This should come from reviews when implemented
     reviews: 0, // This should come from reviews when implemented
-    price: vendor.pricingRange ? 
-      `₹${vendor.pricingRange.min?.toLocaleString()} - ₹${vendor.pricingRange.max?.toLocaleString()}` : 
-      'Price on request'
+    price: vendor.pricingRange && vendor.pricingRange.min && vendor.pricingRange.max
+      ? `₹${vendor.pricingRange.min.toLocaleString()} - ₹${vendor.pricingRange.max.toLocaleString()}`
+      : 'Price on request'
   })) || [];
 
   const displayedVendors = showAll ? formattedVendors : formattedVendors.slice(0, 4);

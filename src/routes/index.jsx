@@ -189,7 +189,8 @@ const index = () => {
                     {/* Location */}
                     <Route path="locations/:city" element={<LocationVendors />} />
                     <Route path="category-selector" element={<CategorySelector />} />
-                    <Route path="/vendors/:location/:category" element={<VendorListPage />} />
+                    <Route path="/vendors/:city/:category" element={<VendorListPage />} />
+                    <Route path="/vendor-list/:city/:category" element={<VendorListPage />} />
 
 
                     {/* User Auth Routes */}
@@ -210,7 +211,7 @@ const index = () => {
                     <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
                     <Route path="/vendor/verify-password-reset" element={<VendorVerifyResetOTP />} />
                     <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
-                    <Route path="preview-profile" element={<PreviewProfile />} />
+                    <Route path="/preview-profile/:vendorId" element={<PreviewProfile />} />
 
                     {/* Admin Auth Route */}
                     <Route path="admin/login" element={<AdminLogin />} />

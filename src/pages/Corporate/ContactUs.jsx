@@ -13,6 +13,7 @@ export default function ContactUs() {
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [message, setMessage] = useState('');
 
     const [submitContact, { isLoading }] = useSubmitContactFormMutation();
@@ -20,19 +21,20 @@ export default function ContactUs() {
     const resetForm = () => {
         setName('');
         setEmail('');
+        setPhone('');
         setMessage('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!name || !email || !message.trim()) {
+        if (!name || !email || !phone || !message.trim()) {
             toast.error('Please fill in all fields.');
             return;
         }
 
         try {
-            await submitContact({ name, email, message }).unwrap();
+            await submitContact({ name, email, phone, message }).unwrap();
             toast.success('Your message has been sent successfully!');
             resetForm();
         } catch (err) {
@@ -126,13 +128,27 @@ export default function ContactUs() {
                                 />
                             </div>
                             <div>
+                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                                    Phone
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    name="phone"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
+                                    placeholder="+91 9876543210"
+                                />
+                            </div>
+                            <div>
                                 <label htmlFor="message" className="block text-sm font-medium text-gray-700">
                                     Message
                                 </label>
                                 <textarea
                                     id="message"
                                     name="message"
-                                    rows="5"
+                                    rows="3"
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"

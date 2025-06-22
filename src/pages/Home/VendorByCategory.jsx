@@ -5,22 +5,41 @@ import {
   FaPaintBrush,
   FaClipboardList,
   FaRegBuilding,
+  FaHotel,
+  FaUmbrellaBeach,
+  FaTree,
+  FaCamera,
+  FaGlassCheers,
+  FaHome,
+  FaLandmark
 } from 'react-icons/fa';
-import { FiCamera } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 
 // Helper function to get icon by category title
 const getCategoryIcon = (title) => {
   switch (title) {
-    case 'Wedding Photographers':
-      return <FiCamera size={30} />;
-    case 'Venue':
+    case 'Banquet Halls':
       return <FaRegBuilding size={24} />;
+    case 'Hotels':
+      return <FaHotel size={24} />;
+    case 'Marriage Garden':
+      return <FaTree size={24} />;
+    case 'Kalyana Mandapams':
+      return <FaLandmark size={24} />;
+    case 'Wedding Resorts':
+      return <FaUmbrellaBeach size={24} />;
+    case 'Wedding Lawns & Farmhouses':
+      return <FaHome size={24} />;
+    case 'Wedding Photographers':
+      return <FaCamera size={24} />;
+    case 'Party Places':
+      return <FaGlassCheers size={24} />;
     case 'Caterers':
       return <FaBirthdayCake size={24} />;
     case 'Wedding Decorators':
       return <FaMagic size={24} />;
-    case 'Wedding MakeUp':
+    case 'Wedding Makeup':
       return <FaPaintBrush size={24} />;
     case 'Wedding Planners':
       return <FaClipboardList size={24} />;
@@ -31,51 +50,62 @@ const getCategoryIcon = (title) => {
 
 const VendorByCategory = ({ location = "All India" }) => {
   const navigate = useNavigate();
+  
+  // Fetch all vendors from Redux
+  const { data: vendorsData, isLoading } = useGetAllVendorsQuery();
 
-  // Vendor counts per location
-  const vendorData = {
-    "All India": {
-      "Wedding Photographers": 156,
-      "Venue": 98,
-      "Caterers": 72,
-      "Wedding Decorators": 64,
-      "Wedding MakeUp": 87,
-      "Wedding Planners": 45,
-    },
-    Delhi: {
-      "Wedding Photographers": 40,
-      "Venue": 20,
-      "Caterers": 15,
-      "Wedding Decorators": 10,
-      "Wedding MakeUp": 18,
-      "Wedding Planners": 8,
-    },
-    Mumbai: {
-      "Wedding Photographers": 35,
-      "Venue": 25,
-      "Caterers": 12,
-      "Wedding Decorators": 15,
-      "Wedding MakeUp": 22,
-      "Wedding Planners": 10,
-    },
-    // Add more cities as needed
+  // Define all categories
+  const categoryTitles = [
+    "Banquet Halls",
+    "Hotels",
+    "Marriage Garden",
+    "Kalyana Mandapams",
+    "Wedding Resorts",
+    "Wedding Lawns & Farmhouses",
+    "Wedding Photographers",
+    "Party Places",
+    "Caterers",
+    "Wedding Decorators",
+    "Wedding Makeup",
+    "Wedding Planners"
+  ];
+
+  // Calculate counts for each category
+  const getCategoryCounts = () => {
+    if (!vendorsData?.vendors) return {};
+    
+    const counts = {};
+    categoryTitles.forEach(category => {
+      // Filter vendors by category and location
+      const filteredVendors = vendorsData.vendors.filter(vendor => {
+        const matchesCategory = vendor.vendorType === category;
+        const matchesLocation = location === "All India" || 
+          (vendor.serviceAreas && vendor.serviceAreas.includes(location)) ||
+          (vendor.address && vendor.address.city === location);
+        return matchesCategory && matchesLocation;
+      });
+      counts[category] = filteredVendors.length;
+    });
+    return counts;
   };
 
-  // Use city data or fallback to "All India"
-  const activeLocationData = vendorData[location] || vendorData["All India"];
+  const categoryCounts = getCategoryCounts();
 
   // Create array of category objects with icon and count
-  const categories = Object.entries(activeLocationData).map(([title, count]) => ({
+  const categories = categoryTitles.map(title => ({
     title,
-    count,
+    count: categoryCounts[title] || 0,
     icon: getCategoryIcon(title),
   }));
 
-  // On category click, navigate with state carrying category & location
+  // Update the handleCategoryClick function
   const handleCategoryClick = (title) => {
-    navigate('/wedding-vendor', {
-      state: { category: title, location },
-    });
+    // Convert location and category to URL-friendly format
+    const locationSlug = location.toLowerCase().replace(/\s+/g, '-');
+    const categorySlug = title.toLowerCase().replace(/\s+/g, '-');
+    
+    // Navigate to the vendor list page
+    navigate(`/vendor-list/${locationSlug}/${categorySlug}`);
   };
 
   return (
@@ -98,7 +128,7 @@ const VendorByCategory = ({ location = "All India" }) => {
               key={index}
               onClick={() => handleCategoryClick(title)}
               style={{ borderRadius: '10px' }}
-              className="bg-white border border-gray-200  shadow-sm px-3 py-4 sm:px-4 sm:py-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group w-full"
+              className="bg-white border border-gray-200 shadow-sm px-3 py-4 sm:px-4 sm:py-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group w-full"
               type="button"
             >
               <div className="w-12 h-12 mx-auto rounded-full flex items-center justify-center text-gray-800">
@@ -107,13 +137,14 @@ const VendorByCategory = ({ location = "All India" }) => {
               <h6 className="mt-2 sm:mt-3 text-sm sm:text-base font-semibold text-black font-serif group-hover:text-pink-600 transition-colors">
                 {title}
               </h6>
-              <p className="text-xs sm:text-sm text-gray-500">{count} Vendors</p>
+              <p className="text-xs sm:text-sm text-gray-500">
+                {isLoading ? "Loading..." : `${count} Vendors`}
+              </p>
             </button>
           ))}
         </div>
       </div>
     </div>
-
   );
 };
 

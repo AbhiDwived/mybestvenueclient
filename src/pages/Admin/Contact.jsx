@@ -178,6 +178,7 @@ export default function Contact() {
                             <th>No</th>
                             <th>Name</th>
                             <th>Email</th>
+                            <th>Phone</th>
                             <th>Message</th>
                             <th>Submitted At</th>
                         </tr>
@@ -189,13 +190,14 @@ export default function Contact() {
                                     <td>{index + 1}</td>
                                     <td>{contact.name}</td>
                                     <td>{contact.email}</td>
+                                    <td>{contact.phone}</td>
                                     <td>{contact.message}</td>
                                     <td>{new Date(contact.createdAt).toLocaleString()}</td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="text-center">
+                                <td colSpan="6" className="text-center">
                                     No messages found.
                                 </td>
                             </tr>

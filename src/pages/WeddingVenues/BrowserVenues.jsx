@@ -2,12 +2,10 @@ import { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { IoIosArrowRoundBack, IoIosArrowRoundForward } from "react-icons/io";
 import { useNavigate, useParams } from 'react-router-dom';
+import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 
-const allLocations = [
-  "All India", "Noida", "Greater Noida", "Old Delhi", "Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad",
-  "Kolkata", "Pune", "Jaipur", "Udaipur", "Goa", "Ahmedabad", "Lucknow",
-  "Chandigarh", "Kochi", "Indore", "Nagpur", "Bhopal", "Patna", "Agra"
-];
+// Keep All India as default option
+const defaultLocations = ["All India"];
 
 const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) => {
   const navigate = useNavigate();
@@ -16,6 +14,11 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
   const [scrollIndex, setScrollIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(5);
 
+  // Fetch vendors data to get locations
+  const { data: vendorsData, isLoading } = useGetAllVendorsQuery();
+  
+  // Combine default locations with vendor locations
+  const allLocations = [...defaultLocations, ...(vendorsData?.locations || [])];
 
   useEffect(() => {
     const handleResize = () => {
@@ -60,6 +63,10 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
       prev >= filteredLocations.length - visibleCount ? 0 : prev + 1
     );
   };
+
+  if (isLoading) {
+    return <div className="w-full my-6 text-center">Loading locations...</div>;
+  }
 
   return (
     <div className="w-full my-6 lg:px-20">
@@ -115,7 +122,6 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
               <IoIosArrowRoundForward className="text-2xl  transition" />
             </button>
           </>
-
         )}
       </div>
     </div>
