@@ -7,6 +7,7 @@ import {
   useGetAllVendorsQuery,
   useGetRecentActivitiesQuery,
 } from '../../features/admin/adminAPI';
+import Loader from "../../components/{Shared}/Loader";
 
 import {
   LineChart,
@@ -65,6 +66,10 @@ const SubDashboard = () => {
     isSuccess,
     isError,
   } = useGetRecentActivitiesQuery();
+
+  if (usersLoading || vendorsLoading || activityLoading) {
+    return <Loader fullScreen />;
+  }
 
   const formattedActivity = useMemo(() => {
     console.log('Activity Data:', activityData);

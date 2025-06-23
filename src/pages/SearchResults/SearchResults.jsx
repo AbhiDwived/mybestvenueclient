@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useGetAllPublicVendorsQuery } from '../../features/vendors/vendorAPI';
 import DiscoverImage from "../../assets/newPics/discoverImage.jpg";
+import Loader from "../../components/{Shared}/Loader";
 
 const SearchResults = () => {
   const location = useLocation();
@@ -32,11 +33,7 @@ const SearchResults = () => {
   }, [vendorData, searchTerm, category, selectedCity]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <Loader fullScreen />;
   }
 
   if (error) {

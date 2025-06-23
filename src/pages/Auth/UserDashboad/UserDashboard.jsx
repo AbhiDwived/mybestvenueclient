@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useGetUserProfileQuery } from "../../../features/auth/authAPI";
+import Loader from "../../../components/{Shared}/Loader";
 
 // Tab components
 import Checklist from "../UserDashboad/CheckList";
@@ -38,7 +39,7 @@ const UserDashboard = () => {
     refetch(); // ensures fresh data on mount
   }, []);
 
-  if (isLoading) return <p className="p-4">Loading profile...</p>;
+  if (isLoading) return <Loader fullScreen />;
   if (isError || !profile) return <p className="p-4 text-red-500">Error fetching profile</p>;
 
   const weddingDate = profile?.weddingDate ? new Date(profile.weddingDate) : null;

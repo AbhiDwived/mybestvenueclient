@@ -3,6 +3,7 @@ import { Heart, MapPin, Star, ExternalLink } from "lucide-react";
 import { useGetSavedVendorsQuery, useUnsaveVendorMutation } from "../../../features/savedVendors/savedVendorAPI";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import Loader from "../../../components/{Shared}/Loader";
 
 export default function SavedVendor() {
     const { isAuthenticated } = useSelector((state) => state.auth);
@@ -34,8 +35,8 @@ export default function SavedVendor() {
     };
 
     // Show loading state
-    if (isLoading) {
-        return <div className="flex justify-center items-center min-h-screen">Loading saved vendors...</div>;
+    if (isLoading || isUnsaving) {
+        return <Loader fullScreen />;
     }
 
     // Show error state

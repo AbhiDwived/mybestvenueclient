@@ -230,8 +230,27 @@ export const vendorApi = createApi({
         return response;
       },
     }),
+    // getUser list by UserId
+    getUserListById: builder.query({
+      query: (userId) => ({
+        url: `/vendor/getUserListByUserId/${userId}`,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+      // providesTags: ['Bookings'],
+    }),
+    createuserBookingByVendor: builder.mutation({
+      query: (bookingData) => ({
+        url: `/vendor/createuserBookingbyVendor`,
+        method: 'POST',
+        body:  bookingData,
+      }),
+    }),
   })
 });
+
 
 
 
@@ -259,4 +278,6 @@ export const {
   useGetVendorBookingsListQuery,
   useUpdateVendorBookingMutation,
   useGetAllPublicVendorsQuery,
+  useGetUserListByIdQuery,
+  useCreateuserBookingByVendorMutation
 } = vendorApi;

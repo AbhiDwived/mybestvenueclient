@@ -177,6 +177,7 @@ const InquiriesSection = () => {
                       : 'border-yellow-200 bg-yellow-50'
                       }`}
                   >
+                      <p className="text-sm text-gray-600">UserId:{inquiry.userId}</p>
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-medium text-md">{inquiry.name}</h3>
                       <span

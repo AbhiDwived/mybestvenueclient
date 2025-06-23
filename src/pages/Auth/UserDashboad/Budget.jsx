@@ -3,6 +3,7 @@ import { useGetUserBudgetQuery, useAddBudgetItemMutation, useUpdateBudgetItemMut
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { MdDelete } from "react-icons/md";
+import Loader from "../../../components/{Shared}/Loader";
 
 export default function Budget() {
   // Local state for new budget item form
@@ -79,8 +80,8 @@ export default function Budget() {
   };
 
   // Show loading state
-  if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading budget...</div>;
+  if (isLoading || isAddingItem || isUpdatingItem || isDeletingItem) {
+    return <Loader fullScreen />;
   }
 
   return (

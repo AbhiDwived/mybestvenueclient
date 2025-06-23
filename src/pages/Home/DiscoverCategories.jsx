@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import DiscoverImage from "../../assets/newPics/discoverImage.jpg";
 import BrowseVenues from '../WeddingVenues/BrowserVenues';
 import { useGetAllPublicVendorsQuery } from '../../features/vendors/vendorAPI';
+import Loader from '../../components/{Shared}/Loader';
 
 const DiscoverCategories = () => {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ const DiscoverCategories = () => {
   const [selectedCity, setSelectedCity] = useState('All India');
 
   // Fetch all vendors to get categories
-  const { data: vendorData } = useGetAllPublicVendorsQuery();
+  const { data: vendorData, isLoading } = useGetAllPublicVendorsQuery();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -25,6 +26,10 @@ const DiscoverCategories = () => {
     // Navigate to search results page with query parameters
     navigate(`/search?${params.toString()}`);
   };
+
+  if (isLoading) {
+    return <Loader fullScreen />;
+  }
 
   return (
     <div className="w-full">
@@ -97,14 +102,14 @@ const DiscoverCategories = () => {
             <Link 
               to='/contactUs'
               style={{borderRadius:'5px', textDecoration:'none'}}
-              className="px-6 py-3 bg-white/10 text-white border border-white rounded-md backdrop-blur-sm hover:text-black hover:bg-white/20 transition-colors text-lg"
+              className="px-6 py-2 bg-white/10 text-white border border-white rounded-md backdrop-blur-sm hover:text-black hover:bg-white/20 transition-colors text-lg"
             >
               Contact Us
             </Link>
             <a
               href="/planning-tools"
               style={{textDecoration:'none'}}
-              className="px-6 py-3 bg-[#445D7B] text-white rounded-md hover:bg-[#3a4f6a] transition-colors text-lg"
+              className="px-6 py-2 bg-[#445D7B] text-white rounded-md hover:bg-[#3a4f6a] transition-colors text-lg"
             >
               Planning Tools
             </a>

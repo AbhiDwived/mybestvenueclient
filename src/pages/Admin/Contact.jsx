@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useGetAllMessageQuery } from '../../features/admin/adminAPI';
+import Loader from "../../components/{Shared}/Loader";
 
 export default function Contact() {
     const {
@@ -20,7 +21,7 @@ export default function Contact() {
         console.log('API Error:', error);
     }, [data, error]);
 
-    if (isLoading) return <div>Loading messages...</div>;
+    if (isLoading) return <Loader fullScreen />;
     if (isError) {
         console.error("Error fetching messages:", error);
         return <div className="text-danger">Error loading messages.</div>;

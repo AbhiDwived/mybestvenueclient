@@ -4,6 +4,7 @@ import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { useState } from 'react';
+import Loader from "../../components/{Shared}/Loader";
 
 const VendorListPage = () => {
   const { category = '', city = 'all-india' } = useParams();
@@ -39,7 +40,7 @@ const VendorListPage = () => {
   }
 
   if (isLoading) {
-    return <div className="text-center py-10">Loading vendors...</div>;
+    return <Loader fullScreen />;
   }
 
   if (error) {

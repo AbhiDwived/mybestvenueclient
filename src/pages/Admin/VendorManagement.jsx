@@ -4,6 +4,7 @@ import {
   useGetAllVendorsQuery,
   useDeleteVendorByAdminMutation,
 } from "../../features/admin/adminAPI";
+import Loader from "../../components/{Shared}/Loader";
 
 const categories = [
   "All Categories",
@@ -76,8 +77,8 @@ const VendorManagement = () => {
     }
   };
 
-  if (isLoading) return <p className="p-4">Loading vendors...</p>;
-  if (isError) return <p className="p-4 text-red-500">Failed to load vendors.</p>;
+  if (isLoading) return <Loader fullScreen />;
+  if (isError) return <div className="text-center text-red-500 p-4">Error loading vendors</div>;
 
   return (
     <div className="p-6 bg-white rounded-xl shadow">

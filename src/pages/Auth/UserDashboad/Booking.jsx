@@ -2,22 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Plus, DollarSign, Trash2 } from 'lucide-react';
 import { useGetUserBookingsQuery, useCreateBookingMutation, useDeleteBookingMutation, useGetAvailableVendorsQuery } from '../../../features/bookings/bookingAPI';
 import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import Loader from "../../../components/{Shared}/Loader";
 
 const BookingBudget = () => {
   const { isAuthenticated } = useSelector((state) => state.auth);
-  
+
   // RTK Query hooks
-  const { 
-    data: bookingData, 
-    isLoading, 
-    isError, 
+  const {
+    data: bookingData,
+    isLoading,
+    isError,
     error,
-    refetch 
+    refetch
   } = useGetUserBookingsQuery(undefined, {
     skip: !isAuthenticated,
   });
-  
+
   const [createBooking, { isLoading: isCreating }] = useCreateBookingMutation();
   const [deleteBooking, { isLoading: isDeleting }] = useDeleteBookingMutation();
   const { data: vendorsData, isLoading: isLoadingVendors } = useGetAvailableVendorsQuery(undefined, {
@@ -46,9 +47,11 @@ const BookingBudget = () => {
 
   // Show error if API request fails
   useEffect(() => {
-    if (isError) {
-      toast.error(`Error loading bookings: ${error?.data?.message || 'Unknown error'}`);
-    }
+    setTimeout(() => {
+      if (isError) {
+        toast.error(`Error loading bookings: ${error?.data?.message || 'Unknown error'}`);
+      }
+    }, 1000)
   }, [isError, error]);
 
   const handleInputChange = (field, value) => {
@@ -89,7 +92,7 @@ const BookingBudget = () => {
           guestCount: parseInt(formData.guestCount) || 0,
           plannedAmount: parseFloat(formData.plannedAmount) || 0,
         }).unwrap();
-        
+
         // Reset form
         setFormData({
           vendorId: '',
@@ -101,8 +104,10 @@ const BookingBudget = () => {
           guestCount: '',
           plannedAmount: ''
         });
-        
-        toast.success('Booking added successfully');
+
+        setTimeout(() => {
+          toast.success('Booking added successfully');
+        }, 1000)
       } catch (err) {
         toast.error(`Error adding booking: ${err.data?.message || 'Unknown error'}`);
       }
@@ -134,8 +139,8 @@ const BookingBudget = () => {
   ];
 
   // Show loading state
-  if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading bookings...</div>;
+  if (isLoading || isCreating || isDeleting || isLoadingVendors) {
+    return <Loader fullScreen />;
   }
 
   return (
@@ -333,7 +338,7 @@ const BookingBudget = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {bookings.map(booking => (
                 <div key={booking._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow relative">
-                  <button 
+                  <button
                     onClick={() => handleDeleteBooking(booking._id)}
                     className="absolute top-2 right-2 text-red-500 hover:text-red-700"
                     disabled={isDeleting}
@@ -364,6 +369,14 @@ const BookingBudget = () => {
           )}
         </div>
       </div>
+      {/* Toast Container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        pauseOnHover
+        closeOnClick
+        toastClassName="custom-toast"
+      />
     </div>
   );
 };

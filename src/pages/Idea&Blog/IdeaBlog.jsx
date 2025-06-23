@@ -3,6 +3,7 @@ import { Calendar } from "lucide-react";
 import { useGetAllBlogsQuery } from '../../features/blogs/adminblogsAPI';
 import IdeaBlogHeader from '../../assets/newPics/IdeaBlogHeader.avif';
 import { useNavigate } from 'react-router-dom';
+import Loader from "../../components/{Shared}/Loader";
 
 export default function IdeaBlog() {
   const navigate = useNavigate();
@@ -93,14 +94,7 @@ export default function IdeaBlog() {
 
   // Loading state
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading blogs...</p>
-        </div>
-      </div>
-    );
+    return <Loader fullScreen />;
   }
 
   // Error state

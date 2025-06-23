@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGetBlogByIdQuery } from '../../features/blogs/adminblogsAPI';
 import { Calendar, ArrowLeft, Clock, Tag, User } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import Loader from "../../components/{Shared}/Loader";
 
 export default function BlogDetails() {
   const { id } = useParams();
@@ -10,11 +11,7 @@ export default function BlogDetails() {
   const { data, isLoading, isError, error } = useGetBlogByIdQuery(id);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
-      </div>
-    );
+    return <Loader fullScreen />;
   }
 
   if (isError) {

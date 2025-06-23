@@ -3,6 +3,7 @@ import { Calendar, Trash2 } from "lucide-react";
 import { useGetUserChecklistQuery, useAddChecklistTaskMutation, useToggleTaskCompletionMutation, useDeleteChecklistTaskMutation } from "../../../features/checklist/checklistAPI";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import Loader from "../../../components/{Shared}/Loader";
 
 export default function CheckList() {
     const [newTask, setNewTask] = useState("");
@@ -68,8 +69,8 @@ export default function CheckList() {
     };
 
     // Show loading state
-    if (isLoading) {
-        return <div className="flex justify-center items-center min-h-screen">Loading checklist...</div>;
+    if (isLoading || isAdding || isToggling || isDeleting) {
+        return <Loader fullScreen />;
     }
 
     return (

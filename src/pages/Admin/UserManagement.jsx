@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaEye, FaPen, FaTrash } from 'react-icons/fa';
 import { useGetAllUsersQuery, useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+import Loader from "../../components/{Shared}/Loader";
 
 const UserManagement = () => {
   const { data: usersDataRaw, isLoading: usersLoading, isError: usersError } = useGetAllUsersQuery();
@@ -78,7 +79,7 @@ const UserManagement = () => {
     });
   };
 
-  if (usersLoading || vendorsLoading) return <p className="p-4">Loading users and vendors...</p>;
+  if (usersLoading || vendorsLoading) return <Loader fullScreen />;
   if (usersError || vendorsError) return <p className="p-4 text-red-500">Failed to load data.</p>;
 
   return (

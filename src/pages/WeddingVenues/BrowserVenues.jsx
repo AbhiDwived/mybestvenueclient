@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react';
 import { IoIosArrowRoundBack, IoIosArrowRoundForward } from "react-icons/io";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+import Loader from '../../components/{Shared}/Loader';
 
 // Keep All India as default option
 const defaultLocations = ["All India"];
@@ -65,7 +66,11 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
   };
 
   if (isLoading) {
-    return <div className="w-full my-6 text-center">Loading locations...</div>;
+    return (
+      <div className="w-full my-6">
+        <Loader />
+      </div>
+    );
   }
 
   return (

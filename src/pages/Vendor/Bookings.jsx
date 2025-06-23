@@ -7,6 +7,8 @@ import { BsExclamationCircle } from "react-icons/bs";
 import { } from "../../features/bookings/bookingAPI";
 import { useSelector, useDispatch } from 'react-redux';
 import { useGetVendorBookingsListQuery, useUpdateVendorBookingMutation } from "../../features/vendors/vendorAPI";
+import { toast } from 'react-toastify';
+import Loader from "../../components/{Shared}/Loader";
 
 
 
@@ -123,7 +125,7 @@ export default function BookingManagement() {
     return <p className="text-center mt-10 text-gray-500">No bookings found</p>;
   }
 
-  if (isLoading) return <p className="text-center mt-10">Loading bookings...</p>;
+  if (isLoading) return <Loader fullScreen />;
   if (error) return <p className="text-center mt-10 text-red-500">Failed to fetch bookings</p>;
 
   return (
