@@ -6,7 +6,7 @@ import { FiCheckCircle } from "react-icons/fi";
 import { BsExclamationCircle } from "react-icons/bs";
 import { } from "../../features/bookings/bookingAPI";
 import { useSelector, useDispatch } from 'react-redux';
-import { useGetVendorBookingsListQuery } from "../../features/vendors/vendorAPI";
+import { useGetVendorBookingsListQuery, useUpdateVendorBookingMutation } from "../../features/vendors/vendorAPI";
 
 
 
@@ -16,6 +16,8 @@ export default function BookingManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+
 
 
 
@@ -25,9 +27,24 @@ export default function BookingManagement() {
   const vendorId = vendor?.id;
 
 
-  const { data, isLoading, error } = useGetVendorBookingsListQuery(vendorId);
+  const { data, isLoading, error, refetch } = useGetVendorBookingsListQuery(vendorId);
+  const [updateVendorBooking, { isLoading: updating }] = useUpdateVendorBookingMutation();
+
   const bookings = data?.data?.bookings || [];
   console.log("bookings", bookings);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    eventType: '',
+    eventDate: '',
+    eventTime: '',
+    guestCount: 0,
+    plannedAmount: 0,
+    venue: ''
+  });
+
 
   const statusColors = {
     confirmed: { class: "bg-green-100 text-green-800", icon: <FiCheckCircle size={16} /> },
@@ -52,13 +69,56 @@ export default function BookingManagement() {
   });
 
 
-
-
-
-  const handleSave = () => {
+  const handleModalClose = () => {
     setShowModal(false);
-    alert("Booking saved successfully!");
+    setIsEditMode(false);
+    setSelectedBooking(null);
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      eventType: '',
+      eventDate: '',
+      eventTime: '',
+      guestCount: 0,
+      plannedAmount: 0,
+      venue: ''
+    });
   };
+
+
+
+  const handleSave = async () => {
+    if (isEditMode && selectedBooking) {
+      try {
+        console.log("bookingId", selectedBooking._id);
+
+        console.log("vendor from token:", vendorId);
+        await updateVendorBooking({
+          bookingId: selectedBooking._id,
+          bookingData: {
+            eventType: formData.eventType,
+            eventDate: formData.eventDate,
+            eventTime: formData.eventTime,
+            guestCount: formData.guestCount,
+            plannedAmount: formData.plannedAmount,
+            venue: formData.venue,
+
+          }
+        }).unwrap();
+        alert("Booking updated successfully!");
+        refetch();
+        handleModalClose();
+      } catch (error) {
+        console.error("Error updating booking", error);
+        alert("Failed to update booking.");
+      }
+    } else {
+
+      alert("Creating new bookings not implemented yet");
+    }
+  };
+
   if (!bookings.length) {
     return <p className="text-center mt-10 text-gray-500">No bookings found</p>;
   }
@@ -126,7 +186,7 @@ export default function BookingManagement() {
       {/* Booking Cards */}
       {filteredBookings.map((booking) => (
         <div
-          key={booking.id}
+          key={booking._id}
           className="relative border border-gray-200 rounded-lg px-2 py-4 mb-4 bg-white shadow-sm"
         >
           {/* Top Row: Name and Actions */}
@@ -148,11 +208,25 @@ export default function BookingManagement() {
                 <IoEyeOutline className="w-[12px] sm:w-[15px]" />
               </button>
               <button className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300" title="Edit">
-                <FaRegEdit className="w-[12px] sm:w-[15px]" 
-                onClick={() => {
-     setIsEditMode(true);
-    setShowModal(true);
-  }}
+                <FaRegEdit className="w-[12px] sm:w-[15px]"
+
+                  onClick={() => {
+                    setIsEditMode(true);
+                    setShowModal(true);
+                    setSelectedBooking(booking);
+                    setFormData({
+                      eventType: booking.eventType,
+                      eventDate: booking.eventDate.split('T')[0],
+                      eventTime: booking.eventTime,
+                      guestCount: booking.guestCount,
+                      plannedAmount: booking.plannedAmount,
+                      venue: booking.venue,
+                      name: booking.user?.name || '',
+                      email: booking.user?.email || '',
+                      phone: booking.user?.phone || '',
+                    });
+                  }}
+
                 />
               </button>
               <select className="border border-gray-300 rounded-md text-[8px] sm:text-[10px] sm:w-[100px] w-[80px]">
@@ -207,39 +281,96 @@ export default function BookingManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Client Name</label>
-                <input type="text" defaultValue="New Client" className="w-full border rounded p-2" />
+
+
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, ClientName: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
+
               </div>
               <div>
                 <label className="text-sm font-medium">Client Email</label>
-                <input type="email" className="w-full border rounded p-2" />
+
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
+
               </div>
               <div>
                 <label className="text-sm font-medium">Client Phone</label>
-                <input type="text" className="w-full border rounded p-2" />
+
+                <input
+                  type="text"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Event Type</label>
-                <input type="text" defaultValue="Wedding" className="w-full border rounded p-2" />
+
+                <input
+                  type="text"
+                  value={formData.eventType}
+                  onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Event Date</label>
-                <input type="date" className="w-full border rounded p-2" />
+
+                <input
+                  type="date"
+                  value={formData.eventDate}
+                  onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Event Time</label>
-                <input type="time" className="w-full border rounded p-2" />
+
+                <input
+                  type="time"
+                  value={formData.eventTime}
+                  onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Guest Count</label>
-                <input type="number" defaultValue={0} className="w-full border rounded p-2" />
+
+                <input
+                  type="number"
+                  value={formData.guestCount}
+                  onChange={(e) => setFormData({ ...formData, guestCount: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Budget</label>
-                <input type="number" className="w-full border rounded p-2" />
+
+                <input
+                  type="number"
+                  value={formData.plannedAmount}
+                  onChange={(e) => setFormData({ ...formData, plannedAmount: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
               </div>
               <div className="md:col-span-2">
                 <label className="text-sm font-medium">Venue</label>
-                <input type="text" className="w-full border rounded p-2" />
+
+                <input
+                  type="text"
+                  value={formData.venue}
+                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
               </div>
             </div>
 
@@ -251,12 +382,16 @@ export default function BookingManagement() {
                 >
                   Cancel
                 </button>
+
+
                 <button
                   onClick={handleSave}
                   className="bg-[#19599A] text-white px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded hover:bg-[#19599A]"
+                  disabled={updating}
                 >
-                  {isEditMode ? "Update" : "Save"}
+                  {updating ? 'Updating...' : isEditMode ? 'Update' : 'Save'}
                 </button>
+
               </div>
             </div>
 

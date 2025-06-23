@@ -1,37 +1,50 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import DiscoverImage from "../../assets/newPics/discoverImage.jpg";
 import BrowseVenues from '../WeddingVenues/BrowserVenues';
-import LocationVendors from '../Location/LocationVendor'; // Make sure this is correct
-import { Link } from 'react-router-dom';
+import { useGetAllPublicVendorsQuery } from '../../features/vendors/vendorAPI';
+
 const DiscoverCategories = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
   const [selectedCity, setSelectedCity] = useState('All India');
 
+  // Fetch all vendors to get categories
+  const { data: vendorData } = useGetAllPublicVendorsQuery();
+
   const handleSearch = (e) => {
     e.preventDefault();
-    // Add logic if you want to filter LocationVendors by category or search term
+    
+    // Build the search query parameters
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('q', searchTerm);
+    if (category) params.set('category', category);
+    if (selectedCity !== 'All India') params.set('city', selectedCity);
+
+    // Navigate to search results page with query parameters
+    navigate(`/search?${params.toString()}`);
   };
 
   return (
-    <>
+    <div className="w-full">
       <div
-        className="relative w-full h-[700px] bg-cover bg-center flex items-center"
+        className="w-full h-[700px] bg-cover bg-center flex items-center"
         style={{
           backgroundImage: `linear-gradient(rgba(15, 76, 129, 0.7), rgba(26, 42, 58, 0.8)), url(${DiscoverImage})`,
         }}
       >
-        <div className="mx-auto px-4 text-center">
-          <h1 className="font-extrabold text-white text-4xl md:text-5xl mb-6">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="font-extrabold text-white text-4xl md:text-5xl lg:text-6xl mb-6">
             Discover Your Perfect Venue
           </h1>
-          <p className="text-xl text-white mb-8 max-w-3xl mt-4 mx-auto">
+          <p className="text-xl text-white mb-8 max-w-3xl mx-auto">
             Connect with trusted professionals for weddings, corporate events, and special occasions.
           </p>
 
           <form
             onSubmit={handleSearch}
-            className="mx-auto mt-5 max-w-3xl bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden p-2"
+            className="mx-auto mt-5 max-w-4xl bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden p-2"
           >
             <div className="flex flex-1 items-center px-4 py-2">
               <svg
@@ -50,7 +63,7 @@ const DiscoverCategories = () => {
               <input
                 type="text"
                 placeholder="Search venues or vendors..."
-                className="w-full outline-none text-gray-700"
+                className="w-full outline-none text-gray-700 text-lg"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -58,41 +71,40 @@ const DiscoverCategories = () => {
 
             <div className="md:border-l border-gray-200 px-4 py-2">
               <select
-                className="w-full outline-none text-gray-700 bg-transparent"
+                className="w-full outline-none text-gray-700 bg-transparent text-lg"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
                 <option value="">All Categories</option>
-                <option value="venues">Venues</option>
-                <option value="photographer">Photographers</option>
-                <option value="caterer">Caterers</option>
-                <option value="decorator">Decorators</option>
-                <option value="makeup-artist">Makeup Artists</option>
-                <option value="wedding-planner">Wedding Planners</option>
+                {vendorData?.categories?.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
               </select>
             </div>
 
             <button
               type="submit"
               style={{ borderTopRightRadius: '5px', borderBottomRightRadius: '5px' }}
-              className="px-4 py-1 bg-[#0f4c81] text-white font-semibold"
+              className="px-8 py-2 bg-[#0f4c81] text-white font-semibold hover:bg-[#0d3d6a] transition-colors text-lg"
             >
               Search
             </button>
           </form>
 
-          <div className="mt-12 flex flex-wrap justify-center gap-4">
-            <Link to='/contactUs'
-            style={{borderRadius:'5px', textDecoration:'none'}}
-              onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })}
-              className="px-3 py-2 bg-white/10 text-white border border-white rounded-md backdrop-blur-sm hover:text-black hover:bg-white/20 transition-colors"
+          <div className="mt-12 flex flex-wrap justify-center gap-6">
+            <Link 
+              to='/contactUs'
+              style={{borderRadius:'5px', textDecoration:'none'}}
+              className="px-6 py-3 bg-white/10 text-white border border-white rounded-md backdrop-blur-sm hover:text-black hover:bg-white/20 transition-colors text-lg"
             >
               Contact Us
             </Link>
             <a
               href="/planning-tools"
               style={{textDecoration:'none'}}
-              className="px-3 py-2 bg-[#445D7B] text-white rounded-md"
+              className="px-6 py-3 bg-[#445D7B] text-white rounded-md hover:bg-[#3a4f6a] transition-colors text-lg"
             >
               Planning Tools
             </a>
@@ -100,16 +112,14 @@ const DiscoverCategories = () => {
         </div>
       </div>
 
-      {/* Section to display location tabs and vendor UI */}
-      <div>
-        {/* Other parts of your component */}
+      {/* Browse Venues Section */}
+      <div className="w-full">
         <BrowseVenues
           currentLocation={selectedCity}
-          onLocationSelect={setSelectedCity} // directly passing setter
+          onLocationSelect={setSelectedCity}
         />
-
       </div>
-    </>
+    </div>
   );
 };
 

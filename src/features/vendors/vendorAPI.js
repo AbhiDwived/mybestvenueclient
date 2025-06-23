@@ -3,11 +3,15 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const vendorApi = createApi({
   reducerPath: 'vendorApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: import.meta.env.VITE_API_URL ,
+    baseUrl: import.meta.env.VITE_API_URL,
     prepareHeaders: (headers, { getState }) => {
+      // Try to get token from Redux state first
       const token = getState().vendor.token;
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
+      // Fallback to localStorage if not in Redux state
+      const storedToken = localStorage.getItem('vendorToken');
+      
+      if (token || storedToken) {
+        headers.set('Authorization', `Bearer ${token || storedToken}`);
       }
       return headers;
     },
@@ -86,6 +90,13 @@ export const vendorApi = createApi({
         method: 'PUT',
         body: profileData,
       }),
+      // Transform the response to ensure we get the updated vendor data
+      transformResponse: (response) => {
+        if (response.success && response.vendor) {
+          return response.vendor;
+        }
+        return response;
+      },
     }),
 
     // Delete Vendor
@@ -193,6 +204,32 @@ export const vendorApi = createApi({
       providesTags: ['Bookings'],
     }),
     
+    // update vendor Booking
+    updateVendorBooking: builder.mutation({
+      query: ({ bookingId, bookingData }) => ({
+        url: `/booking/updateVendorBooking/${bookingId}`,
+        method: 'PUT',
+        body: bookingData,
+      }),
+      invalidatesTags: ['Bookings'],
+    }),
+
+    // Add the new public vendors endpoint
+    getAllPublicVendors: builder.query({
+      query: () => '/admin/all_vendors',
+      transformResponse: (response) => {
+        if (response.vendors) {
+          // Extract unique categories
+          const categories = [...new Set(response.vendors.map(vendor => vendor.vendorType))];
+          return {
+            vendors: response.vendors,
+            categories: categories,
+            locations: response.locations || []
+          };
+        }
+        return response;
+      },
+    }),
   })
 });
 
@@ -220,4 +257,6 @@ export const {
   useVendorservicesPackageListMutation,
   useDeleteServicePackagesMutation,
   useGetVendorBookingsListQuery,
+  useUpdateVendorBookingMutation,
+  useGetAllPublicVendorsQuery,
 } = vendorApi;

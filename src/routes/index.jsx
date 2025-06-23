@@ -22,6 +22,7 @@ import ProjectList from '../pages/Home/ProjectList';
 import SuccessfullEvents from '../pages/Home/SuccessfullEvents';
 import Tesstimonials from '../pages/Home/Tesstimonials';
 import HowItWorks from '../pages/Home/HowItWorks';
+import SearchResults from '../pages/SearchResults/SearchResults';
 
 // User Auth
 import UserLogin from '../pages/Auth/UserLogin';
@@ -135,7 +136,7 @@ const index = () => {
                     <Route index element={<Home />} />
                     <Route path="/navbar" element={<Navbar />} />
                     <Route path="/footer" element={<Footer />} />
-
+                    <Route path="/search" element={<SearchResults />} />
 
                     {/* Footer */}
                     <Route path='/terms' element={<Terms />} />

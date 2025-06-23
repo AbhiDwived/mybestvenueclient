@@ -11,17 +11,20 @@ const EditProfile = () => {
   const dispatch = useDispatch();
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  // console.log(" Data from store editttt:", vendor);
-  const vendorId = vendor?._id || vendor?.id
-  // const vendorId = localStorage.getItem('vendorId');
-  const profileimg = vendor.profilePicture;
-  
-
-
-
+  const vendorId = vendor?.id || vendor?._id;
   const token = useSelector((state) => state.vendor.token);
 
+  // Ensure we have the vendor ID
+  useEffect(() => {
+    if (!vendorId) {
+      console.error('Vendor ID is missing');
+      alert('Error: Vendor ID is missing. Please try logging in again.');
+    }
+  }, [vendorId]);
+
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
+
+  const profileimg = vendor.profilePicture;
 
   const [businessName, setBusinessName] = useState('');
   const [category, setCategory] = useState('');
@@ -37,10 +40,6 @@ const EditProfile = () => {
 
   const fileInputRef = useRef(null);
   const serverURL = "http://localhost:5000"
-
-
-
-
 
   useEffect(() => {
     if (vendor) {
@@ -92,10 +91,11 @@ const EditProfile = () => {
     return formData;
   };
 
-
-
   const handleSave = async () => {
-    if (!vendorId) return alert("Vendor ID missing.");
+    if (!vendorId) {
+      alert("Error: Vendor ID is missing. Please try logging in again.");
+      return;
+    }
 
     try {
       const formData = prepareFormData();
@@ -110,10 +110,17 @@ const EditProfile = () => {
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
       alert("Vendor Record updated successfully");
     } catch (err) {
-      console.error(err);
-      alert("Failed to update vendor");
+      console.error('Update failed:', err);
+      if (err.status === 404) {
+        alert("Error: Vendor not found. Please try logging in again.");
+      } else if (err.status === 401) {
+        alert("Error: Unauthorized. Please try logging in again.");
+      } else {
+        alert("Failed to update vendor: " + (err.data?.message || err.message || "Unknown error"));
+      }
     }
   };
+
   const handleImageChange = async (file) => {
     if (!vendorId || !file) {
       alert("Unable to update image. Vendor ID or file missing.");
@@ -147,10 +154,6 @@ const EditProfile = () => {
       setSelectedFile(null);
     }
   };
-
-
-
-
 
   if (!isAuthenticated) {
     return <h5 className='text-gray-600 font-bold'>You are not logged in.</h5>;
