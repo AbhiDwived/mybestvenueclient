@@ -17,7 +17,7 @@ const ForgotPassword = () => {
       toast.success("OTP sent successfully!");
 
       setTimeout(() => {
-        navigate(`/verify-password-reset?userId=${res.userId}`);
+        navigate(`/verify-password-reset?userId=${res.userId}&email=${encodeURIComponent(email)}`);
       }, 2000);
     } catch (err) {
       toast.error(err?.data?.message || "Failed to send OTP. Please try again.");

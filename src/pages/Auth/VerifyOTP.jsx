@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useVerifyOtpMutation } from '../../features/auth/authAPI';
+import React, { useState, useEffect } from 'react';
+import { useVerifyOtpMutation, useResendOtpMutation } from '../../features/auth/authAPI';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,7 +10,34 @@ const VerifyOTP = () => {
   const userId = new URLSearchParams(location.search).get('userId');
 
   const [otp, setOtp] = useState('');
+  const [timer, setTimer] = useState(30);
+  const [canResend, setCanResend] = useState(false);
   const [verifyOtp, { isLoading, error }] = useVerifyOtpMutation();
+  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
+
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const handleResendOtp = async () => {
+    try {
+      await resendOtp({ userId }).unwrap();
+      toast.success("OTP resent successfully!");
+      setTimer(30);
+      setCanResend(false);
+    } catch (err) {
+      console.error('Resend OTP Failed:', err);
+      toast.error(err?.data?.message || "Failed to resend OTP. Please try again.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,6 +91,21 @@ const VerifyOTP = () => {
               {error.data?.message || 'Invalid OTP'}
             </p>
           )}
+
+          <div className="mt-4 text-center">
+            {!canResend ? (
+              <p className="text-gray-600">Resend OTP in {timer} seconds</p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={isResending || !canResend}
+                className="text-blue-500 hover:text-blue-600 font-medium disabled:opacity-50"
+              >
+                {isResending ? 'Resending...' : 'Resend OTP'}
+              </button>
+            )}
+          </div>
         </form>
       </div>
 
