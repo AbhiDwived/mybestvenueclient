@@ -1,47 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { useVerifyPasswordResetMutation, useForgotPasswordMutation } from '../../features/auth/authAPI';
+import { useVerifyPasswordResetMutation, useResendOtpMutation } from '../../features/auth/authAPI';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
-import { ToastContainer, toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const VerifyPasswordReset = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const userId = new URLSearchParams(location.search).get('userId');
-  const email = new URLSearchParams(location.search).get('email'); // Get email from URL
 
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const [verifyPasswordReset, { isLoading, error }] = useVerifyPasswordResetMutation();
-  const [forgotPassword, { isLoading: isResending }] = useForgotPasswordMutation();
+  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
 
   useEffect(() => {
     let interval;
-    if (timer > 0) {
+    if (timer > 0 && !canResend) {
       interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
+        setTimer((prevTimer) => prevTimer - 1);
       }, 1000);
     } else {
       setCanResend(true);
     }
-    return () => clearInterval(interval);
-  }, [timer]);
 
-  const handleResendOtp = async () => {
-    if (!email) {
-      toast.error("Email address not found. Please try the forgot password process again.");
-      return;
-    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [timer, canResend]);
 
+  const handleResendOTP = async () => {
     try {
-      await forgotPassword({ email }).unwrap();
-      toast.success("New OTP sent to your email!");
+      await resendOtp({ userId }).unwrap();
+      toast.success("OTP resent successfully!");
       setTimer(30);
       setCanResend(false);
     } catch (err) {
-      console.error('Resend OTP Failed:', err);
+      console.error('OTP Resend Failed:', err);
       toast.error(err?.data?.message || "Failed to resend OTP. Please try again.");
     }
   };
@@ -60,7 +59,7 @@ const VerifyPasswordReset = () => {
       toast.success("OTP verified successfully!");
       setTimeout(() => {
         navigate(`/reset-password?userId=${userId}`);
-      }, 1000);
+      }, 2000);
     } catch (err) {
       console.error('Password reset verification failed:', err);
       toast.error(err?.data?.message || "Invalid or expired OTP");
@@ -85,28 +84,30 @@ const VerifyPasswordReset = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600 transition disabled:opacity-70"
+            className="w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600 transition disabled:opacity-70 mb-4"
           >
             {isLoading ? 'Verifying...' : 'Verify OTP'}
           </button>
+
+          {/* Resend OTP Button */}
+          {canResend ? (
+            <button
+              type="button"
+              onClick={handleResendOTP}
+              disabled={isResending}
+              className="w-full bg-gray-100 text-gray-700 py-2 rounded hover:bg-gray-200 transition disabled:opacity-70 text-sm"
+            >
+              {isResending ? 'Resending...' : 'Resend OTP'}
+            </button>
+          ) : (
+            <p className="text-center text-sm text-gray-600">
+              Resend OTP in {timer} seconds
+            </p>
+          )}
+
           {error && (
             <p className="mt-4 text-red-500 text-center">{error.data?.message || 'Invalid or expired OTP'}</p>
           )}
-
-          <div className="mt-4 text-center">
-            {!canResend ? (
-              <p className="text-gray-600">Resend OTP in {timer} seconds</p>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                disabled={isResending || !canResend}
-                className="text-blue-500 hover:text-blue-600 font-medium disabled:opacity-50"
-              >
-                {isResending ? 'Resending...' : 'Resend OTP'}
-              </button>
-            )}
-          </div>
         </form>
       </div>
       <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />

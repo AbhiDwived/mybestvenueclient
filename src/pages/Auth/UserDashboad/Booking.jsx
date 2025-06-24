@@ -1,58 +1,159 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Plus, DollarSign, Trash2 } from 'lucide-react';
 import { useGetUserBookingsQuery, useCreateBookingMutation, useDeleteBookingMutation, useGetAvailableVendorsQuery } from '../../../features/bookings/bookingAPI';
-import { useSelector } from 'react-redux';
+import { useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
 import Loader from "../../../components/{Shared}/Loader";
+import {
+  selectBookings,
+  selectTotalPlanned,
+  selectTotalSpent,
+  selectTotalBookingsCount,
+  selectBookingLoading,
+  selectBookingError,
+  selectAvailableVendors,
+  setFilters,
+  clearFilters
+} from '../../../features/bookings/bookingSlice';
 
 const BookingBudget = () => {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { isAuthenticated, user, token } = useSelector((state) => state.auth);
+  
+  // Redux selectors
+  const bookings = useSelector(selectBookings);
+  const totalPlanned = useSelector(selectTotalPlanned);
+  const totalSpent = useSelector(selectTotalSpent);
+  const totalBookingsCount = useSelector(selectTotalBookingsCount);
+  const isLoading = useSelector(selectBookingLoading);
+  const error = useSelector(selectBookingError);
+  const availableVendors = useSelector(selectAvailableVendors);
+  const remaining = totalPlanned - totalSpent;
 
   // RTK Query hooks
   const {
-    data: bookingData,
-    isLoading,
-    isError,
-    error,
-    refetch
+    refetch: refetchBookings,
+    isError
   } = useGetUserBookingsQuery(undefined, {
-    skip: !isAuthenticated,
+    skip: !isAuthenticated || !token,
   });
 
   const [createBooking, { isLoading: isCreating }] = useCreateBookingMutation();
   const [deleteBooking, { isLoading: isDeleting }] = useDeleteBookingMutation();
-  const { data: vendorsData, isLoading: isLoadingVendors } = useGetAvailableVendorsQuery(undefined, {
-    skip: !isAuthenticated,
+  const { isLoading: isLoadingVendors } = useGetAvailableVendorsQuery(undefined, {
+    skip: !isAuthenticated || !token,
   });
+  const [vendorservicesPackageList] = useVendorservicesPackageListMutation();
 
-  // Extract data from API response
-  const bookings = bookingData?.data?.bookings || [];
-  const totalPlanned = bookingData?.data?.totalPlanned || 0;
-  const totalSpent = bookingData?.data?.totalSpent || 0;
-  const totalBookingsCount = bookingData?.data?.totalBookingsCount || 0;
-  const remaining = totalPlanned - totalSpent;
-  const availableVendors = vendorsData?.data || [];
-
-  // Form state
+  // Local state
+  const [vendorPackages, setVendorPackages] = useState([]);
+  const [isLoadingPackages, setIsLoadingPackages] = useState(false);
   const [formData, setFormData] = useState({
     vendorId: '',
     vendorName: '',
     eventType: '',
     eventDate: '',
-    eventTime: '',
     venue: '',
     guestCount: '',
     plannedAmount: '',
+    selectedPackage: '',
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    notes: ''
   });
+
+  // Check authentication status
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      toast.error('Please log in to access bookings');
+      return;
+    }
+  }, [isAuthenticated, token]);
+
+  // Update form data when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      }));
+    }
+  }, [user]);
 
   // Show error if API request fails
   useEffect(() => {
-    setTimeout(() => {
-      if (isError) {
-        toast.error(`Error loading bookings: ${error?.data?.message || 'Unknown error'}`);
-      }
-    }, 1000)
+    if (isError && error) {
+      toast.error(`Error loading bookings: ${error}`);
+    }
   }, [isError, error]);
+
+  // Fetch vendor packages when vendor is selected
+  const fetchVendorPackages = async (vendorId) => {
+    if (!vendorId || vendorId === 'custom') {
+      setVendorPackages([]);
+      return;
+    }
+
+    setIsLoadingPackages(true);
+    try {
+      const response = await vendorservicesPackageList({ vendorId }).unwrap();
+      if (response && response.packages) {
+        setVendorPackages(response.packages);
+      } else {
+        setVendorPackages([]);
+      }
+    } catch (err) {
+      console.error('Error fetching packages:', err);
+      toast.error('Failed to fetch vendor packages');
+      setVendorPackages([]);
+    } finally {
+      setIsLoadingPackages(false);
+    }
+  };
+
+  // Update vendor name and fetch packages when vendor ID changes
+  const handleVendorChange = (vendorId) => {
+    const selectedVendor = availableVendors.find(vendor => vendor._id === vendorId);
+    if (selectedVendor) {
+      setFormData(prev => ({
+        ...prev,
+        vendorId,
+        vendorName: selectedVendor.businessName || selectedVendor.name,
+        selectedPackage: '',
+        plannedAmount: ''
+      }));
+      fetchVendorPackages(vendorId);
+      
+      // Update filters in Redux
+      dispatch(setFilters({ vendorId }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        vendorId: '',
+        vendorName: '',
+        selectedPackage: '',
+        plannedAmount: ''
+      }));
+      setVendorPackages([]);
+      dispatch(clearFilters());
+    }
+  };
+
+  // Handle package selection
+  const handlePackageChange = (packageId) => {
+    const selectedPackage = vendorPackages.find(pkg => pkg._id === packageId);
+    if (selectedPackage) {
+      setFormData(prev => ({
+        ...prev,
+        selectedPackage: packageId,
+        plannedAmount: selectedPackage.offerPrice || selectedPackage.price || ''
+      }));
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -61,36 +162,23 @@ const BookingBudget = () => {
     }));
   };
 
-  // Update vendor name when vendor ID changes
-  const handleVendorChange = (vendorId) => {
-    const selectedVendor = availableVendors.find(vendor => vendor._id === vendorId);
-    if (selectedVendor) {
-      setFormData(prev => ({
-        ...prev,
-        vendorId,
-        vendorName: selectedVendor.businessName || selectedVendor.name
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        vendorId: '',
-        vendorName: ''
-      }));
-    }
-  };
-
   const handleAddBooking = async () => {
     if (formData.vendorName && formData.eventType && formData.plannedAmount) {
       try {
         await createBooking({
-          vendorId: formData.vendorId || null,
-          vendorName: formData.vendorName,
+          vendorId: formData.vendorId === 'custom' ? null : formData.vendorId,
+          businessName: formData.vendorName,
+          packageId: formData.selectedPackage || null,
+          packageName: vendorPackages.find(pkg => pkg._id === formData.selectedPackage)?.packageName || null,
           eventType: formData.eventType,
           eventDate: formData.eventDate || null,
-          eventTime: formData.eventTime || null,
           venue: formData.venue || '',
           guestCount: parseInt(formData.guestCount) || 0,
           plannedAmount: parseFloat(formData.plannedAmount) || 0,
+          userName: formData.name,
+          userEmail: formData.email,
+          userPhone: formData.phone,
+          notes: formData.notes || ''
         }).unwrap();
 
         // Reset form
@@ -99,15 +187,20 @@ const BookingBudget = () => {
           vendorName: '',
           eventType: '',
           eventDate: '',
-          eventTime: '',
           venue: '',
           guestCount: '',
-          plannedAmount: ''
+          plannedAmount: '',
+          selectedPackage: '',
+          name: user?.name || '',
+          email: user?.email || '',
+          phone: user?.phone || '',
+          notes: ''
         });
 
-        setTimeout(() => {
-          toast.success('Booking added successfully');
-        }, 1000)
+        // Clear filters
+        dispatch(clearFilters());
+
+        toast.success('Booking added successfully');
       } catch (err) {
         toast.error(`Error adding booking: ${err.data?.message || 'Unknown error'}`);
       }
@@ -139,7 +232,7 @@ const BookingBudget = () => {
   ];
 
   // Show loading state
-  if (isLoading || isCreating || isDeleting || isLoadingVendors) {
+  if (isLoading || isCreating || isDeleting) {
     return <Loader fullScreen />;
   }
 
@@ -152,7 +245,6 @@ const BookingBudget = () => {
             <DollarSign className="h-7 w-7 " />
             Booking Budget Summary
           </h3>
-
         </div>
 
         {/* Budget Summary Cards */}
@@ -185,7 +277,7 @@ const BookingBudget = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label htmlFor="vendorName" className="block text-sm font-medium text-gray-700">
-                  Vendor *
+                  Vendor Name
                 </label>
                 <select
                   id="vendorId"
@@ -215,7 +307,45 @@ const BookingBudget = () => {
                   />
                 )}
               </div>
-
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  User Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  placeholder="Enter User Name"
+                  value={formData.name}
+                  readOnly
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <input
+                  id="phone"
+                  type="text"
+                  placeholder="Enter Contact Number"
+                  value={formData.phone}
+                  readOnly
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="example@email.com"
+                  value={formData.email}
+                  readOnly
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                />
+              </div>
               <div className="space-y-2">
                 <label htmlFor="eventType" className="block text-sm font-medium text-gray-700">
                   Event Type *
@@ -232,10 +362,32 @@ const BookingBudget = () => {
                   ))}
                 </select>
               </div>
-
+              <div className="space-y-2">
+                <label htmlFor="package" className="block text-sm font-medium text-gray-700">
+                  Package Name
+                </label>
+                <select
+                  id="package"
+                  value={formData.selectedPackage}
+                  onChange={(e) => handlePackageChange(e.target.value)}
+                  disabled={!formData.vendorId || formData.vendorId === 'custom' || isLoadingPackages}
+                  className="w-full px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                >
+                  <option value="">Select package</option>
+                  {isLoadingPackages ? (
+                    <option disabled>Loading packages...</option>
+                  ) : (
+                    vendorPackages.map(pkg => (
+                      <option key={pkg._id} value={pkg._id}>
+                        {pkg.packageName} - ₹{pkg.offerPrice || pkg.price}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
               <div className="space-y-2">
                 <label htmlFor="plannedAmount" className="block text-sm font-medium text-gray-700">
-                  Planned Amount (₹) *
+                  Final Amount (₹) *
                 </label>
                 <input
                   id="plannedAmount"
@@ -246,9 +398,6 @@ const BookingBudget = () => {
                   className="w-full px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700">
                   Event Date
@@ -264,23 +413,6 @@ const BookingBudget = () => {
                   <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <label htmlFor="eventTime" className="block text-sm font-medium text-gray-700">
-                  Event Time
-                </label>
-                <div className="relative">
-                  <input
-                    id="eventTime"
-                    type="time"
-                    value={formData.eventTime}
-                    onChange={(e) => handleInputChange('eventTime', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
-                  />
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <label htmlFor="venue" className="block text-sm font-medium text-gray-700">
                   Venue
@@ -293,9 +425,6 @@ const BookingBudget = () => {
                   className="w-full px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label htmlFor="guestCount" className="block text-sm font-medium text-gray-700">
                   Guest Count
@@ -310,7 +439,18 @@ const BookingBudget = () => {
                 />
               </div>
             </div>
-
+            <div className="space-y-2">
+              <label className="block w-full">
+                <span className="block mb-1">Additional Notes</span>
+                <textarea
+                  rows="3"
+                  placeholder="Tell us more about your event..."
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </label>
+            </div>
             <button
               onClick={handleAddBooking}
               disabled={isCreating}
@@ -349,7 +489,11 @@ const BookingBudget = () => {
                   <p className="text-sm text-purple-600 font-medium">{booking.eventType}</p>
                   {booking.eventDate && (
                     <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> {new Date(booking.eventDate).toLocaleDateString()}
+                      <Calendar className="h-3 w-3" /> {new Date(booking.eventDate).toLocaleDateString('en-IN', { 
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
                     </p>
                   )}
                   {booking.venue && <p className="text-sm text-gray-600">{booking.venue}</p>}
