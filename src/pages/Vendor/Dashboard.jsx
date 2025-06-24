@@ -19,9 +19,18 @@ const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  const [activeTab, setActiveTab] = useState('Overview');
+  
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDatePickerForWedding, setShowDatePickerForWedding] = useState(null);
+
+   const [activeTab, setActiveTab] = useState(() => {
+  return localStorage.getItem('activeTab') || 'Overview';
+});
+
+const handleTabClick = (tab) => {
+  setActiveTab(tab);
+  localStorage.setItem('activeTab', tab);
+};
 
   if (!isAuthenticated) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
@@ -33,9 +42,18 @@ const Dashboard = () => {
     { date: new Date('2024-11-15'), name: 'Arjun & Meera Kumar Wedding' },
   ]);
 
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-  };
+  // const handleTabClick = (tab) => {
+  //   setActiveTab(tab);
+  // };
+
+ 
+
+useEffect(() => {
+  if (!isAuthenticated) {
+    localStorage.removeItem('activeTab');
+  }
+}, [isAuthenticated]);
+
 
   const handleDateSelect = (date) => {
     setEvents(prev => [...prev, { date, name: 'Custom Event' }]);

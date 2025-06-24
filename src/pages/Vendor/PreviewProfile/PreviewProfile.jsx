@@ -4,7 +4,7 @@ import { FiPhone, FiGlobe, FiCalendar } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 import { HiOutlineCalendar } from "react-icons/hi";
-import { useParams } from 'react-router-dom';
+import { data, useParams } from 'react-router-dom';
 import { useGetVendorByIdQuery } from '../../../features/vendors/vendorAPI';
 
 import mainProfile from "../../../assets/mainProfile.png";
@@ -22,6 +22,11 @@ const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
   const { vendorId } = useParams();
   const { data: vendor, isLoading, error } = useGetVendorByIdQuery(vendorId);
+
+  const vendorData = vendor?.vendor;
+
+
+
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
@@ -43,7 +48,7 @@ const PreviewProfile = () => {
 
   return (
     <div className="mx-auto px-2 py-3 font-serif">
-      <button 
+      <button
         className='flex items-center text-gray-800 px-2 py-2 rounded border border-gray-400 mb-2 hover:bg-[#DEBF78]'
         onClick={() => window.history.back()}
       >
@@ -63,61 +68,78 @@ const PreviewProfile = () => {
 
         {/* Content */}
         <div className="flex-1 space-y-1">
-          <h2 className="text-xl font-bold text-gray-800">{vendor?.businessName}</h2>
-          <p className="text-sm text-gray-500">{vendor?.vendorType}</p>
+
+          <h2 className="text-xl font-bold text-gray-800">{vendor?.vendor?.businessName}</h2>
+          <p className="text-sm text-gray-500">{vendor?.vendor?.vendorType}</p>
 
           {/* Rating & Location */}
           <div className="flex flex-wrap items-center gap-2 text-md text-gray-600 mt-1">
             <span className="flex items-center font-medium">
-              <FaStar className="mr-1" color={"#FACC15"} size={22}/> 
-              {vendor?.rating || '4.8'} 
-              <span className="ml-1 text-gray-400">({vendor?.reviews?.length || '0'} reviews)</span>
+              <FaStar className="mr-1" color={"#FACC15"} size={22} />
+              {vendor?.rating || '4.8'}
+              <span className="ml-1 text-gray-400">({vendor?.reviews?.length || '10'} reviews)</span>
             </span>
             <span>·</span>
+
+
+
+
             <span>
-              <IoLocationOutline className="inline-block" /> 
-              {vendor?.address?.city}, {vendor?.address?.state || 'India'}
+              <IoLocationOutline className="inline-block" />
+              {vendorData?.serviceAreas?.length > 0
+                ? vendorData.serviceAreas.map((area, index) => (
+                  <span key={index}>
+                    {area.charAt(0).toUpperCase() + area.slice(1)}
+                    {index !== vendorData.serviceAreas.length - 1 && ', '}
+                  </span>
+                ))
+                : 'New Delhi, India'}
             </span>
+
+
+
+
+
           </div>
 
-      
+
           <div className="flex flex-wrap justify-start gap-2 mt-2 sm:mt-0 w-full">
             <span className="text-sm px-3 py-1 rounded-full text-white whitespace-nowrap"
               style={{ backgroundColor: vendor?.isActive ? "#34C759" : "#0f4c81" }}
             >
-              {vendor?.isActive ? "Active" : "Inactive"}
+              {vendor?.vendor?.status ? "Active" : "Inactive"}
             </span>
 
-            {vendor?.isVerified && (
-              <span className="text-sm px-3 py-1 rounded-full bg-white text-green-700 flex items-center gap-1 border-2 border-green-600 whitespace-nowrap">
-                <FiShield className="text-green-600" size={16} />
-                Verified
-              </span>
-            )}
+            {/* {vendor?.isVerified && ( */}
+            <span className="text-sm px-3 py-1 rounded-full bg-white text-green-700 flex items-center gap-1 border-2 border-green-600 whitespace-nowrap">
+              <FiShield className="text-green-600" size={16} />
+              Verified
+            </span>
+            {/* )} */}
 
-            {vendor?.isApproved && (
-              <span className="text-sm px-3 py-1 rounded-full text-[#0f4c81] border-2 border-[#0f4c81] whitespace-nowrap">
-                Approved
-              </span>
-            )}
+            {/* {vendor?.isApproved && ( */}
+            <span className="text-sm px-3 py-1 rounded-full text-[#0f4c81] border-2 border-[#0f4c81] whitespace-nowrap">
+              Approved
+            </span>
+            {/* )} */}
           </div>
 
           {/* Description */}
           <p className="text-md text-gray-500 mt-2">
-            {vendor?.description || 'No description available'}
+            {vendor?.vendor?.description || 'No description available'}
           </p>
         </div>
 
         {/* Save Button */}
-       
-          <div className="absolute sm:top-35 sm:right-8 right-4">
-    <button 
-      className="flex items-center text-sm text-gray-700 border px-3 py-2 rounded hover:bg-[#DEBF78]"
-      onClick={handleSave}
-    >
-      <FaRegHeart className={isSaved ? "text-red-500 mr-2" : "mr-2"} /> Save
-    </button> 
-  </div>
+
+        <div className="absolute sm:top-35 sm:right-8 right-4 md:mt-2">
+          <button
+            className="flex items-center text-sm text-gray-700 border  px-3 py-2 rounded hover:bg-[#DEBF78]"
+            onClick={handleSave}
+          >
+            <FaRegHeart className={isSaved ? "text-red-500 mr-2" : "mr-2"} /> Save
+          </button>
+        </div>
 
       </div>
 
@@ -139,7 +161,7 @@ const PreviewProfile = () => {
 
 
         {/* Booking Form  */}
-        
+
         <form className="mx-auto border rounded-lg p-4 sm:p-6 md:p-8 shadow-sm bg-white text-sm grid gap-4 sm:grid-cols-2 w-full max-w-screen-sm">
 
           <h3 className="font-semibold text-xl sm:col-span-2">Book Your Service</h3>
@@ -243,7 +265,7 @@ const PreviewProfile = () => {
           {/* Contact Info */}
           <div className="border rounded-lg p-4 shadow-sm bg-white w-full ">
             <h3 className="font-semibold text-lg mb-4">Contact Information</h3>
-            <ul className="text-gray-700 text-sm space-y-3" style={{paddingLeft: '20px'}}>
+            <ul className="text-gray-700 text-sm space-y-3" style={{ paddingLeft: '20px' }}>
               <li className="flex items-start gap-2">
                 <FiPhone className="mt-1 shrink-0" />
                 <span>{vendor?.phone || 'Contact number not available'}</span>
@@ -259,7 +281,7 @@ const PreviewProfile = () => {
               <li className="flex items-start gap-2">
                 <IoLocationOutline className="mt-1 shrink-0" />
                 <span>
-                  {vendor?.address?.city && vendor?.address?.state 
+                  {vendor?.address?.city && vendor?.address?.state
                     ? `${vendor.address.city}, ${vendor.address.state}`
                     : 'Location not available'}
                 </span>

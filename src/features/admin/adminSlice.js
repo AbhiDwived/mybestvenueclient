@@ -13,6 +13,7 @@ const isTokenValid = (token) => {
 // Load admin and token from localStorage
 const loadAdminFromStorage = () => {
   const token = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("adminRefreshToken");
   const adminStr = localStorage.getItem("admin");
 
   let admin = null;
@@ -31,15 +32,17 @@ const loadAdminFromStorage = () => {
   return {
     admin: isValid ? admin : null,
     token: isValid ? token : null,
+    refreshToken: isValid ? refreshToken : null,
     isAuthenticated: isValid,
   };
 };
 
-const { admin, token, isAuthenticated } = loadAdminFromStorage();
+const { admin, token, refreshToken, isAuthenticated } = loadAdminFromStorage();
 
 const initialState = {
   admin,
   token,
+  refreshToken,
   isAuthenticated,
   loading: false,
   error: null,
@@ -52,20 +55,24 @@ const adminSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      const { token, admin } = action.payload;
+      const { token, refreshToken, admin } = action.payload;
       if (token && isTokenValid(token)) {
         state.token = token;
+        state.refreshToken = refreshToken;
         state.admin = admin;
         state.isAuthenticated = true;
         state.loading = false;
         state.error = null;
         localStorage.setItem("token", token);
+        localStorage.setItem("adminRefreshToken", refreshToken);
         localStorage.setItem("admin", JSON.stringify(admin));
       } else {
         state.token = null;
+        state.refreshToken = null;
         state.admin = null;
         state.isAuthenticated = false;
         localStorage.removeItem("token");
+        localStorage.removeItem("adminRefreshToken");
         localStorage.removeItem("admin");
       }
     },
@@ -87,14 +94,16 @@ const adminSlice = createSlice({
       state.updateError = null;
     },
     logout: (state) => {
-      state.token = null;
       state.admin = null;
+      state.token = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
       state.updateLoading = false;
       state.updateError = null;
       localStorage.removeItem("token");
+      localStorage.removeItem("adminRefreshToken");
       localStorage.removeItem("admin");
     },
     setLoading: (state) => {

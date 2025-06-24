@@ -4,21 +4,31 @@ import { createSlice } from '@reduxjs/toolkit';
 const loadVendorFromStorage = () => {
   try {
     const vendorStr = localStorage.getItem('vendor');
+    const token = localStorage.getItem('vendorToken');
+    const refreshToken = localStorage.getItem('vendorRefreshToken');
     const parsed = vendorStr ? JSON.parse(vendorStr) : null;
     if (parsed?._id && !parsed.id) {
       parsed.id = parsed._id;
     }
-    return parsed;
+    return {
+      vendor: parsed,
+      token,
+      refreshToken,
+      isAuthenticated: !!token
+    };
   } catch (e) {
     console.error("Failed to parse vendor data:", e);
-    return null;
+    return {
+      vendor: null,
+      token: null,
+      refreshToken: null,
+      isAuthenticated: false
+    };
   }
 };
 
 const initialState = {
-  vendor: loadVendorFromStorage(),
-  token: localStorage.getItem('vendorToken') || null,
-  isAuthenticated: !!localStorage.getItem('vendorToken'),
+  ...loadVendorFromStorage(),
   loading: false,
   error: null,
 };
@@ -28,7 +38,7 @@ const vendorSlice = createSlice({
   initialState,
   reducers: {
     setVendorCredentials: (state, action) => {
-      let { token, vendor } = action.payload;
+      let { token, refreshToken, vendor } = action.payload;
 
       // Ensure the vendor object always has role: 'vendor'
       if (vendor && vendor.role !== 'vendor') {
@@ -36,18 +46,22 @@ const vendorSlice = createSlice({
       }
 
       state.token = token;
+      state.refreshToken = refreshToken;
       state.vendor = vendor;
       state.isAuthenticated = true;
 
       localStorage.setItem('vendorToken', token);
+      localStorage.setItem('vendorRefreshToken', refreshToken);
       localStorage.setItem('vendor', JSON.stringify(vendor));
     },
     logoutVendor: (state) => {
       state.vendor = null;
       state.token = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
 
       localStorage.removeItem('vendorToken');
+      localStorage.removeItem('vendorRefreshToken');
       localStorage.removeItem('vendor');
     },
     clearVendorError: (state) => {

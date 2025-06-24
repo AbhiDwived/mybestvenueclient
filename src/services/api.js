@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { logout } from '../features/auth/authSlice';
-import { logoutVendor } from '../features/vendors/vendorSlice';
+import { setCredentials, logout } from '../features/auth/authSlice';
+import { setVendorCredentials, logoutVendor } from '../features/vendors/vendorSlice';
+import { setCredentials as setAdminCredentials, logout as logoutAdmin } from '../features/admin/adminSlice';
 
 // Base query setup
 const baseQuery = fetchBaseQuery({
@@ -11,13 +12,18 @@ const baseQuery = fetchBaseQuery({
     headers.set('Accept', 'application/json');
     headers.set('Content-Type', 'application/json');
 
-    const state = getState();
-    const userToken = state.auth?.token;
-    const vendorToken = state.vendor?.token;
+    // Get tokens based on user type
+    const userToken = getState().auth.token;
+    const vendorToken = getState().vendor.token;
+    const adminToken = getState().adminAuth.token;
 
-    const token = userToken || vendorToken;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
+    // Set the appropriate token
+    if (userToken) {
+      headers.set('Authorization', `Bearer ${userToken}`);
+    } else if (vendorToken) {
+      headers.set('Authorization', `Bearer ${vendorToken}`);
+    } else if (adminToken) {
+      headers.set('Authorization', `Bearer ${adminToken}`);
     }
 
     // Add origin for CORS validation
@@ -31,42 +37,89 @@ const baseQuery = fetchBaseQuery({
 
 // Extended base query with refresh/reauth logic and error handling
 const baseQueryWithReauth = async (args, api, extraOptions) => {
-  try {
-    let result = await baseQuery(args, api, extraOptions);
+  let result = await baseQuery(args, api, extraOptions);
+  const state = api.getState();
 
-    // Handle various error cases
-    if (result?.error) {
-      // Handle 401 Unauthorized
-      if (result.error.status === 401) {
-        const state = api.getState();
-        if (state.vendor?.isAuthenticated) {
-          api.dispatch(logoutVendor());
-          window.location.href = '/vendor/login';
-        } else {
-          api.dispatch(logout());
-          window.location.href = '/user/login';
-        }
+  if (result.error && result.error.status === 401) {
+    // Try to get a new token
+    const refreshResult = await baseQuery(
+      { 
+        url: determineRefreshEndpoint(state),
+        method: 'POST',
+        body: { refreshToken: getRefreshToken(state) }
+      },
+      api,
+      extraOptions
+    );
+
+    if (refreshResult.data) {
+      // Store the new token
+      const userType = determineUserType(state);
+      switch (userType) {
+        case 'user':
+          api.dispatch(setCredentials(refreshResult.data));
+          break;
+        case 'vendor':
+          api.dispatch(setVendorCredentials(refreshResult.data));
+          break;
+        case 'admin':
+          api.dispatch(setAdminCredentials(refreshResult.data));
+          break;
       }
-      
-      // Handle CORS errors
-      if (result.error.status === 'FETCH_ERROR' || result.error.status === 403) {
-        console.error('API Error:', {
-          status: result.error.status,
-          message: result.error.message,
-          data: result.error.data
-        });
+
+      // Retry the original request
+      result = await baseQuery(args, api, extraOptions);
+    } else {
+      // Logout based on user type
+      switch (determineUserType(state)) {
+        case 'user':
+          api.dispatch(logout());
+          break;
+        case 'vendor':
+          api.dispatch(logoutVendor());
+          break;
+        case 'admin':
+          api.dispatch(logoutAdmin());
+          break;
       }
     }
+  }
+  return result;
+};
 
-    return result;
-  } catch (error) {
-    console.error('API Request Failed:', error);
-    return {
-      error: {
-        status: 'FETCH_ERROR',
-        message: 'Failed to connect to the server. Please check your connection.',
-      },
-    };
+// Helper functions
+const determineUserType = (state) => {
+  if (state.auth.isAuthenticated) return 'user';
+  if (state.vendor.isAuthenticated) return 'vendor';
+  if (state.adminAuth.isAuthenticated) return 'admin';
+  return null;
+};
+
+const determineRefreshEndpoint = (state) => {
+  const userType = determineUserType(state);
+  switch (userType) {
+    case 'user':
+      return '/user/refresh-token';
+    case 'vendor':
+      return '/vendor/refresh-token';
+    case 'admin':
+      return '/admin/refresh-token';
+    default:
+      return null;
+  }
+};
+
+const getRefreshToken = (state) => {
+  const userType = determineUserType(state);
+  switch (userType) {
+    case 'user':
+      return localStorage.getItem('refreshToken');
+    case 'vendor':
+      return localStorage.getItem('vendorRefreshToken');
+    case 'admin':
+      return localStorage.getItem('adminRefreshToken');
+    default:
+      return null;
   }
 };
 

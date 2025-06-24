@@ -13,6 +13,7 @@ const isTokenValid = (token) => {
 // Load user and token from localStorage
 const loadUserFromStorage = () => {
   const token = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("refreshToken");
   const userStr = localStorage.getItem("user");
 
   let user = null;
@@ -23,7 +24,7 @@ const loadUserFromStorage = () => {
     }
   } catch (e) {
     console.warn("Invalid JSON in localStorage for user:", userStr);
-    localStorage.removeItem("user"); // Clean up corrupted data
+    localStorage.removeItem("user");
   }
 
   const isValid = token && user && user.id && isTokenValid(token);
@@ -31,15 +32,17 @@ const loadUserFromStorage = () => {
   return {
     user: isValid ? user : null,
     token: isValid ? token : null,
+    refreshToken: isValid ? refreshToken : null,
     isAuthenticated: isValid,
   };
 };
 
-const { user, token, isAuthenticated } = loadUserFromStorage();
+const { user, token, refreshToken, isAuthenticated } = loadUserFromStorage();
 
 const initialState = {
   user,
   token,
+  refreshToken,
   isAuthenticated,
   loading: false,
   error: null,
@@ -52,22 +55,24 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      const { token, user } = action.payload;
-      // Only set if token is valid (extra safety)
+      const { token, refreshToken, user } = action.payload;
       if (token && isTokenValid(token)) {
         state.token = token;
+        state.refreshToken = refreshToken;
         state.user = user;
         state.isAuthenticated = true;
         state.loading = false;
         state.error = null;
         localStorage.setItem("token", token);
+        localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("user", JSON.stringify(user));
       } else {
-        // fallback: clear auth if token invalid
-        state.user = null;
         state.token = null;
+        state.refreshToken = null;
+        state.user = null;
         state.isAuthenticated = false;
         localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
       }
     },
@@ -91,12 +96,14 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
       state.updateLoading = false;
       state.updateError = null;
       localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
     },
     setLoading: (state) => {
