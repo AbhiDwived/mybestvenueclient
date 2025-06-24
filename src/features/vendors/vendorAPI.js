@@ -89,6 +89,8 @@ export const vendorApi = createApi({
         url: `/vendor/update/${vendorId}`,
         method: 'PUT',
         body: profileData,
+        // Add proper headers for multipart form data
+        formData: true,
       }),
       // Transform the response to ensure we get the updated vendor data
       transformResponse: (response) => {

@@ -6,21 +6,34 @@ import coverimage from '../../assets/Images/Navneegt.jpeg';
 import { useSelector, useDispatch } from 'react-redux';
 import { useUpdateProfileMutation } from "../../features/vendors/vendorAPI";
 import { setVendorCredentials } from '../../features/vendors/vendorSlice';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 const EditProfile = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  const vendorId = vendor?.id || vendor?._id;
   const token = useSelector((state) => state.vendor.token);
 
-  // Ensure we have the vendor ID
+  // Extract vendor ID with better validation
+  const vendorId = vendor?._id || vendor?.id;
+
+  // Ensure we have the vendor ID and redirect if not authenticated
   useEffect(() => {
-    if (!vendorId) {
-      console.error('Vendor ID is missing');
-      alert('Error: Vendor ID is missing. Please try logging in again.');
+    if (!isAuthenticated) {
+      toast.error('Please log in to access this page');
+      navigate('/vendor/login');
+      return;
     }
-  }, [vendorId]);
+    
+    if (!vendorId) {
+      console.error('Vendor ID is missing:', vendor);
+      toast.error('Error: Vendor ID is missing. Please try logging in again.');
+      navigate('/vendor/login');
+    }
+  }, [vendorId, isAuthenticated, navigate]);
 
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
 
@@ -58,6 +71,11 @@ const EditProfile = () => {
 
   const prepareFormData = (imageFile = null) => {
     const formData = new FormData();
+    
+    // Log the vendor ID being used
+    console.log('Preparing form data with vendor ID:', vendorId);
+    
+    formData.append("_id", vendorId); // Add vendor ID to form data
     formData.append("businessName", businessName);
     formData.append("vendorType", category);
     formData.append("description", businessDescription);
@@ -93,13 +111,20 @@ const EditProfile = () => {
 
   const handleSave = async () => {
     if (!vendorId) {
-      alert("Error: Vendor ID is missing. Please try logging in again.");
+      toast.error("Error: Vendor ID is missing. Please try logging in again.");
+      navigate('/vendor/login');
       return;
     }
 
     try {
+      console.log('Attempting to update vendor with ID:', vendorId);
       const formData = prepareFormData();
-      const res = await updateProfile({ vendorId, profileData: formData }).unwrap();
+      
+      const res = await updateProfile({ 
+        vendorId, 
+        profileData: formData,
+      }).unwrap();
+
       const updatedVendor = res.vendor || res;
 
       // Only update the image state if a new image was actually returned
@@ -108,22 +133,24 @@ const EditProfile = () => {
       }
 
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
-      alert("Vendor Record updated successfully");
+      toast.success("Profile updated successfully!");
     } catch (err) {
       console.error('Update failed:', err);
       if (err.status === 404) {
-        alert("Error: Vendor not found. Please try logging in again.");
+        toast.error("Error: Vendor not found. Please try logging in again.");
+        navigate('/vendor/login');
       } else if (err.status === 401) {
-        alert("Error: Unauthorized. Please try logging in again.");
+        toast.error("Error: Unauthorized. Please try logging in again.");
+        navigate('/vendor/login');
       } else {
-        alert("Failed to update vendor: " + (err.data?.message || err.message || "Unknown error"));
+        toast.error("Failed to update profile: " + (err.data?.message || err.message || "Unknown error"));
       }
     }
   };
 
   const handleImageChange = async (file) => {
     if (!vendorId || !file) {
-      alert("Unable to update image. Vendor ID or file missing.");
+      toast.error("Unable to update image. Vendor ID or file missing.");
       return;
     }
 
@@ -131,36 +158,76 @@ const EditProfile = () => {
       // Create a local preview immediately
       const localPreview = URL.createObjectURL(file);
       setSelectedFile(file);
-      setCoverImage(localPreview);
+      setCoverImage(localPreview); // Set temporary preview
 
       // Prepare and send the update
-      const formData = prepareFormData(file);
-      const res = await updateProfile({ vendorId, profileData: formData }).unwrap();
-      const updatedVendor = res.vendor || res;
+      const formData = new FormData();
+      formData.append("profilePicture", file);
+      formData.append("_id", vendorId);
       
-      // Update with the ImageKit URL
-      if (updatedVendor.profilePicture) {
-        setCoverImage(updatedVendor.profilePicture);
+      // Keep existing data
+      formData.append("businessName", businessName);
+      formData.append("vendorType", category);
+      formData.append("description", businessDescription);
+      formData.append("serviceAreas", Array.isArray(serviceAreas) ? serviceAreas.join(",") : serviceAreas);
+      formData.append("pricing", priceRange);
+      formData.append("email", contactEmail);
+      formData.append("phone", contactPhone);
+      formData.append("website", website);
+      formData.append("contactName", contactName);
+
+      const res = await updateProfile({ 
+        vendorId, 
+        profileData: formData,
+      }).unwrap();
+
+      // Update with the server URL
+      if (res.profilePicture) {
+        setCoverImage(res.profilePicture);
         setSelectedFile(null); // Clear selected file after successful upload
+        
+        // Update the vendor state in Redux
+        dispatch(setVendorCredentials({ 
+          vendor: { ...vendor, profilePicture: res.profilePicture },
+          token 
+        }));
+
+        toast.success("Profile image updated successfully");
+      } else {
+        throw new Error("No profile picture URL received from server");
       }
-      
-      dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
-      alert("Profile image updated successfully");
     } catch (err) {
       console.error("Error uploading image:", err);
-      alert("Failed to update profile image");
+      toast.error("Failed to update profile image: " + (err.message || "Unknown error"));
       // Revert to previous image on error
       setCoverImage(vendor.profilePicture || null);
       setSelectedFile(null);
+    } finally {
+      // Clean up the temporary object URL
+      if (localPreview) {
+        URL.revokeObjectURL(localPreview);
+      }
     }
   };
 
-  if (!isAuthenticated) {
-    return <h5 className='text-gray-600 font-bold'>You are not logged in.</h5>;
+  if (!isAuthenticated || !vendorId) {
+    return null; // Return null as useEffect will handle the redirect
   }
 
   return (
     <div className="font-serif">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="row g-4">
         {/* Basic Info */}
         <div className="col-lg-8">
@@ -209,12 +276,13 @@ const EditProfile = () => {
             <p className="text-muted small">This will be displayed as your profile banner</p>
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
               <img 
-                src={coverImage || coverimage} 
+                src={coverImage || vendor.profilePicture || coverimage} 
                 className="w-100 h-100 object-fit-cover" 
                 alt="Cover"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = coverimage; // Fallback to default image
+                  console.error("Failed to load image:", coverImage);
                 }}
               />
 
@@ -232,7 +300,7 @@ const EditProfile = () => {
               </div>
               <input
                 type="file"
-                accept=".png, .jpg, .jpeg"
+                accept="image/*"
                 ref={fileInputRef}
                 onChange={(e) => handleImageChange(e.target.files[0])}
                 className="d-none"

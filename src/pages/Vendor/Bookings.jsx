@@ -1,17 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaCalendarAlt, FaMapMarkerAlt, FaRegEdit } from "react-icons/fa";
 import { IoEyeOutline } from "react-icons/io5";
 import { ImCross } from "react-icons/im";
 import { FiCheckCircle } from "react-icons/fi";
 import { BsExclamationCircle } from "react-icons/bs";
-import { } from "../../features/bookings/bookingAPI";
-import { useSelector, useDispatch } from 'react-redux';
-import { useGetVendorBookingsListQuery, useUpdateVendorBookingMutation } from "../../features/vendors/vendorAPI";
+import { useSelector } from 'react-redux';
+import { useGetVendorBookingsListQuery, useUpdateVendorBookingMutation, useGetUserListByIdQuery, useCreateuserBookingByVendorMutation } from "../../features/vendors/vendorAPI";
 import { toast } from 'react-toastify';
 import Loader from "../../components/{Shared}/Loader";
-
-
-
 
 export default function BookingManagement() {
   const [showModal, setShowModal] = useState(false);
@@ -19,21 +15,38 @@ export default function BookingManagement() {
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [userIdSearch, setUserIdSearch] = useState('');
+  const [shouldSearch, setShouldSearch] = useState(false);
 
-
-
-
-
+  // Get vendor info from Redux store
   const vendor = useSelector((state) => state.vendor.vendor);
-  const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
   const vendorId = vendor?.id;
 
+  if (!vendorId) {
+    return <div className="text-center mt-10 text-red-500">Error: Vendor ID not found. Please log in again.</div>;
+  }
 
+  // Remove unnecessary user state
+  // const user = useSelector((state) => state.auth.user);
+  // const userId = user?._id || user?.id;
+  // console.log("user object:", user);
+  // console.log("userId:", userId);
+
+  // API queries and mutations
   const { data, isLoading, error, refetch } = useGetVendorBookingsListQuery(vendorId);
   const [updateVendorBooking, { isLoading: updating }] = useUpdateVendorBookingMutation();
+  const {
+    data: userList,
+    isLoading: isUserListLoading,
+    error: userListError,
+    refetch: refetchUserList,
+  } = useGetUserListByIdQuery(userIdSearch, {
+    skip: !shouldSearch || !userIdSearch,
+  });
+  const [createBooking, { isLoading: creating }] = useCreateuserBookingByVendorMutation();
 
   const bookings = data?.data?.bookings || [];
-  console.log("bookings", bookings);
+  // console.log("bookings", bookings);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -47,13 +60,11 @@ export default function BookingManagement() {
     venue: ''
   });
 
-
   const statusColors = {
     confirmed: { class: "bg-green-100 text-green-800", icon: <FiCheckCircle size={16} /> },
     pending: { class: "bg-yellow-100 text-yellow-800", icon: <BsExclamationCircle size={16} /> },
     completed: { class: "bg-blue-100 text-blue-800", icon: <FiCheckCircle size={16} /> }
   };
-
 
   const overviewStats = {
     total: bookings.length,
@@ -62,14 +73,11 @@ export default function BookingManagement() {
     completed: bookings.filter(b => b.status?.toLowerCase() === 'completed').length
   };
 
-
-
   const filteredBookings = bookings.filter((booking) => {
-    const matchesName = booking.user.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'All Status' || booking.status === statusFilter;
+    const matchesName = booking?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
+    const matchesStatus = statusFilter === 'All Status' || booking?.status === statusFilter;
     return matchesName && matchesStatus;
   });
-
 
   const handleModalClose = () => {
     setShowModal(false);
@@ -88,14 +96,33 @@ export default function BookingManagement() {
     });
   };
 
+  const handleCreateBooking = async () => {
+    try {
+      const bookingData = {
+        userId: userIdSearch,
+        vendorId: vendorId,
+        vendorName: vendor?.businessName || vendor?.name || "",
+        eventType: formData.eventType,
+        eventDate: formData.eventDate,
+        eventTime: formData.eventTime,
+        venue: formData.venue,
+        guestCount: Number(formData.guestCount),
+        plannedAmount: Number(formData.plannedAmount),
+        notes: "",
+      };
 
+      const response = await createBooking(bookingData).unwrap();
+      toast.success("Booking created successfully!");
+      refetch(); // Refresh the bookings list
+      handleModalClose();
+    } catch (error) {
+      toast.error(`Failed to create booking: ${error.message || 'Unknown error'}`);
+    }
+  };
 
   const handleSave = async () => {
     if (isEditMode && selectedBooking) {
       try {
-        console.log("bookingId", selectedBooking._id);
-
-        console.log("vendor from token:", vendorId);
         await updateVendorBooking({
           bookingId: selectedBooking._id,
           bookingData: {
@@ -105,28 +132,47 @@ export default function BookingManagement() {
             guestCount: formData.guestCount,
             plannedAmount: formData.plannedAmount,
             venue: formData.venue,
-
           }
         }).unwrap();
-        alert("Booking updated successfully!");
+        toast.success("Booking updated successfully!");
         refetch();
         handleModalClose();
       } catch (error) {
-        console.error("Error updating booking", error);
-        alert("Failed to update booking.");
+        toast.error(`Failed to update booking: ${error.message || 'Unknown error'}`);
       }
     } else {
-
-      alert("Creating new bookings not implemented yet");
+      await handleCreateBooking();
     }
   };
+
+  useEffect(() => {
+    if (userList && shouldSearch && userList.result) {
+      const user = userList.result;
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+      }));
+      setShouldSearch(false);
+    }
+  }, [userList, shouldSearch]);
 
   if (!bookings.length) {
     return <p className="text-center mt-10 text-gray-500">No bookings found</p>;
   }
 
-  if (isLoading) return <Loader fullScreen />;
-  if (error) return <p className="text-center mt-10 text-red-500">Failed to fetch bookings</p>;
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center mt-10 text-red-500">
+        Error loading bookings: {error.message || 'Unknown error'}
+      </div>
+    );
+  }
 
   return (
     <div className="p-2 bg-gray-50 min-h-screen sm:m-6">
@@ -156,12 +202,35 @@ export default function BookingManagement() {
       {/* Heading and Add Button */}
       <div className="flex justify-between items-center mb-6">
         <p className="sm:text-2xl text-[15px] font-semibold">Booking Management</p>
-        <button
+        {/* <button
           onClick={() => setShowModal(true)}
           className="bg-[#19599A] text-white px-3 py-1 rounded hover:bg-[#19599A] whitespace-nowrap  sm:w-auto sm:ml-0 ml-4 text-sm sm:text-base "
         >
           + Add Booking
+        </button> */}
+
+        <button
+          onClick={() => {
+            setIsEditMode(false);
+            setSelectedBooking(null);
+            setFormData({
+              name: '',
+              email: '',
+              phone: '',
+              eventType: '',
+              eventDate: '',
+              eventTime: '',
+              guestCount: 0,
+              plannedAmount: 0,
+              venue: ''
+            });
+            setShowModal(true);
+          }}
+          className="bg-[#19599A] text-white px-3 py-1 rounded hover:bg-[#19599A] whitespace-nowrap sm:w-auto sm:ml-0 ml-4 text-sm sm:text-base"
+        >
+          + Add Booking
         </button>
+
       </div>
 
       {/* Search and Filter */}
@@ -192,46 +261,51 @@ export default function BookingManagement() {
           className="relative border border-gray-200 rounded-lg px-2 py-4 mb-4 bg-white shadow-sm"
         >
           {/* Top Row: Name and Actions */}
-          <div className="flex justify-between items-start flex-wrap md:flex-nowrap mb-2  sm:justify-center sm:items-center">
-            <div className="items-center justify-between inline sm:flex  ">
-              <span className="text-[10px] sm:text-[20px]  font-semibold text-gray-800">{booking.user.name || "Navneet"}</span>
-              <div className="inline ">
-                <div className={`flex justify-center gap-1 w-[80px] sm:mx-2 sm:w-[100px] py-1 items-center-safe rounded  text-[10px]  sm:text-[12px]   ${statusColors[booking.status]?.class}`}>
-                  <span className={`  font-medium     `}>
-                    {statusColors[booking.status]?.icon}
+          <div className="flex justify-between items-start flex-wrap md:flex-nowrap mb-2 sm:justify-center sm:items-center">
+            <div className="items-center justify-between inline sm:flex">
+              <span className="text-[10px] sm:text-[20px] font-semibold text-gray-800">
+                {booking?.user?.name || "Unknown User"}
+              </span>
+              <div className="inline">
+                <div className={`flex justify-center gap-1 w-[80px] sm:mx-2 sm:w-[100px] py-1 items-center-safe rounded text-[10px] sm:text-[12px] ${statusColors[booking?.status?.toLowerCase()]?.class || statusColors['pending'].class}`}>
+                  <span className="font-medium">
+                    {statusColors[booking?.status?.toLowerCase()]?.icon || statusColors['pending'].icon}
                   </span>
-                  <span className="">{booking.status}</span>
+                  <span className="">{booking?.status || 'Pending'}</span>
                 </div>
-
               </div>
             </div>
-            <div className="flex items-center gap-2 md:mt-2  ml-auto md:w[70px] ">
+            <div className="flex items-center gap-2 md:mt-2 ml-auto md:w[70px]">
               <button className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300" title="View">
                 <IoEyeOutline className="w-[12px] sm:w-[15px]" />
               </button>
-              <button className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300" title="Edit">
-                <FaRegEdit className="w-[12px] sm:w-[15px]"
-
-                  onClick={() => {
-                    setIsEditMode(true);
-                    setShowModal(true);
-                    setSelectedBooking(booking);
-                    setFormData({
-                      eventType: booking.eventType,
-                      eventDate: booking.eventDate.split('T')[0],
-                      eventTime: booking.eventTime,
-                      guestCount: booking.guestCount,
-                      plannedAmount: booking.plannedAmount,
-                      venue: booking.venue,
-                      name: booking.user?.name || '',
-                      email: booking.user?.email || '',
-                      phone: booking.user?.phone || '',
-                    });
-                  }}
-
-                />
+              <button 
+                className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300" 
+                title="Edit"
+                onClick={() => {
+                  setIsEditMode(true);
+                  setShowModal(true);
+                  setSelectedBooking(booking);
+                  setFormData({
+                    eventType: booking?.eventType || '',
+                    eventDate: booking?.eventDate?.split('T')[0] || '',
+                    eventTime: booking?.eventTime || '',
+                    guestCount: booking?.guestCount || 0,
+                    plannedAmount: booking?.plannedAmount || 0,
+                    venue: booking?.venue || '',
+                    name: booking?.user?.name || '',
+                    email: booking?.user?.email || '',
+                    phone: booking?.user?.phone || '',
+                  });
+                }}
+              >
+                <FaRegEdit className="w-[12px] sm:w-[15px]" />
               </button>
-              <select className="border border-gray-300 rounded-md text-[8px] sm:text-[10px] sm:w-[100px] w-[80px]">
+              <select 
+                className="border border-gray-300 rounded-md text-[8px] sm:text-[10px] sm:w-[100px] w-[80px]"
+                value={booking?.status || 'pending'}
+                onChange={(e) => handleStatusChange(booking._id, e.target.value)}
+              >
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
                 <option value="completed">Completed</option>
@@ -244,22 +318,23 @@ export default function BookingManagement() {
             <div>
               <div className="text-sm text-gray-600 flex items-center gap-2 mb-1">
                 <FaCalendarAlt className="text-gray-500" />
-
-                {new Date(booking.eventDate).toLocaleDateString()} at {booking.eventTime}
+                {booking?.eventDate ? (
+                  <>{new Date(booking.eventDate).toLocaleDateString()} at {booking?.eventTime || 'N/A'}</>
+                ) : (
+                  'Date not set'
+                )}
               </div>
               <div className="text-sm text-gray-500">
-
-                Event: {booking.eventType} | Guests: {booking.guestCount}
+                Event: {booking?.eventType || 'N/A'} | Guests: {booking?.guestCount || 0}
               </div>
             </div>
             <div className="flex flex-row gap-2 justify-between">
               <div className="p-2 text-sm flex items-center gap-1">
                 <FaMapMarkerAlt className="text-gray-600" />
-                <span className="text-gray-700 font-medium">{booking.venue}</span>
+                <span className="text-gray-700 font-medium">{booking?.venue || 'Venue not set'}</span>
               </div>
               <div className="p-2 text-sm font-semibold text-gray-700">
-
-                ₹{booking.plannedAmount?.toLocaleString("en-IN") || 0}
+                ₹{(booking?.plannedAmount || 0).toLocaleString("en-IN")}
               </div>
             </div>
           </div>
@@ -281,32 +356,49 @@ export default function BookingManagement() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!isEditMode && (
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium">Search User by ID</label>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={userIdSearch}
+                      onChange={(e) => setUserIdSearch(e.target.value)}
+                      placeholder="Enter User ID"
+                      className="w-full border rounded p-2"
+                    />
+                    <button
+                      onClick={() => {
+                        if (userIdSearch.trim()) setShouldSearch(true);
+                      }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded"
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="text-sm font-medium">Client Name</label>
-
-
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, ClientName: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full border rounded p-2"
                 />
-
               </div>
               <div>
                 <label className="text-sm font-medium">Client Email</label>
-
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full border rounded p-2"
                 />
-
               </div>
               <div>
                 <label className="text-sm font-medium">Client Phone</label>
-
                 <input
                   type="text"
                   value={formData.phone}
@@ -316,7 +408,6 @@ export default function BookingManagement() {
               </div>
               <div>
                 <label className="text-sm font-medium">Event Type</label>
-
                 <input
                   type="text"
                   value={formData.eventType}
@@ -326,7 +417,6 @@ export default function BookingManagement() {
               </div>
               <div>
                 <label className="text-sm font-medium">Event Date</label>
-
                 <input
                   type="date"
                   value={formData.eventDate}
@@ -336,7 +426,6 @@ export default function BookingManagement() {
               </div>
               <div>
                 <label className="text-sm font-medium">Event Time</label>
-
                 <input
                   type="time"
                   value={formData.eventTime}
@@ -346,7 +435,6 @@ export default function BookingManagement() {
               </div>
               <div>
                 <label className="text-sm font-medium">Guest Count</label>
-
                 <input
                   type="number"
                   value={formData.guestCount}
@@ -356,7 +444,6 @@ export default function BookingManagement() {
               </div>
               <div>
                 <label className="text-sm font-medium">Budget</label>
-
                 <input
                   type="number"
                   value={formData.plannedAmount}
@@ -366,7 +453,6 @@ export default function BookingManagement() {
               </div>
               <div className="md:col-span-2">
                 <label className="text-sm font-medium">Venue</label>
-
                 <input
                   type="text"
                   value={formData.venue}
@@ -384,8 +470,6 @@ export default function BookingManagement() {
                 >
                   Cancel
                 </button>
-
-
                 <button
                   onClick={handleSave}
                   className="bg-[#19599A] text-white px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded hover:bg-[#19599A]"
@@ -393,18 +477,12 @@ export default function BookingManagement() {
                 >
                   {updating ? 'Updating...' : isEditMode ? 'Update' : 'Save'}
                 </button>
-
               </div>
             </div>
-
-
           </div>
         </div>
       )}
     </div>
   );
 }
-
-
-
 
