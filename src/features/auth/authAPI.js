@@ -123,14 +123,14 @@ export const authApi = createApi({
       }),
     }),
 
-    sendUserReply: builder.mutation({
-      query: ({ vendorId, message, userId }) => ({
-        url: `/user/userInquiryMessage/${userId}`,
-        // url: `/user/user_reply/${encodeURIComponent(userId)}`,
-        method: "POST",
-        body: { vendorId, message },
-      }),
-    }),
+    //add user Inquiry
+    addUserInquiryMessage: builder.mutation({
+      query: ({userId,vendorId,message,name,phone,email,weddingDate}) => ({
+     url: `/user/userInquiryMessage`,
+     method: "POST",
+     body: {userId, vendorId,message,name,phone,email,weddingDate },
+   }),
+   }),
 
     //UserContact---POST
     submitContactForm: builder.mutation({
@@ -159,5 +159,6 @@ export const {
   useGetUserInquiriesMutation,
   useSendUserReplyMutation,
   useSubmitContactFormMutation,
-  useGetUserProfileQuery ,
+  useGetUserProfileQuery,
+  useAddUserInquiryMessageMutation,
 } = authApi;

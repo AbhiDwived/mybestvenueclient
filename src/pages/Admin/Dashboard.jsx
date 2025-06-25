@@ -9,6 +9,7 @@ import ReviewModeration from './ReviewModeration';
 import ContentManagement from './ContentManagement';
 import Contact from './Contact';
 import SubscriberManagement from './SubscriberManagement';
+import BookingManagement from './BookingManagement';
 
 // 🟢 Import RTK hooks
 import {
@@ -16,6 +17,9 @@ import {
   useGetAllVendorsQuery,
   useGetPendingVendorsQuery,
 } from '../../features/admin/adminAPI'; // Update path if needed
+
+import { FaAngleLeft } from "react-icons/fa";
+import { FaChevronRight } from "react-icons/fa";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(null);
@@ -39,13 +43,15 @@ const AdminDashboard = () => {
 
   const tabs = [
     'Dashboard',
+    'Booking Management',
     'User Management',
     'Vendor Management',
     'Pending Approvals',
     'Review Moderation',
     'Content Management',
     'Subscribers',
-    'Contacts'
+    'Contacts',
+    
   ];
 
   // 🟢 Build cardData with live API counts
@@ -207,72 +213,76 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* Tabs Menu */}
-      <div className="lg:mt-7">
-        <div style={{ borderRadius: '5px' }}
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 bg-gray-200 py-1 px-1"
+      {/* Tabs Menu with Scroll Buttons */}
+      <div className="relative bg-[#f5f8fb] p-1 sm:p-2 rounded-md mb-6 overflow-hidden">
+        {/* Left Scroll Button (Hidden on lg and up) */}
+        <button
+          onClick={() => {
+            const container = document.getElementById('tabs-container');
+            const firstTab = container.querySelector('button');
+            if (firstTab) {
+              const tabWidth = firstTab.offsetWidth + parseFloat(getComputedStyle(firstTab).marginRight);
+              container.scrollBy({ left: -tabWidth * 3, behavior: 'smooth' });
+            }
+          }}
+          style={{borderRadius:"25px"}}
+          className="absolute lg:hidden left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-1 shadow-md text-gray-600"
+        >
+          <FaAngleLeft size={14} />
+        </button>
+
+        {/* Scrollable Tabs Container */}
+        <div
+          id="tabs-container"
+          className="flex gap-3 lg:gap-1 overflow-x-auto scrollbar-hide p-1"
         >
           {tabs.map((tab, i) => (
             <button
               key={i}
               onClick={() => {
                 setActiveTab(tab);
-                localStorage.setItem('adminActiveTab', tab); // Persist tab selection
+                localStorage.setItem('adminActiveTab', tab);
               }}
-              style={{ borderRadius: '5px' }}
-              className={`py-2 rounded-md font-medium whitespace-nowrap text-xs sm:text-sm transition ${tab === activeTab
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-gray-600 hover:bg-white/80'
+              style={{borderRadius:"5px"}}
+              className={`px-3 py-2 rounded-md font-medium text-xs sm:text-sm transition-colors duration-200 whitespace-nowrap ${tab === activeTab
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100'
                 }`}
             >
               {tab}
             </button>
           ))}
         </div>
+
+        {/* Right Scroll Button (Hidden on lg and up) */}
+        <button
+          onClick={() => {
+            const container = document.getElementById('tabs-container');
+            const firstTab = container.querySelector('button');
+            if (firstTab) {
+              const tabWidth = firstTab.offsetWidth + parseFloat(getComputedStyle(firstTab).marginRight);
+              container.scrollBy({ left: tabWidth * 1, behavior: 'smooth' });
+            }
+          }}
+          style={{borderRadius:"25px"}}
+          className="absolute lg:hidden right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-1 shadow-md text-gray-600"
+        >
+          <FaChevronRight size={14} />
+        </button>
       </div>
 
       {/* Tab Content */}
       <div className="shadow-sm rounded-lg overflow-hidden">
-        {activeTab === 'Dashboard' && (
-          <div className="col-span-3 bg-white w-full">
-            <SubDashboard />
-          </div>
-        )}
-        {activeTab === 'User Management' && (
-          <div className="col-span-3 bg-white w-full">
-            <UserManagement />
-          </div>
-        )}
-        {activeTab === 'Vendor Management' && (
-          <div className="col-span-3 bg-white w-full">
-            <VendorManagement />
-          </div>
-        )}
-        {activeTab === 'Pending Approvals' && (
-          <div className="col-span-3 bg-white w-full">
-            <PendingApprovals />
-          </div>
-        )}
-        {activeTab === 'Review Moderation' && (
-          <div className="col-span-3 bg-white w-full">
-            <ReviewModeration />
-          </div>
-        )}
-        {activeTab === 'Content Management' && (
-          <div className="col-span-3 bg-white w-full">
-            <ContentManagement />
-          </div>
-        )}
-        {activeTab === 'Subscribers' && (
-          <div className="col-span-3 bg-white w-full">
-            <SubscriberManagement />
-          </div>
-        )}
-        {activeTab === 'Contacts' && (
-          <div className="col-span-3 bg-white w-full">
-            <Contact />
-          </div>
-        )}
+        {activeTab === 'Dashboard' && <SubDashboard />}
+         {activeTab === 'Booking Management' && <BookingManagement />}
+        {activeTab === 'User Management' && <UserManagement />}
+        {activeTab === 'Vendor Management' && <VendorManagement />}
+        {activeTab === 'Pending Approvals' && <PendingApprovals />}
+        {activeTab === 'Review Moderation' && <ReviewModeration />}
+        {activeTab === 'Content Management' && <ContentManagement />}
+        {activeTab === 'Subscribers' && <SubscriberManagement />}
+        {activeTab === 'Contacts' && <Contact />}
+       
       </div>
     </div>
   );

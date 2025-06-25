@@ -5,7 +5,7 @@ import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 import { HiOutlineCalendar } from "react-icons/hi";
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGetVendorByIdQuery } from '../../../features/vendors/vendorAPI';
+import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
 import { useCreateBookingMutation, useGetUserBookingsQuery } from '../../../features/bookings/bookingAPI';
 import { toast } from 'react-toastify';
 import mainProfile from "../../../assets/mainProfile.png";
@@ -19,6 +19,7 @@ import FaqQuestions from './FaqQuestions';
 import { FaArrowLeft } from "react-icons/fa";
 import { useSelector } from 'react-redux';
 import Loader from '../../../components/{Shared}/Loader';
+import { useAddUserInquiryMessageMutation } from '../../../features/auth/authAPI';
 
 const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
@@ -27,12 +28,19 @@ const PreviewProfile = () => {
   const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
   const [createBooking, { isLoading: isBookingLoading }] = useCreateBookingMutation();
   const { refetch: refetchBookings } = useGetUserBookingsQuery();
+  const [packages, setPackages] = useState([]);
+  const [getVendorPackages] = useVendorservicesPackageListMutation();
+
+  console.log('URL Vendor ID:', vendorId);
+  console.log('Vendor Data:', vendor);
+  console.log('Current packages state:', packages); // Debug log for packages
 
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   // Booking form state with validation
   const [bookingForm, setBookingForm] = useState({
     eventType: '',
+    packageName: '',
     eventDate: '',
     eventTime: '',
     venue: '',
@@ -63,6 +71,7 @@ const PreviewProfile = () => {
   const validateForm = () => {
     const errors = {};
     if (!bookingForm.eventType) errors.eventType = 'Event type is required';
+    if (!bookingForm.packageName) errors.packageName = 'Package name is required';
     if (!bookingForm.eventDate) errors.eventDate = 'Event date is required';
     if (!bookingForm.name) errors.name = 'Name is required';
     if (!bookingForm.email) errors.email = 'Email is required';
@@ -97,6 +106,40 @@ const PreviewProfile = () => {
     }
   };
 
+  // Fetch vendor packages
+  useEffect(() => {
+    const fetchPackages = async () => {
+      const actualVendorId = vendor?.vendor?._id;
+      console.log('Attempting to fetch packages with vendor ID:', actualVendorId);
+
+      if (!actualVendorId) {
+        console.log('No vendor ID available yet');
+        return;
+      }
+
+      try {
+        const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
+        console.log('Raw package response:', response);
+        
+        if (response?.packages && Array.isArray(response.packages)) {
+          console.log('Setting packages:', response.packages);
+          setPackages(response.packages);
+        } else {
+          console.log('No packages found in response');
+          setPackages([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch packages:', error);
+        toast.error('Failed to load vendor packages');
+        setPackages([]);
+      }
+    };
+
+    if (!isVendorLoading && vendor?.vendor?._id) {
+      fetchPackages();
+    }
+  }, [vendor, isVendorLoading, getVendorPackages]);
+
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     
@@ -112,15 +155,29 @@ const PreviewProfile = () => {
     }
 
     try {
+      // Find selected package details
+      const selectedPackageDetails = packages.find(pkg => pkg._id === bookingForm.packageName);
+      
+      // Use offer price if available and less than regular price
+      const finalPrice = selectedPackageDetails?.offerPrice && 
+                        selectedPackageDetails.offerPrice < selectedPackageDetails.price
+                        ? selectedPackageDetails.offerPrice 
+                        : selectedPackageDetails?.price || 0;
+      
       const response = await createBooking({
         vendorId: vendorId,
         vendorName: vendor?.vendor?.businessName || '',
         eventType: bookingForm.eventType,
+        packageName: selectedPackageDetails?.packageName || '',
+        packageId: bookingForm.packageName,
+        packagePrice: selectedPackageDetails?.price || 0,
+        offerPrice: selectedPackageDetails?.offerPrice || 0,
+        finalPrice: finalPrice,
         eventDate: bookingForm.eventDate,
         eventTime: bookingForm.eventTime,
         venue: bookingForm.venue,
         guestCount: parseInt(bookingForm.guestCount) || 0,
-        plannedAmount: 5000,
+        plannedAmount: finalPrice,
         userName: bookingForm.name,
         userEmail: bookingForm.email,
         userPhone: bookingForm.phone,
@@ -129,17 +186,18 @@ const PreviewProfile = () => {
 
       if (response.success) {
         toast.success('Booking request sent successfully');
-        // Refetch bookings to update the list
         refetchBookings();
         
         // Reset form
         setBookingForm({
           eventType: '',
+          packageName: '',
           eventDate: '',
           eventTime: '',
           venue: '',
           guestCount: '',
           selectedPackage: '',
+          plannedAmount: '0',
           name: user?.name || '',
           email: user?.email || '',
           phone: user?.phone || '',
@@ -158,6 +216,75 @@ const PreviewProfile = () => {
   const vendorData = vendor?.vendor;
 
   const [isSaved, setIsSaved] = useState(false);
+
+  const [inquiryForm, setInquiryForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    weddingDate: '',
+    message: ''
+  });
+
+  const [inquiryLoading, setInquiryLoading] = useState(false);
+  const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
+
+  const userRecord = useSelector((state) => state.auth);
+  const userId = userRecord?.user?.id;
+
+  const handleInquiryChange = (e) => {
+    const { name, value } = e.target;
+    setInquiryForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+
+    if (!userId) {
+      toast.error('Please login to send an inquiry');
+      return;
+    }
+
+    if (userRecord?.user?.role === 'vendor') {
+      toast.error('Vendors cannot send inquiries');
+      return;
+    }
+
+    // Validate required fields
+    if (!inquiryForm.name || !inquiryForm.email || !inquiryForm.phone || !inquiryForm.message) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setInquiryLoading(true);
+    try {
+      await addUserInquiryMessage({
+        userId,
+        vendorId: vendorData._id,
+        name: inquiryForm.name,
+        email: inquiryForm.email,
+        phone: inquiryForm.phone,
+        weddingDate: inquiryForm.weddingDate,
+        message: inquiryForm.message
+      }).unwrap();
+
+      toast.success('Inquiry sent successfully!');
+      setInquiryForm({
+        name: '',
+        email: '',
+        phone: '',
+        weddingDate: '',
+        message: ''
+      });
+    } catch (err) {
+      console.error('Failed to send inquiry:', err);
+      toast.error(err.data?.message || 'Failed to send inquiry. Please try again.');
+    } finally {
+      setInquiryLoading(false);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -347,6 +474,36 @@ const PreviewProfile = () => {
             {formErrors.eventType && <span className="text-red-500 text-xs mt-1">{formErrors.eventType}</span>}
           </label>
 
+          <label className="sm:col-span-2">
+            <span className="block mb-1">Package Name *</span>
+            <select 
+              value={bookingForm.packageName}
+              onChange={(e) => {
+                console.log('Selected package ID:', e.target.value); // Debug log
+                const selectedPackage = packages.find(pkg => pkg._id === e.target.value);
+                console.log('Found package:', selectedPackage); // Debug log
+                handleBookingInputChange('packageName', e.target.value);
+                if (selectedPackage) {
+                  handleBookingInputChange('plannedAmount', selectedPackage.price || 0);
+                }
+              }}
+              className={`w-full border rounded px-3 py-2 ${formErrors.packageName ? 'border-red-500' : ''}`}
+            >
+              <option value="">Select Package</option>
+              {Array.isArray(packages) && packages.length > 0 ? (
+                packages.map((pkg) => (
+                  <option key={pkg._id} value={pkg._id}>
+                    {pkg.packageName} - ₹{pkg.price?.toLocaleString('en-IN')} 
+                    {pkg.offerPrice ? ` (Offer: ₹${pkg.offerPrice?.toLocaleString('en-IN')})` : ''}
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>No packages available</option>
+              )}
+            </select>
+            {formErrors.packageName && <span className="text-red-500 text-xs mt-1">{formErrors.packageName}</span>}
+          </label>
+
           <label>
             <span className="block mb-1">Wedding Date *</span>
             <input 
@@ -397,12 +554,21 @@ const PreviewProfile = () => {
             <input 
               type="number" 
               value={bookingForm.plannedAmount}
-              onChange={(e) => handleBookingInputChange('plannedAmount', e.target.value)}
-              placeholder="Enter planned amount"
-              className={`w-full border rounded px-3 py-2 ${formErrors.plannedAmount ? 'border-red-500' : ''}`}
-              min="0"
+              className={`w-full border rounded px-3 py-2 bg-gray-50 ${formErrors.plannedAmount ? 'border-red-500' : ''}`}
+              readOnly
             />
             {formErrors.plannedAmount && <span className="text-red-500 text-xs mt-1">{formErrors.plannedAmount}</span>}
+            {(() => {
+              const selectedPackage = packages.find(pkg => pkg._id === bookingForm.packageName);
+              if (selectedPackage?.offerPrice && selectedPackage.offerPrice < selectedPackage.price) {
+                return (
+                  <span className="text-green-600 text-xs mt-1 block">
+                    Special offer price: ₹{selectedPackage.offerPrice.toLocaleString('en-IN')}
+                  </span>
+                );
+              }
+              return null;
+            })()}
           </label>
 
           <label className="sm:col-span-2">
@@ -451,34 +617,58 @@ const PreviewProfile = () => {
         </div>
 
         {/* Right side: Inquiry + Contact Info */}
-        <div className="space-y-6">
+        <div className="space-y-6  ">
           {/* Inquiry Form */}
           <div className="border rounded-lg p-4 shadow-sm bg-white">
             <h3 className="font-semibold text-lg mb-3">Send Inquiry</h3>
-            <form className="space-y-3 text-sm">
+            <form className="space-y-3 text-sm" onSubmit={handleInquirySubmit}>
               <div>
                 <label className="block mb-1">Your Name</label>
-                <input type="text" placeholder="John and Jane Doe" className="w-full border rounded px-3 py-2" />
+
+                <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
                 <label className="block mb-1">Your Email</label>
-                <input type="email" placeholder="you@example.com" className="w-full border rounded px-3 py-2" />
+                <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
                 <label className="block mb-1">Phone Number</label>
-                <input type="tel" placeholder="+91 98765 43210" className="w-full border rounded px-3 py-2" />
+                <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
+                {/* <label className="block mb-1">useId</label> */}
+                <input type="hidden" value={userId} className="w-full border rounded px-3 py-2" />
+              </div>
+              <input type="hidden" name="vendorId" value={vendorData._id} />
+              <div>
                 <label className="block mb-1">Wedding Date</label>
-                <input type="date" className="w-full border rounded px-3 py-2" />
+
+                <input
+                  type="date"
+                  name="weddingDateRaw"
+                  onChange={(e) => {
+                    const [year, month, day] = e.target.value.split("-");
+                    const formatted = `${day}/${month}/${year}`;
+                    setInquiryForm(prev => ({
+                      ...prev,
+                      weddingDate: formatted
+                    }));
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                />
+
               </div>
               <div>
                 <label className="block mb-1">Message</label>
-                <textarea rows="3" placeholder="Tell us about your wedding and requirements..." className="w-full border rounded px-3 py-2" />
+                <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
-              <button type="submit" className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">Send Inquiry</button>
+              <button type="submit"
+                disabled={!userId || inquiryLoading || userRecord?.user?.role === 'vendor'}
+                className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">
+                {inquiryLoading ? 'Sending...' : 'Send Inquiry'}</button>
             </form>
           </div>
+
 
           {/* Contact Info */}
           <div className="border rounded-lg p-4 shadow-sm bg-white w-full ">

@@ -53,6 +53,16 @@ const formatTimeAgo = (date) => {
   return 'Just now';
 };
 
+const getLast30Days = () => {
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  return days;
+};
+
 const SubDashboard = () => {
   const navigate = useNavigate();
 
@@ -63,54 +73,29 @@ const SubDashboard = () => {
     data: activityData,
     isLoading: activityLoading,
     error: activityError,
-    isSuccess,
-    isError,
+    isSuccess: activitySuccess,
+    isError: activityIsError,
   } = useGetRecentActivitiesQuery();
 
-  if (usersLoading || vendorsLoading || activityLoading) {
-    return <Loader fullScreen />;
-  }
+  useEffect(() => {
+    if (activityIsError && activityError) {
+      console.error('Activity Error:', activityError);
+    }
+  }, [activityIsError, activityError]);
 
   const formattedActivity = useMemo(() => {
-    console.log('Activity Data:', activityData);
-    console.log('Is Success:', isSuccess);
-    
-    if (!isSuccess || !activityData?.activities) {
-      console.log('No activities found or query not successful');
+    if (!activitySuccess || !activityData?.activities) {
       return [];
     }
     
-    const formatted = activityData.activities
-      .map(act => {
-        const formattedActivity = {
-          ...act,
-          time: formatTimeAgo(act.createdAt),
-          color: getColor(act.type)
-        };
-        console.log('Formatted activity:', formattedActivity);
-        return formattedActivity;
-      })
+    return activityData.activities
+      .map(act => ({
+        ...act,
+        time: formatTimeAgo(act.createdAt),
+        color: getColor(act.type)
+      }))
       .slice(0, 10);
-      
-    console.log('Final formatted activities:', formatted);
-    return formatted;
-  }, [activityData, isSuccess]);
-
-  useEffect(() => {
-    if (isError) {
-      console.error('Activity Error:', activityError);
-    }
-  }, [isError, activityError]);
-
-  const getLast30Days = () => {
-    const days = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      days.push(d.toISOString().slice(0, 10));
-    }
-    return days;
-  };
+  }, [activityData, activitySuccess]);
 
   const analyticsData = useMemo(() => {
     const last30 = getLast30Days();
@@ -141,33 +126,16 @@ const SubDashboard = () => {
     }));
   }, [usersData, vendorsData]);
 
-  const recentUsers = useMemo(() => {
-    return (
-      usersData?.users
-        ?.slice()
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 3)
-        .map(user => ({
-          name: user.name || user.fullName || 'No Name',
-          email: user.email || 'No Email',
-          type: user.role === 'vendor' ? 'Vendor' : 'User',
-          date: new Date(user.createdAt).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'numeric',
-            year: 'numeric',
-          }),
-        })) || []
-    );
-  }, [usersData]);
-
   const categories = useMemo(() => {
+    if (!vendorsData?.vendors) return [];
+    
     const counts = {};
-    vendorsData?.vendors?.forEach(v => {
+    vendorsData.vendors.forEach(v => {
       const cat = v.category || 'Other';
       counts[cat] = (counts[cat] || 0) + 1;
     });
 
-    const total = vendorsData?.vendors?.length || 1;
+    const total = vendorsData.vendors.length || 1;
     return Object.entries(counts)
       .map(([name, count]) => ({
         name,
@@ -175,6 +143,29 @@ const SubDashboard = () => {
       }))
       .sort((a, b) => b.percent - a.percent);
   }, [vendorsData]);
+
+  const recentUsers = useMemo(() => {
+    if (!usersData?.users) return [];
+    
+    return usersData.users
+      .slice()
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 3)
+      .map(user => ({
+        name: user.name || user.fullName || 'No Name',
+        email: user.email || 'No Email',
+        type: user.role === 'vendor' ? 'Vendor' : 'User',
+        date: new Date(user.createdAt).toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'numeric',
+          year: 'numeric',
+        }),
+      }));
+  }, [usersData]);
+
+  if (usersLoading || vendorsLoading || activityLoading) {
+    return <Loader fullScreen />;
+  }
 
   const tasks = [
     {
