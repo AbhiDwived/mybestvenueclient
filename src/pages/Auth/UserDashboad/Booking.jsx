@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Plus, DollarSign, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Plus, DollarSign, Trash2, AlertCircle } from 'lucide-react';
 import { useGetUserBookingsQuery, useCreateBookingMutation, useDeleteBookingMutation, useGetAvailableVendorsQuery } from '../../../features/bookings/bookingAPI';
 import { useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
 import { useSelector, useDispatch } from 'react-redux';
@@ -49,6 +49,7 @@ const BookingBudget = () => {
   // Local state
   const [vendorPackages, setVendorPackages] = useState([]);
   const [isLoadingPackages, setIsLoadingPackages] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState({
     vendorId: '',
     vendorName: '',
@@ -117,6 +118,21 @@ const BookingBudget = () => {
 
   // Update vendor name and fetch packages when vendor ID changes
   const handleVendorChange = (vendorId) => {
+    // Clear vendor name error when changing vendor
+    setFormErrors(prev => ({ ...prev, vendorName: '' }));
+    
+    if (vendorId === 'custom') {
+      setFormData(prev => ({
+        ...prev,
+        vendorId: 'custom',
+        vendorName: '',
+        selectedPackage: '',
+        plannedAmount: ''
+      }));
+      setVendorPackages([]);
+      return;
+    }
+    
     const selectedVendor = availableVendors.find(vendor => vendor._id === vendorId);
     if (selectedVendor) {
       setFormData(prev => ({
@@ -152,60 +168,102 @@ const BookingBudget = () => {
         selectedPackage: packageId,
         plannedAmount: selectedPackage.offerPrice || selectedPackage.price || ''
       }));
+      // Clear planned amount error when selecting a package
+      setFormErrors(prev => ({ ...prev, plannedAmount: '' }));
     }
   };
 
   const handleInputChange = (field, value) => {
+    // Clear error for the field being changed
+    setFormErrors(prev => ({ ...prev, [field]: '' }));
+    
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
+  const validateForm = () => {
+    const errors = {};
+    
+    // Check vendor name
+    if (!formData.vendorName || !formData.vendorName.trim()) {
+      errors.vendorName = 'Vendor name is required';
+    }
+    
+    // Check event type
+    if (!formData.eventType) {
+      errors.eventType = 'Event type is required';
+    }
+    
+    // Check planned amount
+    if (!formData.plannedAmount) {
+      errors.plannedAmount = 'Planned amount is required';
+    } else if (isNaN(parseFloat(formData.plannedAmount)) || parseFloat(formData.plannedAmount) <= 0) {
+      errors.plannedAmount = 'Please enter a valid amount';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleAddBooking = async () => {
-    if (formData.vendorName && formData.eventType && formData.plannedAmount) {
-      try {
-        await createBooking({
-          vendorId: formData.vendorId === 'custom' ? null : formData.vendorId,
-          businessName: formData.vendorName,
-          packageId: formData.selectedPackage || null,
-          packageName: vendorPackages.find(pkg => pkg._id === formData.selectedPackage)?.packageName || null,
-          eventType: formData.eventType,
-          eventDate: formData.eventDate || null,
-          venue: formData.venue || '',
-          guestCount: parseInt(formData.guestCount) || 0,
-          plannedAmount: parseFloat(formData.plannedAmount) || 0,
-          userName: formData.name,
-          userEmail: formData.email,
-          userPhone: formData.phone,
-          notes: formData.notes || ''
-        }).unwrap();
+    if (!validateForm()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    try {
+      const bookingData = {
+        vendorId: formData.vendorId === 'custom' ? null : formData.vendorId,
+        vendorName: formData.vendorName,
+        eventType: formData.eventType,
+        eventDate: formData.eventDate || null,
+        venue: formData.venue || '',
+        guestCount: parseInt(formData.guestCount) || 0,
+        plannedAmount: parseFloat(formData.plannedAmount) || 0,
+        notes: formData.notes || ''
+      };
 
-        // Reset form
-        setFormData({
-          vendorId: '',
-          vendorName: '',
-          eventType: '',
-          eventDate: '',
-          venue: '',
-          guestCount: '',
-          plannedAmount: '',
-          selectedPackage: '',
-          name: user?.name || '',
-          email: user?.email || '',
-          phone: user?.phone || '',
-          notes: ''
-        });
-
-        // Clear filters
-        dispatch(clearFilters());
-
-        toast.success('Booking added successfully');
-      } catch (err) {
-        toast.error(`Error adding booking: ${err.data?.message || 'Unknown error'}`);
+      // Add package info if selected
+      if (formData.selectedPackage) {
+        const selectedPackage = vendorPackages.find(pkg => pkg._id === formData.selectedPackage);
+        if (selectedPackage) {
+          bookingData.packageId = formData.selectedPackage;
+          bookingData.packageName = selectedPackage.packageName;
+        }
       }
-    } else {
-      toast.warning('Please fill in all required fields');
+
+      console.log('Sending booking data:', bookingData);
+      
+      const result = await createBooking(bookingData).unwrap();
+      
+      // Reset form
+      setFormData({
+        vendorId: '',
+        vendorName: '',
+        eventType: '',
+        eventDate: '',
+        venue: '',
+        guestCount: '',
+        plannedAmount: '',
+        selectedPackage: '',
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        notes: ''
+      });
+      
+      // Clear errors
+      setFormErrors({});
+
+      // Clear filters
+      dispatch(clearFilters());
+
+      toast.success('Booking added successfully');
+    } catch (err) {
+      console.error('Booking error:', err);
+      toast.error(`Error adding booking: ${err.data?.message || 'Unknown error'}`);
     }
   };
 
@@ -277,13 +335,13 @@ const BookingBudget = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label htmlFor="vendorName" className="block text-sm font-medium text-gray-700">
-                  Vendor Name
+                  Vendor Name <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="vendorId"
                   value={formData.vendorId}
                   onChange={(e) => handleVendorChange(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                  className={`w-full px-4 py-2 bg-white/50 border ${formErrors.vendorName ? 'border-red-500' : 'border-gray-200'} rounded focus:border-purple-400 focus:ring focus:ring-purple-400`}
                 >
                   <option value="">Select a vendor</option>
                   {isLoadingVendors ? (
@@ -303,8 +361,13 @@ const BookingBudget = () => {
                     placeholder="Enter vendor name"
                     value={formData.vendorName}
                     onChange={(e) => handleInputChange('vendorName', e.target.value)}
-                    className="w-full mt-2 px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                    className={`w-full mt-2 px-4 py-2 bg-white/50 border ${formErrors.vendorName ? 'border-red-500' : 'border-gray-200'} rounded focus:border-purple-400 focus:ring focus:ring-purple-400`}
                   />
+                )}
+                {formErrors.vendorName && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center">
+                    <AlertCircle className="h-3 w-3 mr-1" /> {formErrors.vendorName}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
@@ -348,19 +411,24 @@ const BookingBudget = () => {
               </div>
               <div className="space-y-2">
                 <label htmlFor="eventType" className="block text-sm font-medium text-gray-700">
-                  Event Type *
+                  Event Type <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="eventType"
                   value={formData.eventType}
                   onChange={(e) => handleInputChange('eventType', e.target.value)}
-                  className="w-full px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                  className={`w-full px-4 py-2 bg-white/50 border ${formErrors.eventType ? 'border-red-500' : 'border-gray-200'} rounded focus:border-purple-400 focus:ring focus:ring-purple-400`}
                 >
                   <option value="">Select type</option>
                   {eventTypes.map(type => (
                     <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
+                {formErrors.eventType && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center">
+                    <AlertCircle className="h-3 w-3 mr-1" /> {formErrors.eventType}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <label htmlFor="package" className="block text-sm font-medium text-gray-700">
@@ -387,7 +455,7 @@ const BookingBudget = () => {
               </div>
               <div className="space-y-2">
                 <label htmlFor="plannedAmount" className="block text-sm font-medium text-gray-700">
-                  Final Amount (₹) *
+                  Final Amount (₹) <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="plannedAmount"
@@ -395,8 +463,13 @@ const BookingBudget = () => {
                   placeholder="50000"
                   value={formData.plannedAmount}
                   onChange={(e) => handleInputChange('plannedAmount', e.target.value)}
-                  className="w-full px-4 py-2 bg-white/50 border border-gray-200 rounded focus:border-purple-400 focus:ring focus:ring-purple-400"
+                  className={`w-full px-4 py-2 bg-white/50 border ${formErrors.plannedAmount ? 'border-red-500' : 'border-gray-200'} rounded focus:border-purple-400 focus:ring focus:ring-purple-400`}
                 />
+                {formErrors.plannedAmount && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center">
+                    <AlertCircle className="h-3 w-3 mr-1" /> {formErrors.plannedAmount}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700">
