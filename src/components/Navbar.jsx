@@ -140,6 +140,7 @@ const Navbar = () => {
         {renderLink('/Wedding_Venues', <FiUser size={16} />, 'Venues')}
         {renderLink('/IdeaBlog', <FiPackage size={16} />, 'Blogs')}
         {renderLink('/corporate', <FiPackage size={16} />, 'Corporate')}
+        {renderLink('/about', <FiPackage size={16} />, 'About')}
         <hr />
 
         {!isUserLoggedIn ? (
@@ -229,6 +230,7 @@ const Navbar = () => {
           {renderLink('/Wedding_Venues', 'Venues')}
           {renderLink('/IdeaBlog', 'Blogs')}
           {renderLink('/corporate', 'Corporate')}
+          {renderLink('/about', 'About')}
 
           {!isUserLoggedIn ? (
             <>

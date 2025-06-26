@@ -10,6 +10,9 @@ import AdminLayout from '../layouts/AdminLayout';
 import Home from '../pages/Home/Home';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import AboutUs from '../pages/Home/AboutUs';
+
+
 
 // Footer
 import Terms from '../components/Terms';
@@ -127,6 +130,7 @@ import ContactUs from '../pages/Corporate/ContactUs';
 
 
 
+
 const index = () => {
     return (
         <Router>
@@ -137,6 +141,8 @@ const index = () => {
                     <Route path="/navbar" element={<Navbar />} />
                     <Route path="/footer" element={<Footer />} />
                     <Route path="/search" element={<SearchResults />} />
+
+                    <Route path="/about" element={<AboutUs />} />
 
                     {/* Footer */}
                     <Route path='/terms' element={<Terms />} />
