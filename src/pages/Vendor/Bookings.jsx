@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaCalendarAlt, FaMapMarkerAlt, FaRegEdit } from "react-icons/fa";
 import { IoEyeOutline } from "react-icons/io5";
 import { ImCross } from "react-icons/im";
@@ -6,17 +6,26 @@ import { FiCheckCircle } from "react-icons/fi";
 import { BsExclamationCircle } from "react-icons/bs";
 import { useSelector } from 'react-redux';
 import { useGetVendorBookingsListQuery, useUpdateVendorBookingMutation, useGetUserListByIdQuery, useCreateuserBookingByVendorMutation } from "../../features/vendors/vendorAPI";
+import { useGetUserProfileByIdQuery } from "../../features/auth/authAPI";
 import { toast } from 'react-toastify';
 import Loader from "../../components/{Shared}/Loader";
 
+
 export default function BookingManagement() {
   const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [userIdSearch, setUserIdSearch] = useState('');
   const [shouldSearch, setShouldSearch] = useState(false);
+  const [cardStatusFilter, setCardStatusFilter] = useState('');
+
+  const cardRef = useRef(null);
+
+
 
   // Get vendor info from Redux store
   const vendor = useSelector((state) => state.vendor.vendor);
@@ -26,11 +35,7 @@ export default function BookingManagement() {
     return <div className="text-center mt-10 text-red-500">Error: Vendor ID not found. Please log in again.</div>;
   }
 
-  // Remove unnecessary user state
-  // const user = useSelector((state) => state.auth.user);
-  // const userId = user?._id || user?.id;
-  // console.log("user object:", user);
-  // console.log("userId:", userId);
+
 
   // API queries and mutations
   const { data, isLoading, error, refetch } = useGetVendorBookingsListQuery(vendorId);
@@ -73,11 +78,50 @@ export default function BookingManagement() {
     completed: bookings.filter(b => b.status?.toLowerCase() === 'completed').length
   };
 
+
+  const handleStatusChange = async (bookingId, newStatus) => {
+    try {
+      await updateVendorBooking({
+        bookingId,
+        bookingData: { status: newStatus }
+      }).unwrap();
+      toast.success("Booking status updated successfully!");
+      refetch();
+    } catch (error) {
+      toast.error(`Failed to update booking status: ${error.message || 'Unknown error'}`);
+    }
+  };
+
   const filteredBookings = bookings.filter((booking) => {
     const matchesName = booking?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
-    const matchesStatus = statusFilter === 'All Status' || booking?.status === statusFilter;
-    return matchesName && matchesStatus;
+
+    const matchesStatus = 
+      statusFilter === 'All Status' ? true :
+      booking?.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    const matchesCardStatus = 
+      !cardStatusFilter ? true :
+      booking?.status?.toLowerCase() === cardStatusFilter.toLowerCase();
+
+    return matchesName && matchesStatus && matchesCardStatus;
   });
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cardRef.current && !cardRef.current.contains(event.target)) {
+        setCardStatusFilter('');
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
 
   const handleModalClose = () => {
     setShowModal(false);
@@ -113,7 +157,7 @@ export default function BookingManagement() {
 
       const response = await createBooking(bookingData).unwrap();
       toast.success("Booking created successfully!");
-      refetch(); // Refresh the bookings list
+      refetch();
       handleModalClose();
     } catch (error) {
       toast.error(`Failed to create booking: ${error.message || 'Unknown error'}`);
@@ -145,6 +189,13 @@ export default function BookingManagement() {
     }
   };
 
+  const cardStatusLabelMap = {
+  '': 'Total Bookings',
+  'pending': 'Pending Bookings',
+  'confirmed': 'Confirmed Bookings',
+  'completed': 'Completed Bookings'
+};
+
   useEffect(() => {
     if (userList && shouldSearch && userList.result) {
       const user = userList.result;
@@ -157,6 +208,55 @@ export default function BookingManagement() {
       setShouldSearch(false);
     }
   }, [userList, shouldSearch]);
+
+  const stats = [
+    { 
+      title: 'Total Bookings', 
+      count: overviewStats.total, 
+      type: '', 
+      color: 'blue', 
+      gradient: 'from-blue-50 to-blue-100',
+      onClick: () => setCardStatusFilter('')
+    },
+    { 
+      title: 'Pending', 
+      count: overviewStats.pending, 
+      type: 'pending', 
+      color: 'yellow', 
+      gradient: 'from-yellow-50 to-yellow-100',
+      onClick: () => setCardStatusFilter('pending')
+    },
+    { 
+      title: 'Confirmed', 
+      count: overviewStats.confirmed, 
+      type: 'confirmed', 
+      color: 'green', 
+      gradient: 'from-green-50 to-green-100',
+      onClick: () => setCardStatusFilter('confirmed')
+    },
+    { 
+      title: 'Completed', 
+      count: overviewStats.completed, 
+      type: 'completed', 
+      color: 'purple', 
+      gradient: 'from-purple-50 to-purple-100',
+      onClick: () => setCardStatusFilter('completed')
+    }
+  ];
+
+  // Get user profile data
+  const { data: userProfileData, isLoading: isProfileLoading } = useGetUserProfileByIdQuery(selectedUserId, {
+    skip: !selectedUserId || !showViewModal,
+  });
+
+  const handleViewProfile = (userId) => {
+    if (!userId) {
+      toast.error("User ID not found");
+      return;
+    }
+    setSelectedUserId(userId);
+    setShowViewModal(true);
+  };
 
   if (!bookings.length) {
     return <p className="text-center mt-10 text-gray-500">No bookings found</p>;
@@ -177,38 +277,37 @@ export default function BookingManagement() {
   return (
     <div className="p-2 bg-gray-50 min-h-screen sm:m-6">
       {/* Booking Overview */}
-      <div className="border rounded-lg p-4 mb-6 bg-white">
-        <h2 className="text-lg font-semibold mb-4">Booking Overview</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-blue-50 text-center p-2 rounded h-28">
-            <h2 className="text-xl font-bold text-blue-600">{overviewStats.total}</h2>
-            <p className="text-sm">Total Bookings</p>
+      <div className="bg-white rounded-lg shadow-sm px-4 py-3 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-xl font-semibold">Bookings Management</h2>
+            <p className="text-sm text-gray-500">View and manage all venue bookings</p>
           </div>
-          <div className="bg-yellow-50 text-center p-2 rounded h-28">
-            <h2 className="text-xl font-bold text-yellow-600">{overviewStats.pending}</h2>
-            <p className="text-sm">Pending</p>
-          </div>
-          <div className="bg-green-50 text-center p-2 rounded h-28">
-            <h2 className="text-xl font-bold text-green-600">{overviewStats.confirmed}</h2>
-            <p className="text-sm">Confirmed</p>
-          </div>
-          <div className="bg-purple-50 text-center p-2 rounded h-28">
-            <h2 className="text-xl font-bold text-purple-600">{overviewStats.completed}</h2>
-            <p className="text-sm">Completed</p>
-          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {stats.map((stat) => (
+            <div
+              key={stat.type}
+              onClick={stat.onClick}
+              className={`bg-gradient-to-r ${stat.gradient} px-4 py-2.5 rounded-lg cursor-pointer transition-all duration-300
+                ${cardStatusFilter === stat.type
+                  ? `shadow-md transform scale-[1.02] border border-${stat.color}-200` 
+                  : 'hover:shadow-md hover:scale-[1.01] border border-transparent'}`}
+            >
+              <p className={`text-sm text-${stat.color}-600 mb-1 font-bold`}>{stat.title}</p>
+              <p className={`text-xl font-semibold text-${stat.color}-700`}>{stat.count}</p>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Heading and Add Button */}
       <div className="flex justify-between items-center mb-6">
-        <p className="sm:text-2xl text-[15px] font-semibold">Booking Management</p>
-        {/* <button
-          onClick={() => setShowModal(true)}
-          className="bg-[#19599A] text-white px-3 py-1 rounded hover:bg-[#19599A] whitespace-nowrap  sm:w-auto sm:ml-0 ml-4 text-sm sm:text-base "
-        >
-          + Add Booking
-        </button> */}
-
+        <p className="sm:text-2xl text-[15px] font-semibold">
+          {cardStatusFilter ? `${cardStatusFilter.charAt(0).toUpperCase() + cardStatusFilter.slice(1)} Bookings` : 'All Bookings'}
+        </p>
         <button
           onClick={() => {
             setIsEditMode(false);
@@ -230,29 +329,9 @@ export default function BookingManagement() {
         >
           + Add Booking
         </button>
-
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6 w-full p-2 rounded-md">
-        <input
-          type="text"
-          placeholder="Search bookings..."
-          className="w-full border border-gray-300 rounded px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-gray-800"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <select
-          className="w-full lg:w-60 border border-gray-300 rounded px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-gray-800"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option>All Status</option>
-          <option>Confirmed</option>
-          <option>Pending</option>
-          <option>Completed</option>
-        </select>
-      </div>
+      
 
       {/* Booking Cards */}
       {filteredBookings.map((booking) => (
@@ -276,11 +355,16 @@ export default function BookingManagement() {
               </div>
             </div>
             <div className="flex items-center gap-2 md:mt-2 ml-auto md:w[70px]">
-              <button className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300" title="View">
+              <button 
+                onClick={() => handleViewProfile(booking?.user?._id)}
+                className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300" 
+                title="View"
+                disabled={!booking?.user?._id}
+              >
                 <IoEyeOutline className="w-[12px] sm:w-[15px]" />
               </button>
-              <button 
-                className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300" 
+              <button
+                className="hover:bg-[#DEBF78] text-gray-600 rounded p-1 border border-gray-300"
                 title="Edit"
                 onClick={() => {
                   setIsEditMode(true);
@@ -301,7 +385,7 @@ export default function BookingManagement() {
               >
                 <FaRegEdit className="w-[12px] sm:w-[15px]" />
               </button>
-              <select 
+              <select
                 className="border border-gray-300 rounded-md text-[8px] sm:text-[10px] sm:w-[100px] w-[80px]"
                 value={booking?.status || 'pending'}
                 onChange={(e) => handleStatusChange(booking._id, e.target.value)}
@@ -340,6 +424,99 @@ export default function BookingManagement() {
           </div>
         </div>
       ))}
+
+      {/* View Profile Modal */}
+      {showViewModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 backdrop-blur-sm flex justify-center items-center px-2">
+          <div className="bg-white w-full max-w-2xl rounded-lg p-6 shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">User Profile</h2>
+              <button onClick={() => {
+                setShowViewModal(false);
+                setSelectedUserId(null);
+              }} className="text-gray-500 hover:text-gray-700">
+                <ImCross />
+              </button>
+            </div>
+
+            {isProfileLoading ? (
+              <div className="flex justify-center items-center h-40">
+                <Loader />
+              </div>
+            ) : userProfileData?.user ? (
+              <div className="space-y-4">
+                {/* Profile Photo */}
+                <div className="flex justify-center mb-4">
+                  {userProfileData.user.profilePhoto ? (
+                    <img 
+                      src={userProfileData.user.profilePhoto} 
+                      alt={`${userProfileData.user.name}'s profile`}
+                      className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-3xl text-gray-400">
+                        {userProfileData.user.name?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Name</p>
+                    <p className="font-medium">{userProfileData.user.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="font-medium">{userProfileData.user.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Phone</p>
+                    <p className="font-medium">{userProfileData.user.phone || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Location</p>
+                    <p className="font-medium">{userProfileData.user.location || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Wedding Date</p>
+                    <p className="font-medium">
+                      {userProfileData.user.weddingDate 
+                        ? new Date(userProfileData.user.weddingDate).toLocaleDateString() 
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Partner Name</p>
+                    <p className="font-medium">{userProfileData.user.partnerName || 'N/A'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500">About</p>
+                  <p className="font-medium">{userProfileData.user.about || 'No description available'}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500">
+                {userProfileData?.message || 'No profile data available'}
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedUserId(null);
+                }}
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (

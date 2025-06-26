@@ -24,7 +24,15 @@ export const authApi = createApi({
 
     //getUserProfile
     getUserProfile: builder.query({
-      query: () => `user/`,
+      query: () => `user/UserProfile`,
+    }),
+
+    // Get specific user profile by ID
+    getUserProfileById: builder.query({
+      query: (userId) => ({
+        url: `user/profile/${userId}`,
+        method: 'GET',
+      }),
     }),
 
     // Verify OTP after registration
@@ -140,6 +148,15 @@ export const authApi = createApi({
         body: userData,
       }),
     }),
+
+    // Send User Reply
+    sendUserReply: builder.mutation({
+      query: ({ userId, vendorId, message }) => ({
+        url: `/user/userInquiryMessage`,
+        method: "POST",
+        body: { userId, vendorId, message },
+      }),
+    }),
   }),
 });
 
@@ -160,5 +177,6 @@ export const {
   useSendUserReplyMutation,
   useSubmitContactFormMutation,
   useGetUserProfileQuery,
+  useGetUserProfileByIdQuery,
   useAddUserInquiryMessageMutation,
 } = authApi;

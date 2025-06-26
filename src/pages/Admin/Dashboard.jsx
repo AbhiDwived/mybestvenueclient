@@ -43,12 +43,12 @@ const AdminDashboard = () => {
 
   const tabs = [
     'Dashboard',
-    'Booking Management',
-    'User Management',
-    'Vendor Management',
+    'Booking',
+    'User',
+    'Vendor',
     'Pending Approvals',
     'Review Moderation',
-    'Content Management',
+    'Blogs',
     'Subscribers',
     'Contacts',
     
@@ -274,12 +274,12 @@ const AdminDashboard = () => {
       {/* Tab Content */}
       <div className="shadow-sm rounded-lg overflow-hidden">
         {activeTab === 'Dashboard' && <SubDashboard />}
-         {activeTab === 'Booking Management' && <BookingManagement />}
-        {activeTab === 'User Management' && <UserManagement />}
-        {activeTab === 'Vendor Management' && <VendorManagement />}
+         {activeTab === 'Booking' && <BookingManagement />}
+        {activeTab === 'User' && <UserManagement />}
+        {activeTab === 'Vendor' && <VendorManagement />}
         {activeTab === 'Pending Approvals' && <PendingApprovals />}
         {activeTab === 'Review Moderation' && <ReviewModeration />}
-        {activeTab === 'Content Management' && <ContentManagement />}
+        {activeTab === 'Blogs' && <ContentManagement />}
         {activeTab === 'Subscribers' && <SubscriberManagement />}
         {activeTab === 'Contacts' && <Contact />}
        

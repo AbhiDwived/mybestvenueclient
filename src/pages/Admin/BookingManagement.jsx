@@ -1,37 +1,56 @@
 import React, { useState } from 'react';
+import { useGetAllBookingsQuery, useUpdateBookingMutation } from '../../features/bookings/bookingAPI';
+import Loader from "../../components/{Shared}/Loader";
 
 const BookingManagement = () => {
   const [activeFilter, setActiveFilter] = useState('all');
 
-  // Static booking data
+  // RTK Query hooks
+  const { data: response, isLoading, error } = useGetAllBookingsQuery();
+  const [updateBooking] = useUpdateBookingMutation();
+
+  if (isLoading) return <Loader />;
+  if (error) return <div className="text-center text-red-500">Error: {error.message}</div>;
+
+  const allBookings = response?.data?.bookings || [];
+
+  // Organize bookings by status
   const bookingsData = {
-    all: [
-      { id: 'BK001', customer: 'John & Sarah Wedding', customerPhone: '+91 98765 43210', vendor: 'Royal Events & Co.', venue: 'Royal Palace', date: '15 Mar 2024', status: 'confirmed', amount: '₹1,45,000' },
-      { id: 'BK002', customer: 'Corporate Event - TechCo', customerPhone: '+91 87654 32109', vendor: 'Garden Events', venue: 'Garden View', date: '18 Mar 2024', status: 'pending', amount: '₹95,000' },
-      { id: 'BK003', customer: 'Birthday Celebration', customerPhone: '+91 76543 21098', vendor: 'Beach Weddings', venue: 'Beach Resort', date: '20 Mar 2024', status: 'cancelled', amount: '₹55,000' },
-      { id: 'BK004', customer: 'Anniversary Party', customerPhone: '+91 65432 10987', vendor: 'Sunset Events', venue: 'Sunset Villa', date: '22 Mar 2024', status: 'confirmed', amount: '₹75,000' },
-      { id: 'BK005', customer: 'Raj & Priya Wedding', customerPhone: '+91 54321 09876', vendor: 'Grand Celebrations', venue: 'Grand Ballroom', date: '25 Mar 2024', status: 'pending', amount: '₹1,25,000' }
-    ],
-    confirmed: [
-      { id: 'BK001', customer: 'John & Sarah Wedding', customerPhone: '+91 98765 43210', vendor: 'Royal Events & Co.', venue: 'Royal Palace', date: '15 Mar 2024', status: 'confirmed', amount: '₹1,45,000' },
-      { id: 'BK004', customer: 'Anniversary Party', customerPhone: '+91 65432 10987', vendor: 'Sunset Events', venue: 'Sunset Villa', date: '22 Mar 2024', status: 'confirmed', amount: '₹75,000' },
-      { id: 'BK007', customer: 'Corporate Gala', customerPhone: '+91 43210 98765', vendor: 'Business Events', venue: 'Business Center', date: '28 Mar 2024', status: 'confirmed', amount: '₹2,25,000' }
-    ],
-    pending: [
-      { id: 'BK002', customer: 'Corporate Event - TechCo', customerPhone: '+91 87654 32109', vendor: 'Garden Events', venue: 'Garden View', date: '18 Mar 2024', status: 'pending', amount: '₹95,000' },
-      { id: 'BK005', customer: 'Raj & Priya Wedding', customerPhone: '+91 54321 09876', vendor: 'Grand Celebrations', venue: 'Grand Ballroom', date: '25 Mar 2024', status: 'pending', amount: '₹1,25,000' }
-    ],
-    cancelled: [
-      { id: 'BK003', customer: 'Birthday Celebration', customerPhone: '+91 76543 21098', vendor: 'Beach Weddings', venue: 'Beach Resort', date: '20 Mar 2024', status: 'cancelled', amount: '₹55,000' },
-      { id: 'BK006', customer: 'Family Reunion', customerPhone: '+91 32109 87654', vendor: 'Mountain Events', venue: 'Mountain View', date: '27 Mar 2024', status: 'cancelled', amount: '₹65,000' }
-    ]
+    all: allBookings,
+    confirmed: allBookings.filter(b => b.status === 'confirmed'),
+    pending: allBookings.filter(b => b.status === 'pending'),
+    cancelled: allBookings.filter(b => b.status === 'cancelled')
   };
 
   const stats = [
-    { title: 'Total Bookings', count: '245', type: 'all', color: 'blue', gradient: 'from-blue-50 to-blue-100' },
-    { title: 'Confirmed', count: '180', type: 'confirmed', color: 'green', gradient: 'from-green-50 to-green-100' },
-    { title: 'Pending', count: '45', type: 'pending', color: 'yellow', gradient: 'from-yellow-50 to-yellow-100' },
-    { title: 'Cancelled', count: '20', type: 'cancelled', color: 'red', gradient: 'from-red-50 to-red-100' }
+    { 
+      title: 'Total Bookings', 
+      count: response?.data?.totalBookingsCount || '0', 
+      type: 'all', 
+      color: 'blue', 
+      gradient: 'from-blue-50 to-blue-100' 
+    },
+    { 
+      title: 'Confirmed', 
+      count: response?.data?.confirmedBookingsCount || '0', 
+      type: 'confirmed', 
+      color: 'green', 
+      gradient: 'from-green-50 to-green-100' 
+    },
+    { 
+      title: 'Pending', 
+      count: response?.data?.pendingBookingsCount || '0', 
+      type: 'pending', 
+      color: 'yellow', 
+      gradient: 'from-yellow-50 to-yellow-100' 
+    },
+    { 
+      title: 'Cancelled', 
+      count: allBookings.filter(b => b.status === 'cancelled').length, 
+      type: 'cancelled', 
+      color: 'red', 
+      gradient: 'from-red-50 to-red-100' 
+    }
   ];
 
   const getStatusBadge = (status) => {
@@ -54,13 +73,13 @@ const BookingManagement = () => {
     const csvData = [
       headers.join(','), // Add headers
       ...dataToExport.map(booking => [
-        booking.vendor,
-        booking.customer,
-        booking.customerPhone,
-        booking.venue,
-        booking.date,
+        booking.vendorName,
+        booking.user?.name || 'N/A',
+        booking.user?.phone || 'N/A',
+        booking.venue || 'N/A',
+        new Date(booking.eventDate).toLocaleDateString(),
         booking.status,
-        booking.amount
+        `₹${booking.plannedAmount?.toLocaleString('en-IN')}`
       ].join(','))
     ].join('\n');
 
@@ -110,7 +129,7 @@ const BookingManagement = () => {
                   ? `shadow-md transform scale-[1.02] border border-${stat.color}-200` 
                   : 'hover:shadow-md hover:scale-[1.01] border border-transparent'}`}
             >
-              <p className={`text-sm text-${stat.color}-600 mb-1 font-medium`}>{stat.title}</p>
+              <p className={`text-sm text-${stat.color}-600 mb-1 font-bold`}>{stat.title}</p>
               <p className={`text-xl font-semibold text-${stat.color}-700`}>{stat.count}</p>
             </div>
           ))}
@@ -119,7 +138,7 @@ const BookingManagement = () => {
         {/* Recent Bookings Section */}
         <div className="border border-gray-100 rounded-lg px-4 py-3 shadow-md hover:shadow-md transition-shadow duration-300">
           <div className="flex justify-between items-center mb-3">
-            <p className="text-sm font-medium">
+            <p className="text-sm font-bold">
               {activeFilter === 'all' ? 'Recent Bookings' : `${activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)} Bookings`}
             </p>
             <p className="text-xs text-gray-500">
@@ -130,29 +149,29 @@ const BookingManagement = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr>
-                  <th className="text-left font-medium text-gray-600 pb-3 pr-4 border-b border-gray-100">Vendor Name</th>
-                  <th className="text-left font-medium text-gray-600 pb-3 pr-4 border-b border-gray-100">Customer</th>
-                  <th className="text-left font-medium text-gray-600 pb-3 pr-4 border-b border-gray-100">Phone Number</th>
-                  <th className="text-left font-medium text-gray-600 pb-3 pr-4 border-b border-gray-100">Venue</th>
-                  <th className="text-left font-medium text-gray-600 pb-3 pr-4 border-b border-gray-100">Date</th>
-                  <th className="text-left font-medium text-gray-600 pb-3 pr-4 border-b border-gray-100">Status</th>
-                  <th className="text-left font-medium text-gray-600 pb-3 border-b border-gray-100">Amount</th>
+                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Vendor Name</th>
+                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Customer</th>
+                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Phone Number</th>
+                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Venue</th>
+                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Date</th>
+                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Status</th>
+                  <th className="text-left font-bold text-gray-800 pb-3 border-b border-gray-100">Amount</th>
                 </tr>
               </thead>
               <tbody className="text-gray-600">
                 {bookingsData[activeFilter].map((booking) => (
-                  <tr key={booking.id} className="border-b border-gray-50 hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent transition-colors duration-300">
-                    <td className="py-3 pr-4">{booking.vendor}</td>
-                    <td className="pr-4">{booking.customer}</td>
-                    <td className="pr-4">{booking.customerPhone}</td>
-                    <td className="pr-4">{booking.venue}</td>
-                    <td className="pr-4">{booking.date}</td>
+                  <tr key={booking._id} className="border-b border-gray-50 hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent transition-colors duration-300">
+                    <td className="py-3 pr-4 font-medium">{booking.vendorName}</td>
+                    <td className="pr-4 font-medium">{booking.user?.name || 'N/A'}</td>
+                    <td className="pr-4 font-medium">{booking.user?.phone || 'N/A'}</td>
+                    <td className="pr-4 font-medium">{booking.venue || 'N/A'}</td>
+                    <td className="pr-4 font-medium">{new Date(booking.eventDate).toLocaleDateString()}</td>
                     <td className="pr-4">
-                      <span className={`${getStatusBadge(booking.status)} px-3 py-1 rounded-full text-xs capitalize shadow-sm`}>
+                      <span className={`${getStatusBadge(booking.status)} px-3 py-1 rounded-full text-xs capitalize font-medium shadow-sm`}>
                         {booking.status}
                       </span>
                     </td>
-                    <td className="font-medium">{booking.amount}</td>
+                    <td className="font-medium">₹{booking.plannedAmount?.toLocaleString('en-IN')}</td>
                   </tr>
                 ))}
               </tbody>

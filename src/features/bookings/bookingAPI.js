@@ -14,6 +14,15 @@ export const bookingApi = createApi({
   }),
   tagTypes: ['Booking', 'Vendors'],
   endpoints: (builder) => ({
+    // Get all bookings (Admin)
+    getAllBookings: builder.query({
+      query: () => ({
+        url: '/booking/all',
+        method: 'GET',
+      }),
+      providesTags: ['Booking'],
+    }),
+
     // Get user's bookings
     getUserBookings: builder.query({
       query: () => ({
@@ -77,6 +86,7 @@ export const bookingApi = createApi({
 });
 
 export const {
+  useGetAllBookingsQuery,
   useGetUserBookingsQuery,
   useGetBookingByIdQuery,
   useCreateBookingMutation,
