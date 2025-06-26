@@ -3,11 +3,18 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL,
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', // Fallback URL
     prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token');
+      // Try to get admin token first
+      const adminToken = localStorage.getItem('adminToken');
+      // Fallback to regular token if admin token is not available
+      const token = adminToken || localStorage.getItem('token');
+      
       if (token) {
+        console.log('Using token for admin API call:', token.substring(0, 10) + '...');
         headers.set('Authorization', `Bearer ${token}`);
+      } else {
+        console.warn('No token found for admin API call');
       }
       return headers;
     },

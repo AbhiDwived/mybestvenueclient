@@ -3,15 +3,25 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const vendorApi = createApi({
   reducerPath: 'vendorApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: import.meta.env.VITE_API_URL,
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', // Fallback URL
     prepareHeaders: (headers, { getState }) => {
       // Try to get token from Redux state first
-      const token = getState().vendor.token;
-      // Fallback to localStorage if not in Redux state
-      const storedToken = localStorage.getItem('vendorToken');
+      const token = getState().vendor?.token;
+      // Try vendor token from localStorage
+      const vendorToken = localStorage.getItem('vendorToken');
+      // Try admin token from localStorage (for admin operations on vendors)
+      const adminToken = localStorage.getItem('adminToken');
+      // Regular user token as last resort
+      const userToken = localStorage.getItem('token');
       
-      if (token || storedToken) {
-        headers.set('Authorization', `Bearer ${token || storedToken}`);
+      // Use the first available token
+      const finalToken = token || vendorToken || adminToken || userToken;
+      
+      if (finalToken) {
+        console.log('Using token for vendor API call:', finalToken.substring(0, 10) + '...');
+        headers.set('Authorization', `Bearer ${finalToken}`);
+      } else {
+        console.warn('No token found for vendor API call');
       }
       return headers;
     },
@@ -119,10 +129,21 @@ export const vendorApi = createApi({
 
     // Get Vendor BY Id
     getVendorById: builder.query({
-      query: (vendorId) => ({
-        url: `/vendor/vendorbyId/${vendorId}`,
-        method: 'GET',
-      }),
+      query: (vendorId) => {
+        console.log('Fetching vendor profile for ID:', vendorId);
+        return {
+          url: `/vendor/vendorbyId/${vendorId}`,
+          method: 'GET',
+        };
+      },
+      transformResponse: (response, meta, arg) => {
+        console.log('Vendor profile API response:', response);
+        return response;
+      },
+      transformErrorResponse: (response, meta, arg) => {
+        console.error('Vendor profile API error:', response);
+        return response;
+      }
     }),
 
     // Get vendor inquiry list

@@ -234,7 +234,7 @@ const AdminDashboard = () => {
         {/* Scrollable Tabs Container */}
         <div
           id="tabs-container"
-          className="flex gap-3 lg:gap-1 overflow-x-auto scrollbar-hide p-1"
+          className="flex gap-3 lg:gap-1 overflow-x-auto scrollbar-hide "
         >
           {tabs.map((tab, i) => (
             <button
@@ -244,7 +244,7 @@ const AdminDashboard = () => {
                 localStorage.setItem('adminActiveTab', tab);
               }}
               style={{borderRadius:"5px"}}
-              className={`px-3 py-2 rounded-md font-medium text-xs sm:text-sm transition-colors duration-200 whitespace-nowrap ${tab === activeTab
+              className={`px-3 py-1 rounded-md font-medium text-xs sm:text-sm transition-colors duration-200 whitespace-nowrap ${tab === activeTab
                 ? 'bg-white text-black shadow-sm'
                 : 'text-gray-600 hover:bg-gray-100'
                 }`}

@@ -316,8 +316,8 @@ const PreviewProfile = () => {
       <div className="border rounded-lg p-4 shadow-sm bg-white flex flex-col md:flex-row md:items-start gap-4">
         {/* Profile Image */}
         <img
-          src={vendor?.profilePicture || mainProfile}
-          alt={vendor?.businessName}
+          src={vendor?.vendor?.profilePicture || vendor?.vendor?.profilePhoto || mainProfile}
+          alt={vendor?.vendor?.businessName || "Vendor Profile"}
           className="w-40 h-40 rounded-full object-cover"
         />
 

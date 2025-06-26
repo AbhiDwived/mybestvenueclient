@@ -75,25 +75,21 @@ const Footer = () => {
           <h5 className="text-lg font-semibold border-b border-blue-500">Quick Links</h5>
           <ul style={{ marginLeft: '-30px' }}>
             <li className='mt-7'><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
-            <li className='mt-2'><Link to="/planning-tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Wedding Venues</Link></li>
             <li className='mt-2'><Link to="/corporate" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Corporate Events</Link></li>
             <li className='mt-2'><Link to="/IdeaBlog" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Event Blog</Link></li>
-            <li className='mt-2'><Link to="/planning-tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Planning Tools</Link></li>
           </ul>
         </div>
         <AccordionSection title="Quick Links">
           <ul className="text-[#D1D5DB]">
             <li><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
-            <li className='mt-2'><Link to="/planning-tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Wedding Venues</Link></li>
             <li className='mt-2'><Link to="/corporate" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Corporate Events</Link></li>
             <li className='mt-2'><Link to="/IdeaBlog" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Event Blog</Link></li>
-            <li className='mt-2'><Link to="/planning-tools" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Planning Tools</Link></li>
           </ul>
         </AccordionSection>
 
         {/* Contact Info */}
         <div className="hidden sm:hidden md:block">
-          <h5 className="text-lg font-semibold border-b  border-blue-500 mb-4 pb-1"> <Link to='/contactUs' style={{textDecoration:'none', color:'white'}}>Contact Us</Link></h5>
+          <h5 className="text-lg font-semibold border-b  border-blue-500 mb-4 pb-1"> <Link to='/contactUs' style={{ textDecoration: 'none', color: 'white' }}>Contact Us</Link></h5>
           <ul className="text-md p-0 text-[#D1D5DB]">
             <li className='sm:text-[#D1D5DB] text-sm '><Link to="https://www.google.com/maps/dir/?api=1&destination=A-223%2C+Sector+151%2C+Noida%2C+Uttar+Pradesh+201310" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaLocationDot className="inline mr-2 " style={{ textDecoration: 'none', color: '#D1D5DB' }} />A-230, Sector-151, Near-148 metro station, Greater Noida, India, Uttar Pradesh code - 201310</Link></li>
             <li className="mt-3"><Link to="tel:9990555740" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" /> +91 9990555740</Link></li>
@@ -105,7 +101,7 @@ const Footer = () => {
             <li><Link to='https://www.google.com/maps/dir/?api=1&destination=A-223%2C+Sector+151%2C+Noida%2C+Uttar+Pradesh+201310' target="_blank"
               rel="noopener noreferrer"
               style={{ textDecoration: 'none' }}
-              className="inline-block transition text-black duration-300">
+              className="inline-block transition text-white duration-300">
               A-230, Sector-151, Near-148 metro station, Greater Noida, India, <br /> Uttar Pradesh code - 201310
             </Link></li>
             <li className="mt-2"><Link to="tel:9990555740" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" /> +91 9990555740</Link></li>
@@ -118,17 +114,17 @@ const Footer = () => {
           <h5 className="text-lg font-semibold border-b border-blue-500 mb-4 pb-1">Subscribe</h5>
           <p className="text-lg mb-4 text-[#D1D5DB]">Stay updated with the latest venues, event trends, and special offers.</p>
           <form onSubmit={handleSubscribe}>
-            <input 
-              type="email" 
-              placeholder="Your email address" 
+            <input
+              type="email"
+              placeholder="Your email address"
               className="w-full px-4 py-2 bg-gray-700 text-white rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
             />
-            <button 
-              type="submit" 
-              style={{ borderRadius: '5px' }} 
+            <button
+              type="submit"
+              style={{ borderRadius: '5px' }}
               className={`w-full bg-[#075fac] hover:bg-[#6B9AC4] px-4 py-2 transition ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={isLoading}
             >
@@ -139,17 +135,17 @@ const Footer = () => {
         <AccordionSection title="Subscribe">
           <p className="text-[#D1D5DB] mb-3 text-sm">Stay updated with the latest venues, event trends, and special offers.</p>
           <form onSubmit={handleSubscribe}>
-            <input 
-              type="email" 
-              placeholder="Your email address" 
+            <input
+              type="email"
+              placeholder="Your email address"
               className="w-full px-4 py-2 bg-gray-700 text-white rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
             />
-            <button 
-              type="submit" 
-              style={{ borderRadius: '5px' }} 
+            <button
+              type="submit"
+              style={{ borderRadius: '5px' }}
               className={`w-full bg-[#075fac] hover:bg-[#6B9AC4] px-4 py-2 transition ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={isLoading}
             >

@@ -146,7 +146,7 @@ const TestimonialSection = () => {
   };
 
   return (
-    <section className="mt-20">
+    <>
       <div className=" mx-auto px-2">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-4 font-playfair">What Our Clients Say</h2>
@@ -229,7 +229,7 @@ const TestimonialSection = () => {
           </button>
         </div>
       </div>
-    </section>
+    </>
   );
 };
 

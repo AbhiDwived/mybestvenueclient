@@ -3,11 +3,14 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL,
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', // Fallback URL
     prepareHeaders: (headers, { getState }) => {
       const token = localStorage.getItem("token");
       if (token) {
+        console.log('Using token for auth API call:', token.substring(0, 10) + '...');
         headers.set("Authorization", `Bearer ${token}`);
+      } else {
+        console.warn('No token found for auth API call');
       }
       return headers;
     },
@@ -29,10 +32,21 @@ export const authApi = createApi({
 
     // Get specific user profile by ID
     getUserProfileById: builder.query({
-      query: (userId) => ({
-        url: `user/profile/${userId}`,
-        method: 'GET',
-      }),
+      query: (userId) => {
+        console.log('Fetching user profile for ID:', userId);
+        return {
+          url: `user/profile/${userId}`,
+          method: 'GET',
+        };
+      },
+      transformResponse: (response, meta, arg) => {
+        console.log('User profile API response:', response);
+        return response;
+      },
+      transformErrorResponse: (response, meta, arg) => {
+        console.error('User profile API error:', response);
+        return response;
+      }
     }),
 
     // Verify OTP after registration

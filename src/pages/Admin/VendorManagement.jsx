@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaStar, FaPen, FaTrash } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import {
   useGetAllVendorsQuery,
   useDeleteVendorByAdminMutation,
@@ -32,6 +33,7 @@ const categories = [
 ];
 
 const VendorManagement = () => {
+  const navigate = useNavigate();
   const { data: vendorsData, isLoading, isError } = useGetAllVendorsQuery();
   const [deleteVendor] = useDeleteVendorByAdminMutation();
 
@@ -59,8 +61,29 @@ const VendorManagement = () => {
   const paginatedVendors = filteredVendors.slice(startIdx, startIdx + vendorsPerPage);
   const totalPages = Math.ceil(filteredVendors.length / vendorsPerPage);
 
-  const handleView = (vendor) => alert(`Viewing profile: ${vendor.businessName || vendor.name}`);
-  const handleEdit = (vendor) => alert(`Editing vendor: ${vendor.businessName || vendor.name}`);
+  const handleView = (vendor) => {
+    const vendorId = vendor._id || vendor.id;
+    if (vendorId) {
+      navigate(`/preview-profile/${vendorId}`);
+    } else {
+      console.error("Cannot navigate: Vendor ID is undefined");
+      alert("Unable to view vendor profile: ID not found");
+    }
+  };
+  const handleEdit = (vendor) => {
+    const vendorId = vendor._id || vendor.id;
+    if (vendorId) {
+      // For now, we'll navigate to the UserManagement page where vendor approval can be managed
+      // This could be updated to a dedicated vendor edit page if available
+      navigate('/admin/user-management');
+      
+      // Alternatively, you could implement an edit modal directly in this component
+      // similar to how it's done in UserManagement.jsx
+    } else {
+      console.error("Cannot edit: Vendor ID is undefined");
+      alert("Unable to edit vendor: ID not found");
+    }
+  };
 
   const handleDelete = async (vendor) => {
     if (window.confirm(`Delete ${vendor.businessName || vendor.name}?`)) {

@@ -7,6 +7,7 @@ import SuccessfulEvents from '../Home/SuccessfullEvents';
 import Testimonials from '../Home/Tesstimonials';
 import HowItWorks from '../Home/HowItWorks';
 import FeaturedVendors from '../Home/FeatureVendors';
+import LocationList from '../Location/LocationList'
 
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
       <SuccessfulEvents />
       <Testimonials />
       <HowItWorks />
+      <LocationList/>
     </div>
   )
 }

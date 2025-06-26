@@ -1,13 +1,39 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGetAllBookingsQuery, useUpdateBookingMutation } from '../../features/bookings/bookingAPI';
 import Loader from "../../components/{Shared}/Loader";
+import { toast } from 'react-toastify';
 
 const BookingManagement = () => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
 
   // RTK Query hooks
   const { data: response, isLoading, error } = useGetAllBookingsQuery();
   const [updateBooking] = useUpdateBookingMutation();
+
+  const handleViewVendor = (booking) => {
+    const vendorId = booking.vendorId || booking.vendor?._id || booking.vendor?.id;
+    
+    if (vendorId) {
+      navigate(`/preview-profile/${vendorId}`);
+    } else {
+      console.error("Cannot navigate: Vendor ID is undefined for booking:", booking);
+      toast.warning("Vendor profile not available. The vendor ID is missing.");
+    }
+  };
+
+  const handleViewUser = (booking) => {
+    const userId = booking.user?._id || booking.user?.id || booking.userId;
+    
+    if (userId) {
+      // Navigate to admin user management with a query parameter to open the user's profile
+      navigate(`/admin/user_management?userId=${userId}`);
+    } else {
+      console.error("Cannot navigate: User ID is undefined for booking:", booking);
+      toast.warning("User profile not available. The user ID is missing.");
+    }
+  };
 
   if (isLoading) return <Loader />;
   if (error) return <div className="text-center text-red-500">Error: {error.message}</div>;
@@ -161,8 +187,26 @@ const BookingManagement = () => {
               <tbody className="text-gray-600">
                 {bookingsData[activeFilter].map((booking) => (
                   <tr key={booking._id} className="border-b border-gray-50 hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent transition-colors duration-300">
-                    <td className="py-3 pr-4 font-medium">{booking.vendorName}</td>
-                    <td className="pr-4 font-medium">{booking.user?.name || 'N/A'}</td>
+                    <td className="py-3 pr-4 font-medium">
+                      <button 
+                        onClick={() => handleViewVendor(booking)}
+                        className="text-[#0f4c81] hover:underline font-medium focus:outline-none"
+                      >
+                        {booking.vendorName}
+                      </button>
+                    </td>
+                    <td className="pr-4 font-medium">
+                      {booking.user ? (
+                        <button 
+                          onClick={() => handleViewUser(booking)}
+                          className="text-[#0f4c81] hover:underline font-medium focus:outline-none"
+                        >
+                          {booking.user.name || 'N/A'}
+                        </button>
+                      ) : (
+                        'N/A'
+                      )}
+                    </td>
                     <td className="pr-4 font-medium">{booking.user?.phone || 'N/A'}</td>
                     <td className="pr-4 font-medium">{booking.venue || 'N/A'}</td>
                     <td className="pr-4 font-medium">{new Date(booking.eventDate).toLocaleDateString()}</td>
