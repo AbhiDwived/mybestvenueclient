@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Accordion } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { VscCircleFilled } from "react-icons/vsc";
-import { Link } from 'react-router-dom';
+
+// Slugify helper function
+const slugify = (text) =>
+    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
 const baseCategories = {
     "Banquet Halls": [
@@ -36,83 +39,94 @@ const locationData = states.map((state) => {
 });
 
 const WeddingVendorsByLocation = () => {
-    const [isSmallScreen, setIsSmallScreen] = useState(false);
+    const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
 
     useEffect(() => {
-        const handleResize = () => {
-            setIsSmallScreen(window.innerWidth < 768);
-        };
-        handleResize();
+        const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     return (
         <div className="px-4 md:px-10 lg:mx-10 py-8">
-            <span className="lg:text-3xl md:text-3xl text-2xl mb-6 lg:mx-7 md:mx-7 text-gray-800">Wedding vendors by location</span>
+            <h2 className="lg:text-3xl md:text-3xl text-2xl mb-6 lg:mx-7 md:mx-7 text-gray-800">
+                Wedding vendors by location
+            </h2>
 
             {isSmallScreen ? (
+                // Small Screens - Accordion Layout
                 <div className="mt-5">
                     {locationData.map((region, regionIdx) => (
                         <div key={regionIdx} className="mb-4">
                             <h6 className="font-semibold text-lg text-gray-800 mb-2">{region.state}</h6>
-                            <Accordion>
-                                {region.categories.map((cat, catIdx) => (
-                                    <Accordion.Item eventKey={catIdx.toString()} key={catIdx}>
-                                        <Accordion.Header>{cat.category}</Accordion.Header>
-                                        <Accordion.Body>
-                                            <ul className="space-y-1 text-sm">
-                                                {cat.items.map((item, itemIdx) => (
-                                                    <li
-                                                        key={itemIdx}
-                                                        style={{ marginLeft: '-30px' }}
-                                                        className="cursor-pointer flex"
-                                                    >
-                                                        <VscCircleFilled className='mt-1 mr-1' />
-                                                        <Link
-                                                            to={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            style={{ textDecoration: 'none' }}
-                                                            className="text-black"
+                            <Accordion defaultActiveKey="0" alwaysOpen>
+                                {region.categories.map((cat, catIdx) => {
+                                    const categorySlug = slugify(cat.category);
+                                    const citySlug = slugify(region.state);
+                                    return (
+                                        <Accordion.Item eventKey={String(catIdx)} key={catIdx}>
+                                            <Accordion.Header>{cat.category}</Accordion.Header>
+                                            <Accordion.Body>
+                                                <ul className="space-y-1 text-sm">
+                                                    {cat.items.map((item, itemIdx) => (
+                                                        <li
+                                                            key={itemIdx}
+                                                            style={{ marginLeft: '-30px' }}
+                                                            className="cursor-pointer flex items-start"
                                                         >
-                                                            {item}
-                                                        </Link>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </Accordion.Body>
-                                    </Accordion.Item>
-                                ))}
+                                                            <VscCircleFilled className="mt-1 mr-1 text-gray-700" />
+                                                            <a
+                                                                href={`/vendor-list/${citySlug}/${categorySlug}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-black hover:text-blue-700"
+                                                                style={{ textDecoration: 'none' }}
+                                                            >
+                                                                {item}
+                                                            </a>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </Accordion.Body>
+                                        </Accordion.Item>
+                                    );
+                                })}
                             </Accordion>
                         </div>
                     ))}
                 </div>
             ) : (
+                // Desktop View - Grid
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:mt-4">
                     {locationData.map((region, index) => (
                         <div key={index} className="lg:mt-5">
                             <h6 className="font-semibold text-lg text-gray-800 mb-2 lg:mx-8 md:mx-8">{region.state}</h6>
-                            {region.categories.map((cat, catIdx) => (
-                                <div key={catIdx} className="mb-4">
-                                    <p className="font-semibold text-gray-700 mb-1 text-sm lg:mx-8 md:mx-8 mt-3">{cat.category}</p>
-                                    <ul className="space-y-1 text-sm max-h-32 overflow-y-auto custom-scroll">
-                                        {cat.items.map((item, itemIdx) => (
-                                            <li key={itemIdx} className="cursor-pointer">
-                                                <Link
-                                                    to={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    style={{ textDecoration: 'none' }}
-                                                    className="text-black"
-                                                >
-                                                    {item}
-                                                </Link>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
+                            {region.categories.map((cat, catIdx) => {
+                                const categorySlug = slugify(cat.category);
+                                const citySlug = slugify(region.state);
+                                return (
+                                    <div key={catIdx} className="mb-4">
+                                        <p className="font-semibold text-gray-700 mb-1 text-sm lg:mx-8 md:mx-8 mt-3">
+                                            {cat.category}
+                                        </p>
+                                        <ul className="space-y-1 text-sm max-h-32 overflow-y-auto custom-scroll">
+                                            {cat.items.map((item, itemIdx) => (
+                                                <li key={itemIdx} className="cursor-pointer">
+                                                    <a
+                                                        href={`/vendor-list/${citySlug}/${categorySlug}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-black hover:text-blue-700"
+                                                        style={{ textDecoration: 'none' }}
+                                                    >
+                                                        {item}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                );
+                            })}
                         </div>
                     ))}
                 </div>

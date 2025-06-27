@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const vendorApi = createApi({
   reducerPath: 'vendorApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', // Fallback URL
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', // Updated URL with v1 prefix
     prepareHeaders: (headers, { getState }) => {
       // Try to get token from Redux state first
       const token = getState().vendor?.token;
@@ -271,6 +271,101 @@ export const vendorApi = createApi({
         body:  bookingData,
       }),
     }),
+
+    // Portfolio management endpoints
+    uploadPortfolioImage: builder.mutation({
+      query: (formData) => ({
+        url: '/vendor/portfolio/image',
+        method: 'POST',
+        body: formData,
+        formData: true,
+      }),
+    }),
+
+    getPortfolioImages: builder.query({
+      query: (vendorId) => ({
+        url: `/vendor/portfolio/images/${vendorId}`,
+        method: 'GET',
+      }),
+      providesTags: ['PortfolioImages'],
+    }),
+
+    deletePortfolioImage: builder.mutation({
+      query: (imageId) => ({
+        url: `/vendor/portfolio/image/${imageId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['PortfolioImages'],
+    }),
+
+    // Upload Portfolio Video
+    uploadPortfolioVideo: builder.mutation({
+      query: (videoData) => {
+        // If videoData is a FormData object (file upload)
+        if (videoData instanceof FormData) {
+          return {
+            url: '/vendor/portfolio/video',
+            method: 'POST',
+            body: videoData,
+            // Important: let fetch set the correct Content-Type for FormData
+            headers: {
+              // No explicit Content-Type to allow browser to set with boundary
+              'Accept': 'application/json'
+            }
+          };
+        }
+        
+        // If videoData is a regular object (URL upload)
+        return {
+          url: '/vendor/portfolio/video',
+          method: 'POST',
+          body: videoData
+        };
+      },
+      transformResponse: (response) => {
+        console.log('Video Upload Response:', response);
+        return response;
+      },
+      transformErrorResponse: (response) => {
+        console.error('Video Upload Error:', response);
+        return response;
+      }
+    }),
+
+    // Get Portfolio Videos
+    getPortfolioVideos: builder.query({
+      query: (vendorId) => {
+        console.log('Fetching portfolio videos for vendor:', vendorId);
+        return {
+          url: `/vendor/portfolio/videos/${vendorId}`,
+          method: 'GET',
+        };
+      },
+      transformResponse: (response) => {
+        console.log('Portfolio Videos API response:', response);
+        return response;
+      },
+      transformErrorResponse: (response) => {
+        console.error('Portfolio Videos API error:', response);
+        return response;
+      }
+    }),
+
+    // Delete Portfolio Video
+    deletePortfolioVideo: builder.mutation({
+      query: (videoId) => ({
+        url: `/vendor/portfolio/video/${videoId}`,
+        method: 'DELETE',
+      }),
+      transformResponse: (response) => {
+        console.log('Video Delete Response:', response);
+        return response;
+      },
+      transformErrorResponse: (response) => {
+        console.error('Video Delete Error:', response);
+        return response;
+      }
+    }),
   })
 });
 
@@ -302,5 +397,11 @@ export const {
   useUpdateVendorBookingMutation,
   useGetAllPublicVendorsQuery,
   useGetUserListByIdQuery,
-  useCreateuserBookingByVendorMutation
+  useCreateuserBookingByVendorMutation,
+  useUploadPortfolioImageMutation,
+  useGetPortfolioImagesQuery,
+  useDeletePortfolioImageMutation,
+  useUploadPortfolioVideoMutation,
+  useGetPortfolioVideosQuery,
+  useDeletePortfolioVideoMutation
 } = vendorApi;

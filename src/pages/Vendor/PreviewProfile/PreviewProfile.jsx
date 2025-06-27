@@ -20,9 +20,12 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useSelector } from 'react-redux';
 import Loader from '../../../components/{Shared}/Loader';
 import { useAddUserInquiryMessageMutation } from '../../../features/auth/authAPI';
+import { ImCross } from 'react-icons/im';
+import { useGetPortfolioImagesQuery, useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
 
 const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
+  const [activeGalleryTab, setActiveGalleryTab] = useState('images');
   const navigate = useNavigate();
   const { vendorId } = useParams();
   const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
@@ -290,6 +293,105 @@ const PreviewProfile = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+
+  const handleImageView = (imageUrl) => {
+    setSelectedImage(imageUrl);
+  };
+
+  const handleVideoView = (videoUrl) => {
+    setSelectedVideo(videoUrl);
+  };
+
+  const ImageViewModal = ({ imageUrl, onClose }) => (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" 
+      onClick={onClose}
+    >
+      <div 
+        className="max-w-[90%] max-h-[90%] relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img 
+          src={imageUrl} 
+          alt="Full Size" 
+          className="max-w-full max-h-full object-contain" 
+        />
+        <button 
+          className="absolute top-2 right-2 bg-white rounded-full p-2 hover:bg-gray-200"
+          onClick={onClose}
+        >
+          <ImCross size={16} />
+        </button>
+      </div>
+    </div>
+  );
+
+  const VideoViewModal = ({ videoUrl, onClose }) => (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" 
+      onClick={onClose}
+    >
+      <div 
+        className="max-w-[90%] max-h-[90%] relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <iframe
+          src={videoUrl.replace('watch?v=', 'embed/')}
+          className="w-full h-[80vh]"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+        <button 
+          className="absolute top-2 right-2 bg-white rounded-full p-2 hover:bg-gray-200"
+          onClick={onClose}
+        >
+          <ImCross size={16} />
+        </button>
+      </div>
+    </div>
+  );
+
+  // Portfolio Gallery Queries
+  const [vendorPortfolio, setVendorPortfolio] = useState({
+    images: vendor?.portfolio?.images || [],
+    videos: vendor?.portfolio?.videos || []
+  });
+
+  const { data: portfolioImagesData } = useGetPortfolioImagesQuery(vendorId, {
+    skip: !vendorId,
+    selectFromResult: ({ data }) => ({
+      data: data?.images || []
+    })
+  });
+
+  const { data: portfolioVideosData } = useGetPortfolioVideosQuery(vendorId, {
+    skip: !vendorId,
+    selectFromResult: ({ data }) => ({
+      data: data?.videos || []
+    })
+  });
+
+  // Update vendor portfolio data
+  useEffect(() => {
+    if (portfolioImagesData && portfolioImagesData.length > 0) {
+      setVendorPortfolio(prev => ({
+        ...prev,
+        images: portfolioImagesData
+      }));
+    }
+  }, [portfolioImagesData]);
+
+  useEffect(() => {
+    if (portfolioVideosData && portfolioVideosData.length > 0) {
+      setVendorPortfolio(prev => ({
+        ...prev,
+        videos: portfolioVideosData
+      }));
+    }
+  }, [portfolioVideosData]);
+
   if (isVendorLoading) {
     return <Loader />;
   }
@@ -393,17 +495,80 @@ const PreviewProfile = () => {
       <div className="grid md:grid-cols-3 gap-6 mt-6">
         {/* Photo Gallery */}
         <div className="md:col-span-2 bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-semibold mb-4">Photo Gallery</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {(vendor?.galleryImages || [1, 2, 3, 4, 5, 6]).map((image, i) => (
-              <img
-                key={i}
-                src={typeof image === 'object' ? image.url : secondProfile}
-                alt={`Gallery image ${i + 1}`}
-                className="rounded object-cover w-full h-60"
-              />
-            ))}
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Portfolio Gallery</h3>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setActiveGalleryTab('images')}
+                className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'images' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Images ({vendorPortfolio.images.length})
+              </button>
+              <button 
+                onClick={() => setActiveGalleryTab('videos')}
+                className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'videos' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Videos ({vendorPortfolio.videos.length})
+              </button>
+            </div>
           </div>
+          
+          {activeGalleryTab === 'images' && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {vendorPortfolio.images.length > 0 ? (
+                vendorPortfolio.images.map((image, i) => (
+                  <div 
+                    key={image._id || i} 
+                    className="relative group cursor-pointer"
+                    onClick={() => handleImageView(image.url)}
+                  >
+                    <img
+                      src={image.url}
+                      alt={image.title || `Portfolio Image ${i + 1}`}
+                      className="rounded object-cover w-full h-60 transition-transform group-hover:scale-105"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-sm truncate">{image.title || 'Portfolio Image'}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center text-gray-500 py-8">
+                  No portfolio images available
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeGalleryTab === 'videos' && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {vendorPortfolio.videos.length > 0 ? (
+                vendorPortfolio.videos.map((video, i) => (
+                  <div 
+                    key={video._id || i} 
+                    className="relative group cursor-pointer"
+                    onClick={() => handleVideoView(video.url)}
+                  >
+                    <iframe
+                      src={video.url.includes('youtube.com') 
+                        ? video.url.replace('watch?v=', 'embed/') 
+                        : video.url}
+                      title={video.title || `Portfolio Video ${i + 1}`}
+                      className="rounded w-full h-60 object-cover"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-sm truncate">{video.title || 'Portfolio Video'}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center text-gray-500 py-8">
+                  No portfolio videos available
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Booking Form */}
@@ -703,6 +868,8 @@ const PreviewProfile = () => {
         </div>
       </div>
       <SimilarVendors vendorType={vendor?.vendorType} currentVendorId={vendorId} />
+      {selectedImage && <ImageViewModal imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />}
+      {selectedVideo && <VideoViewModal videoUrl={selectedVideo} onClose={() => setSelectedVideo(null)} />}
     </div>
   );
 };

@@ -7,26 +7,30 @@ import Loader from '../../components/{Shared}/Loader';
 import { FiArrowLeft } from "react-icons/fi";
 
 const VendorListPage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const { category = '', city = 'all-india' } = useParams();
   const navigate = useNavigate();
+  const { city = '', category = '' } = useParams();
 
-  // Format category and city
+  const [searchTerm, setSearchTerm] = useState('');
+  const [favorites, setFavorites] = useState([]);
+  const [activeTab, setActiveTab] = useState('popular');
+
+  // Format inputs
   const formattedCategory = category
-    ? category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-    : '';
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
   const formattedCity = city === 'all-india'
     ? 'All India'
     : city.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-  const [favorites, setFavorites] = useState([]);
-
+  // Load favorites
   useEffect(() => {
-    const savedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    setFavorites(savedFavorites);
+    const saved = JSON.parse(localStorage.getItem('favorites') || '[]');
+    setFavorites(saved);
   }, []);
 
+  // Save favorites
   useEffect(() => {
     localStorage.setItem('favorites', JSON.stringify(favorites));
   }, [favorites]);
@@ -35,7 +39,7 @@ const VendorListPage = () => {
     data: vendorsData,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useGetAllVendorsQuery();
 
   const toggleFavorite = (e, id) => {
@@ -47,6 +51,13 @@ const VendorListPage = () => {
 
   const handleVendorClick = (vendorId) => {
     navigate(`/preview-profile/${vendorId}`);
+  };
+
+  const formatPrice = (pricingRange) => {
+    if (!pricingRange || typeof pricingRange.min !== 'number' || typeof pricingRange.max !== 'number') {
+      return 'Price on request';
+    }
+    return `₹${pricingRange.min.toLocaleString()} - ₹${pricingRange.max.toLocaleString()}`;
   };
 
   if (!category || !city) {
@@ -75,67 +86,44 @@ const VendorListPage = () => {
     );
   }
 
-  // Filter vendors
   const filteredVendors = vendorsData?.vendors?.filter(vendor => {
     const lowerSearchTerm = searchTerm.toLowerCase().trim();
-
-    // Step 1: Category match
     const matchesCategory = vendor.vendorType === formattedCategory;
 
-    // Step 2: Location match
-    let matchesLocation = true; // default for "all-india"
-    if (city !== 'all-india') {
+    let matchesLocation = city === 'all-india';
+    if (!matchesLocation) {
       const searchCity = formattedCity.toLowerCase();
       const vendorLocations = [
         ...(vendor.serviceAreas || []),
         vendor.address?.city
-      ]
-        .filter(Boolean)
-        .map(loc => loc.toLowerCase());
+      ].filter(Boolean).map(loc => loc.toLowerCase());
 
-      matchesLocation = vendorLocations.some(loc => loc === searchCity);
+      matchesLocation = vendorLocations.includes(searchCity);
     }
 
-    // Step 3: Search term match (business name or service area)
-    let matchesSearch = true; // no filter if search is empty
+    let matchesSearch = true;
     if (lowerSearchTerm) {
-      const searchableFields = [
+      const searchable = [
         vendor.businessName.toLowerCase(),
         ...(vendor.serviceAreas || []).map(sa => sa.toLowerCase()),
-        vendor.address?.city?.toLowerCase()
+        vendor.address?.city?.toLowerCase() || ''
       ];
-
-      matchesSearch = searchableFields.some(field =>
-        field?.includes(lowerSearchTerm)
-      );
+      matchesSearch = searchable.some(field => field.includes(lowerSearchTerm));
     }
 
     return matchesCategory && matchesLocation && matchesSearch;
   }) || [];
 
-  const formatPrice = (pricingRange) => {
-    if (!pricingRange || typeof pricingRange.min !== 'number' || typeof pricingRange.max !== 'number') {
-      return 'Price on request';
-    }
-    return `₹${pricingRange.min.toLocaleString()} - ₹${pricingRange.max.toLocaleString()}`;
-  };
-
-  // State for active tab
-  const [activeTab, setActiveTab] = useState('popular'); // Default to "popular"
-
   return (
     <>
-      {/* Header Section */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] py-12 md:py-16 text-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-bold text-white text-xl sm:text-2xl md:text-3xl mb-2">
-              Find the Perfect {formattedCategory}
-            </h1>
+            <h1 className="font-bold text-xl sm:text-2xl md:text-3xl mb-2">Find the Perfect {formattedCategory}</h1>
             <h2 className="text-lg mb-2">In {formattedCity}</h2>
-            <p className="mb-6 text-sm sm:text-base">
-              {filteredVendors.length} {filteredVendors.length === 1 ? 'Vendor' : 'Vendors'} Available
-            </p>
+            <p className="mb-6 text-sm sm:text-base">{filteredVendors.length} {filteredVendors.length === 1 ? 'Vendor' : 'Vendors'} Available</p>
+
             <div className="bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2 shadow-lg">
               <input
                 type="text"
@@ -145,11 +133,7 @@ const VendorListPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="text-gray-400 hover:text-gray-600 font-bold"
-                  aria-label="Clear search"
-                >
+                <button onClick={() => setSearchTerm('')} className="text-gray-400 hover:text-gray-600 font-bold" aria-label="Clear search">
                   &times;
                 </button>
               )}
@@ -164,43 +148,29 @@ const VendorListPage = () => {
         </div>
       </div>
 
-      {/* Filter Bar */}
+      {/* Filter and Sort */}
       <div className="min-h-screen p-4 md:p-10">
         <div className="flex flex-col md:flex-row justify-between items-center mb-10">
           <p className="text-2xl sm:text-3xl md:text-3xl w-full text-gray-800">
             {formattedCategory} in {formattedCity}
           </p>
-          <div className="flex space-x-2 ">
-            {/* Back Button */}
-            <button
-              style={{ borderRadius: '5px' }}
-              className="flex items-center px-3 py-2 border text-sm text-gray-700 hover:bg-gray-100 whitespace-nowrap transition-colors duration-200"
+          <div className="flex space-x-2">
+            <Link
+              to="/"
+              style={{textDecoration:'none', color:'black'}}
+              className="flex items-center px-3 py-2 border text-sm text-gray-700 hover:bg-gray-100 whitespace-nowrap rounded"
             >
               <FiArrowLeft className="mr-2" />
-              <Link to="/" style={{ textDecoration: "none", color: 'black' }} className="text-gray-700">
-                Back to Home
-              </Link>
-            </button>
-
-            {/* Popular Button */}
+              Back to Home
+            </Link>
             <button
-              style={{ borderRadius: '5px' }}
-              className={`px-3 py-2  text-sm whitespace-nowrap transition-colors duration-200 ${activeTab === 'popular'
-                  ? 'bg-[#062b4b] text-white '
-                  : 'bg-transparent text-gray-700 border hover:bg-gray-100'
-                }`}
+              className={`px-3 py-2 text-sm rounded ${activeTab === 'popular' ? 'bg-[#062b4b] text-white' : 'border text-gray-700 hover:bg-gray-100'}`}
               onClick={() => setActiveTab('popular')}
             >
               Popular
             </button>
-
-            {/* Newest Button */}
             <button
-              style={{ borderRadius: '5px' }}
-              className={`px-3 py-2 text-sm whitespace-nowrap transition-colors duration-200 ${activeTab === 'newest'
-                  ? 'bg-[#062b4b] text-white'
-                  : 'bg-transparent text-gray-700 border hover:bg-gray-100'
-                }`}
+              className={`px-3 py-2 text-sm rounded ${activeTab === 'newest' ? 'bg-[#062b4b] text-white' : 'border text-gray-700 hover:bg-gray-100'}`}
               onClick={() => setActiveTab('newest')}
             >
               Newest
@@ -208,12 +178,10 @@ const VendorListPage = () => {
           </div>
         </div>
 
-        {/* Vendor Cards or Empty Message */}
+        {/* Vendor Cards */}
         {filteredVendors.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center mt-20">
-            <p className="text-gray-500 text-lg mb-6">
-              No vendors found matching your criteria.
-            </p>
+          <div className="text-center mt-20 text-gray-500">
+            <p className="text-lg mb-6">No vendors found matching your criteria.</p>
             <button
               onClick={() => setSearchTerm("")}
               className="px-5 py-2 border text-sm rounded-md hover:bg-gray-100 text-blue-800"
@@ -238,7 +206,6 @@ const VendorListPage = () => {
                   <button
                     onClick={(e) => toggleFavorite(e, vendor._id)}
                     className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md"
-                    aria-label={favorites.includes(vendor._id) ? "Remove from favorites" : "Add to favorites"}
                   >
                     {favorites.includes(vendor._id) ? (
                       <FaHeart className="text-red-500" />

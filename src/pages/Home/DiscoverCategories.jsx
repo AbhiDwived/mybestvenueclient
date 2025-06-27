@@ -107,11 +107,11 @@ const DiscoverCategories = () => {
               Contact Us
             </Link>
             <a
-              href="/planning-tools"
+              href="/about"
               style={{textDecoration:'none'}}
               className="px-6 py-2 bg-[#445D7B] text-white rounded-md hover:bg-[#3a4f6a] transition-colors text-lg"
             >
-              Planning Tools
+              About
             </a>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', // Fallback URL
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', // Updated URL with v1 prefix
     prepareHeaders: (headers) => {
       // Try to get admin token first
       const adminToken = localStorage.getItem('adminToken');
