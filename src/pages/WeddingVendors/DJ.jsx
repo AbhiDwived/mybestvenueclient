@@ -14,7 +14,7 @@ export default function DJ() {
   const { data, isLoading, isError, error } = useGetAllVendorsQuery();
 
   //  console.log("vendorsList", data);
-  const weddingDj = data?.vendors?.filter(v => v.vendorType === "Wedding Dj");
+  const weddingDj = data?.vendors?.filter(v => v.vendorType === "DJ");
   console.log("weddingDj", weddingDj);
 
   useEffect(() => {

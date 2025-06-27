@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { FaStar } from 'react-icons/fa';
-import WeVendorr2 from '../../assets/newPics/WeVendor2avif.avif'; // Update with actual path
+import WeVendorr2 from '../../assets/newPics/WeVendor2avif.avif'; 
 
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 
@@ -14,7 +14,7 @@ export default function Music() {
   const { data, isLoading, isError, error } = useGetAllVendorsQuery();
 
   //  console.log("vendorsList", data);
-  const music = data?.vendors?.filter(v => v.vendorType === "Music");
+  const music = data?.vendors?.filter(v => v.vendorType === "Musics");
   // console.log("music", music);
 
   useEffect(() => {
