@@ -4,7 +4,23 @@ export const vendorApi = createApi({
   reducerPath: 'vendorApi',
   baseQuery: fetchBaseQuery({ 
     baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', // Updated URL with v1 prefix
-    prepareHeaders: (headers, { getState }) => {
+    prepareHeaders: (headers, { getState, endpoint }) => {
+      // List of public endpoints that don't require authentication
+      const publicEndpoints = [
+        'forgotPassword',
+        'verifyOtp',
+        'resendOtp',
+        'loginVendor',
+        'registerVendor',
+        'verifyPasswordReset',
+        'resendPasswordResetOtp'
+      ];
+
+      // Skip adding token for public endpoints
+      if (publicEndpoints.includes(endpoint)) {
+        return headers;
+      }
+
       // Try to get token from Redux state first
       const token = getState().vendor?.token;
       // Try vendor token from localStorage
@@ -75,23 +91,21 @@ export const vendorApi = createApi({
 
     // Verify OTP for Password Reset
     verifyPasswordReset: builder.mutation({
-      query: ({ vendorId, otp }) => ({
+      query: ({ email, otp }) => ({
         url: '/vendor/forgot_password_otp',
         method: 'POST',
-        body: { vendorId, otp },
+        body: { email, otp },
       }),
     }),
-
 
     // Reset Password
     resetPassword: builder.mutation({
-      query: ({ vendorId, newPassword }) => ({
+      query: ({ email, newPassword }) => ({
         url: '/vendor/reset_password',
         method: 'POST',
-        body: { vendorId, newPassword },
+        body: { email, newPassword },
       }),
     }),
-
 
     // Update Vendor Profile
     updateProfile: builder.mutation({
@@ -366,6 +380,15 @@ export const vendorApi = createApi({
         return response;
       }
     }),
+
+    // Resend Password Reset OTP
+    resendPasswordResetOtp: builder.mutation({
+      query: ({ email }) => ({
+        url: '/vendor/resend-forgot-password-otp',
+        method: 'POST',
+        body: { email },
+      }),
+    }),
   })
 });
 
@@ -403,5 +426,6 @@ export const {
   useDeletePortfolioImageMutation,
   useUploadPortfolioVideoMutation,
   useGetPortfolioVideosQuery,
-  useDeletePortfolioVideoMutation
+  useDeletePortfolioVideoMutation,
+  useResendPasswordResetOtpMutation
 } = vendorApi;

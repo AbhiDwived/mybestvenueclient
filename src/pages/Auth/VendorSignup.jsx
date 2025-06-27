@@ -5,11 +5,47 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, EyeOff } from 'react-feather';
 
+const VENDOR_TYPES = [
+  // Venues
+  'Banquet Halls',
+  'Hotels',
+  'Marriage Garden',
+  'Kalyana Mandapams',
+  'Wedding Resorts',
+  'Wedding Lawns & Farmhouses',
+
+  // Photographers
+  'Wedding Photographers',
+  'Party Places',
+  'Photographers',
+
+  // Catering & Decorations
+  'Caterers',
+  'Wedding Decorators',
+  'Wedding Makeup',
+  'Wedding Planners',
+
+  // Additional Services
+  'Gifts',
+  'Florist',
+  'Invitation',
+  'Choreographers',
+  'Photobooth',
+  'DJ',
+  'Cakes',
+  'Musics',
+  'TentHouse',
+  'Transportation',
+  'Videography',
+  'Other'
+];
+
 const VendorSignup = () => {
   const [formData, setFormData] = useState({
     contactName: '',
     businessName: '',
     vendorType: '',
+    otherVendorType: '',
     email: '',
     phone: '',
     password: '',
@@ -45,6 +81,7 @@ const VendorSignup = () => {
     setFormData((prev) => ({
       ...prev,
       [name]: inputType === 'checkbox' ? checked : value,
+      ...(name === 'vendorType' && value !== 'Other' ? { otherVendorType: '' } : {})
     }));
   };
 
@@ -52,13 +89,28 @@ const VendorSignup = () => {
     e.preventDefault();
     if (isLoading) return;
 
+    // Comprehensive form validation
+    const errors = [];
+    
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
+      errors.push("Passwords do not match");
+    }
+
+    if (!formData.vendorType) {
+      errors.push('Please select a vendor type');
+    }
+
+    if (formData.vendorType === 'Other' && !formData.otherVendorType.trim()) {
+      errors.push('Please specify your custom vendor type');
     }
 
     if (!formData.termsAccepted) {
-      toast.error('You must accept the terms and conditions');
+      errors.push('You must accept the terms and conditions');
+    }
+
+    // Display all validation errors at once
+    if (errors.length > 0) {
+      errors.forEach(error => toast.error(error));
       return;
     }
 
@@ -67,29 +119,83 @@ const VendorSignup = () => {
 
     const data = new FormData();
     Object.entries(vendorData).forEach(([key, value]) => {
-      data.append(key, value);
+      if (key === 'vendorType' && vendorData.vendorType === 'Other') {
+        data.append(key, vendorData.otherVendorType.trim());
+      } else if (key !== 'otherVendorType') {
+        data.append(key, value);
+      }
     });
+
     if (profilePicture) {
       data.append('profilePicture', profilePicture);
     }
 
     try {
-      const res = await registerVendor(data).unwrap();
+      // Use Promise.race to implement a timeout
+      const registrationPromise = registerVendor(data).unwrap();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Registration took too long')), 15000)
+      );
+
+      const res = await Promise.race([registrationPromise, timeoutPromise]);
+
       if (!isMounted.current) return;
 
       const vendorId = res?.vendor?._id || res?.vendorId;
 
       if (vendorId) {
-        toast.success('Registration successful! Please verify your email.');
+        // Immediate success feedback
+        toast.success('Registration successful!', {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: true,
+          progress: undefined,
+        });
+
+        // Preload OTP verification page
+        const otpVerifyUrl = `/vendor/verify-otp?vendorId=${vendorId}`;
+        
+        // Prefetch the next page
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = otpVerifyUrl;
+        document.head.appendChild(link);
+
+        // Slightly delayed navigation to ensure user sees success message
         setTimeout(() => {
-          navigate(`/vendor/verify-otp?vendorId=${vendorId}`, { replace: true });
+          navigate(otpVerifyUrl, { 
+            replace: true,
+            state: { 
+              email: formData.email, 
+              vendorType: formData.vendorType === 'Other' ? formData.otherVendorType : formData.vendorType 
+            }
+          });
         }, 2000);
       } else {
-        toast.error('Registration succeeded but vendor ID is missing.');
+        toast.error('Registration incomplete. Please try again.', {
+          position: "top-center"
+        });
       }
     } catch (err) {
       if (!isMounted.current) return;
-      toast.error(err?.data?.message || 'Registration failed. Please try again.');
+      
+      // Detailed error handling
+      const errorMessage = err.data?.message || 
+        (err.message === 'Registration took too long' 
+          ? 'Registration is taking longer than expected. Please check your internet connection.' 
+          : 'Registration failed. Please try again.');
+      
+      toast.error(errorMessage, {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       if (!isMounted.current) return;
       setIsLoading(false);
@@ -155,17 +261,38 @@ const VendorSignup = () => {
 
             <div>
               <label htmlFor="vendorType" className="block text-sm font-medium text-gray-700 mb-1">Vendor Type</label>
-              <input
+              <select
                 id="vendorType"
                 name="vendorType"
-                type="text"
                 value={formData.vendorType}
                 onChange={handleChange}
-                placeholder="Photographer, Caterer, etc."
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              >
+                <option value="">Select a vendor type</option>
+                {VENDOR_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {formData.vendorType === 'Other' && (
+              <div>
+                <label htmlFor="otherVendorType" className="block text-sm font-medium text-gray-700 mb-1">Other Vendor Type</label>
+                <input
+                  id="otherVendorType"
+                  name="otherVendorType"
+                  type="text"
+                  value={formData.otherVendorType}
+                  onChange={handleChange}
+                  placeholder="Enter your custom vendor type"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -295,9 +422,39 @@ const VendorSignup = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2 px-4 mt-2 text-white font-semibold rounded-lg bg-[#0F4C81] hover:bg-[#0D3F6A] transition focus:outline-none focus:ring-2 focus:ring-[#0F4C81] opacity-60 disabled:cursor-not-allowed mb-4"
+              className={`w-full py-2 px-4 mt-2 text-white font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-[#0F4C81] 
+                ${isLoading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-[#0F4C81] hover:bg-[#0D3F6A]'
+                }`}
             >
-              {isLoading ? 'Signing up...' : 'Sign Up'}
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <svg 
+                    className="animate-spin h-5 w-5 mr-3" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24"
+                  >
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      strokeWidth="4"
+                    ></circle>
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Signing up...
+                </div>
+              ) : (
+                'Sign Up'
+              )}
             </button>
           </form>
 

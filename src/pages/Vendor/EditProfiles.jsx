@@ -215,7 +215,7 @@ const EditProfile = () => {
   }
 
   return (
-    <div className="font-serif">
+    <div className="font-serif p-2">
       <ToastContainer
         position="top-right"
         autoClose={3000}

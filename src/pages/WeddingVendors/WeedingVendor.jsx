@@ -3,6 +3,13 @@ import {
   Camera, Video, Music, Utensils, Gift, Activity, Smile, Cake, Sparkles, Tent
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+import { BiSolidFlorist, BiSolidParty } from "react-icons/bi";
+import { SiPioneerdj } from "react-icons/si";
+import { BsCake2 } from "react-icons/bs";
+import { MdInsertInvitation, MdEmojiTransportation, MdAddAPhoto } from "react-icons/md";
+
+
 
 // Components
 import WeddingPhotographers from '../WeddingVendors/Photographers';
@@ -13,35 +20,59 @@ import WeddingPlanners from '../WeddingVendors/Planners';
 import PartyPlaces from '../WeddingVendors/PartyPlaces';
 import Choreographers from '../WeddingVendors/Choreographers';
 import Photobooth from '../WeddingVendors/Photobooth';
+import Cakes from './Cakes';
+import DJ from './DJ';
+import TentHouse from './TentHouse';
+import Transportation from './Transportation';
+import Videography from './Videography';
+import Florist from './Florists';
+import Gifts from './Gifts';
+import Invitation from './Invitations';
+import Musics from './Music';
+
 
 // Data
 const vendorCategories = [
-  { title: 'Wedding Photographers', icon: Camera },
+  { title: 'Photographers', icon: Camera },
   { title: 'Caterers', icon: Utensils },
   { title: 'Wedding Decorators', icon: Gift },
   { title: 'Wedding MakeUp', icon: Gift },
   { title: 'Wedding Planners', icon: Utensils },
-  { title: 'Party Places', icon: Video },
+  { title: 'Party Places', icon: BiSolidParty },
+  { title: 'Gifts', icon: Gift },
+  { title: 'Florist', icon: BiSolidFlorist },
+  { title: 'Invitation', icon: MdInsertInvitation },
 ];
 
 const additionalServices = [
-  { title: 'Wedding Choreographers', icon: Activity },
-  { title: 'Photobooth', icon: Smile },
-  { title: 'Wedding DJ', icon: Music },
-  { title: 'Wedding Cakes', icon: Cake },
-  { title: 'Wedding Decorators', icon: Sparkles },
-  { title: 'Party Places', icon: Tent },
+  { title: 'Choreographers', icon: Activity },
+  { title: 'Photobooth', icon: MdAddAPhoto },
+  { title: 'DJ', icon: SiPioneerdj },
+  { title: 'Cakes', icon: BsCake2 },
+  { title: 'Musics', icon: Music },
+  { title: 'TentHouse', icon: Tent },
+  { title: 'Transportation', icon: MdEmojiTransportation },
+  { title: 'Videography', icon: Video },
 ];
 
 const categoryComponents = {
-  'Wedding Photographers': <WeddingPhotographers />,
   'Caterers': <Caterers />,
+  'Photographers': <WeddingPhotographers />,
   'Wedding Decorators': <WeddingDecorators />,
   'Wedding MakeUp': <WeddingMakeUp />,
   'Wedding Planners': <WeddingPlanners />,
   'Party Places': <PartyPlaces />,
-  'Wedding Choreographers': <Choreographers />,
+  'Choreographers': <Choreographers />,
   'Photobooth': <Photobooth />,
+  'Cakes': <Cakes />,
+  'Musics': <Musics />,
+  'DJ': <DJ />,
+  'TentHouse': <TentHouse />,
+  'Transportation': <Transportation />,
+  'Videography': <Videography />,
+  'Florist': <Florist />,
+  'Gifts': <Gifts />,
+  'Invitation': <Invitation />,
 };
 
 export default function WeddingVendor() {
@@ -54,6 +85,12 @@ export default function WeddingVendor() {
   const combinedCategories = [...vendorCategories, ...additionalServices];
   window.scrollTo({ top: 0, category: "top" })
   // Filtered categories based on active tab and search term
+  const { data, isLoading, isError, error } = useGetAllVendorsQuery();
+
+
+  //  const caterers = data?.vendors?.filter(v => v.vendorType === "Caterers");
+  //  const Hospitality = data?.vendors?.filter(v => v.vendorType ==="Hospitality");
+
   const filteredCategories = searchTerm
     ? combinedCategories.filter(({ title }) =>
       title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -81,6 +118,17 @@ export default function WeddingVendor() {
     setSelectedCategory(prev => (prev === category ? null : category));
   };
 
+  if (isLoading) {
+    return <div className="text-center py-10">Loading vendors...</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center text-red-500 py-10">
+        Error: {error?.data?.message || 'Failed to fetch vendors.'}
+      </div>
+    );
+  }
   return (
     <div className="relative font-serif">
       {/* Header */}
@@ -183,17 +231,22 @@ export default function WeddingVendor() {
       {/* Render Category Component if selected */}
       {selectedCategory && (
         <div className="p-2 lg:mx-20 lg:mt-15">
-          <div className="flex justify-between mb-6">
-            <h3 className="text-xl font-bold">{selectedCategory}</h3>
+
+
+
+          <div className="grid grid-cols-[1fr_auto] items-start mb-6 gap-4">
+            <h3 className="text-xl font-bold break-words">
+              {selectedCategory}
+            </h3>
             <button
               onClick={() => setSelectedCategory(null)}
-              className="border text-sm text-gray-700 px-3 py-2 rounded hover:bg-[#DEBF78] transition"
+              className="border text-sm text-gray-700 px-3 py-2 rounded hover:bg-[#DEBF78] transition whitespace-nowrap"
             >
               Back to Categories
             </button>
           </div>
 
-          {activeTab === 'primary' &&
+       {activeTab === 'primary' &&
             vendorCategories.some((cat) => cat.title === selectedCategory) &&
             (categoryComponents[selectedCategory] || <p>No component available.</p>)
           }

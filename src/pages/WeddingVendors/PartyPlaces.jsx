@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { FaStar } from 'react-icons/fa';
 import WeVendorr2 from '../../assets/newPics/WeVendor2avif.avif';
+import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 
 const vendorData = [
   {
@@ -54,58 +55,87 @@ export default function PartyPlaces() {
   const [selectedCategory, setSelectedCategory] = useState("Party Places");
   const [sortType, setSortType] = useState("popular");
   const [filteredVendors, setFilteredVendors] = useState([]);
+ const { data, isLoading, isError, error } = useGetAllVendorsQuery();
+  
+    //  console.log("vendorsList", data);
+    const partyPlaces = data?.vendors?.filter(v => v.vendorType === "Party Places");
+    console.log("partyPlaces", partyPlaces);
 
-  useEffect(() => {
-    let sorted = [...vendorData];
+   useEffect(() => {
+  if (!partyPlaces) return;
 
-    if (sortType === "popular") {
-      sorted.sort((a, b) => b.reviews - a.reviews);
-    } else if (sortType === "newest") {
-      sorted.sort((a, b) => b.id - a.id);
-    }
+  let sorted = [...partyPlaces];
 
-    setFilteredVendors(sorted);
-  }, [sortType]);
+  if (sortType === "popular") {
+    sorted.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+  } else if (sortType === "newest") {
+    sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
 
+  setFilteredVendors(sorted);
+}, [sortType, partyPlaces]);
+
+
+
+
+  if (isLoading) {
+    return <div className="text-center py-10">Loading vendors...</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center text-red-500 py-10">
+        Error: {error?.data?.message || 'Failed to fetch vendors.'}
+      </div>
+    );
+  }
   return (
     <>
       {/* Top Buttons */}
       
       {/* Vendor Grid */}
-      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVendors.length === 0 ? (
-          <p>No vendors available for this category.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredVendors?.length === 0 ? (
+          <p className="text-center col-span-full">No vendors available for this category.</p>
         ) : (
           filteredVendors.map((vendor) => (
             <div
-              key={vendor.id}
+              key={vendor._id }
               className="bg-white border rounded-xl overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300"
             >
+              {/* Image */}
               <div className="relative">
                 <img
-                  src={vendor.image}
-                  alt={vendor.name}
+                  src={vendor.coverImage || vendor.profilePicture || '/fallback.jpg'}
+                  alt={vendor.businessName || vendor.name}
                   className="w-full h-[250px] object-cover"
                 />
                 <span className="absolute top-3 right-4 bg-white text-gray-600 text-xs font-medium px-2 py-1 rounded-full shadow flex items-center">
-                  <FaStar size={14} className='text-yellow-400 mr-1' /> {vendor.rating}
+                  <FaStar size={14} className='text-yellow-400 mr-1' />
+                  {vendor.rating || "4.5"}
                 </span>
               </div>
+      
+              {/* Info */}
               <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
                 <div className="mb-4">
-                  <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.category}</p>
+                  <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.vendorType || "Vendor"}</p>
                   <h5 className="text-lg font-semibold mb-1 leading-snug">
-                    {vendor.name}
+                    {vendor.businessName || vendor.name || "Vendor Name"}
                   </h5>
-                  <p className="text-sm text-gray-600">{vendor.description}</p>
+                  <p className="text-sm text-gray-600">
+                    {vendor.aboutBusiness || vendor.description || "No description available."}
+                  </p>
                   <div className="flex items-center text-sm text-gray-500 gap-1 mt-1">
                     <MapPin size={14} />
-                    <span>{vendor.location}</span>
+                    <span>{vendor.serviceAreas?.join(", ") || "Location not specified"}</span>
                   </div>
                 </div>
+      
+                {/* Price & Reviews */}
                 <div className="border-t pt-3 mt-auto flex justify-between items-center text-sm text-gray-800">
-                  <span>{vendor.price}</span>
-                  <span>{vendor.reviews} reviews</span>
+                  <span>{vendor.priceRange || vendor.price || "Price on request"}</span>
+                  <span>{vendor.reviews || 0} reviews</span>
                 </div>
               </div>
             </div>

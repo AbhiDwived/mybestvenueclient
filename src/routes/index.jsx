@@ -79,6 +79,23 @@ import HotelCultureByDsy from '../pages/WeddingVenues/IneerPages/HotelCultureByD
 import WeedingVendor from '../pages/WeddingVendors/WeedingVendor';
 import Photographers from '../pages/WeddingVendors/Photographers';
 import Videography from '../pages/WeddingVendors/Videography';
+import Cakes from '../pages/WeddingVendors/Cakes';
+import Caterers from '../pages/WeddingVendors/Caterers';
+import WeddingMakeUp from '../pages/WeddingVendors/WeddingMakeUp';
+import Choreographers from '../pages/WeddingVendors/Choreographers';
+import Decorators from '../pages/WeddingVendors/Decorators';
+import DJ from '../pages/WeddingVendors/DJ';
+import Entertainment from  '../pages/WeddingVendors/Entertainment';
+import Florists from '../pages/WeddingVendors/Florists';
+import Gifts from '../pages/WeddingVendors/Gifts';
+import Invitation from '../pages/WeddingVendors/Invitations';
+import Music from '../pages/WeddingVendors/Music';
+import PartyPlaces from '../pages/WeddingVendors/PartyPlaces';
+import Photobooth from  '../pages/WeddingVendors/Photobooth';
+import Planners from '../pages/WeddingVendors/Planners';
+import Transportation from '../pages/WeddingVendors/Transportation';
+import TentHouse from '../pages/WeddingVendors/TentHouse';
+import VendorPromotion from '../pages/WeddingVendors/VendorPromotions';
 
 // Vendor Auth
 import VendorSignup from "../pages/Auth/VendorSignup";
@@ -170,10 +187,28 @@ const index = () => {
                     <Route path="/networking" element={<Networking />} />
                     <Route path="/contactUs" element={<ContactUs />} />
 
+                   
                     {/* Wedding Vendor public page */}
                     <Route path="/wedding-vendor" element={<WeedingVendor />} />
+                    <Route path="/Cakes" element={<Cakes/>}/>
+                    <Route path ="/caterers" element={<Caterers/>}/>
+                    <Route path='/choreographers' element={<Choreographers/>}/>
+                    <Route path='/decorators' element={<Decorators/>}/>
+                    <Route path='/dj' element={<DJ/>}/>
+                    <Route path='/entertainment' element={<Entertainment/>}/>
+                    <Route path='/florist' element={<Florists/>}/>
+                    <Route path='/gifts' element={<Gifts/>}/>
+                    <Route path='/invitation' element={<Invitation/>}/>
+                    <Route path='/music' element={<Music/>}/>
+                    <Route path='/partyPlaces' element={<PartyPlaces/>}/>
+                    <Route path='/photobooth' element={<Photobooth/>}/>
                     <Route path="/photographers" element={<Photographers />} />
+                    <Route path="/planners"  element={<Planners/>}/> 
                     <Route path="/videography" element={<Videography />} />
+                    <Route path="/tentHouse"  element={<TentHouse/>}/> 
+                    <Route path="/transportation"  element={<Transportation/>}/> 
+                    <Route path="/promotion"  element={<VendorPromotion/>}/> 
+                    <Route path="/makeUp"  element={<WeddingMakeUp/>}/> 
 
                     {/* Home additional pages */}
                     <Route path='/BrowserVenues' element={<BrowserVenues />} />
