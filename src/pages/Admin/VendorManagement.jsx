@@ -104,14 +104,14 @@ const VendorManagement = () => {
   if (isError) return <div className="text-center text-red-500 p-4">Error loading vendors</div>;
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow">
+    <div className=" bg-white rounded-xl ">
       <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
-        <div>
+        <div className="p-3">
           <h2 className="text-2xl font-semibold">Vendor Management</h2>
           <p className="text-sm text-gray-500">Manage all registered vendors on the platform</p>
         </div>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4 px-3">
           <input
             type="text"
             placeholder="Search vendors..."
@@ -155,10 +155,10 @@ const VendorManagement = () => {
                 </div>
               )}
 
-              <div className="p-4">
+              <div className="p-2">
                 <div className="flex justify-between items-center mb-2">
-                  <h3
-                    className="font-semibold text-lg leading-tight"
+                  <span
+                    className="font-semibold text-md lg:text-2xl md:text-xl mt-4 leading-tight"
                     style={{
                       display: "-webkit-box",
                       WebkitLineClamp: 2,
@@ -169,9 +169,9 @@ const VendorManagement = () => {
                     title={vendor.businessName || vendor.name}
                   >
                     {vendor.businessName || vendor.name}
-                  </h3>
+                  </span>
 
-                  <span className="text-xs px-2 py-1 bg-[#0f4c81] text-white rounded-full">
+                  <span className="text-xs p-2 bg-[#0f4c81] text-white rounded-md">
                     {vendor.vendorType || vendor.category}
                   </span>
                 </div>
@@ -210,12 +210,12 @@ const VendorManagement = () => {
         )}
       </div>
 
-      <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
+      <div className="flex flex-wrap justify-between items-center text-sm text-gray-600 mt-4">
         <span>
           Showing {startIdx + 1}-{Math.min(startIdx + vendorsPerPage, filteredVendors.length)} of{" "}
           {filteredVendors.length} vendors
         </span>
-        <div className="space-x-2">
+        <div className="space-x-2 flex gap-1">
           <button
             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
             disabled={currentPage === 1}

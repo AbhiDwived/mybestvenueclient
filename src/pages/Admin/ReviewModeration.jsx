@@ -49,8 +49,8 @@ const ReviewModeration = () => {
   };
 
   return (
-    <div className="max-w-full mx-auto p-6 bg-white rounded-lg shadow-md">
-      <div className="mb-2">
+    <div className="max-w-full mx-auto  bg-white rounded-lg shadow-md lg:p-2 md:p-2">
+      <div className="mb-2 px-3 py-3">
         <h1 className="text-2xl font-bold text-gray-800">Review Moderation</h1>
         <p className="text-gray-600">Reported reviews that need attention</p>
       </div>
@@ -97,12 +97,12 @@ const ReviewModeration = () => {
 
             {/* Action Buttons */}
 
-            <div className="p-2 flex justify-end gap-4">
+            <div className="p-2 flex justify-end gap-2">
               <button
                 onClick={() => handleApprove(review.id)}
-                className="px-4 py-2 bg-green-100 text-green-800 rounded flex items-center hover:text-gray-800"
+                className="p-2 bg-green-100 text-green-800 rounded flex items-center hover:text-gray-800"
               >
-                <span className="w-5 h-5 rounded  flex items-center justify-center text-white mr-2 ">
+                <span className="w-5 h-5 rounded  flex items-center justify-center text-white mr- ">
                   <FaRegCheckCircle className='hover:text-gray-800' color='green' size={18} />
                 </span>
                 Approve Review

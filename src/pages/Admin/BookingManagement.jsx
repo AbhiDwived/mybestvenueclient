@@ -85,6 +85,27 @@ const BookingManagement = () => {
     return styles[status] || '';
   };
 
+  const getResponsiveText = (text, max = 7) => (
+    <>
+      <span className="block md:hidden lg:hidden m-3" title={text}>
+        {text?.length > max ? `${text.slice(0, max)}` : text}
+      </span>
+      <span className="hidden md:block mb-3">
+        {text}
+      </span>
+    </>
+  );
+  const getResponsiveTextData = (text, max = 7) => (
+    <>
+      <span className="block md:hidden lg:hidden m-3 " title={text}>
+        {text?.length > max ? `${text.slice(0, max)}` : text}
+      </span>
+      <span className="hidden md:block">
+        {text}
+      </span>
+    </>
+  );
+
   const handleExport = () => {
     const dataToExport = bookingsData[activeFilter];
     const headers = ['Vendor Name', 'Customer', 'Phone Number', 'Venue', 'Date', 'Status', 'Amount'];
@@ -114,15 +135,16 @@ const BookingManagement = () => {
   };
 
   return (
-    <div className="py-3">
+    <div className="py-3 ">
       <div className="flex justify-between items-center mb-4">
-        <div className="mx-3">
-          <h2 className="text-xl font-semibold">Bookings Management</h2>
+        <div className="mx-3 ">
+          <span className=" text-md lg:text-2xl font-bold">Bookings Management</span>
           <p className="text-sm text-gray-500">View and manage all venue bookings</p>
         </div>
         <button
           onClick={handleExport}
-          className="text-sm bg-gradient-to-r from-[#0f4c81] to-[#1a6cbd] text-white px-4 py-1.5 rounded-md hover:from-[#DEBF78] hover:to-[#E8D4A7] transition-all duration-300 shadow-md hover:shadow-md flex items-center gap-2"
+          style={{ marginTop: '-40px', borderRadius: "3px" }}
+          className="text-sm bg-gradient-to-r from-[#0f4c81] to-[#1a6cbd] text-white p-1 mx-3 rounded-md hover:from-[#DEBF78] hover:to-[#E8D4A7] transition-all duration-300 shadow-md hover:shadow-md flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -148,8 +170,8 @@ const BookingManagement = () => {
           ))}
         </div>
 
-        <div className="border border-gray-100 rounded-lg px-3 py-3 shadow-md hover:shadow-md transition-shadow duration-300">
-          <div className="flex justify-between items-center mb-3">
+        <div className="border border-gray-100 rounded-lg px-3 py-3 lg:mx-3 shadow-md hover:shadow-md transition-shadow duration-300">
+          <div className="flex justify-between items-center mb-2">
             <p className="text-sm font-bold">
               {activeFilter === 'all' ? 'Recent Bookings' : `${activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)} Bookings`}
             </p>
@@ -160,58 +182,46 @@ const BookingManagement = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr>
-                  <th className="text-left font-bold text-gray-800 pb-2 pr-4 border-b border-gray-100 flex">Vendor Name</th>
-                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Customer</th>
-                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Phone Number</th>
-                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Venue</th>
-                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Date</th>
-                  <th className="text-left font-bold text-gray-800 pb-3 pr-4 border-b border-gray-100">Status</th>
-                  <th className="text-left font-bold text-gray-800 pb-3 border-b border-gray-100">Amount</th>
+                <tr >
+                  <th>{getResponsiveText('Vendor Name')}</th>
+                  <th>{getResponsiveText('Customer')}</th>
+                  <th>{getResponsiveText('Phone')}</th>
+                  <th>{getResponsiveText('Venue')}</th>
+                  <th>{getResponsiveText('Date')}</th>
+                  <th>{getResponsiveText('Status')}</th>
+                  <th>{getResponsiveText('Amount')}</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-600">
+              <tbody>
                 {bookingsData[activeFilter].map((booking) => (
-                  <tr key={booking._id} className="border-b border-gray-50 hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent transition-colors duration-300">
-                    <td className="py-3 pr-4 font-medium">
+                  <tr key={booking._id}>
+                    <td>
                       <button
                         onClick={() => handleViewVendor(booking)}
-                        className="text-[#0f4c81] hover:underline font-medium focus:outline-none"
+                        className="text-[#0f4c81] hover:underline font-medium"
                       >
-                        <>
-                          <span className="block lg:hidden">
-                            {booking.vendorName?.length > 8
-                              ? `${booking.vendorName.slice(0, 5)}...`
-                              : booking.vendorName}
-                          </span>
-                          <span className="hidden lg:block">
-                            {booking.vendorName}
-                          </span>
-                        </>
+                        {getResponsiveTextData(booking.vendorName || 'N/A')}
                       </button>
                     </td>
-                    <td className="pr-4 font-medium">
+                    <td>
                       {booking.user ? (
                         <button
                           onClick={() => handleViewUser(booking)}
-                          className="text-[#0f4c81] hover:underline font-medium focus:outline-none"
+                          className="text-[#0f4c81] hover:underline font-medium"
                         >
-                          {booking.user.name?.length > 5
-                            ? `${booking.user.name.slice(0, 10)}..` : booking.user.name}
+                          {getResponsiveTextData(booking.user.name || 'N/A')}
                         </button>
-                      ) : (
-                        'N/A'
-                      )}
+                      ) : 'N/A'}
                     </td>
-                    <td className="pr-4 font-medium">{booking.user?.phone || 'N/A'}</td>
-                    <td className="pr-4 font-medium">{booking.venue || 'N/A'}</td>
-                    <td className="pr-4 font-medium">{new Date(booking.eventDate).toLocaleDateString()}</td>
-                    <td className="pr-4">
-                      <span className={`${getStatusBadge(booking.status)} px-3 py-1 rounded-full text-xs capitalize font-medium shadow-sm`}>
+                    <td>{booking.user?.phone || 'N/A'}</td>
+                    <td>{getResponsiveTextData(booking.venue || 'N/A')}</td>
+                    <td>{new Date(booking.eventDate).toLocaleDateString()}</td>
+                    <td >
+                      <span  className={`${getStatusBadge(booking.status)} p-1 mx-2 rounded-sm text-xs capitalize font-medium shadow-sm`}>
                         {booking.status}
                       </span>
                     </td>
-                    <td className="font-medium">₹{booking.plannedAmount?.toLocaleString('en-IN')}</td>
+                    <td>₹{booking.plannedAmount?.toLocaleString('en-IN')}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useGetAllMessageQuery } from '../../features/admin/adminAPI';
-import Loader from "../../components/{Shared}/Loader";
+import Loader from '../../components/{Shared}/Loader';
 
 export default function Contact() {
     const {
@@ -27,7 +27,6 @@ export default function Contact() {
         return <div className="text-danger">Error loading messages.</div>;
     }
 
-    // Use correct key based on your actual response structure
     const contacts = data?.message || [];
 
     // Helper functions
@@ -89,11 +88,11 @@ export default function Contact() {
     };
 
     return (
-        <div className="mx-3 my-4">
+        <div className="mx-3 my-4 ">
             <h2 className="mb-3">Contact Submissions</h2>
 
             {/* Filter Controls */}
-            <div className="d-flex flex-wrap gap-3 mb-3 align-items-center">
+            <div className="d-flex flex-wrap gap-2 mb-3 align-items-center">
                 <div>
                     <div>
                         <button
@@ -127,7 +126,6 @@ export default function Contact() {
                             Custom Range
                         </button>
                     </div>
-
                 </div>
 
                 {filterType === 'custom_range' && (
@@ -153,11 +151,10 @@ export default function Contact() {
                     </>
                 )}
 
-                <div className="ms-auto">
-                    <label className="form-label">Search</label>
+                <div className="mt-4 flex">
                     <input
                         type="text"
-                        placeholder="Name or Email"
+                        placeholder="Name or Email Search"
                         className="form-control"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -172,15 +169,15 @@ export default function Contact() {
             </div>
 
             {/* Table */}
-            <div className="table-responsive ">
-                <table className="table table-bordered ">
+            <div className="table-responsive">
+                <table className="table table-bordered">
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Name</th>
+                            <th className="d-none d-lg-table-cell">Name</th>
                             <th>Email</th>
                             <th>Phone</th>
-                            <th>Message</th>
+                            <th className="d-none d-md-table-cell">Message</th>
                             <th>Submitted At</th>
                         </tr>
                     </thead>
@@ -189,16 +186,22 @@ export default function Contact() {
                             filteredContacts.map((contact, index) => (
                                 <tr key={contact._id}>
                                     <td>{index + 1}</td>
-                                    <td>{contact.name}</td>
+                                    <td className="d-none d-lg-table-cell">{contact.name}</td>
+                                    <td className="d-table-cell d-lg-none text-truncate" style={{ maxWidth: "150px" }}>
+                                        {contact.name}
+                                    </td>
                                     <td>{contact.email}</td>
                                     <td>{contact.phone}</td>
-                                    <td>{contact.message}</td>
+                                    <td className="d-none d-md-table-cell">{contact.message}</td>
+                                    <td className="d-table-cell d-md-none text-truncate" style={{ maxWidth: "150px" }}>
+                                        {contact.message}
+                                    </td>
                                     <td>{new Date(contact.createdAt).toLocaleString()}</td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className="text-center">
+                                <td colSpan="8" className="text-center">
                                     No messages found.
                                 </td>
                             </tr>

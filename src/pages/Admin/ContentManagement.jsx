@@ -107,20 +107,21 @@ export default function ContentManagement() {
     <>
       {/* Header & New Post Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-        <div>
+        <div className='mx-3'>
           <h1 className="text-xl font-semibold">Blog Management</h1>
           <p className="text-gray-600">Create and manage blog posts</p>
         </div>
         <button
           onClick={() => navigate('/admin/add-blog-post')}
-          className="bg-[#00478F] text-white px-4 py-2 rounded text-sm flex items-center gap-2" 
+          style={{ borderRadius: '5px' }}
+          className="bg-[#00478F] text-white px-4 py-2 mx-3 text-sm flex items-center gap-2"
         >
           <Pencil size={16} /> New Blog Post
         </button>
       </div>
 
       {/* Blog Cards */}
-      <div className="py-12 bg-white">
+      <div className="py-12 bg-white mx-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {localBlogs.length > 0 ? (
             localBlogs.map((post) => (
@@ -141,34 +142,38 @@ export default function ContentManagement() {
                       }}
                     />
                   </Link>
-                  <span className="absolute top-3 left-4 bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full capitalize">
+                  <span className="absolute top-3 left-4 bg-blue-900 text-white text-sm font-medium p-2 rounded-sm capitalize">
                     {post.category}
                   </span>
                 </div>
                 <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
                   <div className="mb-4">
-                    <Link 
+                    <Link
                       to={`/admin/blogs/${post.id}`}
-                      className="hover:text-blue-600 transition-colors"
+                      style={{ textDecoration: "none" }}
+                      className="text-black transition-colors"
                     >
                       <h5 className="text-lg font-semibold mb-1">{post.title}</h5>
                     </Link>
                     <p className="text-sm text-gray-600 mt-2">{post.description}</p>
                   </div>
-                  <div className="flex justify-between gap-2 mb-3">
+                  <div className="flex gap-2 mb-3">
                     <button
-                      className="py-2 px-3 bg-blue-100 text-blue-800 rounded-md flex items-center gap-1"
+                      style={{ borderRadius: '5px' }}
+                      className="py-2 px-3 bg-blue-100 text-blue-800  flex items-center gap-1"
                       onClick={() => navigate(`/admin/blogs/${post.id}`)}
                     >
                       <Eye size={16} /> View
                     </button>
                     <button
+                      style={{ borderRadius: '5px' }}
                       className="py-2 px-3 bg-yellow-100 text-yellow-800 rounded-md flex items-center gap-1"
                       onClick={() => handleEditBlog(post)}
                     >
                       <Pencil size={16} /> Edit
                     </button>
                     <button
+                      style={{ borderRadius: '5px' }}
                       className="py-2 px-3 bg-red-100 text-red-800 rounded-md flex items-center gap-1"
                       onClick={() => handleDelete(post.id)}
                       disabled={isDeleting && deletingId === post.id}

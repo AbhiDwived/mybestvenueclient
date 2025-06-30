@@ -81,35 +81,6 @@ export const adminApi = createApi({
     // ✅ Get All Vendors
     getAllVendors: builder.query({
       query: () => '/admin/all_vendors',
-      transformResponse: (response) => {
-        const vendors = response.vendors || [];
-        
-        // Group vendors by type and get latest from each type
-        const vendorsByType = {};
-        vendors.forEach(vendor => {
-          if (!vendor.vendorType) return;
-          
-          if (!vendorsByType[vendor.vendorType]) {
-            vendorsByType[vendor.vendorType] = vendor;
-          } else {
-            // Compare dates to keep the latest vendor
-            const existingDate = new Date(vendorsByType[vendor.vendorType].appliedDate);
-            const currentDate = new Date(vendor.appliedDate);
-            
-            if (currentDate > existingDate) {
-              vendorsByType[vendor.vendorType] = vendor;
-            }
-          }
-        });
-
-        // Convert back to array
-        const latestVendors = Object.values(vendorsByType);
-
-        return {
-          ...response,
-          vendors: latestVendors
-        };
-      }
     }),
 
     // Get Latest Vendors By Type
@@ -123,11 +94,15 @@ export const adminApi = createApi({
         url: `/admin/approve/${vendorId}`,
         method: 'PUT',
       }),
+      // Invalidate the pending vendors cache after successful approval
+      invalidatesTags: ['PendingVendors'],
     }),
 
     // Get Pending Vendors
     getPendingVendors: builder.query({
       query: () => '/admin/pending_vendor',
+      // Add tag to the query
+      providesTags: ['PendingVendors'],
     }),
 
     // Delete Vendor
@@ -136,6 +111,8 @@ export const adminApi = createApi({
         url: `/admin/delete-vendor/${vendorId}`,
         method: 'DELETE',
       }),
+      // Invalidate the pending vendors cache after successful deletion
+      invalidatesTags: ['PendingVendors'],
     }),
 
     // ✅ Activity Endpoints — UPDATED to use /activity instead of /admin

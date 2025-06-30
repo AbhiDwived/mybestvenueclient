@@ -112,11 +112,11 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 text-gray-800 space-y-6 font-serif">
+    <div className="min-h-screen  text-gray-800 space-y-6 font-serif">
       {/* Header */}
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-4 lg:m-5 m-3">
         <div>
-          <span className="text-md  lg:text-2xl font-bold">Admin Dashboard</span>
+          <span className="text-lg  lg:text-2xl font-bold">Admin Dashboard</span>
           <p className="text-gray-500 text-sm">Manage users, vendors, <br /> content, and platform settings</p>
         </div>
         <button
@@ -130,7 +130,7 @@ const AdminDashboard = () => {
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         {cardData.map((card, index) => (
-          <div key={index} className="bg-white p-4 rounded shadow-sm">
+          <div key={index} className="bg-white p-3 rounded shadow-sm">
             <h2 className="text-sm font-semibold text-gray-800 mb-2">{card.title}</h2>
 
             {/* Platform Statistics */}
@@ -205,7 +205,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Tabs */}
-      <div className="relative bg-[#f5f8fb] p-1 sm:p-2 rounded-md mb-6 overflow-hidden">
+      <div className="relative bg-[#f5f8fb] p-1 lg:mx-2 sm:p-2 rounded-md mb-6 overflow-hidden">
         <button
           onClick={() => {
             const container = document.getElementById('tabs-container');
@@ -260,7 +260,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="shadow-sm rounded-lg overflow-hidden">
+      <div className=" rounded-lg overflow-hidden">
         {activeTab === 'Dashboard' && <SubDashboard />}
         {activeTab === 'Booking' && <BookingManagement />}
         {activeTab === 'User' && <UserManagement />}

@@ -67,11 +67,11 @@ const SubscriberManagement = () => {
   if (isError) return <div className="text-center text-red-500 p-4">Error: {error?.data?.message || 'Failed to load subscribers'}</div>;
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Subscriber Management</h2>
+    <div className="p-">
+      <h2 className="text-2xl font-bold mb-4 p-3">Subscriber Management</h2>
       
       {/* Search Bar */}
-      <div className="mb-4">
+      <div className="mb-4 p-3">
         <input
           type="text"
           placeholder="Search by email..."
@@ -87,7 +87,7 @@ const SubscriberManagement = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Subscribed</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>

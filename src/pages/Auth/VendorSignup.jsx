@@ -40,6 +40,26 @@ const VENDOR_TYPES = [
   'Other'
 ];
 
+// Delhi-NCR locations
+const LOCATIONS = [
+  'Delhi',
+  'New Delhi',
+  'Noida',
+  'Greater Noida',
+  'Gurgaon',
+  'Faridabad',
+  'Ghaziabad',
+  'Indirapuram',
+  'Dwarka',
+  'Rohini',
+  'Janakpuri',
+  'Laxmi Nagar',
+  'Vasant Kunj',
+  'Connaught Place',
+  'Saket',
+  'Other'
+];
+
 const VendorSignup = () => {
   const [formData, setFormData] = useState({
     contactName: '',
@@ -51,6 +71,9 @@ const VendorSignup = () => {
     password: '',
     confirmPassword: '',
     termsAccepted: false,
+    location: '',
+    otherLocation: '',
+    serviceAreas: []
   });
 
   const [profilePicture, setProfilePicture] = useState(null);
@@ -78,11 +101,30 @@ const VendorSignup = () => {
 
   const handleChange = (e) => {
     const { name, value, type: inputType, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: inputType === 'checkbox' ? checked : value,
-      ...(name === 'vendorType' && value !== 'Other' ? { otherVendorType: '' } : {})
-    }));
+    
+    if (name === 'location') {
+      if (value === 'Other') {
+        setFormData(prev => ({
+          ...prev,
+          location: value,
+          serviceAreas: []
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          location: value,
+          otherLocation: '',
+          serviceAreas: [value]
+        }));
+      }
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: inputType === 'checkbox' ? checked : value,
+        ...(name === 'vendorType' && value !== 'Other' ? { otherVendorType: '' } : {}),
+        ...(name === 'otherLocation' ? { serviceAreas: [value] } : {})
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -103,6 +145,14 @@ const VendorSignup = () => {
     if (formData.vendorType === 'Other' && !formData.otherVendorType.trim()) {
       errors.push('Please specify your custom vendor type');
     }
+    
+    if (!formData.location) {
+      errors.push('Please select a location');
+    }
+    
+    if (formData.location === 'Other' && !formData.otherLocation.trim()) {
+      errors.push('Please specify your location');
+    }
 
     if (!formData.termsAccepted) {
       errors.push('You must accept the terms and conditions');
@@ -115,16 +165,29 @@ const VendorSignup = () => {
     }
 
     setIsLoading(true);
-    const { confirmPassword, ...vendorData } = formData;
+    const { confirmPassword, otherLocation, location, serviceAreas, ...vendorData } = formData;
 
     const data = new FormData();
+    
+    // Handle basic vendor data
     Object.entries(vendorData).forEach(([key, value]) => {
       if (key === 'vendorType' && vendorData.vendorType === 'Other') {
         data.append(key, vendorData.otherVendorType.trim());
       } else if (key !== 'otherVendorType') {
-      data.append(key, value);
+        data.append(key, value);
       }
     });
+    
+    // Handle serviceAreas and address
+    const selectedLocation = formData.location === 'Other' ? formData.otherLocation : formData.location;
+    if (selectedLocation) {
+      const serviceAreasArray = [selectedLocation];
+      data.append('serviceAreas', JSON.stringify(serviceAreasArray));
+      data.append('address', JSON.stringify({
+        city: selectedLocation,
+        state: 'India'
+      }));
+    }
 
     if (profilePicture) {
       data.append('profilePicture', profilePicture);
@@ -288,6 +351,42 @@ const VendorSignup = () => {
                   value={formData.otherVendorType}
                   onChange={handleChange}
                   placeholder="Enter your custom vendor type"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+
+            {/* Location dropdown */}
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+              <select
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select your primary service area</option>
+                {LOCATIONS.map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {formData.location === 'Other' && (
+              <div>
+                <label htmlFor="otherLocation" className="block text-sm font-medium text-gray-700 mb-1">Other Location</label>
+                <input
+                  id="otherLocation"
+                  name="otherLocation"
+                  type="text"
+                  value={formData.otherLocation}
+                  onChange={handleChange}
+                  placeholder="Enter your service area"
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

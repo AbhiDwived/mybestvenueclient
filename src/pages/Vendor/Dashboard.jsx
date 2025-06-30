@@ -105,7 +105,13 @@ useEffect(() => {
               {vendor?.businessName || 'Dream Wedding Photography'}
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 font-serif">
-              {vendor?.vendorType || 'Photographer'} • {vendor?.Address || 'Delhi, India'}
+              {vendor?.vendorType || 'Photographer'} • {
+                vendor?.serviceAreas?.length > 0 
+                  ? vendor.serviceAreas[0]
+                  : vendor?.address?.city 
+                    ? vendor.address.city
+                    : 'Location not specified'
+              }
             </p>
           </div>
 

@@ -243,39 +243,51 @@ const PortfolioTab = () => {
   const handleAddImageClick = (index = null) => {
     setEditingImageIndex(index);
     fileInputRef.current.accept = 'image/*';
+    fileInputRef.current.multiple = true; // Enable multiple file selection
     fileInputRef.current.click();
   };
 
   const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
     try {
       setIsLoading(true);
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('title', `Portfolio Image ${portfolioImages.length + 1}`);
-
-          if (editingImageIndex !== null) {
-        // If editing, first delete the old image then upload new one
+      
+      // If editing a single image
+      if (editingImageIndex !== null && files.length === 1) {
+        // Delete the old image first
         const imageId = portfolioImages[editingImageIndex]._id;
         if (imageId) {
           await deletePortfolioImage(imageId).unwrap();
         }
+        
+        // Then upload the new image
+        const formData = new FormData();
+        formData.append('image', files[0]);
+        formData.append('title', `Portfolio Image ${portfolioImages.length}`);
+        await uploadPortfolioImage(formData).unwrap();
+      } 
+      // For multiple uploads or adding new images
+      else {
+        // Upload each image in sequence
+        for (let i = 0; i < files.length; i++) {
+          const formData = new FormData();
+          formData.append('image', files[i]);
+          formData.append('title', `Portfolio Image ${portfolioImages.length + i + 1}`);
+          await uploadPortfolioImage(formData).unwrap();
+        }
       }
-
-      // Upload the new image
-      const response = await uploadPortfolioImage(formData).unwrap();
       
       // Refetch images to get updated list
       refetchImages();
       
-        setEditingImageIndex(null);
-        fileInputRef.current.value = null;
-      toast.success('Image uploaded successfully');
+      setEditingImageIndex(null);
+      fileInputRef.current.value = null;
+      toast.success(files.length > 1 ? `${files.length} images uploaded successfully` : 'Image uploaded successfully');
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error(error?.data?.message || 'Failed to upload image');
+      console.error('Error uploading image(s):', error);
+      toast.error(error?.data?.message || 'Failed to upload image(s)');
     } finally {
       setIsLoading(false);
     }
@@ -650,8 +662,9 @@ const PortfolioTab = () => {
             style={{ aspectRatio: '1 / 1' }}
           >
             <LuImagePlus size={32} className="text-muted mb-2" />
-            <div className="fw-medium">Add New Image</div>
-            <div className="text-muted small mt-1">Upload JPG or PNG</div>
+            <div className="fw-medium">Add New Images</div>
+            <div className="text-muted small mt-1">Upload multiple JPG or PNG</div>
+            <div className="text-muted small">Hold Ctrl/Cmd to select multiple</div>
           </div>
         </div>
       </div>

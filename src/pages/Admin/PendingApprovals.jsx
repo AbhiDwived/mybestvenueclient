@@ -3,6 +3,8 @@ import { GrContact } from "react-icons/gr";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { RxCrossCircled } from "react-icons/rx";
 import { FaPhoneAlt } from "react-icons/fa";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import {
   useGetPendingVendorsQuery,
@@ -37,8 +39,8 @@ function getDistinctColor(value, usedMap) {
 
 const PendingVendorApprovals = () => {
   const { data, isLoading, isError } = useGetPendingVendorsQuery();
-  const [approveVendor] = useApproveVendorMutation();
-  const [deleteVendor] = useDeleteVendorByAdminMutation();
+  const [approveVendor, { isLoading: isApproving }] = useApproveVendorMutation();
+  const [deleteVendor, { isLoading: isDeleting }] = useDeleteVendorByAdminMutation();
 
   const vendors = Array.isArray(data)
     ? data
@@ -66,10 +68,10 @@ const PendingVendorApprovals = () => {
   const handleApprove = async (vendorId) => {
     try {
       await approveVendor({ vendorId }).unwrap();
-      alert("Vendor approved successfully!");
+      toast.success("Vendor approved successfully!");
     } catch (err) {
       console.error("Approval failed:", err);
-      alert("Error approving vendor.");
+      toast.error(err.data?.message || "Error approving vendor.");
     }
   };
 
@@ -77,10 +79,10 @@ const PendingVendorApprovals = () => {
     if (window.confirm("Are you sure you want to reject this vendor?")) {
       try {
         await deleteVendor({ vendorId }).unwrap();
-        alert("Vendor rejected and removed.");
+        toast.success("Vendor rejected and removed.");
       } catch (err) {
         console.error("Rejection failed:", err);
-        alert("Error rejecting vendor.");
+        toast.error(err.data?.message || "Error rejecting vendor.");
       }
     }
   };
@@ -152,15 +154,23 @@ const PendingVendorApprovals = () => {
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => handleApprove(vendor._id)}
-                    className="bg-green-100 text-green-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-green-200 transition"
+                    disabled={isApproving || isDeleting}
+                    className={`bg-green-100 text-green-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-green-200 transition ${
+                      (isApproving || isDeleting) ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   >
-                    <FaRegCheckCircle className="mr-1" /> Approve
+                    <FaRegCheckCircle className="mr-1" /> 
+                    {isApproving ? 'Approving...' : 'Approve'}
                   </button>
                   <button
                     onClick={() => handleReject(vendor._id)}
-                    className="bg-red-100 text-red-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-red-200 transition"
+                    disabled={isApproving || isDeleting}
+                    className={`bg-red-100 text-red-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-red-200 transition ${
+                      (isApproving || isDeleting) ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   >
-                    <RxCrossCircled className="mr-1" /> Reject
+                    <RxCrossCircled className="mr-1" /> 
+                    {isDeleting ? 'Rejecting...' : 'Reject'}
                   </button>
                   <button className="text-gray-600 text-sm underline hover:text-gray-800 hover:bg-[#DEBF78] p-1 rounded">
                     View Details
@@ -171,6 +181,7 @@ const PendingVendorApprovals = () => {
           ))
         )}
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
