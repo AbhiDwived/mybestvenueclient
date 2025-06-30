@@ -75,7 +75,7 @@ const VendorVerifyResetOTP = () => {
       
       toast.success(res.message || 'OTP Verified Successfully');
       
-      setTimeout(() => {
+       setTimeout(() => {
         navigate(`/vendor/reset-password`, { 
           state: { email, otp } 
         });
@@ -107,14 +107,14 @@ const VendorVerifyResetOTP = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
-            <input
-              type="text"
+      <input
+        type="text"
               placeholder="Enter 6-digit OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+        value={otp}
+        onChange={(e) => setOtp(e.target.value)}
               maxLength={6}
               className="w-full p-3 border rounded mb-2 text-center tracking-[10px] uppercase"
-              required
+        required
             />
             <div className="text-center text-sm text-gray-500 mb-4">
               {!canResendOtp ? (
@@ -132,8 +132,8 @@ const VendorVerifyResetOTP = () => {
             </div>
           </div>
           
-          <button
-            type="submit"
+      <button
+        type="submit"
             disabled={isVerifying}
             className={`w-full py-3 rounded transition ${
               isVerifying 
@@ -148,7 +148,7 @@ const VendorVerifyResetOTP = () => {
                   xmlns="http://www.w3.org/2000/svg" 
                   fill="none" 
                   viewBox="0 0 24 24"
-                >
+      >
                   <circle 
                     className="opacity-25" 
                     cx="12" 
@@ -168,8 +168,8 @@ const VendorVerifyResetOTP = () => {
             ) : (
               'Verify OTP'
             )}
-          </button>
-        </form>
+      </button>
+    </form>
       </div>
       <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />
     </div>

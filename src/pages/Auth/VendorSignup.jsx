@@ -91,7 +91,7 @@ const VendorSignup = () => {
 
     // Comprehensive form validation
     const errors = [];
-    
+
     if (formData.password !== formData.confirmPassword) {
       errors.push("Passwords do not match");
     }
@@ -122,7 +122,7 @@ const VendorSignup = () => {
       if (key === 'vendorType' && vendorData.vendorType === 'Other') {
         data.append(key, vendorData.otherVendorType.trim());
       } else if (key !== 'otherVendorType') {
-        data.append(key, value);
+      data.append(key, value);
       }
     });
 

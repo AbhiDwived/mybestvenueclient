@@ -258,9 +258,7 @@ export default function BookingManagement() {
     setShowViewModal(true);
   };
 
-  if (!bookings.length) {
-    return <p className="text-center mt-10 text-gray-500">No bookings found</p>;
-  }
+ 
 
   if (isLoading) {
     return <Loader />;

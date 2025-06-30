@@ -3,12 +3,12 @@ import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { IoIosArrowForward } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
-import { useGetAllVendorsQuery } from "../../features/admin/adminAPI";
+import { useGetLatestVendorsByTypeQuery } from "../../features/admin/adminAPI";
 
 const FeaturedVendors = ({ showAll = false }) => {
   const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
-  const { data: vendorsData, isLoading, error } = useGetAllVendorsQuery();
+  const { data: vendorsData, isLoading, error } = useGetLatestVendorsByTypeQuery();
 
   const toggleFavorite = (e, id) => {
     e.stopPropagation();
@@ -44,20 +44,21 @@ const FeaturedVendors = ({ showAll = false }) => {
       : vendor.address?.city && vendor.address?.state
         ? `${vendor.address.city}, ${vendor.address.state}`
         : vendor.address?.city || vendor.address?.state || 'Location not specified',
-    rating: 4.5, // This should come from reviews when implemented
-    reviews: 0, // This should come from reviews when implemented
+    rating: 4.5,
+    reviews: 0,
     price: vendor.pricingRange && vendor.pricingRange.min && vendor.pricingRange.max
       ? `₹${vendor.pricingRange.min.toLocaleString()} - ₹${vendor.pricingRange.max.toLocaleString()}`
       : 'Price on request'
   })) || [];
 
+  // Show all vendors if showAll is true, otherwise show only 4
   const displayedVendors = showAll ? formattedVendors : formattedVendors.slice(0, 4);
 
   return (
     <div className="lg:mx-16 px-4 md:px-10 xl:px-20 py-10">
       <div className="flex flex- justify-between items-start sm:items-center mb-6 gap-4">
-        <h3 className="font-semibold text-gray-800 font-serif">Featured Vendors</h3>
-        {!showAll && (
+        <h3 className="font-semibold text-gray-800 font-serif">Latest Vendors By Category</h3>
+        {!showAll && formattedVendors.length > 4 && (
           <Link style={{ textDecoration: 'none' }} to="/featurevendors" className="flex text-[#052038] hover:underline">
             <p className="text-[#052038] hover:text-black">View All</p>
             <IoIosArrowForward className="ml-1 mt-1 text-[#052038]" />
@@ -74,7 +75,7 @@ const FeaturedVendors = ({ showAll = false }) => {
           >
             <div className="relative group">
               <img
-                src={vendor.image || 'default-vendor-image.jpg'} // Add a default image path
+                src={vendor.image || 'default-vendor-image.jpg'}
                 alt={vendor.name}
                 className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
               />

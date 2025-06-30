@@ -116,12 +116,12 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-500 text-sm">Manage users, vendors, content, and platform settings</p>
+          <span className="text-md  lg:text-2xl font-bold">Admin Dashboard</span>
+          <p className="text-gray-500 text-sm">Manage users, vendors, <br /> content, and platform settings</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="text-sm font-bold text-white bg-[#0f4c81] hover:bg-[#DEBF78] rounded px-4 py-2 inline-flex items-center"
+          className="text-sm  text-white bg-[#0f4c81] hover:bg-[#DEBF78] rounded p-2  inline-flex items-center"
         >
           Preview Profile
         </button>

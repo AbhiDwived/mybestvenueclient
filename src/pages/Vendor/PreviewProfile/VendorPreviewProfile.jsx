@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {  FaLinkedinIn, FaPhoneAlt,  } from 'react-icons/fa';
+import { FaLinkedinIn, FaPhoneAlt, } from 'react-icons/fa';
 import { MdEmail } from "react-icons/md";
 import { IoLocationOutline } from "react-icons/io5";
 import { HiOutlineCalendar } from 'react-icons/hi';
@@ -10,6 +10,10 @@ import { FiFacebook, FiTwitter, FiShield } from "react-icons/fi";
 import { BsInstagram } from "react-icons/bs";
 import { FaCreditCard } from "react-icons/fa6";
 import { useSelector } from 'react-redux';
+import { useVendorservicesPackageListMutation, useGetPortfolioImagesQuery ,useGetVendorByIdQuery } from '../../../features/vendors/vendorAPI';
+import { useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
+
+
 
 const VendorPreviewProfile = ({ show, onClose }) => {
 
@@ -18,9 +22,31 @@ const VendorPreviewProfile = ({ show, onClose }) => {
 
     const vendor = useSelector((state) => state.vendor.vendor);
     const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
+    const [fetchPackages, { data: packagesData }] = useVendorservicesPackageListMutation();
 
-    // console.log(" Data from store editttt:", vendor);
-    // console.log(" Data from servvvv:", vendor.serviceAreas);
+    const { data: portfolioImagesData, isLoading: imagesLoading } = useGetPortfolioImagesQuery(vendor?.id, {
+        skip: !vendor?.id,
+    });
+
+    //   const { vendorId } = useParams(); 
+    const vendorId = vendor?.id;
+  
+  const {
+  data: vendorData,
+  isLoading,
+  isError,
+  error,
+} = useGetVendorByIdQuery(vendorId);
+// console.log("vednordata",vendorData.vendor.description)
+
+    useEffect(() => {
+        if (vendor?.id) {
+            fetchPackages({ vendorId: vendor.id })
+                .unwrap()
+                .catch((err) => console.error('Error fetching packages:', err));
+        }
+    }, [vendor, fetchPackages]);
+
     if (!show) return null;
     if (!isAuthenticated) {
         return <h5 className='text-gray-600 font-bold'>You are not logged in.</h5>;
@@ -100,7 +126,7 @@ const VendorPreviewProfile = ({ show, onClose }) => {
 
                     {/* Description at the bottom from full start */}
                     <p className="text-md text-gray-700 text-left font-serif">
-                        {vendor.description || "DSY Hospitality Private limited is a leading provider of"}
+                        {vendorData?.vendor.description || "DSY Hospitality Private limited is a leading provider of"}
                         Premium hospitality services for weddings and corporate events. We specialize in creating
                         memorable experiences with our professional team and state-of-the-art facilities.
                     </p>
@@ -115,10 +141,10 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                             <li><span className="inline-block align-middle">< MdEmail /></span> <span className="inline-block align-middle">{vendor.email || "dsyhosp@gmail.com"}</span></li>
                             <li><span className="inline-block align-middle">< FaPhoneAlt /></span> <span className="inline-block align-middle">{vendor.phone || "dsyhosp@gmail.com"}</span></li>
                             <li>
-                                <span className="inline-block align-middle">< IoLocationOutline /></span> 
+                                <span className="inline-block align-middle">< IoLocationOutline /></span>
                                 <span className="inline-block align-middle">
                                     {vendor.address ? (
-                                        typeof vendor.address === 'object' ? 
+                                        typeof vendor.address === 'object' ?
                                             `${vendor.address.street || ''}, ${vendor.address.city || ''}, ${vendor.address.state || ''} ${vendor.address.zipCode || ''}`
                                             : vendor.address
                                     ) : "Delhi, India"}
@@ -131,13 +157,7 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                     <div className="border p-4 rounded">
                         <h4 className=" text-md mb-2 font-bold text-black-500 ">Service Areas</h4>
                         <div className="flex flex-wrap gap-2 text-sm">
-                            {/* {(vendor?.serviceAreas?.length > 0 ? vendor.serviceAreas : ["Noida", "Greater Noida", "Delhi", "Gurgaon"]).map(
-                                (area, index) => (
-                                    <span key={index} className="bg-gray-100 px-2 py-1 rounded">
-                                        {area}
-                                    </span>
-                                )
-                            )} */}
+
                             {(
                                 vendor?.serviceAreas?.length > 0
                                     ? vendor.serviceAreas.flatMap(area =>
@@ -157,34 +177,57 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                     </div>
                 </div>
 
-                {/* Pricing Range */}
+
                 <div className="border p-4 rounded">
                     <h4 className="font-bold text-sm mb-1 text-black-400">Pricing Range</h4>
-                    <p className="text-sm text-gray-700">₹ 25000 - 45000</p>
-                    <p className="text-xs text-gray-500 mt-1"><span className='text-gray-600 font-bold'> Deposit Info:</span> 30% advance payment required to confirm booking</p>
+                    <p className="text-sm text-gray-700">
+                        {(() => {
+                            const packages = packagesData?.packages || [];
+
+                            const basic = packages.find(pkg =>
+                                pkg.packageName?.toLowerCase() === "basic package"
+                            );
+                            const luxury = packages.find(pkg =>
+                                pkg.packageName?.toLowerCase() === "luxury package"
+                            );
+                            const premium = packages.find(pkg =>
+                                pkg.packageName?.toLowerCase() === "premium package"
+                            );
+
+                            const basicPrice = basic?.price;
+                            const endPrice = luxury?.price || premium?.price;
+
+                            if (basicPrice && endPrice) {
+                                return `₹ ${basicPrice} - ₹ ${endPrice}`;
+                            } else {
+                                return `₹ 5000 - ₹ 10000`;
+                            }
+                        })()}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                        <span className='text-gray-600 font-bold'>Deposit Info:</span> 30% advance payment required to confirm booking
+                    </p>
                 </div>
 
                 {/* Package Pricing */}
                 <div className="border p-4 rounded space-y-4">
                     <h4 className="font-bold text-md">Package Pricing</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="border p-3 rounded text-sm">
-                            <h5 className="font-semibold">Basic Package</h5>
-                            <p>Basic decoration and food setup</p>
-                            <p className="font-bold mt-2">₹25000</p>
-                        </div>
-                        <div className="border p-3 rounded text-sm">
-                            <h5 className="font-semibold">Premium Package</h5>
-                            <p>Decorator + Catering + Venue</p>
-                            <p className="font-bold mt-2">₹75000</p>
-                        </div>
-                        <div className="border p-3 rounded text-sm">
-                            <h5 className="font-semibold">Luxury Package</h5>
-                            <p>All-inclusive high-end service</p>
-                            <p className="font-bold mt-2">₹120000</p>
-                        </div>
+                        {packagesData?.packages?.length > 0 ? (
+                            packagesData.packages.map((pkg, index) => (
+                                <div key={index} className="border p-3 rounded text-sm">
+                                    <h5 className="font-semibold">{pkg.packageName}</h5>
+                                    <p>{pkg.description}</p>
+                                    <p className="font-bold mt-2">₹{pkg.price}</p>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 text-sm">No packages available.</p>
+                        )}
                     </div>
                 </div>
+
+
 
                 {/* Payment Methods */}
                 <div className="border p-4 rounded">
@@ -245,35 +288,45 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                 </div>
 
                 {/* Gallery */}
+
                 <div className="border p-4 rounded">
                     <h4 className="font-medium text-sm mb-2 text-gray-800">Gallery</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {/* {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="w-full h-45 bg-gray-200 rounded" />
-                        ))} */}
-                        {(() => {
-                            const galleryImages = vendor?.galleryImages || [];
-                            const hasGallery = galleryImages.length > 0;
 
-                            const imagesToShow = hasGallery
-                                ? galleryImages.slice(0, 4)
-                                : Array(4).fill(vendor?.profilePicture || '/default-profile.jpg');
-
-                            return imagesToShow.map((img, index) => (
+                    {imagesLoading ? (
+                        <p className="text-sm text-gray-500">Loading images...</p>
+                    ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {portfolioImagesData?.images?.length > 0 ? (
+                                // ✅ Show all gallery images
+                                portfolioImagesData.images.map((img, index) => (
+                                    <img
+                                        key={img._id}
+                                        src={img.url}
+                                        alt={img.title || `Gallery ${index + 1}`}
+                                        className="w-full h-45 object-cover rounded"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = '/default-profile.jpg';
+                                        }}
+                                    />
+                                ))
+                            ) : (
+                                // 🔁 Fallback to profilePicture
                                 <img
-                                    key={index}
-                                    src={img}
-                                    alt={`Gallery ${index + 1}`}
+                                    src={vendor?.profilePicture || '/default-profile.jpg'}
+                                    alt="Vendor"
                                     className="w-full h-45 object-cover rounded"
                                     onError={(e) => {
                                         e.target.onerror = null;
                                         e.target.src = '/default-profile.jpg';
                                     }}
                                 />
-                            ));
-                        })()}
-                    </div>
+                            )}
+                        </div>
+                    )}
                 </div>
+
+
             </div>
         </div>
     );

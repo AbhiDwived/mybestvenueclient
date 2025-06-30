@@ -318,9 +318,9 @@ export const vendorApi = createApi({
         // If videoData is a FormData object (file upload)
         if (videoData instanceof FormData) {
           return {
-            url: '/vendor/portfolio/video',
-            method: 'POST',
-            body: videoData,
+        url: '/vendor/portfolio/video',
+        method: 'POST',
+        body: videoData,
             // Important: let fetch set the correct Content-Type for FormData
             headers: {
               // No explicit Content-Type to allow browser to set with boundary
@@ -351,8 +351,8 @@ export const vendorApi = createApi({
       query: (vendorId) => {
         console.log('Fetching portfolio videos for vendor:', vendorId);
         return {
-          url: `/vendor/portfolio/videos/${vendorId}`,
-          method: 'GET',
+        url: `/vendor/portfolio/videos/${vendorId}`,
+        method: 'GET',
         };
       },
       transformResponse: (response) => {

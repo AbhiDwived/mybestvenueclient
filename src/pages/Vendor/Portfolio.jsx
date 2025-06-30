@@ -256,7 +256,7 @@ const PortfolioTab = () => {
       formData.append('image', file);
       formData.append('title', `Portfolio Image ${portfolioImages.length + 1}`);
 
-      if (editingImageIndex !== null) {
+          if (editingImageIndex !== null) {
         // If editing, first delete the old image then upload new one
         const imageId = portfolioImages[editingImageIndex]._id;
         if (imageId) {
@@ -270,8 +270,8 @@ const PortfolioTab = () => {
       // Refetch images to get updated list
       refetchImages();
       
-      setEditingImageIndex(null);
-      fileInputRef.current.value = null;
+        setEditingImageIndex(null);
+        fileInputRef.current.value = null;
       toast.success('Image uploaded successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -303,8 +303,8 @@ const PortfolioTab = () => {
       handleAddVideo();
     } else {
       // For file upload
-      fileInputRef.current.accept = 'video/*';
-      fileInputRef.current.click();
+    fileInputRef.current.accept = 'video/*';
+    fileInputRef.current.click();
     }
   };
 
@@ -443,11 +443,11 @@ const PortfolioTab = () => {
     }
 
     // Create local preview
-    const videoURL = URL.createObjectURL(file);
+      const videoURL = URL.createObjectURL(file);
     
     // Set selected file and preview
     setSelectedVideoFile(file);
-    setVideoUrl(videoURL);
+      setVideoUrl(videoURL);
 
     // Optional: Show preview
     toast.info('Video selected. Click "Upload" to save.');
@@ -603,18 +603,18 @@ const PortfolioTab = () => {
 
       {/* Images Tab Content */}
       {activeTab === 'images' && (
-        <div className="row g-3">
-          {portfolioImages.map((image, index) => (
-            <div key={index} className="col-12 col-md-6 col-lg-4">
-              <div className="position-relative overflow-hidden rounded shadow">
-                <img
+      <div className="row g-3">
+        {portfolioImages.map((image, index) => (
+          <div key={index} className="col-12 col-md-6 col-lg-4">
+            <div className="position-relative overflow-hidden rounded shadow">
+              <img
                   src={image.url}
                   alt={image.title || `Portfolio ${index + 1}`}
-                  className="img-fluid w-100 h-100 object-fit-cover"
-                  style={{ aspectRatio: '1 / 1' }}
-                />
-                <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 hover-opacity-100 transition-all">
-                  <div className="d-flex gap-2">
+                className="img-fluid w-100 h-100 object-fit-cover"
+                style={{ aspectRatio: '1 / 1' }}
+              />
+              <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 hover-opacity-100 transition-all">
+                <div className="d-flex gap-2">
                     <button
                       onClick={() => handleViewImage(image)}
                       className="btn btn-light btn-sm hover-bg-blue"
@@ -622,39 +622,39 @@ const PortfolioTab = () => {
                     >
                       <LuEye />
                     </button>
-                    <button
-                      onClick={() => handleAddImageClick(index)}
+                  <button
+                    onClick={() => handleAddImageClick(index)}
                       className="btn btn-light btn-sm hover-bg-blue"
                       title="Edit Image"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleRemoveImage(index)}
-                      className="btn btn-danger btn-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleRemoveImage(index)}
+                    className="btn btn-danger btn-sm"
                       title="Remove Image"
-                    >
-                      Remove
-                    </button>
-                  </div>
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
+        ))}
 
-          {/* Add Image Card */}
-          <div className="col-12 col-md-6 col-lg-4">
-            <div
+        {/* Add Image Card */}
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
               onClick={() => !isLoading && handleAddImageClick(null)}
               className={`border-2 border-dashed rounded d-flex flex-column align-items-center justify-content-center h-100 py-4 text-center ${!isLoading ? 'cursor-pointer' : ''} bg-light`}
-              style={{ aspectRatio: '1 / 1' }}
-            >
-              <LuImagePlus size={32} className="text-muted mb-2" />
-              <div className="fw-medium">Add New Image</div>
-              <div className="text-muted small mt-1">Upload JPG or PNG</div>
-            </div>
+            style={{ aspectRatio: '1 / 1' }}
+          >
+            <LuImagePlus size={32} className="text-muted mb-2" />
+            <div className="fw-medium">Add New Image</div>
+            <div className="text-muted small mt-1">Upload JPG or PNG</div>
           </div>
         </div>
+      </div>
       )}
 
       {/* Videos Tab Content */}

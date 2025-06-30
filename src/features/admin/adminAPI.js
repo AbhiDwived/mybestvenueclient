@@ -81,6 +81,40 @@ export const adminApi = createApi({
     // ✅ Get All Vendors
     getAllVendors: builder.query({
       query: () => '/admin/all_vendors',
+      transformResponse: (response) => {
+        const vendors = response.vendors || [];
+        
+        // Group vendors by type and get latest from each type
+        const vendorsByType = {};
+        vendors.forEach(vendor => {
+          if (!vendor.vendorType) return;
+          
+          if (!vendorsByType[vendor.vendorType]) {
+            vendorsByType[vendor.vendorType] = vendor;
+          } else {
+            // Compare dates to keep the latest vendor
+            const existingDate = new Date(vendorsByType[vendor.vendorType].appliedDate);
+            const currentDate = new Date(vendor.appliedDate);
+            
+            if (currentDate > existingDate) {
+              vendorsByType[vendor.vendorType] = vendor;
+            }
+          }
+        });
+
+        // Convert back to array
+        const latestVendors = Object.values(vendorsByType);
+
+        return {
+          ...response,
+          vendors: latestVendors
+        };
+      }
+    }),
+
+    // Get Latest Vendors By Type
+    getLatestVendorsByType: builder.query({
+      query: () => '/admin/latest_vendors_by_type',
     }),
 
     // Approve Vendor
@@ -162,6 +196,7 @@ export const {
   useDeleteUserByAdminMutation,
 
   useGetAllVendorsQuery,
+  useGetLatestVendorsByTypeQuery,
   useGetPendingVendorsQuery,
   useApproveVendorMutation,
   useDeleteVendorByAdminMutation,

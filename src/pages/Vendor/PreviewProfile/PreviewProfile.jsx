@@ -514,7 +514,7 @@ const PreviewProfile = () => {
           </div>
           
           {activeGalleryTab === 'images' && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {vendorPortfolio.images.length > 0 ? (
                 vendorPortfolio.images.map((image, i) => (
                   <div 
@@ -567,7 +567,7 @@ const PreviewProfile = () => {
                   No portfolio videos available
                 </div>
               )}
-            </div>
+          </div>
           )}
         </div>
 
