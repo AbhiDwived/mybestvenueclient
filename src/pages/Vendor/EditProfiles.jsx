@@ -10,42 +10,6 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 
-// Import the same vendor types as in VendorSignup
-const VENDOR_TYPES = [
-  // Venues
-  'Banquet Halls',
-  'Hotels',
-  'Marriage Garden',
-  'Kalyana Mandapams',
-  'Wedding Resorts',
-  'Wedding Lawns & Farmhouses',
-
-  // Photographers
-  'Wedding Photographers',
-  'Party Places',
-  'Photographers',
-
-  // Catering & Decorations
-  'Caterers',
-  'Wedding Decorators',
-  'Wedding Makeup',
-  'Wedding Planners',
-
-  // Additional Services
-  'Gifts',
-  'Florist',
-  'Invitation',
-  'Choreographers',
-  'Photobooth',
-  'DJ',
-  'Cakes',
-  'Musics',
-  'TentHouse',
-  'Transportation',
-  'Videography',
-  'Other'
-];
-
 const EditProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -113,7 +77,7 @@ const EditProfile = () => {
     
     formData.append("_id", vendorId); // Add vendor ID to form data
     formData.append("businessName", businessName);
-    formData.append("vendorType", category); // This maps the Category field to vendorType
+    formData.append("vendorType", category);
     formData.append("description", businessDescription);
 
     const formattedServiceAreas = Array.isArray(serviceAreas)
@@ -203,7 +167,7 @@ const EditProfile = () => {
       
       // Keep existing data
       formData.append("businessName", businessName);
-      formData.append("vendorType", category); // Ensure Category maps to vendorType
+      formData.append("vendorType", category);
       formData.append("description", businessDescription);
       formData.append("serviceAreas", Array.isArray(serviceAreas) ? serviceAreas.join(",") : serviceAreas);
       formData.append("pricing", priceRange);
@@ -276,13 +240,14 @@ const EditProfile = () => {
                 <input type="text" className="form-control" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
               </div>
               <div className="mb-3">
-                <label className="form-label">Vendor Type</label>
+                <label className="form-label">Category</label>
                 <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-                  {VENDOR_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
+                  <option>Photographer</option>
+                  <option>Venue</option>
+                  <option>Cateree</option>
+                  <option>Decorator</option>
+                  <option>MakeUp Artist</option>
+                  <option>Wedding Hall</option>
                 </select>
               </div>
               <div className="mb-3">

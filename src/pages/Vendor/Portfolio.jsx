@@ -13,38 +13,38 @@ import {
 
 const ImageViewModal = ({ imageUrl, onClose }) => {
   return (
-    <div 
-      className="modal fade show" 
-      style={{ 
-        display: 'block', 
-        backgroundColor: 'rgba(0,0,0,0.8)', 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        width: '100%', 
-        height: '100%', 
-        zIndex: 1050 
+    <div
+      className="modal fade show"
+      style={{
+        display: 'block',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 1050
       }}
       onClick={onClose}
     >
-      <div 
+      <div
         className="modal-dialog modal-dialog-centered modal-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content bg-transparent border-0">
           <div className="modal-body text-center">
-            <img 
-              src={imageUrl} 
-              alt="Full Size" 
-              className="img-fluid mx-auto" 
-              style={{ 
-                maxWidth: '90%', 
-                maxHeight: '90vh', 
-                objectFit: 'contain' 
+            <img
+              src={imageUrl}
+              alt="Full Size"
+              className="img-fluid mx-auto"
+              style={{
+                maxWidth: '90%',
+                maxHeight: '90vh',
+                objectFit: 'contain'
               }}
             />
-            <button 
-              className="btn btn-light mt-3" 
+            <button
+              className="btn btn-light mt-3"
               onClick={onClose}
             >
               Close
@@ -71,21 +71,21 @@ const VideoViewModal = ({ videoUrl, onClose }) => {
   const embedUrl = getEmbedUrl(videoUrl);
 
   return (
-    <div 
-      className="modal fade show" 
-      style={{ 
-        display: 'block', 
-        backgroundColor: 'rgba(0,0,0,0.8)', 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        width: '100%', 
-        height: '100%', 
-        zIndex: 1050 
+    <div
+      className="modal fade show"
+      style={{
+        display: 'block',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 1050
       }}
       onClick={onClose}
     >
-      <div 
+      <div
         className="modal-dialog modal-dialog-centered modal-xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -94,16 +94,16 @@ const VideoViewModal = ({ videoUrl, onClose }) => {
             <iframe
               src={embedUrl}
               title="Portfolio Video"
-              style={{ 
-                width: '90%', 
-                height: '70vh', 
+              style={{
+                width: '90%',
+                height: '70vh',
                 maxWidth: '1200px',
                 border: 'none'
               }}
               allowFullScreen
             />
-            <button 
-              className="btn btn-light mt-3" 
+            <button
+              className="btn btn-light mt-3"
               onClick={onClose}
             >
               Close
@@ -192,15 +192,15 @@ const PortfolioTab = () => {
   const [deletePortfolioVideo] = useDeletePortfolioVideoMutation();
 
   // Queries for images and videos
-  const { 
-    data: portfolioImagesData, 
-    isLoading: isLoadingImages, 
-    isError: isImagesError, 
+  const {
+    data: portfolioImagesData,
+    isLoading: isLoadingImages,
+    isError: isImagesError,
     error: imagesError,
-    refetch: refetchImages 
+    refetch: refetchImages
   } = useGetPortfolioImagesQuery(
-    vendorId, 
-    { 
+    vendorId,
+    {
       skip: !vendorId,
       onError: (error) => {
         console.error('Portfolio Images Query Error:', error);
@@ -209,15 +209,15 @@ const PortfolioTab = () => {
     }
   );
 
-  const { 
-    data: portfolioVideosData, 
-    isLoading: isLoadingVideos, 
-    isError: isVideosError, 
+  const {
+    data: portfolioVideosData,
+    isLoading: isLoadingVideos,
+    isError: isVideosError,
     error: videosError,
-    refetch: refetchVideos 
+    refetch: refetchVideos
   } = useGetPortfolioVideosQuery(
-    vendorId, 
-    { 
+    vendorId,
+    {
       skip: !vendorId,
       onError: (error) => {
         console.error('Portfolio Videos Query Error:', error);
@@ -253,7 +253,7 @@ const PortfolioTab = () => {
 
     try {
       setIsLoading(true);
-      
+
       // If editing a single image
       if (editingImageIndex !== null && files.length === 1) {
         // Delete the old image first
@@ -261,13 +261,13 @@ const PortfolioTab = () => {
         if (imageId) {
           await deletePortfolioImage(imageId).unwrap();
         }
-        
+
         // Then upload the new image
         const formData = new FormData();
         formData.append('image', files[0]);
         formData.append('title', `Portfolio Image ${portfolioImages.length}`);
         await uploadPortfolioImage(formData).unwrap();
-      } 
+      }
       // For multiple uploads or adding new images
       else {
         // Upload each image in sequence
@@ -278,10 +278,10 @@ const PortfolioTab = () => {
           await uploadPortfolioImage(formData).unwrap();
         }
       }
-      
+
       // Refetch images to get updated list
       refetchImages();
-      
+
       setEditingImageIndex(null);
       fileInputRef.current.value = null;
       toast.success(files.length > 1 ? `${files.length} images uploaded successfully` : 'Image uploaded successfully');
@@ -315,8 +315,8 @@ const PortfolioTab = () => {
       handleAddVideo();
     } else {
       // For file upload
-    fileInputRef.current.accept = 'video/*';
-    fileInputRef.current.click();
+      fileInputRef.current.accept = 'video/*';
+      fileInputRef.current.click();
     }
   };
 
@@ -348,7 +348,7 @@ const PortfolioTab = () => {
     console.group('Video Removal Process');
     console.log('Attempting to remove video at index:', index);
     console.log('Current Videos:', portfolioVideos);
-    
+
     // Validate index and video existence
     if (index < 0 || index >= portfolioVideos.length) {
       console.error('Invalid video index:', index);
@@ -358,7 +358,7 @@ const PortfolioTab = () => {
     }
 
     const videoToRemove = portfolioVideos[index];
-    
+
     // Detailed video info logging
     console.log('Video to Remove:', {
       index,
@@ -382,7 +382,7 @@ const PortfolioTab = () => {
 
       // Attempt video deletion
       const deletionResponse = await deletePortfolioVideo(videoToRemove._id).unwrap();
-      
+
       console.log('Deletion Response:', deletionResponse);
 
       // Optimistic update of local state
@@ -394,12 +394,12 @@ const PortfolioTab = () => {
 
       // Success notification
       toast.success('Video removed successfully');
-      
+
       console.log('Video removal completed successfully');
     } catch (error) {
       // Comprehensive error handling
       console.error('Video Removal Error:', error);
-      
+
       // Detailed error logging
       console.error('Error Details:', {
         message: error.message,
@@ -416,8 +416,8 @@ const PortfolioTab = () => {
       } else {
         // User-friendly error message
         toast.error(
-          error.data?.message || 
-          error.message || 
+          error.data?.message ||
+          error.message ||
           'Failed to remove video. Please try again.'
         );
       }
@@ -433,7 +433,7 @@ const PortfolioTab = () => {
 
   const handleVideoFileSelect = (e) => {
     const file = e.target.files[0];
-    
+
     // Validate file
     if (!file) {
       toast.error('No file selected');
@@ -455,11 +455,11 @@ const PortfolioTab = () => {
     }
 
     // Create local preview
-      const videoURL = URL.createObjectURL(file);
-    
+    const videoURL = URL.createObjectURL(file);
+
     // Set selected file and preview
     setSelectedVideoFile(file);
-      setVideoUrl(videoURL);
+    setVideoUrl(videoURL);
 
     // Optional: Show preview
     toast.info('Video selected. Click "Upload" to save.');
@@ -481,7 +481,7 @@ const PortfolioTab = () => {
 
       // Upload video
       const response = await uploadPortfolioVideo(formData).unwrap();
-      
+
       // Refetch videos to update list
       await refetchVideos();
 
@@ -494,11 +494,11 @@ const PortfolioTab = () => {
       toast.success('Video uploaded successfully');
     } catch (error) {
       console.error('Video Upload Error:', error);
-      
+
       // Detailed error handling
       toast.error(
-        error.data?.message || 
-        error.message || 
+        error.data?.message ||
+        error.message ||
         'Failed to upload video. Please try again.'
       );
     } finally {
@@ -525,7 +525,7 @@ const PortfolioTab = () => {
             <span className="visually-hidden">Loading vendor information...</span>
           </div>
           <p className="ms-3">
-            Unable to load vendor information. 
+            Unable to load vendor information.
             Please ensure you are logged in as a vendor.
           </p>
           <div className="mt-3">
@@ -547,17 +547,17 @@ const PortfolioTab = () => {
     <div className="bg-white p-4 rounded shadow-sm">
       {/* Image Modal */}
       {selectedImageForView && (
-        <ImageViewModal 
-          imageUrl={selectedImageForView.url} 
-          onClose={() => setSelectedImageForView(null)} 
+        <ImageViewModal
+          imageUrl={selectedImageForView.url}
+          onClose={() => setSelectedImageForView(null)}
         />
       )}
 
       {/* Video Modal */}
       {selectedVideoForView && (
-        <VideoViewModal 
-          videoUrl={selectedVideoForView.url} 
-          onClose={() => setSelectedVideoForView(null)} 
+        <VideoViewModal
+          videoUrl={selectedVideoForView.url}
+          onClose={() => setSelectedVideoForView(null)}
         />
       )}
 
@@ -587,20 +587,32 @@ const PortfolioTab = () => {
       {/* Tab Navigation */}
       <div className="mb-4 d-flex justify-content-center">
         <div className="btn-group" role="group">
-          <button 
-            type="button" 
-            className={`btn ${activeTab === 'images' ? 'btn-primary' : 'btn-outline-primary'}`}
+          <button
+            type="button"
+            style={{
+              backgroundColor: activeTab === 'images' ? '#0f4c81' : 'transparent',
+              color: activeTab === 'images' ? '#fff' : '#0f4c81',
+              border: `1px solid #0f4c81`
+            }}
+            className="btn"
             onClick={() => setActiveTab('images')}
           >
             Images
           </button>
-          <button 
-            type="button" 
-            className={`btn ${activeTab === 'videos' ? 'btn-primary' : 'btn-outline-primary'}`}
+
+          <button
+            type="button"
+            style={{
+              backgroundColor: activeTab === 'videos' ? '#0f4c81' : 'transparent',
+              color: activeTab === 'videos' ? '#fff' : '#0f4c81',
+              border: '1px solid #0f4c81'
+            }}
+            className="btn"
             onClick={() => setActiveTab('videos')}
           >
             Videos
           </button>
+
         </div>
       </div>
 
@@ -615,18 +627,18 @@ const PortfolioTab = () => {
 
       {/* Images Tab Content */}
       {activeTab === 'images' && (
-      <div className="row g-3">
-        {portfolioImages.map((image, index) => (
-          <div key={index} className="col-12 col-md-6 col-lg-4">
-            <div className="position-relative overflow-hidden rounded shadow">
-              <img
+        <div className="row g-3">
+          {portfolioImages.map((image, index) => (
+            <div key={index} className="col-12 col-md-6 col-lg-4">
+              <div className="position-relative overflow-hidden rounded shadow">
+                <img
                   src={image.url}
                   alt={image.title || `Portfolio ${index + 1}`}
-                className="img-fluid w-100 h-100 object-fit-cover"
-                style={{ aspectRatio: '1 / 1' }}
-              />
-              <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 hover-opacity-100 transition-all">
-                <div className="d-flex gap-2">
+                  className="img-fluid w-100 h-100 object-fit-cover"
+                  style={{ aspectRatio: '1 / 1' }}
+                />
+                <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 hover-opacity-100 transition-all">
+                  <div className="d-flex gap-2">
                     <button
                       onClick={() => handleViewImage(image)}
                       className="btn btn-light btn-sm hover-bg-blue"
@@ -634,40 +646,40 @@ const PortfolioTab = () => {
                     >
                       <LuEye />
                     </button>
-                  <button
-                    onClick={() => handleAddImageClick(index)}
+                    <button
+                      onClick={() => handleAddImageClick(index)}
                       className="btn btn-light btn-sm hover-bg-blue"
                       title="Edit Image"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleRemoveImage(index)}
-                    className="btn btn-danger btn-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleRemoveImage(index)}
+                      className="btn btn-danger btn-sm"
                       title="Remove Image"
-                  >
-                    Remove
-                  </button>
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* Add Image Card */}
-        <div className="col-12 col-md-6 col-lg-4">
-          <div
+          {/* Add Image Card */}
+          <div className="col-12 col-md-6 col-lg-4">
+            <div
               onClick={() => !isLoading && handleAddImageClick(null)}
               className={`border-2 border-dashed rounded d-flex flex-column align-items-center justify-content-center h-100 py-4 text-center ${!isLoading ? 'cursor-pointer' : ''} bg-light`}
-            style={{ aspectRatio: '1 / 1' }}
-          >
-            <LuImagePlus size={32} className="text-muted mb-2" />
-            <div className="fw-medium">Add New Images</div>
-            <div className="text-muted small mt-1">Upload multiple JPG or PNG</div>
-            <div className="text-muted small">Hold Ctrl/Cmd to select multiple</div>
+              style={{ aspectRatio: '1 / 1' }}
+            >
+              <LuImagePlus size={32} className="text-muted mb-2" />
+              <div className="fw-medium">Add New Images</div>
+              <div className="text-muted small mt-1">Upload multiple JPG or PNG</div>
+              <div className="text-muted small">Hold Ctrl/Cmd to select multiple</div>
+            </div>
           </div>
         </div>
-      </div>
       )}
 
       {/* Videos Tab Content */}
@@ -713,20 +725,32 @@ const PortfolioTab = () => {
               <LuVideo size={32} className="text-muted mb-2" />
               <div className="fw-medium">Upload Video</div>
               <div className="text-muted small mt-1">Max 50MB (MP4, AVI, MOV)</div>
-              
+
               {/* File Upload Buttons */}
               <div className="d-flex gap-2 mt-2">
-                <button 
-                  className="btn btn-sm btn-outline-primary"
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: '#0f4c81',
+                    border: '1px solid #0f4c81',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
                   onClick={() => videoInputRef.current.click()}
                   disabled={isLoading}
                 >
                   <LuUpload className="me-1" /> Choose File
                 </button>
-                
+
                 {selectedVideoFile && (
-                  <button 
-                    className="btn btn-sm btn-primary"
+                  <button
+                    className="btn btn-sm"
+                    style={{
+                      backgroundColor: '#0f4c81',
+                      color: '#fff',
+                      border: '1px solid #0f4c81',
+                    }}
                     onClick={handleVideoUpload}
                     disabled={isLoading}
                   >
@@ -735,12 +759,13 @@ const PortfolioTab = () => {
                 )}
               </div>
 
+
               {/* Video Preview */}
               {videoUrl && (
                 <div className="mt-2">
-                  <video 
-                    src={videoUrl} 
-                    controls 
+                  <video
+                    src={videoUrl}
+                    controls
                     style={{ maxWidth: '100%', maxHeight: '150px' }}
                   />
                 </div>

@@ -5,6 +5,7 @@ import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import Loader from '../../components/{Shared}/Loader';
 import { FiArrowLeft } from "react-icons/fi";
+import { MapPin } from 'lucide-react';
 
 const VendorListPage = () => {
   const navigate = useNavigate();
@@ -157,7 +158,7 @@ const VendorListPage = () => {
           <div className="flex space-x-2">
             <Link
               to="/"
-              style={{textDecoration:'none', color:'black'}}
+              style={{ textDecoration: 'none', color: 'black' }}
               className="flex items-center px-3 py-2 border text-sm text-gray-700 hover:bg-gray-100 whitespace-nowrap rounded"
             >
               <FiArrowLeft className="mr-2" />
@@ -215,20 +216,68 @@ const VendorListPage = () => {
                   </button>
                 </div>
 
-                <div className="p-3 sm:p-4">
-                  <h5 className="text-base sm:text-lg font-semibold mb-1 truncate">{vendor.businessName}</h5>
-                  <div className="flex items-center mb-2">
-                    <MdLocationOn className="text-gray-500 mr-1" />
-                    <span className="text-gray-600 text-xs sm:text-sm">
-                      {vendor.address?.city || vendor.serviceAreas?.[0] || 'Location not specified'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FaStar className="text-yellow-400 mr-1" />
-                      <span className="font-semibold text-xs sm:text-sm">New</span>
+                <div className="p-3 sm:p-4 font-serif">
+
+                  <div>
+
+
+                    <p className="text-xs text-gray-400 mb-1 uppercase">{vendor.vendorType || "Vendor"}</p>
+                    <div className="flex justify-between items-center gap-2 mb-2">
+                      <h5 className="text-md font-semibold truncate max-w-[65%]">
+                        {vendor.businessName || vendor.name || "Vendor Name"}
+                      </h5>
+
+                      <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
+                        <FaStar size={18} className="text-yellow-500" />
+                        <span>{vendor.rating || "5.0"}</span>
+                      </div>
+
+
                     </div>
-                    <div className="text-gray-600 text-xs sm:text-sm">{formatPrice(vendor.pricingRange)}</div>
+
+
+                    {/* Location */}
+                    <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
+                      <MapPin size={14} />
+                      <span className="truncate">{vendor.serviceAreas?.join(", ") || "Location not specified"}</span>
+
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1">
+
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+
+                    <div className="border-t  border-gray-400 mt-3 pt-3 text-sm text-gray-800 w-full">
+                      {/* Veg & Non-Veg prices side-by-side, aligned left */}
+                      <div className="flex items-start gap-8 mb-2">
+                        {/* Veg price */}
+                        <div>
+                          <div className="text-xs text-gray-500">Veg</div>
+                          <div className="text-base font-semibold text-gray-800">
+                            ₹ {vendor.priceVeg || "999"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                          </div>
+                        </div>
+
+                        {/* Non-Veg price */}
+                        <div>
+                          <div className="text-xs text-gray-500">Non veg</div>
+                          <div className="text-base font-semibold text-gray-800">
+                            ₹ {vendor.priceNonVeg || "1,200"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Capacity, Rooms, and More */}
+                      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                        <span>{vendor.capacity || "650–2500 pax"}</span>
+                        <span>• {vendor.rooms || "4 Rooms"}</span>
+                        <span>• +7 more</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

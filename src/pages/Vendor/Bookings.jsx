@@ -273,7 +273,7 @@ export default function BookingManagement() {
   }
 
   return (
-    <div className="p-2 bg-gray-50 min-h-screen sm:m-6">
+    <div className="p-2 w-full bg-gray-50 min-h-screen ">
       {/* Booking Overview */}
       <div className="bg-white rounded-lg shadow-sm px-4 py-3 mb-6">
         <div className="flex justify-between items-center mb-4">
@@ -340,11 +340,11 @@ export default function BookingManagement() {
           {/* Top Row: Name and Actions */}
           <div className="flex justify-between items-start flex-wrap md:flex-nowrap mb-2 sm:justify-center sm:items-center">
             <div className="items-center justify-between inline sm:flex">
-              <span className="text-[10px] sm:text-[20px] font-semibold text-gray-800">
+              <span className="text-[18px] sm:text-[20px] font-semibold text-gray-800">
                 {booking?.user?.name || "Unknown User"}
               </span>
               <div className="inline">
-                <div className={`flex justify-center gap-1 w-[80px] sm:mx-2 sm:w-[100px] py-1 items-center-safe rounded text-[10px] sm:text-[12px] ${statusColors[booking?.status?.toLowerCase()]?.class || statusColors['pending'].class}`}>
+                <div className={`flex justify-center gap-1 w-[80px] lg:m-2  sm:w-[100px] py-2 items-center-safe rounded text-[12px]  ${statusColors[booking?.status?.toLowerCase()]?.class || statusColors['pending'].class}`}>
                   <span className="font-medium">
                     {statusColors[booking?.status?.toLowerCase()]?.icon || statusColors['pending'].icon}
                   </span>
@@ -384,7 +384,7 @@ export default function BookingManagement() {
                 <FaRegEdit className="w-[12px] sm:w-[15px]" />
               </button>
               <select
-                className="border border-gray-300 rounded-md text-[8px] sm:text-[10px] sm:w-[100px] w-[80px]"
+                className="border border-gray-300 rounded-md p-2 text-[10px]  w-[100px]"
                 value={booking?.status || 'pending'}
                 onChange={(e) => handleStatusChange(booking._id, e.target.value)}
               >
@@ -522,7 +522,7 @@ export default function BookingManagement() {
           <div className="bg-white w-full max-w-3xl rounded-lg p-6 shadow-lg overflow-y-auto max-h-[90vh] ">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h2 className="text-xl font-semibold">Add Booking</h2>
+                <h2 className="text-xl font-semibold ">Add Booking</h2>
                 <p className="text-sm text-gray-500">Update booking information</p>
               </div>
               <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 text-xl">

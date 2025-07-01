@@ -14,23 +14,24 @@ import Analytics from './Analytics';
 import Bookings from './Bookings';
 import VendorPreviewProfile from "./PreviewProfile/VendorPreviewProfile";
 import { useSelector } from 'react-redux';
+import { FaAngleLeft, FaChevronRight } from "react-icons/fa6";
 
 const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
-  
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDatePickerForWedding, setShowDatePickerForWedding] = useState(null);
 
-   const [activeTab, setActiveTab] = useState(() => {
-  return localStorage.getItem('activeTab') || 'Overview';
-});
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('activeTab') || 'Overview';
+  });
 
-const handleTabClick = (tab) => {
-  setActiveTab(tab);
-  localStorage.setItem('activeTab', tab);
-};
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem('activeTab', tab);
+  };
 
   if (!isAuthenticated) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
@@ -46,13 +47,13 @@ const handleTabClick = (tab) => {
   //   setActiveTab(tab);
   // };
 
- 
 
-useEffect(() => {
-  if (!isAuthenticated) {
-    localStorage.removeItem('activeTab');
-  }
-}, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      localStorage.removeItem('activeTab');
+    }
+  }, [isAuthenticated]);
 
 
   const handleDateSelect = (date) => {
@@ -106,10 +107,10 @@ useEffect(() => {
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 font-serif">
               {vendor?.vendorType || 'Photographer'} • {
-                vendor?.serviceAreas?.length > 0 
-                  ? vendor.serviceAreas[0]
-                  : vendor?.address?.city 
-                    ? vendor.address.city
+                vendor?.serviceAreas?.length > 0
+                  ? vendor.serviceAreas.join(', ')
+                  : vendor?.address?.city
+                    ? `${vendor.address.city}${vendor.address.state ? `, ${vendor.address.state}` : ''}`
                     : 'Location not specified'
               }
             </p>
@@ -127,26 +128,65 @@ useEffect(() => {
 
             <button
               onClick={() => setShowModal(true)}
-              className="bg-[#0f4c81] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded text-xs sm:text-sm w-full sm:w-auto text-center">
+
+              className="bg-[#0f4c81] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded text-md sm:text-sm w-full sm:w-auto text-center">
               Preview Profile
             </button>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex flex-wrap justify-start gap-1 sm:gap-2 bg-[#f5f8fb] p-1 sm:p-2 rounded-md mb-4 sm:mb-6 text-xs sm:text-sm overflow-x-auto">
-        {tabs.map((tab, i) => (
-          <button
-            key={i}
-            onClick={() => handleTabClick(tab)}
-            className={`px-2 sm:px-3 py-1 rounded-md font-medium whitespace-nowrap ${tab === activeTab ? 'bg-white text-black shadow-sm' : 'text-gray-600'
-              }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="relative bg-[#f5f8fb] p-1 sm:p-2 rounded-md mb-6 overflow-hidden">
+        {/* Scroll Left Button */}
+        <button
+          onClick={() => {
+            const container = document.getElementById('tabs-container');
+            const firstTab = container.querySelector('button');
+            if (firstTab) {
+              const tabWidth = firstTab.offsetWidth + parseFloat(getComputedStyle(firstTab).marginRight);
+              container.scrollBy({ left: -tabWidth * 3, behavior: 'smooth' });
+            }
+          }}
+          style={{borderRadius:'25px'}}
+          className="absolute lg:hidden left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-1 shadow-md text-gray-600 rounded-full"
+        >
+          <FaAngleLeft size={14} />
+        </button>
+
+        {/* Tabs container */}
+        <div id="tabs-container" className="flex overflow-x-auto scrollbar-hide gap-3 ">
+          {tabs.map((tab, i) => (
+            <button
+              key={i}
+              onClick={() => handleTabClick(tab)}
+              style={{borderRadius:'5px'}}
+              className={`whitespace-nowrap p-1 rounded-full text-sm font-medium transition duration-200 ${activeTab === tab
+                  ? 'bg-white text-[#0f4c81] shadow'
+                  : 'text-gray-700 hover:bg-white/60'
+                }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Scroll Right Button */}
+        <button
+          onClick={() => {
+            const container = document.getElementById('tabs-container');
+            const firstTab = container.querySelector('button');
+            if (firstTab) {
+              const tabWidth = firstTab.offsetWidth + parseFloat(getComputedStyle(firstTab).marginRight);
+              container.scrollBy({ left: tabWidth * 3, behavior: 'smooth' });
+            }
+          }}
+          style={{borderRadius:'25px'}}
+          className="absolute lg:hidden right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-1 shadow-md text-gray-600 rounded-full"
+        >
+          <FaChevronRight size={14} />
+        </button>
       </div>
+
 
       {/* Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">

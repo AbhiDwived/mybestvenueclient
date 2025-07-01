@@ -3,12 +3,15 @@ import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { IoIosArrowForward } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
-import { useGetLatestVendorsByTypeQuery } from "../../features/admin/adminAPI";
+import { useGetlatestVendorTypeDataQuery } from "../../features/vendors/vendorAPI";
+
 
 const FeaturedVendors = ({ showAll = false }) => {
   const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
-  const { data: vendorsData, isLoading, error } = useGetLatestVendorsByTypeQuery();
+  const { data: vendorsData, isLoading, error } = useGetlatestVendorTypeDataQuery();
+  
+console.log("vendorsDatafff", vendorsData)
 
   const toggleFavorite = (e, id) => {
     e.stopPropagation();
@@ -34,7 +37,7 @@ const FeaturedVendors = ({ showAll = false }) => {
   }
 
   // Format vendors data according to our display needs
-  const formattedVendors = vendorsData?.vendors?.map(vendor => ({
+  const formattedVendors = vendorsData?.data?.map(vendor => ({
     id: vendor._id,
     image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
     category: vendor.vendorType,

@@ -7,10 +7,7 @@ export const authApi = createApi({
     prepareHeaders: (headers, { getState }) => {
       const token = localStorage.getItem("token");
       if (token) {
-        console.log('Using token for auth API call:', token.substring(0, 10) + '...');
         headers.set("Authorization", `Bearer ${token}`);
-      } else {
-        console.warn('No token found for auth API call');
       }
       return headers;
     },

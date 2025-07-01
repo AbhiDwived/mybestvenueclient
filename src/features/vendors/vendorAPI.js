@@ -34,10 +34,7 @@ export const vendorApi = createApi({
       const finalToken = token || vendorToken || adminToken || userToken;
       
       if (finalToken) {
-        console.log('Using token for vendor API call:', finalToken.substring(0, 10) + '...');
         headers.set('Authorization', `Bearer ${finalToken}`);
-      } else {
-        console.warn('No token found for vendor API call');
       }
       return headers;
     },
@@ -144,20 +141,11 @@ export const vendorApi = createApi({
     // Get Vendor BY Id
     getVendorById: builder.query({
       query: (vendorId) => {
-        console.log('Fetching vendor profile for ID:', vendorId);
         return {
           url: `/vendor/vendorbyId/${vendorId}`,
           method: 'GET',
         };
       },
-      transformResponse: (response, meta, arg) => {
-        console.log('Vendor profile API response:', response);
-        return response;
-      },
-      transformErrorResponse: (response, meta, arg) => {
-        console.error('Vendor profile API error:', response);
-        return response;
-      }
     }),
 
     // Get vendor inquiry list
@@ -337,32 +325,18 @@ export const vendorApi = createApi({
         };
       },
       transformResponse: (response) => {
-        console.log('Video Upload Response:', response);
         return response;
       },
-      transformErrorResponse: (response) => {
-        console.error('Video Upload Error:', response);
-        return response;
-      }
     }),
 
     // Get Portfolio Videos
     getPortfolioVideos: builder.query({
       query: (vendorId) => {
-        console.log('Fetching portfolio videos for vendor:', vendorId);
         return {
         url: `/vendor/portfolio/videos/${vendorId}`,
         method: 'GET',
         };
       },
-      transformResponse: (response) => {
-        console.log('Portfolio Videos API response:', response);
-        return response;
-      },
-      transformErrorResponse: (response) => {
-        console.error('Portfolio Videos API error:', response);
-        return response;
-      }
     }),
 
     // Delete Portfolio Video
@@ -372,13 +346,8 @@ export const vendorApi = createApi({
         method: 'DELETE',
       }),
       transformResponse: (response) => {
-        console.log('Video Delete Response:', response);
         return response;
       },
-      transformErrorResponse: (response) => {
-        console.error('Video Delete Error:', response);
-        return response;
-      }
     }),
 
     // Resend Password Reset OTP
@@ -389,8 +358,18 @@ export const vendorApi = createApi({
         body: { email },
       }),
     }),
+
+  //get latest vendor type Data
+    getlatestVendorTypeData: builder.query({
+      query: () => ({
+        url: `/vendor/getlatestvendorType`,
+        method: 'GET',
+      }),
+      // providesTags: ['PortfolioImages'],
+    }),
   })
 });
+
 
 
 
@@ -427,5 +406,6 @@ export const {
   useUploadPortfolioVideoMutation,
   useGetPortfolioVideosQuery,
   useDeletePortfolioVideoMutation,
-  useResendPasswordResetOtpMutation
+  useResendPasswordResetOtpMutation,
+  useGetlatestVendorTypeDataQuery
 } = vendorApi;

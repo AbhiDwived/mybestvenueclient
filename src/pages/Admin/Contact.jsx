@@ -15,16 +15,15 @@ export default function Contact() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [pendingSearchTerm, setPendingSearchTerm] = useState('');
 
     useEffect(() => {
-        console.log('API Data:', data);
-        console.log('API Error:', error);
     }, [data, error]);
 
     if (isLoading) return <Loader fullScreen />;
     if (isError) {
         console.error("Error fetching messages:", error);
-        return <div className="text-danger">Error loading messages.</div>;
+        return <div className="text-red-600">Error loading messages.</div>;
     }
 
     const contacts = data?.message || [];
@@ -57,10 +56,17 @@ export default function Contact() {
         return msgDate >= new Date(startDate) && msgDate <= new Date(endDate);
     };
 
+    const applySearchFilter = (list) => {
+        if (!searchTerm) return list;
+        return list.filter(contact =>
+            contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            contact.email.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    };
+
     // Apply all filters
     let filteredContacts = contacts;
 
-    // Date filter
     if (filterType === 'today') {
         filteredContacts = filteredContacts.filter(contact => isToday(contact.createdAt));
     } else if (filterType === 'yesterday') {
@@ -71,137 +77,126 @@ export default function Contact() {
         filteredContacts = filteredContacts.filter(contact => isInRange(contact.createdAt));
     }
 
-    // Search filter
-    if (searchTerm) {
-        filteredContacts = filteredContacts.filter(contact =>
-            contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            contact.email.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }
+    filteredContacts = applySearchFilter(filteredContacts);
 
-    // Reset all filters
-    const handleResetFilters = () => {
-        setFilterType('all');
-        setStartDate('');
-        setEndDate('');
-        setSearchTerm('');
-    };
+   
 
     return (
-        <div className="mx-3 my-4 ">
-            <h2 className="mb-3">Contact Submissions</h2>
+        <div className="px-4 py-6">
+            <h2 className="text-xl font-semibold mb-4">Contact Submissions</h2>
 
             {/* Filter Controls */}
-            <div className="d-flex flex-wrap gap-2 mb-3 align-items-center">
-                <div>
-                    <div>
+            <div className="flex flex-wrap gap-3 items-end mb-6">
+                {/* Filter Buttons */}
+                <div className="flex flex-wrap gap-2">
+                    {['all', 'today', 'yesterday', 'this_week', 'custom_range'].map(type => (
                         <button
-                            className={`btn ${filterType === 'all' ? 'btn-secondary' : 'btn-outline-secondary'} me-1`}
-                            onClick={() => setFilterType('all')}
+                            key={type}
+                            className={`px-3 py-2 rounded border text-sm ${filterType === type
+                                ? 'bg-gray-800 text-white'
+                                : 'border-gray-400 text-gray-600 hover:bg-gray-100'
+                                }`}
+                            onClick={() => setFilterType(type)}
                         >
-                            All
+                            {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </button>
-                        <button
-                            className={`btn ${filterType === 'today' ? 'btn-secondary' : 'btn-outline-secondary'} me-1`}
-                            onClick={() => setFilterType('today')}
-                        >
-                            Today
-                        </button>
-                        <button
-                            className={`btn ${filterType === 'yesterday' ? 'btn-secondary' : 'btn-outline-secondary'} me-1`}
-                            onClick={() => setFilterType('yesterday')}
-                        >
-                            Yesterday
-                        </button>
-                        <button
-                            className={`btn ${filterType === 'this_week' ? 'btn-secondary' : 'btn-outline-secondary'} me-1`}
-                            onClick={() => setFilterType('this_week')}
-                        >
-                            This Week
-                        </button>
-                        <button
-                            className={`btn ${filterType === 'custom_range' ? 'btn-secondary' : 'btn-outline-secondary'}`}
-                            onClick={() => setFilterType('custom_range')}
-                        >
-                            Custom Range
-                        </button>
-                    </div>
+                    ))}
                 </div>
 
+                {/* Custom Date Range Inputs */}
                 {filterType === 'custom_range' && (
                     <>
                         <div>
-                            <label className="form-label">Start Date</label>
+                            <label className="block text-sm mb-1">Start Date</label>
                             <input
                                 type="date"
-                                className="form-control"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
+                                className="border rounded px-3 py-2 text-sm w-full"
                             />
                         </div>
                         <div>
-                            <label className="form-label">End Date</label>
+                            <label className="block text-sm mb-1">End Date</label>
                             <input
                                 type="date"
-                                className="form-control"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
+                                className="border rounded px-3 py-2 text-sm w-full"
                             />
                         </div>
                     </>
                 )}
 
-                <div className="mt-4 flex">
+                {/* Search Input */}
+                <div className="flex-1">
                     <input
                         type="text"
-                        placeholder="Name or Email Search"
-                        className="form-control"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search..."
+                        value={pendingSearchTerm}
+                        onChange={(e) => setPendingSearchTerm(e.target.value)}
+                        className="w-full border rounded px-3 py-2 text-sm"
                     />
                 </div>
 
-                <div className="mt-4">
-                    <button className="btn btn-secondary" onClick={handleResetFilters}>
-                        Reset Filters
+                {/* Search and Reset Buttons */}
+                <div className="flex gap-2">
+                    <button
+                        className="bg-[#0f4c81] text-white text-sm px-4 py-2 rounded"
+                        onClick={() => setSearchTerm(pendingSearchTerm)}
+                    >
+                        Search
                     </button>
+                    
                 </div>
             </div>
 
             {/* Table */}
-            <div className="table-responsive">
-                <table className="table table-bordered">
-                    <thead>
+            <div className="overflow-x-auto">
+                <table className="min-w-full text-sm border border-gray-200">
+                    <thead className="bg-gray-100">
                         <tr>
-                            <th>No</th>
-                            <th className="d-none d-lg-table-cell">Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th className="d-none d-md-table-cell">Message</th>
-                            <th>Submitted At</th>
+                            <th className="p-2 border">No</th>
+                            <th className="p-2 border hidden lg:table-cell">Name</th>
+                            <th className="p-2 border">Email</th>
+                            <th className="p-2 border">Phone</th>
+                            <th className="p-2 border hidden md:table-cell">Message</th>
+                            <th className="p-2 border">Submitted At</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredContacts.length > 0 ? (
                             filteredContacts.map((contact, index) => (
-                                <tr key={contact._id}>
-                                    <td>{index + 1}</td>
-                                    <td className="d-none d-lg-table-cell">{contact.name}</td>
-                                    <td className="d-table-cell d-lg-none text-truncate" style={{ maxWidth: "150px" }}>
-                                        {contact.name}
+                                <tr key={contact._id} className="hover:bg-gray-50">
+                                    <td className="p-2 border">{index + 1}</td>
+
+                                    {/* Name (visible only on large screens) */}
+                                    <td className="p-2 border hidden lg:table-cell">{contact.name}</td>
+
+                                    {/* Name + Email stacked (for smaller screens) */}
+                                    <td className="p-2 border lg:hidden text-gray-700 font-medium">
+                                        <div className="truncate max-w-[150px]">{contact.name}</div>
+                                        <div className="text-xs text-gray-500">{contact.email}</div>
                                     </td>
-                                    <td>{contact.email}</td>
-                                    <td>{contact.phone}</td>
-                                    <td className="d-none d-md-table-cell">{contact.message}</td>
-                                    <td className="d-table-cell d-md-none text-truncate" style={{ maxWidth: "150px" }}>
+
+                                    {/* Email (large screens only) */}
+                                    <td className="p-2 border hidden lg:table-cell">{contact.email}</td>
+
+                                    <td className="p-2 border">{contact.phone}</td>
+
+                                    {/* Message full (medium and up) */}
+                                    <td className="p-2 border hidden md:table-cell">{contact.message}</td>
+
+                                    {/* Message truncated (small screens) */}
+                                    <td className="p-2 border md:hidden truncate max-w-[180px] text-gray-600">
                                         {contact.message}
                                     </td>
-                                    <td>{new Date(contact.createdAt).toLocaleString()}</td>
+
+                                    <td className="p-2 border">{new Date(contact.createdAt).toLocaleString()}</td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="8" className="text-center">
+                                <td colSpan="6" className="text-center p-4 text-gray-500">
                                     No messages found.
                                 </td>
                             </tr>
