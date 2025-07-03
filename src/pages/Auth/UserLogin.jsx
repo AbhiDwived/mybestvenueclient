@@ -34,9 +34,18 @@ const UserLogin = () => {
     try {
       const res = await loginUser(formData).unwrap();
 
+      // Clear any existing tokens from other user types to prevent conflicts
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminRefreshToken");
+      localStorage.removeItem("admin");
+      localStorage.removeItem("vendorToken");
+      localStorage.removeItem("vendorRefreshToken");
+      localStorage.removeItem("vendor");
+
       dispatch(setCredentials(res));
 
-      localStorage.setItem("token", res.token);
+      localStorage.setItem("userToken", res.token);
+      localStorage.setItem("userRefreshToken", res.refreshToken || "");
       localStorage.setItem("user", JSON.stringify(res.user));
 
       // Handle remember me

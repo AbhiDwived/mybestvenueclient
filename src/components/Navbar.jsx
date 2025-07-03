@@ -233,10 +233,10 @@ const Navbar = () => {
           {renderLink('/about', 'About')}
 
           {!isUserLoggedIn ? (
-            <>
+            <div style={{marginTop:'-2px'}}>
               <Link to="/user/login" className="text-black text-decoration-none">Login</Link>
-              <Link to="/user/signup" className="btn text-white" style={{ backgroundColor: '#0F4C81' }}>Sign Up</Link>
-            </>
+              <Link to="/user/signup" className="btn text-white mx-3" style={{ backgroundColor: '#0F4C81' }}>Sign Up</Link>
+            </div>
           ) : (
             <div className="position-relative" ref={profileRef}>
               <button

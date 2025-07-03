@@ -4,11 +4,62 @@ import { RiCheckboxCircleLine } from "react-icons/ri";
 import { FaExclamationCircle } from "react-icons/fa";
 import coverimage from '../../assets/Images/Navneegt.jpeg';
 import { useSelector, useDispatch } from 'react-redux';
-import { useUpdateProfileMutation } from "../../features/vendors/vendorAPI";
+import { useUpdateProfileMutation, useGetVendorByIdQuery } from "../../features/vendors/vendorAPI";
 import { setVendorCredentials } from '../../features/vendors/vendorSlice';
+import { MdOutlineAddCircle } from "react-icons/md";
+import { FaTrash } from "react-icons/fa";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+
+const VENDOR_TYPES = [
+  'Banquet Halls',
+  'Hotels',
+  'Marriage Garden',
+  'Kalyana Mandapams',
+  'Wedding Resorts',
+  'Wedding Lawns & Farmhouses',
+  'Wedding Photographers',
+  'Party Places',
+  'Photographers',
+  'Caterers',
+  'Wedding Decorators',
+  'Wedding Makeup',
+  'Wedding Planners',
+  'Gifts',
+  'Florist',
+  'Invitation',
+  'Choreographers',
+  'Photobooth',
+  'DJ',
+  'Cakes',
+  'Musics',
+  'TentHouse',
+  'Transportation',
+  'Videography',
+  'Other'
+];
+
+const LOCATIONS = [
+  'Delhi',
+  'New Delhi',
+  'Noida',
+  'Greater Noida',
+  'Gurgaon',
+  'Faridabad',
+  'Ghaziabad',
+  'Indirapuram',
+  'Dwarka',
+  'Rohini',
+  'Janakpuri',
+  'Laxmi Nagar',
+  'Vasant Kunj',
+  'Connaught Place',
+  'Saket',
+  'Other'
+];
+
+
 
 const EditProfile = () => {
   const dispatch = useDispatch();
@@ -20,16 +71,22 @@ const EditProfile = () => {
   // Extract vendor ID with better validation
   const vendorId = vendor?._id || vendor?.id;
 
+  const { data, error, isLoading: isLoadingVendor } = useGetVendorByIdQuery(vendorId);
+  // console.log("data ff", data);
+
+
   // Ensure we have the vendor ID and redirect if not authenticated
+
+  // console.log("descriptionqqqq", vendor);
   useEffect(() => {
     if (!isAuthenticated) {
       toast.error('Please log in to access this page');
       navigate('/vendor/login');
       return;
     }
-    
+
     if (!vendorId) {
-      console.error('Vendor ID is missing:', vendor);
+      // console.error('Vendor ID is missing:', vendor);
       toast.error('Error: Vendor ID is missing. Please try logging in again.');
       navigate('/vendor/login');
     }
@@ -50,6 +107,8 @@ const EditProfile = () => {
   const [coverImage, setCoverImage] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [contactName, setcontactName] = useState('');
+  const [address, setAddress] = useState('');
+  const [services, setServices] = useState(['']);
 
   const fileInputRef = useRef(null);
   const serverURL = "http://localhost:5000"
@@ -66,15 +125,32 @@ const EditProfile = () => {
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
       setCoverImage(vendor.profilePicture || null);
+      setAddress(vendor.address || 'New Delhi, India');
+      // setServices(data?.vendor.services || 'Photographers,Gifts');
+      const servicesData = data?.vendor?.services;
+      if (Array.isArray(servicesData)) {
+        setServices(servicesData);
+      } else if (typeof servicesData === 'string') {
+        setServices(servicesData.split(',').map(s => s.trim()));
+      } else {
+        // setServices(['Photographers', 'Gifts']);
+        setServices(['']);
+
+      }
+
+
+
     }
-  }, [vendor]);
+  }, [vendor, data]);
+
+
 
   const prepareFormData = (imageFile = null) => {
     const formData = new FormData();
-    
+
     // Log the vendor ID being used
-    console.log('Preparing form data with vendor ID:', vendorId);
-    
+    // console.log('Preparing form data with vendor ID:', vendorId);
+
     formData.append("_id", vendorId); // Add vendor ID to form data
     formData.append("businessName", businessName);
     formData.append("vendorType", category);
@@ -92,6 +168,11 @@ const EditProfile = () => {
     formData.append("termsAccepted", true);
     formData.append("isApproved", true);
     formData.append("contactName", contactName);
+
+    formData.append("address", address);
+    // formData.append("services", services);
+    formData.append("services", Array.isArray(services) ? services.join(',') : services);
+
 
     // If a new image file is provided, use it
     if (imageFile) {
@@ -117,11 +198,11 @@ const EditProfile = () => {
     }
 
     try {
-      console.log('Attempting to update vendor with ID:', vendorId);
+      // console.log('Attempting to update vendor with ID:', vendorId);
       const formData = prepareFormData();
-      
-      const res = await updateProfile({ 
-        vendorId, 
+
+      const res = await updateProfile({
+        vendorId,
         profileData: formData,
       }).unwrap();
 
@@ -135,7 +216,7 @@ const EditProfile = () => {
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
       toast.success("Profile updated successfully!");
     } catch (err) {
-      console.error('Update failed:', err);
+      // console.error('Update failed:', err);
       if (err.status === 404) {
         toast.error("Error: Vendor not found. Please try logging in again.");
         navigate('/vendor/login');
@@ -164,7 +245,7 @@ const EditProfile = () => {
       const formData = new FormData();
       formData.append("profilePicture", file);
       formData.append("_id", vendorId);
-      
+
       // Keep existing data
       formData.append("businessName", businessName);
       formData.append("vendorType", category);
@@ -175,21 +256,24 @@ const EditProfile = () => {
       formData.append("phone", contactPhone);
       formData.append("website", website);
       formData.append("contactName", contactName);
+      formData.append("address", address);
+      formData.append("services", services);
 
-      const res = await updateProfile({ 
-        vendorId, 
+      const res = await updateProfile({
+        vendorId,
         profileData: formData,
       }).unwrap();
 
+      // console.log("services", vendor.services)
       // Update with the server URL
       if (res.profilePicture) {
         setCoverImage(res.profilePicture);
         setSelectedFile(null); // Clear selected file after successful upload
-        
+
         // Update the vendor state in Redux
-        dispatch(setVendorCredentials({ 
+        dispatch(setVendorCredentials({
           vendor: { ...vendor, profilePicture: res.profilePicture },
-          token 
+          token
         }));
 
         toast.success("Profile image updated successfully");
@@ -209,6 +293,23 @@ const EditProfile = () => {
       }
     }
   };
+
+
+
+  const handleServiceChange = (index, value) => {
+    const updated = [...services];
+    updated[index] = value;
+    setServices(updated);
+  };
+
+  const handleAddService = () => {
+    setServices([...services, ""]);
+  };
+
+  const handleRemoveService = (index) => {
+    setServices(services.filter((_, i) => i !== index));
+  };
+
 
   if (!isAuthenticated || !vendorId) {
     return null; // Return null as useEffect will handle the redirect
@@ -240,14 +341,12 @@ const EditProfile = () => {
                 <input type="text" className="form-control" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
               </div>
               <div className="mb-3">
-                <label className="form-label">Category</label>
+                <label className="form-label"> Category</label>
                 <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-                  <option>Photographer</option>
-                  <option>Venue</option>
-                  <option>Cateree</option>
-                  <option>Decorator</option>
-                  <option>MakeUp Artist</option>
-                  <option>Wedding Hall</option>
+                  <option value="">Select Category</option>
+                  {VENDOR_TYPES.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
                 </select>
               </div>
               <div className="mb-3">
@@ -255,9 +354,66 @@ const EditProfile = () => {
                 <textarea className="form-control" rows="4" value={businessDescription} onChange={(e) => setBusinessDescription(e.target.value)}></textarea>
               </div>
               <div className="mb-3">
-                <label className="form-label">Location</label>
-                <input type="text" className="form-control" value={serviceAreas} onChange={(e) => setServiceAreas(e.target.value)} />
+                <label className="form-label">Address</label>
+                <input type="text" className="form-control" value={address} onChange={(e) => setAddress(e.target.value)} />
               </div>
+              <div className="mb-3">
+                <label className="form-label">Location</label>
+                {/* <input type="text" className="form-control" value={serviceAreas} onChange={(e) => setServiceAreas(e.target.value)} /> */}
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={serviceAreas}
+                  onChange={(e) => setServiceAreas(e.target.value)}
+                >
+                  <option value="">Select Location</option>
+                  {LOCATIONS.map((location) => (
+                    <option key={location} value={location}>{location}</option>
+                  ))}
+                </select>
+              </div>
+
+
+
+
+              <div className="mb-3">
+                <label className="form-label">Services</label>
+                {(services.length > 0 ? services : ['']).map((service, index) => (
+                  <div key={index} className="d-flex align-items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={service}
+                      onChange={(e) => handleServiceChange(index, e.target.value)}
+                    />
+
+                    {/* ✅ Corrected Add button condition */}
+                    {index === services.length - 1 && (
+                      <button
+                        type="button"
+                        className="d-flex align-items-center justify-content-center rounded"
+                        onClick={handleAddService}
+                        style={{ padding: "6px 10px", backgroundColor: '#0f4c81' }}
+                      >
+                        <MdOutlineAddCircle size={20} color="white" />
+                      </button>
+                    )}
+
+                    {services.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger d-flex align-items-center justify-content-center"
+                        onClick={() => handleRemoveService(index)}
+                        style={{ padding: "6px 10px" }}
+                      >
+                        <FaTrash size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+
+
               <div className="mb-3">
                 <label className="form-label">Price Range</label>
                 <input type="text" className="form-control" value={priceRange} onChange={(e) => setPriceRange(e.target.value)} />
@@ -275,9 +431,9 @@ const EditProfile = () => {
             <h4>Cover Image</h4>
             <p className="text-muted small">This will be displayed as your profile banner</p>
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
-              <img 
-                src={coverImage || vendor.profilePicture || coverimage} 
-                className="w-100 h-100 object-fit-cover" 
+              <img
+                src={coverImage || vendor.profilePicture || coverimage}
+                className="w-100 h-100 object-fit-cover"
                 alt="Cover"
                 onError={(e) => {
                   e.target.onerror = null;

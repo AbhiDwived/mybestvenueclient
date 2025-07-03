@@ -4,7 +4,7 @@ import { MdOutlineWifiCalling3 } from "react-icons/md";
 
 const FloatingContactButtons = () => {
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 mb-5">
 
 
         {/* Call */}

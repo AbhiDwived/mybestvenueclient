@@ -113,7 +113,9 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                             </div>
 
                             <p className="text-md text-gray-500">{vendor.vendorType || "Hospitality"}</p>
-                            <p className="text-md text-gray-600">Contact: {vendor.phone || "Navneet Yadav"}</p>
+                            <p className="text-md text-gray-600 space-between" >Contact: {vendor.phone || "Navneet Yadav"} <span  className='ml-5  '>Address:{vendor.address || "New York"}</span> </p>
+                            
+                            <p className="text-md text-gray-600">Services: {vendor.services || "Photographers,Gifts"}</p>
 
                             <div className="flex items-center text-md text-gray-500">
                                 <HiOutlineCalendar className="mr-1" />

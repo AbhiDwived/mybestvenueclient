@@ -8,26 +8,27 @@ const loginRedirects = {
   admin: '/admin/login',
 };
 
-const ProtectedRoute = ({ allowedRoles = [], children }) => {
+const ProtectedRoute = ({ allowedRoles = [] }) => {
   // Get auth slices from Redux
   const userAuth = useSelector((state) => state.auth || {});
   const vendorAuth = useSelector((state) => state.vendor || {});
   const adminAuth = useSelector((state) => state.adminAuth || {});
 
- 
-
   let isAuthenticated = false;
   let currentRole = null;
+  let currentUser = null;
 
   // Check admin first (highest priority)
   if (adminAuth.isAuthenticated && adminAuth.admin) {
     isAuthenticated = true;
-    currentRole = adminAuth.admin.role || 'admin';
+    currentRole = 'admin';
+    currentUser = adminAuth.admin;
   }
   // Then check vendor
   else if (vendorAuth.isAuthenticated && vendorAuth.vendor) {
     isAuthenticated = true;
-    currentRole = vendorAuth.vendor.role || 'vendor';
+    currentRole = 'vendor';
+    currentUser = vendorAuth.vendor;
 
     // Check if vendor is approved
     if (allowedRoles.includes('vendor') && !vendorAuth.vendor.isApproved) {
@@ -37,10 +38,9 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
   // Then check user
   else if (userAuth.isAuthenticated && userAuth.user) {
     isAuthenticated = true;
-    currentRole = userAuth.user.role || 'user';
+    currentRole = 'user';
+    currentUser = userAuth.user;
   }
-
-
 
   // Not authenticated, redirect to login page based on first allowed role or default to user login
   if (!isAuthenticated) {
@@ -50,11 +50,21 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
 
   // Authenticated but role not authorized
   if (allowedRoles.length > 0 && !allowedRoles.includes(currentRole)) {
-    return <Navigate to="/not-authorized" replace />;
+    // Redirect to their respective dashboard instead of a generic unauthorized page
+    switch (currentRole) {
+      case 'admin':
+        return <Navigate to="/admin/dashboard" replace />;
+      case 'vendor':
+        return <Navigate to="/vendor/dashboard" replace />;
+      case 'user':
+        return <Navigate to="/user/dashboard" replace />;
+      default:
+        return <Navigate to="/" replace />;
+    }
   }
 
   // Authorized — render children or nested routes
-  return children ? children : <Outlet />;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

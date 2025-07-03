@@ -34,9 +34,9 @@ const PreviewProfile = () => {
   const [packages, setPackages] = useState([]);
   const [getVendorPackages] = useVendorservicesPackageListMutation();
 
-  console.log('URL Vendor ID:', vendorId);
-  console.log('Vendor Data:', vendor);
-  console.log('Current packages state:', packages); // Debug log for packages
+  // console.log('URL Vendor ID:', vendorId);
+  // console.log('Vendor Data:', vendor);
+  // console.log('Current packages state:', packages); // Debug log for packages
 
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
@@ -217,6 +217,8 @@ const PreviewProfile = () => {
   };
 
   const vendorData = vendor?.vendor;
+  
+
 
   const [isSaved, setIsSaved] = useState(false);
 
@@ -428,6 +430,8 @@ const PreviewProfile = () => {
 
           <h2 className="text-xl font-bold text-gray-800">{vendor?.vendor?.businessName}</h2>
           <p className="text-sm text-gray-500">{vendor?.vendor?.vendorType}</p>
+          <p className="text-sm text-gray-500">Services:{vendor?.vendor?.services}</p>
+          
 
           {/* Rating & Location */}
           <div className="flex flex-wrap items-center gap-2 text-md text-gray-600 mt-1">
@@ -440,15 +444,17 @@ const PreviewProfile = () => {
 
             <span>
               <IoLocationOutline className="inline-block" />
-              {vendorData?.serviceAreas?.length > 0
+              {/* {vendorData?.serviceAreas?.length > 0
                 ? vendorData.serviceAreas.map((area, index) => (
                   <span key={index}>
                     {area.charAt(0).toUpperCase() + area.slice(1)}
                     {index !== vendorData.serviceAreas.length - 1 && ', '}
                   </span>
                 ))
-                : 'New Delhi, India'}
+                : 'New Delhi, India'} */}
+                {vendor?.address || "New York"}
             </span>
+            
 
           </div>
 
@@ -875,9 +881,3 @@ const PreviewProfile = () => {
 };
 
 export default PreviewProfile;
-
-
-
-
-
-

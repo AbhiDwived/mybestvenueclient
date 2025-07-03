@@ -5,7 +5,7 @@ import DatePicker from 'react-datepicker';
 import Calendar from 'react-calendar';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'react-calendar/dist/Calendar.css';
-import EditProfile from './EditProfiles';
+import EditProfiles from './EditProfiles';
 import PortfolioTab from './Portfolio';
 import PackagesAndFaqs from './PackagesAndFaqs';
 import Inquiries from './Inquiries/Inquiries';
@@ -23,17 +23,29 @@ const Dashboard = () => {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDatePickerForWedding, setShowDatePickerForWedding] = useState(null);
+  const [eventName, setEventName] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem('activeTab') || 'Overview';
+    const savedTab = localStorage.getItem('activeTab') || 'Overview';
+    console.log('Initial active tab:', savedTab);
+    return savedTab;
   });
 
   const handleTabClick = (tab) => {
+    console.log('Switching to tab:', tab);
     setActiveTab(tab);
     localStorage.setItem('activeTab', tab);
   };
 
+  useEffect(() => {
+    console.log('Current active tab:', activeTab);
+    console.log('Vendor data:', vendor);
+    console.log('Is authenticated:', isAuthenticated);
+  }, [activeTab, vendor, isAuthenticated]);
+
   if (!isAuthenticated) {
+    console.log('Not authenticated, showing login message');
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
   }
 
@@ -43,21 +55,14 @@ const Dashboard = () => {
     { date: new Date('2024-11-15'), name: 'Arjun & Meera Kumar Wedding' },
   ]);
 
-  // const handleTabClick = (tab) => {
-  //   setActiveTab(tab);
-  // };
-
-
-
   useEffect(() => {
     if (!isAuthenticated) {
       localStorage.removeItem('activeTab');
     }
   }, [isAuthenticated]);
 
-
-  const handleDateSelect = (date) => {
-    setEvents(prev => [...prev, { date, name: 'Custom Event' }]);
+  const handleDateSelect = (date, name) => {
+    setEvents(prev => [...prev, { date, name: name }]);
     setShowDatePicker(false);
   };
 
@@ -96,6 +101,15 @@ const Dashboard = () => {
     }
   ];
 
+  // Format services for display
+  const formatServices = (services) => {
+    if (!services) return '';
+    if (Array.isArray(services)) {
+      return services.join(', ');
+    }
+    return services;
+  };
+
   return (
     <div className="p-2 sm:p-6 bg-white min-h-screen text-gray-800 font-serif">
       {/* Header */}
@@ -103,16 +117,19 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
           <div>
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold font-serif">
-              {vendor?.businessName || 'Dream Wedding Photography'}
+              {vendor?.businessName || 'DSY'}
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 font-serif">
-              {vendor?.vendorType || 'Photographer'} • {
-                vendor?.serviceAreas?.length > 0
+              {vendor?.vendorType || 'Banquet Halls'} • {
+                vendor?.address?.city || 
+                (vendor?.serviceAreas?.length > 0
                   ? vendor.serviceAreas.join(', ')
-                  : vendor?.address?.city
-                    ? `${vendor.address.city}${vendor.address.state ? `, ${vendor.address.state}` : ''}`
-                    : 'Location not specified'
+                  : 'Dwarka')
               }
+            </p>
+            {/* Display services */}
+            <p className="text-xs sm:text-sm text-gray-600 font-serif mt-1">
+              Services: {formatServices(vendor?.services) || 'Photographers, Gifts'}
             </p>
           </div>
 
@@ -215,27 +232,68 @@ const Dashboard = () => {
 
               {/* Calendar Section */}
               <div className="bg-white p-3 sm:p-4 rounded shadow">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-xs sm:text-sm font-medium">Monthly Profile Views</p>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-sm sm:text-base font-medium">Monthly Profile Views</p>
                   <button
                     onClick={() => setShowDatePicker(!showDatePicker)}
-                    className="text-[#0f4c81] flex items-center gap-1 text-xs sm:text-sm font-medium"
+                    className="text-[#0f4c81] flex items-center gap-1 text-sm sm:text-base font-medium hover:bg-blue-50 px-3 py-1.5 rounded-md transition-colors"
                   >
-                    <MdOutlineCalendarMonth size={16} className="sm:w-5 sm:h-5" /> Add Event
+                    <MdOutlineCalendarMonth size={20} className="sm:w-5 sm:h-5" /> Add Event
                   </button>
                 </div>
 
                 {showDatePicker && (
-                  <DatePicker
-                    selected={null}
-                    onChange={handleDateSelect}
-                    inline
-                  />
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                      <h3 className="text-lg font-semibold mb-4">Add New Event</h3>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-2 border rounded-md"
+                          placeholder="Enter event name"
+                          value={eventName}
+                          onChange={(e) => setEventName(e.target.value)}
+                        />
+                      </div>
+                      <DatePicker
+                        selected={selectedDate}
+                        onChange={(date) => setSelectedDate(date)}
+                        inline
+                        className="w-full"
+                      />
+                      <div className="flex justify-end gap-3 mt-4">
+                        <button 
+                          onClick={() => {
+                            setShowDatePicker(false);
+                            setEventName('');
+                            setSelectedDate(null);
+                          }}
+                          className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (eventName && selectedDate) {
+                              handleDateSelect(selectedDate, eventName);
+                              setEventName('');
+                              setSelectedDate(null);
+                            }
+                          }}
+                          className="px-4 py-2 bg-[#0f4c81] text-white rounded-md hover:bg-[#0d3f6a] transition-colors"
+                          disabled={!eventName || !selectedDate}
+                        >
+                          Add Event
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
-                <div className="mt-4">
+                <div className="mt-4 w-full">
                   <Calendar
-                    className="w-full text-xs sm:text-sm"
+                    className="w-full border-none"
                     value={new Date()}
                     tileClassName={tileClassName}
                     tileContent={({ date, view }) => {
@@ -244,10 +302,12 @@ const Dashboard = () => {
                       );
                       return event ? (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="tooltip group-hover:block hidden absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded-md z-10 whitespace-nowrap">
-                            {event.name}
-                          </span>
-                          <span className="text-white text-xs font-bold">●</span>
+                          <div className="group relative">
+                            <span className="text-white text-xs font-bold">●</span>
+                            <div className="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 mb-1">
+                              {event.name}
+                            </div>
+                          </div>
                         </div>
                       ) : null;
                     }}
@@ -281,14 +341,44 @@ const Dashboard = () => {
           </>
         )}
 
+        {/* Edit Profile Tab */}
+        {activeTab === 'Edit Profile' && (
+          <div className="lg:col-span-3 w-full">
+            <EditProfiles />
+          </div>
+        )}
+
         {/* Other tabs content */}
-        {activeTab === 'Edit Profile' && <div className="col-span-3"><EditProfile /></div>}
-        {activeTab === 'Bookings' && <div className="col-span-3"><Bookings /></div>}
-        {activeTab === 'Portfolio' && <div className="col-span-3"><PortfolioTab /></div>}
-        {activeTab === 'Packages & FAQs' && <div className="col-span-3"><PackagesAndFaqs /></div>}
-        {activeTab === 'Inquiries' && <div className="col-span-3"><Inquiries /></div>}
-        {activeTab === 'Reviews' && <div className="col-span-3"><ReviewSection /></div>}
-        {activeTab === 'Analytics' && <div className="col-span-3"><Analytics /></div>}
+        {activeTab === 'Bookings' && (
+          <div className="lg:col-span-3 -mt-4">
+            <Bookings />
+          </div>
+        )}
+        {activeTab === 'Portfolio' && (
+          <div className="lg:col-span-3 -mt-4">
+            <PortfolioTab />
+          </div>
+        )}
+        {activeTab === 'Packages & FAQs' && (
+          <div className="lg:col-span-3 -mt-4">
+            <PackagesAndFaqs />
+          </div>
+        )}
+        {activeTab === 'Inquiries' && (
+          <div className="lg:col-span-3 -mt-4">
+            <Inquiries />
+          </div>
+        )}
+        {activeTab === 'Reviews' && (
+          <div className="lg:col-span-3 -mt-4">
+            <ReviewSection />
+          </div>
+        )}
+        {activeTab === 'Analytics' && (
+          <div className="lg:col-span-3 -mt-4">
+            <Analytics />
+          </div>
+        )}
       </div>
 
       {/* Upcoming Weddings Section */}

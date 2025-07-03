@@ -6,6 +6,8 @@ import { MdLocationOn } from "react-icons/md";
 import Loader from '../../components/{Shared}/Loader';
 import { FiArrowLeft } from "react-icons/fi";
 import { MapPin } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useGetVendorByIdQuery } from "../../features/vendors/vendorAPI";
 
 const VendorListPage = () => {
   const navigate = useNavigate();
@@ -14,6 +16,13 @@ const VendorListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [favorites, setFavorites] = useState([]);
   const [activeTab, setActiveTab] = useState('popular');
+
+  const vendor = useSelector((state) => state.vendor.vendor);
+  const vendorId = vendor?._id;
+  // console.log("vendorvvvv",vendor);
+
+  const { data, error: vendorError, isLoading: isLoadingVendor } = useGetVendorByIdQuery(vendorId);
+  // console.log("data", data?.vendor.services);
 
   // Format inputs
   const formattedCategory = category
@@ -53,7 +62,7 @@ const VendorListPage = () => {
   const handleVendorClick = (vendorId) => {
     navigate(`/preview-profile/${vendorId}`);
   };
-
+  // console.log("vendorServices",vendorsData);
   const formatPrice = (pricingRange) => {
     if (!pricingRange || typeof pricingRange.min !== 'number' || typeof pricingRange.max !== 'number') {
       return 'Price on request';
@@ -87,6 +96,12 @@ const VendorListPage = () => {
     );
   }
 
+  const rawServices = data?.vendor?.services || [];
+  const services = Array.isArray(rawServices)
+    ? rawServices.length === 1 && typeof rawServices[0] === "string"
+      ? rawServices[0].split(',').map(s => s.trim())
+      : rawServices
+    : [];
   const filteredVendors = vendorsData?.vendors?.filter(vendor => {
     const lowerSearchTerm = searchTerm.toLowerCase().trim();
     const matchesCategory = vendor.vendorType === formattedCategory;
@@ -102,6 +117,7 @@ const VendorListPage = () => {
       matchesLocation = vendorLocations.includes(searchCity);
     }
 
+
     let matchesSearch = true;
     if (lowerSearchTerm) {
       const searchable = [
@@ -115,6 +131,7 @@ const VendorListPage = () => {
     return matchesCategory && matchesLocation && matchesSearch;
   }) || [];
 
+  console.log(filteredVendors.services, "filteredVendors");
   return (
     <>
       {/* Header */}
@@ -274,8 +291,34 @@ const VendorListPage = () => {
                       {/* Capacity, Rooms, and More */}
                       <div className="flex flex-wrap gap-3 text-xs text-gray-600">
                         <span>{vendor.capacity || "650–2500 pax"}</span>
-                        <span>• {vendor.rooms || "4 Rooms"}</span>
-                        <span>• +7 more</span>
+                        <span
+                          className="text-gray-600 hover:underline"
+                          onClick={() => handleVendorClick(vendor._id)}
+                        >
+                          {(() => {
+                            let raw = vendor.services || [];
+                            let vendorServices = Array.isArray(raw)
+                              ? raw.length === 1 && typeof raw[0] === "string"
+                                ? raw[0].split(',').map(s => s.trim())
+                                : raw
+                              : [];
+
+                            return vendorServices.length > 0 ? (
+                              <>
+                                {vendorServices.slice(0, 2).join(', ')}
+                                {vendorServices.length > 2 && (
+                                  <> +{vendorServices.length - 2} more</>
+                                )}
+                              </>
+                            ) : (
+                              <>No more services </>
+                            );
+                          })()}
+
+                        </span>
+
+
+                        {/* <span>• +7 more</span> */}
                       </div>
                     </div>
                   </div>

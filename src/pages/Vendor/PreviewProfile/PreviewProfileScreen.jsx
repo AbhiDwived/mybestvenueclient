@@ -1,9 +1,54 @@
 
 import { FaCamera } from 'react-icons/fa';
+import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 
 const PreviewProfileScreen = () => {
   window.scrollTo({ top: 0, category: "top" })
+  const { vendorId } = useParams();
+  const [packages, setPackages] = useState([]);
+  const [getVendorPackages] = useVendorservicesPackageListMutation();
+
+  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
+console.log("vendor2222", vendor.vendor.services)
+
+
+//Fetch Packages 
+  useEffect(() => {
+      const fetchPackages = async () => {
+        const actualVendorId = vendor?.vendor?._id;
+        console.log('Attempting to fetch packages with vendor ID:', actualVendorId);
+  
+        if (!actualVendorId) {
+          console.log('No vendor ID available yet');
+          return;
+        }
+  
+        try {
+          const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
+          console.log('in previewprofileScreen raw package response:', response);
+          
+          if (response?.packages && Array.isArray(response.packages)) {
+            console.log('Setting packages:', response.packages);
+            setPackages(response.packages);
+          } else {
+            console.log('No packages found in response');
+            setPackages([]);
+          }
+        } catch (error) {
+          console.error('Failed to fetch packages:', error);
+          toast.error('Failed to load vendor packages');
+          setPackages([]);
+        }
+      };
+  
+      if (!isVendorLoading && vendor?.vendor?._id) {
+        fetchPackages();
+      }
+    }, [vendor, isVendorLoading, getVendorPackages]);
+  
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 ">
@@ -19,7 +64,7 @@ const PreviewProfileScreen = () => {
           </div>
 
           {/* Services */}
-          <section>
+          {/* <section>
             <h2 className="text-xl font-semibold mb-2">Services</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-gray-700 text-sm">
               <span><FaCamera className="inline mr-2" /> Wedding Photography</span>
@@ -29,51 +74,68 @@ const PreviewProfileScreen = () => {
               <span><FaCamera className="inline mr-2" /> Video Coverage</span>
               <span><FaCamera className="inline mr-2" /> Drone Shots</span>
             </div>
-          </section>
+          </section> */}
+  {/* Services */}
+<section>
+  <h2 className="text-xl font-semibold mb-2">Services</h2>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-gray-700 text-sm">
+    {vendor?.vendor?.services?.length > 0 &&
+    typeof vendor.vendor.services[0] === "string" ? (
+      vendor.vendor.services[0]
+        .split(",")
+        .map(service => service.trim())
+        .filter(service => service)
+        .map((service, index) => (
+          <span key={index} className="flex items-center">
+            <FaCamera className="inline mr-2 shrink-0" /> {service}
+          </span>
+        ))
+    ) : (
+      <span className="text-gray-500 col-span-2">No services available.</span>
+    )}
+  </div>
+</section>
 
-          {/* Pricing */}
-          <section>
-            <h2 className="text-xl font-semibold mb-2">Pricing</h2>
-            <p className="text-gray-700 mb-4 text-sm md:text-base">We offer customized packages to suit your needs:</p>
+{/* Pricing */}
+<section>
+  <h2 className="text-xl font-semibold mb-2">Pricing</h2>
+  <p className="text-gray-700 mb-4 text-sm md:text-base">We offer customized packages to suit your needs:</p>
 
-            <div className="space-y-4 text-sm md:text-base">
-              {/* Basic Package */}
-              <div>
-                <h3 className="font-semibold">Basic Package (₹10,000 - ₹20,000)</h3>
-                <ul className="list-disc list-inside text-gray-700">
-                  <li>6 hours of coverage</li>
-                  <li>One photographer</li>
-                  <li>100 edited digital photos</li>
-                </ul>
-              </div>
+  <div className="space-y-4 text-sm md:text-base">
+    {packages.length > 0 ? (
+      packages.map((pkg, index) => (
+        <div
+          key={pkg._id}
+          className={`p-4 rounded-md ${index % 2 === 1 ? 'bg-gray-50 border' : ''}`}
+        >
+          <h3 className="font-semibold">
+            {pkg.packageName}
+            {pkg.price > 0 && ` (₹${pkg.price.toLocaleString()})`}
+          </h3>
 
-              {/* Premium Package */}
-              <div className="border p-4 rounded-md bg-gray-50">
-                <h3 className="font-semibold">Premium Package (₹20,000 - ₹35,000)</h3>
-                <ul className="list-disc list-inside text-gray-700">
-                  <li>10 hours of coverage</li>
-                  <li>Two photographers</li>
-                  <li>300 edited digital photos</li>
-                  <li>Wedding album (20 pages)</li>
-                  <li>Pre-wedding shoot (2 hours)</li>
-                </ul>
-              </div>
+          <ul className="list-disc list-inside text-gray-700 mt-2">
+            {pkg.description && <li>{pkg.description}</li>}
 
-              {/* Deluxe Package */}
-              <div>
-                <h3 className="font-semibold">Deluxe Package (₹35,000 - ₹50,000)</h3>
-                <ul className="list-disc list-inside text-gray-700">
-                  <li>Full day coverage (up to 16 hours)</li>
-                  <li>Team of 3+ photographers</li>
-                  <li>500+ edited digital photos</li>
-                  <li>Wedding album + video highlights</li>
-                  <li>Premium wedding album (30 pages)</li>
-                  <li>Drone coverage</li>
-                  <li>Same-day edit highlights</li>
-                </ul>
-              </div>
+            {pkg.services?.flatMap((s) =>
+              s.split('+').map((service, i) => (
+                <li key={`${service}-${i}`}>{service.trim()}</li>
+              ))
+            )}
+          </ul>
+
+          {pkg.offerPrice > 0 && (
+            <div className="text-green-600 mt-2 text-sm">
+              Offer Price: ₹{pkg.offerPrice.toLocaleString()} ({pkg.offerPercentage}% OFF)
             </div>
-          </section>
+          )}
+        </div>
+      ))
+    ) : (
+      <p className="text-gray-500 italic">No packages available.</p>
+    )}
+  </div>
+</section>
+
         </div>
 
         {/* Right Section */}

@@ -7,12 +7,10 @@ export const adminApi = createApi({
     prepareHeaders: (headers) => {
       // Try to get admin token first
       const adminToken = localStorage.getItem('adminToken');
-      // Fallback to regular token if admin token is not available
-      const token = adminToken || localStorage.getItem('token');
       
-      if (token) {
-        console.log('Using token for admin API call:', token.substring(0, 10) + '...');
-        headers.set('Authorization', `Bearer ${token}`);
+      if (adminToken) {
+        console.log('Using token for admin API call:', adminToken.substring(0, 10) + '...');
+        headers.set('Authorization', `Bearer ${adminToken}`);
       } else {
         console.warn('No token found for admin API call');
       }

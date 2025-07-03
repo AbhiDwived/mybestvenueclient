@@ -12,7 +12,7 @@ const isTokenValid = (token) => {
 
 // Load admin and token from localStorage
 const loadAdminFromStorage = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("adminToken");
   const refreshToken = localStorage.getItem("adminRefreshToken");
   const adminStr = localStorage.getItem("admin");
 
@@ -63,7 +63,7 @@ const adminSlice = createSlice({
         state.isAuthenticated = true;
         state.loading = false;
         state.error = null;
-        localStorage.setItem("token", token);
+        localStorage.setItem("adminToken", token);
         localStorage.setItem("adminRefreshToken", refreshToken);
         localStorage.setItem("admin", JSON.stringify(admin));
       } else {
@@ -71,7 +71,7 @@ const adminSlice = createSlice({
         state.refreshToken = null;
         state.admin = null;
         state.isAuthenticated = false;
-        localStorage.removeItem("token");
+        localStorage.removeItem("adminToken");
         localStorage.removeItem("adminRefreshToken");
         localStorage.removeItem("admin");
       }
@@ -102,7 +102,7 @@ const adminSlice = createSlice({
       state.error = null;
       state.updateLoading = false;
       state.updateError = null;
-      localStorage.removeItem("token");
+      localStorage.removeItem("adminToken");
       localStorage.removeItem("adminRefreshToken");
       localStorage.removeItem("admin");
     },
