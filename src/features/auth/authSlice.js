@@ -12,8 +12,8 @@ const isTokenValid = (token) => {
 
 // Load user and token from localStorage
 const loadUserFromStorage = () => {
-  const token = localStorage.getItem("userToken");
-  const refreshToken = localStorage.getItem("userRefreshToken");
+  const token = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("refreshToken");
   const userStr = localStorage.getItem("user");
 
   let user = null;
@@ -63,16 +63,16 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.loading = false;
         state.error = null;
-        localStorage.setItem("userToken", token);
-        localStorage.setItem("userRefreshToken", refreshToken);
+        localStorage.setItem("token", token);
+        localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("user", JSON.stringify(user));
       } else {
         state.token = null;
         state.refreshToken = null;
         state.user = null;
         state.isAuthenticated = false;
-        localStorage.removeItem("userToken");
-        localStorage.removeItem("userRefreshToken");
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
       }
     },
@@ -102,8 +102,8 @@ const authSlice = createSlice({
       state.error = null;
       state.updateLoading = false;
       state.updateError = null;
-      localStorage.removeItem("userToken");
-      localStorage.removeItem("userRefreshToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
     },
     setLoading: (state) => {

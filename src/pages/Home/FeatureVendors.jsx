@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
+import { MapPin } from 'lucide-react';
 import { IoIosArrowForward } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { useGetlatestVendorTypeDataQuery } from "../../features/vendors/vendorAPI";
@@ -10,8 +11,8 @@ const FeaturedVendors = ({ showAll = false }) => {
   const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
   const { data: vendorsData, isLoading, error } = useGetlatestVendorTypeDataQuery();
-  
-console.log("vendorsDatafff", vendorsData)
+
+  // console.log("vendorsDatafff", vendorsData)
 
   const toggleFavorite = (e, id) => {
     e.stopPropagation();
@@ -42,13 +43,14 @@ console.log("vendorsDatafff", vendorsData)
     image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
     category: vendor.vendorType,
     name: vendor.businessName,
-    location: vendor.serviceAreas?.length > 0 
+    location: vendor.serviceAreas?.length > 0
       ? vendor.serviceAreas[0]
       : vendor.address?.city && vendor.address?.state
         ? `${vendor.address.city}, ${vendor.address.state}`
         : vendor.address?.city || vendor.address?.state || 'Location not specified',
     rating: 4.5,
     reviews: 0,
+    services: vendor.services,
     price: vendor.pricingRange && vendor.pricingRange.min && vendor.pricingRange.max
       ? `₹${vendor.pricingRange.min.toLocaleString()} - ₹${vendor.pricingRange.max.toLocaleString()}`
       : 'Price on request'
@@ -93,25 +95,112 @@ console.log("vendorsDatafff", vendorsData)
                 )}
               </button>
             </div>
-            <div className="p-4">
-              <p className="text-sm text-gray-500 mb-1 font-playfair-display">{vendor.category}</p>
-              <h5 className="text-lg font-semibold text-gray-900 font-serif">
-                {vendor.name}
-              </h5>
-              <div className="flex items-center text-sm text-gray-500 mt-1">
-                <MdLocationOn className="mr-1" />
-                {vendor.location}
-              </div>
-              <div className="flex justify-between items-center mt-4 text-sm text-gray-700">
-                <div className="flex items-center gap-1">
-                  <FaStar className="text-yellow-500" />
-                  <span className="text-gray-900 font-bold font-playfair-display">
-                    {vendor.rating}
-                  </span>
-                  <span className="text-gray-500">({vendor.reviews} reviews)</span>
+            {/* Details */}
+            <div className="flex flex-col justify-between flex-grow p-2 font-serif">
+              <div>
+
+
+                <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.category || "Vendor"}</p>
+                <div className="flex justify-between items-center gap-2 mb-2">
+                  <h5 className="text-md font-semibold truncate max-w-[65%] font-serif">
+                    {vendor.businessName || vendor.name || "Vendor Name"}
+                  </h5>
+
+                  <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
+                    <FaStar size={18} className="text-yellow-500" />
+                    <span>{vendor.rating || "5.0"}</span>
+                  </div>
+
                 </div>
-                <div className="text-black font-bold text-right">{vendor.price}</div>
+
+
+                {/* Location */}
+                <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
+                  <MapPin size={14} />
+                  {/* <span className="truncate">{vendor.serviceAreas?.join(", ") || "Location not specified"}</span> */}
+                  <span className="truncate">{vendor.location || "Location not specified"}</span>
+                  {/* <span className="before:content-['•'] before:mx-1">{vendor.vendorType || "Category"}</span> */}
+                </div>
+
+                {/* Tags */}
+                <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1">
+
+                </div>
               </div>
+
+              {/* Price / Rooms / Pax */}
+
+
+
+              <div className="border-t mt-3 pt-3 text-sm text-gray-800">
+
+                <div className="flex items-start gap-8 mb-2">
+                  {/* Veg price */}
+                  <div>
+                    <div className="text-xs text-gray-500">Veg</div>
+                    <div className="text-base font-semibold text-gray-800">
+                      ₹ {vendor.priceVeg || "999"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                    </div>
+                  </div>
+
+                  {/* Non-Veg price */}
+                  <div>
+                    <div className="text-xs text-gray-500">Non veg</div>
+                    <div className="text-base font-semibold text-gray-800">
+                      ₹ {vendor.priceNonVeg || "1,200"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Capacity, Rooms, and More */}
+                <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+
+
+                  <span className="text-gray-600   p-1 rounded"
+                    onClick={() => handleVendorClick(vendor._id)}
+                  >
+
+                    {(() => {
+                      let raw = vendor.services || [];
+                      let vendorServices = Array.isArray(raw)
+                        ? raw.length === 1 && typeof raw[0] === "string"
+                          ? raw[0].split(',').map(s => s.trim())
+                          : raw
+                        : [];
+
+                      return vendorServices.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 "
+
+                        >
+
+                          {vendorServices.slice(0, 2).map((service, index) => (
+
+                            <span
+                              key={index}
+                              className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md  "
+
+                            >
+                              {service}
+                            </span>
+                          ))}
+                          {vendorServices.length > 2 && (
+                            <span className="text-sm text-gray-600 hover:underline">
+                              +{vendorServices.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">No services available</span>
+                      );
+                    })()}
+
+
+                  </span>
+                </div>
+              </div>
+
+
+
             </div>
           </div>
         ))}

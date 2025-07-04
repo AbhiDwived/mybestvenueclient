@@ -246,7 +246,7 @@ export default function WeddingVendor() {
             </button>
           </div>
 
-       {activeTab === 'primary' &&
+          {activeTab === 'primary' &&
             vendorCategories.some((cat) => cat.title === selectedCategory) &&
             (categoryComponents[selectedCategory] || <p>No component available.</p>)
           }

@@ -33,18 +33,9 @@ const VendorLogin = () => {
     try {
       const res = await loginVendor(formData).unwrap();
 
-      // Clear any existing tokens from other user types to prevent conflicts
-      localStorage.removeItem("userToken");
-      localStorage.removeItem("userRefreshToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminRefreshToken");
-      localStorage.removeItem("admin");
-
       dispatch(setVendorCredentials(res));
 
       localStorage.setItem("vendorToken", res.token);
-      localStorage.setItem("vendorRefreshToken", res.refreshToken || "");
       localStorage.setItem("vendor", JSON.stringify(res.vendor));
 
       // Handle remember me

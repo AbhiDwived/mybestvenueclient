@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { FiTrendingUp, FiMessageSquare, FiCalendar } from "react-icons/fi";
 import { FaRegStar } from "react-icons/fa";
+import { useGetVendorBookingsListQuery, useUserInquiryListQuery } from "../../features/vendors/vendorAPI";
+// import { useUserInquiryListQuery } from "../../features/vendors/vendorAPI";
+import { useSelector } from 'react-redux';
+
 
 
 
@@ -27,43 +31,112 @@ const Analytics = () => {
 
 
   const [stats, setStats] = useState([]);
+  const vendor = useSelector((state) => state.vendor.vendor);
+  console.log("vendor", vendor);
+  const vendorId = vendor.id;
+
+
+
+  const { data: bookings, isLoading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useGetVendorBookingsListQuery(vendorId);
+  const { data: inquiries, isLoading, isError, error, refetch: refetchInquiries } = useUserInquiryListQuery(undefined, {
+    // The query will use the auth token from the state, so we don't need to pass vendorId
+    refetchOnMountOrArgChange: true
+  });
+
+
+  console.log("bookings", bookings?.data?.totalBookingsCount);
+  console.log("inquiries", inquiries);
+  // useEffect(() => {
+  //   // Simulating API call
+  //   const fetchData = async () => {
+  //     const data = [
+  //       {
+  //         title: "Total Views",
+  //         value: "12,450",
+  //         change: "+12% from last month",
+  //         type: "views",
+  //       },
+  //       {
+  //         title: "Inquiries",
+  //         value: inquiries?.data?.length || 2,
+  //         change: "+8% from last month",
+  //         type: "inquiries",
+  //       },
+  //       {
+  //         title: "Bookings",
+  //         value: bookings?.data?.totalBookingsCount||10,
+  //         change: "+15% from last month",
+  //         type: "bookings",
+  //       },
+  //       {
+  //         title: "Avg Rating",
+  //         value: "4.8",
+  //         change: "+0.2 from last month",
+  //         type: "rating",
+  //       },
+  //     ];
+
+  //     setStats(data);
+  //   };
+
+  //   fetchData();
+  // }, []);
+
 
   useEffect(() => {
-    // Simulating API call
-    const fetchData = async () => {
-      const data = [
-        {
-          title: "Total Views",
-          value: "12,450",
-          change: "+12% from last month",
-          type: "views",
-        },
-        {
-          title: "Inquiries",
-          value: "156",
-          change: "+8% from last month",
-          type: "inquiries",
-        },
-        {
-          title: "Bookings",
-          value: "23",
-          change: "+15% from last month",
-          type: "bookings",
-        },
-        {
-          title: "Avg Rating",
-          value: "4.8",
-          change: "+0.2 from last month",
-          type: "rating",
-        },
-      ];
+    if (!bookings || !inquiries) return;
+    const avgRating = 4.8;
 
-      setStats(data);
-    };
 
-    fetchData();
-  }, []);
+     const currentYear = new Date().getFullYear();
+    const totalInquiriesYearly = inquiries?.modifiedList?.filter((inq) => {
+      const inqYear = new Date(inq.createdAt).getFullYear();
+      return inqYear === currentYear;
+    }).length || 0;
+
+    // Bookings: Assuming bookings.data.bookings is the array of bookings
+    const totalBookingsYearly = bookings?.data?.bookings?.filter((bk) => {
+      const bookingYear = new Date(bk.createdAt).getFullYear();
+      return bookingYear === currentYear;
+    }).length || 0;
+
+    const data = [
+      {
+        title: "Total Views",
+        value: "12,450", // static or fetch if available
+        change: "+12% from last month",
+        type: "views",
+      },
+      {
+        title: "Inquiries",
+        value: inquiries?.modifiedList?.length || 0,
+        change: "+8% from last month",
+        type: "inquiries",
+        percent: Math.min((totalInquiriesYearly / 100) * 100, 100),
+      },
+      {
+        title: "Bookings",
+        value: bookings?.data?.totalBookingsCount || 0,
+        change: "+15% from last month",
+        type: "bookings",
+        percent: Math.min((totalBookingsYearly / 100) * 100, 100),
+      },
+      {
+        title: "Avg Rating",
+        value: "4.8", // static or dynamic
+        change: "+0.2 from last month",
+        type: "rating",
+        percent: (avgRating / 5) * 100,
+      },
+    ];
+
+    // setStats(data);
+    setStats(statsData);
+  }, [bookings, inquiries]);
+
   return (
+
+
 
 
 
@@ -89,10 +162,15 @@ const Analytics = () => {
             </div>
             <div className="text-sm text-green-600 mb-2">{stat.change}</div>
             <div className="w-full h-4 bg-gray-300 rounded-full">
-              <div
+              {/* <div
                 className={`h-full bg-[#00478F] rounded-full ${barWidthMap[stat.type] || "w-[50%]"
                   }`}
+              ></div> */}
+              <div
+                className="h-full bg-[#00478F] rounded-full transition-all duration-500"
+                style={{ width: `${stat.percent}%` }}
               ></div>
+
             </div>
           </div>
         ))}

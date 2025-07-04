@@ -1,81 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin } from 'lucide-react';
 import { FaStar } from 'react-icons/fa';
 import WeVendorr2 from '../../assets/newPics/WeVendor2avif.avif';
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+import { useNavigate } from 'react-router-dom';
 
-const vendorData = [
-  {
-    id: 1,
-    name: "The Grand Venue",
-    category: "Party Places",
-    location: "Delhi, India",
-    price: "₹60,000 - ₹1,50,000",
-    reviews: 102,
-    rating: 4.8,
-    image: WeVendorr2,
-    description: "A luxurious space for your special celebrations.",
-  },
-  {
-    id: 2,
-    name: "Bliss Banquets",
-    category: "Party Places",
-    location: "Mumbai, India",
-    price: "₹55,000 - ₹1,30,000",
-    reviews: 89,
-    rating: 4.7,
-    image: WeVendorr2,
-    description: "Perfect party venue with top-class amenities.",
-  },
-  {
-    id: 3,
-    name: "Celebration Halls",
-    category: "Party Places",
-    location: "Hyderabad, India",
-    price: "₹50,000 - ₹1,20,000",
-    reviews: 93,
-    rating: 4.6,
-    image: WeVendorr2,
-    description: "Spacious halls with beautiful decor options.",
-  },
-  {
-    id: 4,
-    name: "Elite Garden Venue",
-    category: "Party Places",
-    location: "Chennai, India",
-    price: "₹45,000 - ₹1,10,000",
-    reviews: 79,
-    rating: 4.5,
-    image: WeVendorr2,
-    description: "Outdoor celebrations surrounded by nature.",
-  },
-];
+
 
 export default function PartyPlaces() {
+    const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("Party Places");
   const [sortType, setSortType] = useState("popular");
   const [filteredVendors, setFilteredVendors] = useState([]);
- const { data, isLoading, isError, error } = useGetAllVendorsQuery();
-  
-    //  console.log("vendorsList", data);
-    const partyPlaces = data?.vendors?.filter(v => v.vendorType === "Party Places");
-    console.log("partyPlaces", partyPlaces);
+  const { data, isLoading, isError, error } = useGetAllVendorsQuery();
 
-   useEffect(() => {
-  if (!partyPlaces) return;
+  //  console.log("vendorsList", data);
+  // const partyPlaces = data?.vendors?.filter(v => v.vendorType === "Party Places");
+  // console.log("partyPlaces", partyPlaces);
+  const partyPlaces = useMemo(() => {
+    return data?.vendors?.filter(v => v.vendorType === "Party Places") || [];
+  }, [data]);
 
-  let sorted = [...partyPlaces];
+  useEffect(() => {
+    if (!partyPlaces) return;
 
-  if (sortType === "popular") {
-    sorted.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
-  } else if (sortType === "newest") {
-    sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }
+    let sorted = [...partyPlaces];
 
-  setFilteredVendors(sorted);
-}, [sortType, partyPlaces]);
+    if (sortType === "popular") {
+      sorted.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+    } else if (sortType === "newest") {
+      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
 
+    setFilteredVendors(sorted);
+  }, [sortType, partyPlaces]);
 
+  const handleVendorClick = (vendorId) => {
+    navigate(`/preview-profile/${vendorId}`);
+  };
 
 
   if (isLoading) {
@@ -92,51 +54,128 @@ export default function PartyPlaces() {
   return (
     <>
       {/* Top Buttons */}
-      
+
       {/* Vendor Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ">
         {filteredVendors?.length === 0 ? (
           <p className="text-center col-span-full">No vendors available for this category.</p>
         ) : (
           filteredVendors.map((vendor) => (
             <div
-              key={vendor._id }
-              className="bg-white border rounded-xl overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300"
+              key={vendor._id}
+              onClick={() => handleVendorClick(vendor._id)}
+              className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col"
             >
-              {/* Image */}
+              {/* Image + Tag */}
               <div className="relative">
                 <img
-                  src={vendor.coverImage || vendor.profilePicture || '/fallback.jpg'}
+                  src={vendor.profilePicture || vendor.coverImage}
                   alt={vendor.businessName || vendor.name}
-                  className="w-full h-[250px] object-cover"
+                  className="w-full h-[220px] object-cover"
                 />
-                <span className="absolute top-3 right-4 bg-white text-gray-600 text-xs font-medium px-2 py-1 rounded-full shadow flex items-center">
-                  <FaStar size={14} className='text-yellow-400 mr-1' />
-                  {vendor.rating || "4.5"}
-                </span>
+
               </div>
-      
-              {/* Info */}
-              <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
-                <div className="mb-4">
+
+              {/* Details */}
+              <div className="flex flex-col justify-between flex-grow p-2">
+                <div>
+
+
                   <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.vendorType || "Vendor"}</p>
-                  <h5 className="text-lg font-semibold mb-1 leading-snug">
-                    {vendor.businessName || vendor.name || "Vendor Name"}
-                  </h5>
-                  <p className="text-sm text-gray-600">
-                    {vendor.aboutBusiness || vendor.description || "No description available."}
-                  </p>
-                  <div className="flex items-center text-sm text-gray-500 gap-1 mt-1">
+                  <div className="flex justify-between items-center gap-2 mb-2">
+                    <h5 className="text-md font-semibold truncate max-w-[65%]">
+                      {vendor.businessName || vendor.name || "Vendor Name"}
+                    </h5>
+
+                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
+                      <FaStar size={18} className="text-yellow-500" />
+                      <span>{vendor.rating || "5.0"}</span>
+                    </div>
+
+                  </div>
+
+
+                  {/* Location */}
+                  <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
                     <MapPin size={14} />
-                    <span>{vendor.serviceAreas?.join(", ") || "Location not specified"}</span>
+                    <span className="truncate">{vendor.serviceAreas?.join(", ") || "Location not specified"}</span>
+                    {/* <span className="before:content-['•'] before:mx-1">{vendor.vendorType || "Category"}</span> */}
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1">
+
                   </div>
                 </div>
-      
-                {/* Price & Reviews */}
-                <div className="border-t pt-3 mt-auto flex justify-between items-center text-sm text-gray-800">
-                  <span>{vendor.priceRange || vendor.price || "Price on request"}</span>
-                  <span>{vendor.reviews || 0} reviews</span>
+
+                {/* Price / Rooms / Pax */}
+
+
+
+                <div className="border-t mt-3 pt-3 text-sm text-gray-800">
+
+                  <div className="flex items-start gap-8 mb-2">
+                    {/* Veg price */}
+                    <div>
+                      <div className="text-xs text-gray-500">Veg</div>
+                      <div className="text-base font-semibold text-gray-800">
+                        ₹ {vendor.priceVeg || "999"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                      </div>
+                    </div>
+
+                    {/* Non-Veg price */}
+                    <div>
+                      <div className="text-xs text-gray-500">Non veg</div>
+                      <div className="text-base font-semibold text-gray-800">
+                        ₹ {vendor.priceNonVeg || "1,200"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Capacity, Rooms, and More */}
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                    
+
+                    <span className="text-gray-600 hover:underline  p-1 rounded"
+                      onClick={() => handleVendorClick(vendor._id)}
+                    >
+
+                      {(() => {
+                        let raw = vendor.services || [];
+                        let vendorServices = Array.isArray(raw)
+                          ? raw.length === 1 && typeof raw[0] === "string"
+                            ? raw[0].split(',').map(s => s.trim())
+                            : raw
+                          : [];
+
+                        return vendorServices.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {vendorServices.slice(0, 2).map((service, index) => (
+                              <span
+                                key={index}
+                                className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md"
+                              >
+                                {service}
+                              </span>
+                            ))}
+                            {vendorServices.length > 2 && (
+                              <span className="text-sm text-gray-600">
+                                +{vendorServices.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">No services available</span>
+                        );
+                      })()}
+
+
+                    </span>
+                  </div>
                 </div>
+
+
+
               </div>
             </div>
           ))

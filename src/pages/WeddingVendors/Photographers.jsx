@@ -1,101 +1,227 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin } from 'lucide-react';
 import { FaStar } from 'react-icons/fa';
 import WeVendorr1 from '../../assets/newPics/WeVendorr1.avif';
 import WeVendorr2 from '../../assets/newPics/WeVendor3.avif';
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 
-
+import { useNavigate } from 'react-router-dom';
 
 export default function Photographers() {
-    const [selectedCategory, setSelectedCategory] = useState("Wedding Photographers");
-    const [sortType, setSortType] = useState("popular");
-    const [filteredVendors, setFilteredVendors] = useState([]);
-    const { data, isLoading, isError, error } = useGetAllVendorsQuery();
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState("Wedding Photographers");
+  const [sortType, setSortType] = useState("popular");
+  const [filteredVendors, setFilteredVendors] = useState([]);
+  const { data, isLoading, isError, error } = useGetAllVendorsQuery();
 
-    //  console.log("vendorsList", data);
-    const photographers = data?.vendors?.filter(v => v.vendorType === "Photographers");
-    // console.log("photographers", photographers);
+  // console.log("vendorsList photo", data);
+  // const photographers = data?.vendors?.filter(v => v.vendorType === "Photographers");
+  const photographers = useMemo(() => {
+    return data?.vendors?.filter(v => v.vendorType === "Photographers") || [];
+  }, [data]);
+  // console.log("photographers", photographers);
+  useEffect(() => {
+    if (!photographers) return;
 
-    useEffect(() => {
-        if (!photographers) return;
+    let sorted = [...photographers];
 
-        let sorted = [...photographers];
-
-        if (sortType === "popular") {
-            sorted.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
-        } else if (sortType === "newest") {
-            sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        }
-
-        setFilteredVendors(sorted);
-    }, [sortType, photographers]);
-
-
-    if (isLoading) {
-        return <div className="text-center py-10">Loading vendors...</div>;
+    if (sortType === "popular") {
+      sorted.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+    } else if (sortType === "newest") {
+      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
-    if (isError) {
-        return (
-            <div className="text-center text-red-500 py-10">
-                Error: {error?.data?.message || 'Failed to fetch vendors.'}
-            </div>
-        );
-    } return (
-        <>
+    setFilteredVendors(sorted);
+  }, [sortType, photographers]);
 
-            {/* Vendor Grid */}
+  const handleVendorClick = (vendorId) => {
+    navigate(`/preview-profile/${vendorId}`);
+  };
+  if (isLoading) {
+    return <div className="text-center py-10">Loading vendors...</div>;
+  }
 
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredVendors?.length === 0 ? (
-                    <p className="text-center col-span-full">No vendors available for this category.</p>
-                ) : (
-                    filteredVendors.map((vendor) => (
-                        <div
-                            key={vendor._id }
-                            className="bg-white border rounded-xl overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300"
-                        >
-                            {/* Image */}
-                            <div className="relative">
-                                <img
-                                    src={vendor.profilePicture || vendor.coverImage}
-                                    alt={vendor.businessName || vendor.name}
-                                    className="w-full h-[250px] object-cover"
-                                />
-                                <span className="absolute top-3 right-4 bg-white text-gray-600 text-xs font-medium px-2 py-1 rounded-full shadow flex items-center">
-                                    <FaStar size={14} className='text-yellow-400 mr-1' />
-                                    {vendor.rating || "4.5"}
-                                </span>
-                            </div>
+  const rawServices = data?.vendor?.services || [];
+  const services = Array.isArray(rawServices)
+    ? rawServices.length === 1 && typeof rawServices[0] === "string"
+      ? rawServices[0].split(',').map(s => s.trim())
+      : rawServices
+    : [];
 
-                            {/* Info */}
-                            <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
-                                <div className="mb-4">
-                                    <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.vendorType || "Vendor"}</p>
-                                    <h5 className="text-lg font-semibold mb-1 leading-snug">
-                                        {vendor.businessName || vendor.name || "Vendor Name"}
-                                    </h5>
-                                    <p className="text-sm text-gray-600">
-                                        {vendor.aboutBusiness || vendor.description || "No description available."}
-                                    </p>
-                                    <div className="flex items-center text-sm text-gray-500 gap-1 mt-1">
-                                        <MapPin size={14} />
-                                        <span>{vendor.serviceAreas?.join(", ") || "Location not specified"}</span>
-                                    </div>
-                                </div>
 
-                                {/* Price & Reviews */}
-                                <div className="border-t pt-3 mt-auto flex justify-between items-center text-sm text-gray-800">
-                                    <span>{vendor.priceRange || vendor.price || "Price on request"}</span>
-                                    <span>{vendor.reviews || 0} reviews</span>
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-        </>
+  if (isError) {
+    return (
+      <div className="text-center text-red-500 py-10">
+        Error: {error?.data?.message || 'Failed to fetch vendors.'}
+      </div>
     );
+  } return (
+    <>
+
+      {/* Vendor Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ">
+        {filteredVendors?.length === 0 ? (
+          <p className="text-center col-span-full">No vendors available for this category.</p>
+        ) : (
+          filteredVendors.map((vendor) => (
+            <div
+              key={vendor._id}
+              onClick={() => handleVendorClick(vendor._id)}
+              className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col"
+            >
+              {/* Image + Tag */}
+              <div className="relative">
+                <img
+                  src={vendor.profilePicture || vendor.coverImage}
+                  alt={vendor.businessName || vendor.name}
+                  className="w-full h-[220px] object-cover"
+                />
+                {/* Handpicked Tag */}
+                {/* <span className="absolute top-3 left-3 bg-[#ec407a] text-white text-xs font-semibold px-2 py-1 rounded-tr-md rounded-bl-md">
+            Handpicked
+          </span> */}
+
+                {/* Rating Top Right */}
+                {/* <span className="absolute top-3 right-3 bg-white text-gray-600 text-xs font-medium px-2 py-1 rounded-full shadow flex items-center"> */}
+                {/* <FaStar size={14} className='text-yellow-400 mr-1' /> */}
+                {/* {vendor.rating || "5.0"} */}
+                {/* </span> */}
+              </div>
+
+              {/* Details */}
+              <div className="flex flex-col justify-between flex-grow p-2">
+                <div>
+                  {/* <h5 className="text-md font-semibold truncate mb-1">
+              {vendor.businessName || vendor.name || "Vendor Name"}
+            </h5>
+
+            {/* Reviews */}
+                  {/* <div className="text-sm text-pink-600 font-medium mb-2">
+              ★ {vendor.rating || "5.0"} ({vendor.reviews || 5} reviews)
+            </div> */}
+
+                  <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.vendorType || "Vendor"}</p>
+                  <div className="flex justify-between items-center gap-2 mb-2">
+                    <h5 className="text-md font-semibold truncate max-w-[65%]">
+                      {vendor.businessName || vendor.name || "Vendor Name"}
+                    </h5>
+                    {/* <div className="text-sm text-gray-800 font-medium shrink-0">
+    <FaStar size={14} className='text-yellow-400 mr-1' /> {vendor.rating || "5.0"} ({vendor.reviews || 5})
+  </div> */}
+                    {/* <div className="flex items-center text-sm text-gray-800 font-medium shrink-0">
+                      <FaStar size={18} className="text-yellow-400 mr-1" />
+                      {vendor.rating || "5"} ({vendor.reviews || 5} reviews)
+                    </div> */}
+                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
+                      <FaStar size={18} className="text-yellow-500" />
+                      <span>{vendor.rating || "5.0"}</span>
+                    </div>
+
+                  </div>
+
+
+                  {/* Location */}
+                  <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
+                    <MapPin size={14} />
+                    <span className="truncate">{vendor.serviceAreas?.join(", ") || "Location not specified"}</span>
+                    {/* <span className="before:content-['•'] before:mx-1">{vendor.vendorType || "Category"}</span> */}
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1">
+                    {/* {vendor.vendorType ? <span>{vendor.vendorType}</span> : null} */}
+                    {/* <span className="before:content-['•'] before:mx-1">{vendor.category || "Category"}</span> */}
+                  </div>
+                </div>
+
+                {/* Price / Rooms / Pax */}
+                {/* <div className="border-t mt-3 pt-3 flex flex-col gap-1 text-sm text-gray-800">
+            <span className="font-bold text-base">
+              ₹ {vendor.priceRange || vendor.price || "2500"}
+            </span>
+            <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+              <span>{vendor.capacity || "650-2500 pax"}</span>
+              <span>• {vendor.rooms || "4 rooms"}</span>
+              <span>• +7 more</span>
+            </div>
+          </div> */}
+
+
+                <div className="border-t mt-3 pt-3 text-sm text-gray-800">
+                  {/* Veg & Non-Veg prices side-by-side, aligned left */}
+                  <div className="flex items-start gap-8 mb-2">
+                    {/* Veg price */}
+                    <div>
+                      <div className="text-xs text-gray-500">Veg</div>
+                      <div className="text-base font-semibold text-gray-800">
+                        ₹ {vendor.priceVeg || "999"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                      </div>
+                    </div>
+
+                    {/* Non-Veg price */}
+                    <div>
+                      <div className="text-xs text-gray-500">Non veg</div>
+                      <div className="text-base font-semibold text-gray-800">
+                        ₹ {vendor.priceNonVeg || "1,200"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Capacity, Rooms, and More */}
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                 
+                    <span className="text-gray-600 hover:underline  p-1 rounded"
+                      onClick={() => handleVendorClick(vendor._id)}
+                    >
+
+                      
+
+                      {(() => {
+                        let raw = vendor.services || [];
+                        let vendorServices = Array.isArray(raw)
+                          ? raw.length === 1 && typeof raw[0] === "string"
+                            ? raw[0].split(',').map(s => s.trim())
+                            : raw
+                          : [];
+
+                        return vendorServices.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {vendorServices.slice(0, 2).map((service, index) => (
+                              <span
+                                key={index}
+                                className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md"
+                              >
+                                {service}
+                              </span>
+                            ))}
+                            {vendorServices.length > 2 && (
+                              <span className="text-sm text-gray-600">
+                                +{vendorServices.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">No services available</span>
+                        );
+                      })()}
+
+
+
+                    </span>
+                  </div>
+                </div>
+
+
+
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+
+
+    </>
+  );
 }

@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../utils/ProtectedRoute';
-import AuthProtectedRoute from '../utils/AuthProtectedRoute';
 
 import MainLayout from '../layouts/MainLayout';
 import UserLayout from '../layouts/UserLayout';
@@ -12,6 +11,8 @@ import Home from '../pages/Home/Home';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import AboutUs from '../pages/Home/AboutUs';
+
+
 
 // Footer
 import Terms from '../components/Terms';
@@ -43,6 +44,9 @@ import Inquiry from '../pages/Auth/UserDashboad/Inquiry';
 import SavedVendor from '../pages/Auth/UserDashboad/SavedVendor';
 import CheckList from '../pages/Auth/UserDashboad/CheckList';
 import Booking from '../pages/Auth/UserDashboad/Booking';
+
+
+
 
 // Corporate
 import Corporate from '../pages/Corporate/Corporate';
@@ -140,6 +144,10 @@ import CategorySelector from '../pages/Location/CategorySelector';
 import VendorListPage from '../pages/Location/VendorListPage';
 import ContactUs from '../pages/Corporate/ContactUs';
 
+
+
+
+
 const index = () => {
     return (
         <Router>
@@ -150,32 +158,14 @@ const index = () => {
                     <Route path="/navbar" element={<Navbar />} />
                     <Route path="/footer" element={<Footer />} />
                     <Route path="/search" element={<SearchResults />} />
+
                     <Route path="/about" element={<AboutUs />} />
 
                     {/* Footer */}
                     <Route path='/terms' element={<Terms />} />
 
-                    {/* Auth Routes - Protected from authenticated users */}
-                    <Route element={<AuthProtectedRoute />}>
-                        {/* User Auth Routes */}
-                        <Route path="/user/signup" element={<UserSignup />} />
-                        <Route path="/verify-otp" element={<VerifyOTP />} />
-                        <Route path="/user/login" element={<UserLogin />} />
-                        <Route path="/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/reset-password" element={<ResetPassword />} />
-                        <Route path="/verify-password-reset" element={<VerifyPasswordReset />} />
 
-                        {/* Vendor Auth Routes */}
-                        <Route path="/vendor-register" element={<VendorSignup />} />
-                        <Route path="/vendor/login" element={<VendorLogin />} />
-                        <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
-                        <Route path="/vendor/verify-reset-otp" element={<VendorVerifyResetOTP />} />
-                        <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
-                        <Route path="/vendor/verify-otp" element={<VendorVerifyOTP />} />
-
-                        {/* Admin Auth Routes */}
-                        <Route path="/admin/login" element={<AdminLogin />} />
-                    </Route>
+                   
 
                     {/* Idea Blog */}
                     <Route path="/IdeaBlog" element={<IdeaBlog />} />
@@ -197,6 +187,7 @@ const index = () => {
                     <Route path="/networking" element={<Networking />} />
                     <Route path="/contactUs" element={<ContactUs />} />
 
+                   
                     {/* Wedding Vendor public page */}
                     <Route path="/wedding-vendor" element={<WeedingVendor />} />
                     <Route path="/Cakes" element={<Cakes/>}/>
@@ -242,65 +233,100 @@ const index = () => {
                     <Route path="category-selector" element={<CategorySelector />} />
                     <Route path="/vendors/:city/:category" element={<VendorListPage />} />
                     <Route path="/vendor-list/:city/:category" element={<VendorListPage />} />
+
+
+                    {/* User Auth Routes */}
+                    <Route path="/user/signup" element={<UserSignup />} />
+                    <Route path="verify-otp" element={<VerifyOTP />} />
+                    <Route path="/user/login" element={<UserLogin />} />
+                    <Route path="forgot-password" element={<ForgotPassword />} />
+                    <Route path="reset-password" element={<ResetPassword />} />
+                    <Route path="verify-password-reset" element={<VerifyPasswordReset />} />
+                    <Route path="edit-profile" element={<EditProfile />} />
+                    <Route path="delete-account" element={<DeleteAccount />} />
+
+                    {/* Vendor Auth Routes */}
+                    <Route path="/not-approved" element={<NotApproved />} />
+                    <Route path="/vendor-register" element={<VendorSignup />} />
+                    <Route path="/vendor/verify-otp" element={<VendorVerifyOTP />} />
+                    <Route path="/vendor/login" element={<VendorLogin />} />
+                    <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
+                    <Route path="/vendor/verify-password-reset" element={<VendorVerifyResetOTP />} />
+                    <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
+                    <Route path="/preview-profile/:vendorId" element={<PreviewProfile />} />
+
+                    {/* Admin Auth Route */}
+                    <Route path="admin/login" element={<AdminLogin />} />
                 </Route>
 
-                {/* Protected User Routes */}
-                <Route element={<ProtectedRoute allowedRoles={['user']} />}>
-                    <Route path="/user" element={<UserLayout />}>
-                        <Route path="dashboard" element={<UserDashboard />} />
-                        <Route path="edit-profile" element={<EditProfile />} />
-                        <Route path="delete-account" element={<DeleteAccount />} />
-                        <Route path="profile" element={<Profile />} />
-                        <Route path="guest-list" element={<GuestList />} />
-                        <Route path="budget" element={<Budget />} />
-                        <Route path="inquiry" element={<Inquiry />} />
-                        <Route path="saved-vendor" element={<SavedVendor />} />
-                        <Route path="checklist" element={<CheckList />} />
-                        <Route path="booking" element={<Booking />} />
-                    </Route>
+                {/* User Dashboard Protected Routes */}
+                <Route
+                    path="/user"
+                    element={
+                        <ProtectedRoute allowedRoles={['user']}>
+                            <UserLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route path="dashboard" element={<UserDashboard />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="guest-list" element={<GuestList />} />
+                    <Route path="budget" element={<Budget />} />
+                    <Route path="inquiry" element={<Inquiry />} />
+                    <Route path="saved-vendor" element={<SavedVendor />} />
+                    <Route path="check-list" element={<CheckList />} />
+                    <Route path="booking" element={<Booking />} />
                 </Route>
 
-                {/* Protected Vendor Routes */}
-                <Route element={<ProtectedRoute allowedRoles={['vendor']} />}>
-                    <Route path="/vendor" element={<VendorLayout />}>
-                        <Route path="dashboard" element={<Dashboard />} />
-                        <Route path="inquiries" element={<Inquiries />} />
-                        <Route path="reviews" element={<Reviews />} />
-                        <Route path="edit-profile" element={<EditProfiles />} />
-                        <Route path="hiring-vendors" element={<HiringVendors />} />
-                        <Route path="packages-faqs" element={<PackagesAndFaqs />} />
-                        <Route path="portfolio" element={<Portfolio />} />
-                        <Route path="blog" element={<VendorBlog />} />
-                        <Route path="add-blog" element={<AddBlogPost />} />
-                        <Route path="bookings" element={<Bookings />} />
-                        <Route path="preview-profile" element={<PreviewProfile />} />
-                        <Route path="preview-screen" element={<PreviewProfileScreen />} />
-                        <Route path="similar-vendors" element={<SimilarVendors />} />
-                        <Route path="customer-reviews" element={<CustomerReviews />} />
-                        <Route path="faq-questions" element={<FaqQuestions />} />
-                        <Route path="vendor-preview" element={<VendorPreviewProfile />} />
-                        <Route path="inquiry-reply/:inquiryId" element={<InquiryReply />} />
-                    </Route>
+                {/* Vendor Dashboard Protected Routes */}
+                <Route
+                    path="/vendor"
+                    element={
+                        <ProtectedRoute allowedRoles={['vendor']}>
+                            <VendorLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="edit_profile" element={<EditProfiles />} />
+                    <Route path="hiring_vendors" element={<HiringVendors />} />
+                    <Route path="inquiries" element={<Inquiries />} />
+                    <Route path="reviews" element={<Reviews />} />
+                    <Route path="packages_and_faqs" element={<PackagesAndFaqs />} />
+                    <Route path="portfolio" element={<Portfolio />} />
+                    <Route path="preview_profilescreen" element={<PreviewProfileScreen />} />
+                    <Route path="similar_vendors" element={<SimilarVendors />} />
+                    <Route path="reviews" element={<Reviews />} />
+                    <Route path="customer_reviews" element={<CustomerReviews />} />
+                    <Route path="faqs_Questions" element={<FaqQuestions />} />
+                    <Route path="inquiry" element={<FaqQuestions />} />
+                    <Route path="inquiryReply" element={<InquiryReply />} />
+                    <Route path="blogs" element={<VendorBlog />} />
+                    <Route path="add-blog-post" element={<AddBlogPost />} />
+                    <Route path="vendorpreview_profile" element={<VendorPreviewProfile />} />
+                    <Route path="bookings" element={<Bookings />} />
                 </Route>
 
-                {/* Protected Admin Routes */}
-                <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-                    <Route path="/admin" element={<AdminLayout />}>
-                        <Route path="dashboard" element={<AdminDashboard />} />
-                        <Route path="sub-dashboard" element={<SubDashboard />} />
-                        <Route path="user-management" element={<UserManagement />} />
-                        <Route path="vendor-management" element={<VendorManagement />} />
-                        <Route path="pending-approvals" element={<PendingVendorApprovals />} />
-                        <Route path="review-moderation" element={<ReviewModeration />} />
-                        <Route path="add-blog" element={<AdminAddBlogPost />} />
-                        <Route path="category-management" element={<CategoryManagement />} />
-                        <Route path="blog/:id" element={<BlogDetails />} />
-                        <Route path="contact" element={<Contact />} />
-                    </Route>
+                {/* Admin Dashboard Protected Routes */}
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                            <AdminLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="sub_dashboard" element={<SubDashboard />} />
+                    <Route path="user_management" element={<UserManagement />} />
+                    <Route path="vendor_management" element={<VendorManagement />} />
+                    <Route path="pending_vendor_approvals" element={<PendingVendorApprovals />} />
+                    <Route path="review_moderation" element={<ReviewModeration />} />
+                    <Route path="category_management" element={<CategoryManagement />} />
+                    <Route path="add-blog-post" element={<AdminAddBlogPost />} />
+                    <Route path="blogs/:id" element={<BlogDetails />} />
+                    <Route path="contact" element={<Contact />} />
                 </Route>
-
-                {/* Not Approved Route */}
-                <Route path="/not-approved" element={<NotApproved />} />
             </Routes>
         </Router>
     );

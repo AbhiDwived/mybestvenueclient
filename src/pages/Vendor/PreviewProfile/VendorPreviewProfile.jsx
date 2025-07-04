@@ -38,6 +38,7 @@ const VendorPreviewProfile = ({ show, onClose }) => {
   error,
 } = useGetVendorByIdQuery(vendorId);
 // console.log("vednordata",vendorData.vendor.description)
+console.log("vendordd",vendorData?.vendor)
 
     useEffect(() => {
         if (vendor?.id) {
@@ -113,9 +114,9 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                             </div>
 
                             <p className="text-md text-gray-500">{vendor.vendorType || "Hospitality"}</p>
-                            <p className="text-md text-gray-600 space-between" >Contact: {vendor.phone || "Navneet Yadav"} <span  className='ml-5  '>Address:{vendor.address || "New York"}</span> </p>
+                            <p className="text-md text-gray-600 space-between" >Contact: {vendor.phone || "Navneet Yadav"} <span  className='ml-5  '>Address:{vendorData?.vendor.address || "New York"}</span> </p>
                             
-                            <p className="text-md text-gray-600">Services: {vendor.services || "Photographers,Gifts"}</p>
+                            <p className="text-md text-gray-600">Services: {vendorData?.vendor?.services || "Photographers,Gifts"}</p>
 
                             <div className="flex items-center text-md text-gray-500">
                                 <HiOutlineCalendar className="mr-1" />
@@ -145,11 +146,12 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                             <li>
                                 <span className="inline-block align-middle">< IoLocationOutline /></span>
                                 <span className="inline-block align-middle">
-                                    {vendor.address ? (
+                                    {/* {vendor.address ? (
                                         typeof vendor.address === 'object' ?
                                             `${vendor.address.street || ''}, ${vendor.address.city || ''}, ${vendor.address.state || ''} ${vendor.address.zipCode || ''}`
                                             : vendor.address
-                                    ) : "Delhi, India"}
+                                    ) : "Delhi, India"} */}
+                                    {vendorData?.vendor.address || "Delhi, India"}
                                 </span>
                             </li>
                             <Link to="https://mybestvenue.com" ><li><span className="inline-block align-middle">< FiGlobe /></span> <span className="inline-block align-middle text-[#0f4c81]"> MyBest Venue</span></li></Link>
@@ -220,6 +222,7 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                                 <div key={index} className="border p-3 rounded text-sm">
                                     <h5 className="font-semibold">{pkg.packageName}</h5>
                                     <p>{pkg.description}</p>
+                                    <p>{pkg.services}</p>
                                     <p className="font-bold mt-2">₹{pkg.price}</p>
                                 </div>
                             ))

@@ -33,18 +33,9 @@ const AdminLogin = () => {
     try {
       const res = await loginAdmin(formData).unwrap();
 
-      // Clear any existing tokens from other user types to prevent conflicts
-      localStorage.removeItem("userToken");
-      localStorage.removeItem("userRefreshToken");
-      localStorage.removeItem("user");
-      localStorage.removeItem("vendorToken");
-      localStorage.removeItem("vendorRefreshToken");
-      localStorage.removeItem("vendor");
-
       dispatch(setCredentials(res));
 
-      localStorage.setItem('adminToken', res.token);
-      localStorage.setItem('adminRefreshToken', res.refreshToken || '');
+      localStorage.setItem('token', res.token);
       localStorage.setItem('admin', JSON.stringify(res.admin));
 
       // Handle remember me

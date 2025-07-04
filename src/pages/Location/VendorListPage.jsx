@@ -290,30 +290,39 @@ const VendorListPage = () => {
 
                       {/* Capacity, Rooms, and More */}
                       <div className="flex flex-wrap gap-3 text-xs text-gray-600">
-                        <span>{vendor.capacity || "650–2500 pax"}</span>
+                        {/* <span >{vendor.capacity || "650–2500 pax"}</span> */}
                         <span
-                          className="text-gray-600 hover:underline"
+                          className="text-gray-600 hover:underline  p-1 rounded"
                           onClick={() => handleVendorClick(vendor._id)}
                         >
                           {(() => {
-                            let raw = vendor.services || [];
-                            let vendorServices = Array.isArray(raw)
-                              ? raw.length === 1 && typeof raw[0] === "string"
-                                ? raw[0].split(',').map(s => s.trim())
-                                : raw
-                              : [];
+                        let raw = vendor.services || [];
+                        let vendorServices = Array.isArray(raw)
+                          ? raw.length === 1 && typeof raw[0] === "string"
+                            ? raw[0].split(',').map(s => s.trim())
+                            : raw
+                          : [];
 
-                            return vendorServices.length > 0 ? (
-                              <>
-                                {vendorServices.slice(0, 2).join(', ')}
-                                {vendorServices.length > 2 && (
-                                  <> +{vendorServices.length - 2} more</>
-                                )}
-                              </>
-                            ) : (
-                              <>No more services </>
-                            );
-                          })()}
+                        return vendorServices.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {vendorServices.slice(0, 2).map((service, index) => (
+                              <span
+                                key={index}
+                                className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md"
+                              >
+                                {service}
+                              </span>
+                            ))}
+                            {vendorServices.length > 2 && (
+                              <span className="text-sm text-gray-600">
+                                +{vendorServices.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">No services available</span>
+                        );
+                      })()}
 
                         </span>
 

@@ -15,6 +15,7 @@ import Bookings from './Bookings';
 import VendorPreviewProfile from "./PreviewProfile/VendorPreviewProfile";
 import { useSelector } from 'react-redux';
 import { FaAngleLeft, FaChevronRight } from "react-icons/fa6";
+import { useGetVendorByIdQuery } from '../../features/vendors/vendorAPI';
 
 const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
@@ -28,10 +29,13 @@ const Dashboard = () => {
 
   const [activeTab, setActiveTab] = useState(() => {
     const savedTab = localStorage.getItem('activeTab') || 'Overview';
-    console.log('Initial active tab:', savedTab);
+    // console.log('Initial active tab:', savedTab);
     return savedTab;
   });
+   const vendorId = vendor.id;
 
+  const { data: vendorData, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
+  // console.log("vendorttttt", vendorData?.vendor?.services);
   const handleTabClick = (tab) => {
     console.log('Switching to tab:', tab);
     setActiveTab(tab);
@@ -129,7 +133,9 @@ const Dashboard = () => {
             </p>
             {/* Display services */}
             <p className="text-xs sm:text-sm text-gray-600 font-serif mt-1">
-              Services: {formatServices(vendor?.services) || 'Photographers, Gifts'}
+              {/* Services: {formatServices(vendor?.services) || 'Photographers, Gifts'} */}
+              {/* Services: {formatServices(vendorData?.vendor?.services) || 'Photographers, Gifts'} */}
+              Services: {vendorData?.vendor?.services || 'Photographers, Gifts'}
             </p>
           </div>
 
