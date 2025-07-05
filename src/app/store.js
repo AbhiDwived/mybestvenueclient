@@ -23,6 +23,7 @@ import { checklistApi } from '../features/checklist/checklistAPI';  // Checklist
 import { savedVendorApi } from '../features/savedVendors/savedVendorAPI';  // Saved Vendor API
 import { guestApi } from '../features/guests/guestAPI';  // Guest API
 import { subscriberApi } from '../features/subscribers/subscriberAPI';
+import { eventApi } from '../features/events/eventAPI';  // Event API
 
 export const store = configureStore({
   reducer: {
@@ -47,6 +48,7 @@ export const store = configureStore({
     [savedVendorApi.reducerPath]: savedVendorApi.reducer, // Saved Vendor API reducer
     [guestApi.reducerPath]: guestApi.reducer,            // Guest API reducer
     [subscriberApi.reducerPath]: subscriberApi.reducer,
+    [eventApi.reducerPath]: eventApi.reducer,            // Event API reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -62,7 +64,8 @@ export const store = configureStore({
       .concat(checklistApi.middleware)                  // Checklist API middleware
       .concat(savedVendorApi.middleware)                // Saved Vendor API middleware
       .concat(guestApi.middleware)                     // Guest API middleware
-      .concat(subscriberApi.middleware),
+      .concat(subscriberApi.middleware)
+      .concat(eventApi.middleware),                     // Event API middleware
 });
 
 setupListeners(store.dispatch);

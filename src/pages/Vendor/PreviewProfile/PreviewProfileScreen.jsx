@@ -1,150 +1,358 @@
+import React, { useEffect, useState } from 'react';
+import { FaLinkedinIn, FaPhoneAlt, } from 'react-icons/fa';
+import { MdEmail } from "react-icons/md";
+import { IoLocationOutline } from "react-icons/io5";
+import { HiOutlineCalendar } from 'react-icons/hi';
+import { ImCross } from "react-icons/im";
+import { FiGlobe } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import { FiFacebook, FiTwitter, FiShield } from "react-icons/fi";
+import { BsInstagram } from "react-icons/bs";
+import { FaCreditCard } from "react-icons/fa6";
+import { useSelector } from 'react-redux';
+import { useVendorservicesPackageListMutation, useGetPortfolioImagesQuery, useGetVendorByIdQuery } from '../../../features/vendors/vendorAPI';
+import { useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
 
-import { FaCamera } from 'react-icons/fa';
-import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 
 
-const PreviewProfileScreen = () => {
-  window.scrollTo({ top: 0, category: "top" })
-  const { vendorId } = useParams();
-  const [packages, setPackages] = useState([]);
-  const [getVendorPackages] = useVendorservicesPackageListMutation();
+const VendorPreviewProfile = ({ show, onClose }) => {
 
-  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
-console.log("vendor2222", vendor.vendor.services)
+    // const [coverImage, setCoverImage] = useState("");
+    const serverURL = "http://localhost:5000"
 
+    const vendor = useSelector((state) => state.vendor.vendor);
+    const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
+    const [fetchPackages, { data: packagesData }] = useVendorservicesPackageListMutation();
 
-//Fetch Packages 
-  useEffect(() => {
-      const fetchPackages = async () => {
-        const actualVendorId = vendor?.vendor?._id;
-        console.log('Attempting to fetch packages with vendor ID:', actualVendorId);
-  
-        if (!actualVendorId) {
-          console.log('No vendor ID available yet');
-          return;
+    const { data: portfolioImagesData, isLoading: imagesLoading } = useGetPortfolioImagesQuery(vendor?.id, {
+        skip: !vendor?.id,
+    });
+
+    //   const { vendorId } = useParams(); 
+    const vendorId = vendor?.id;
+
+    const {
+        data: vendorData,
+        isLoading,
+        isError,
+        error,
+    } = useGetVendorByIdQuery(vendorId);
+    // console.log("vednordata",vendorData.vendor.description)
+    console.log("vendordd", vendorData?.vendor)
+
+    useEffect(() => {
+        if (vendor?.id) {
+            fetchPackages({ vendorId: vendor.id })
+                .unwrap()
+                .catch((err) => console.error('Error fetching packages:', err));
         }
-  
-        try {
-          const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
-          console.log('in previewprofileScreen raw package response:', response);
-          
-          if (response?.packages && Array.isArray(response.packages)) {
-            console.log('Setting packages:', response.packages);
-            setPackages(response.packages);
-          } else {
-            console.log('No packages found in response');
-            setPackages([]);
-          }
-        } catch (error) {
-          console.error('Failed to fetch packages:', error);
-          toast.error('Failed to load vendor packages');
-          setPackages([]);
-        }
-      };
-  
-      if (!isVendorLoading && vendor?.vendor?._id) {
-        fetchPackages();
-      }
-    }, [vendor, isVendorLoading, getVendorPackages]);
-  
-  return (
-    <>
-      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 ">
-        {/* Left Section */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* About */}
-          <div>
-            <h2 className="text-xl font-semibold mb-2">About Dream Wedding Photography</h2>
-            <p className="text-gray-700 text-sm md:text-base">
-              Capturing your special moments with creativity and passion. Our team of experienced photographers specializes in candid wedding photography,
-              traditional portraits, and creative pre-wedding shoots. We use state-of-the-art equipment to ensure your memories are preserved in the highest quality.
-            </p>
-          </div>
+    }, [vendor, fetchPackages]);
 
-          {/* Services */}
-          {/* <section>
-            <h2 className="text-xl font-semibold mb-2">Services</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-gray-700 text-sm">
-              <span><FaCamera className="inline mr-2" /> Wedding Photography</span>
-              <span><FaCamera className="inline mr-2" /> Pre-wedding Shoot</span>
-              <span><FaCamera className="inline mr-2" /> Candid Photography</span>
-              <span><FaCamera className="inline mr-2" /> Traditional Photography</span>
-              <span><FaCamera className="inline mr-2" /> Video Coverage</span>
-              <span><FaCamera className="inline mr-2" /> Drone Shots</span>
+    if (!show) return null;
+    if (!isAuthenticated) {
+        return <h5 className='text-gray-600 font-bold'>You are not logged in.</h5>;
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex justify-center items-center z-50 p-4 font-serif">
+            <div className="bg-white w-full max-w-4xl rounded-lg p-6 overflow-y-auto max-h-[90vh] shadow-lg space-y-6">
+                {/* Header */}
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h2 className="text-2xl font-semibold">Vendor Profile Preview</h2>
+                    </div>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl"><ImCross /></button>
+                </div>
+
+
+                <div className=" rounded-lg shadow-sm border p-6 flex flex-col space-y-4">
+                    {/* Top Section - Flex in row on md */}
+                    <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
+                        {/* Profile Image */}
+
+
+
+                        <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                            {vendor?.profilePicture ? (
+                                <img
+                                    src={vendor.profilePicture}
+                                    alt="Vendor"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/default-profile.jpg';
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">No Image</div>
+                            )}
+                        </div>
+
+
+                        {/* Details */}
+                        <div className="flex-1 space-y-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                <h2 className="text-2xl font-semibold text-gray-900">  {vendor.businessName || " DSY Hospitality Private limited"}</h2>
+
+                                <div className="flex flex-wrap justify-start gap-2 mt-2 sm:mt-0 w-full">
+                                    <span className="text-sm px-3 py-1 rounded-full text-white whitespace-nowrap "
+                                        style={{ backgroundColor: vendor.status === "Active" ? "#34C759" : "#0f4c81" }}
+                                    >
+                                        {vendor.status || "InActive"}
+                                    </span>
+
+                                    <span className="text-sm px-3 py-1 rounded-full bg-white text-green-700 flex items-center gap-1 border-2 border-green-600 whitespace-nowrap">
+                                        <FiShield className="text-green-600" size={16} />
+                                        Verified
+                                    </span>
+
+                                    <span className="text-sm px-3 py-1 rounded-full text-[#0f4c81] border-2 border-[#0f4c81] whitespace-nowrap">
+                                        Approved
+                                    </span>
+                                </div>
+
+                            </div>
+
+                            <p className="text-md text-gray-500">{vendor.vendorType || "Hospitality"}</p>
+                            <p className="text-md text-gray-600 space-between" >Contact: {vendor.phone || "Navneet Yadav"} <span className='ml-5  '>Address:{vendorData?.vendor.address || "New York"}</span> </p>
+
+                            {/* <p className="text-md text-gray-600">Services: {vendorData?.vendor?.services || "Photographers,Gifts"}</p> */}
+
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                {vendorData?.vendor?.services?.[0]
+                                    ?.split(',')
+                                    .map((service, index) => (
+                                        <span
+                                            key={index}
+                                            className="px-3 py-1 text-xs sm:text-sm bg-sky-100 text-gray-700 rounded-md border border-gray-300 font-serif"
+                                        >
+                                            {service.trim()}
+                                        </span>
+                                    )) || (
+                                        <span className="text-xs text-gray-500 font-serif">{vendor?.vendorType || "no more services"}</span>
+                                    )}
+                            </div>
+
+                            <div className="flex items-center text-md text-gray-500">
+                                <HiOutlineCalendar className="mr-1" />
+                                8 years in business
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    {/* Description at the bottom from full start */}
+                    <p className="text-md text-gray-700 text-left font-serif">
+                        {vendorData?.vendor.description || "DSY Hospitality Private limited is a leading provider of"}
+                        Premium hospitality services for weddings and corporate events. We specialize in creating
+                        memorable experiences with our professional team and state-of-the-art facilities.
+                    </p>
+                </div>
+
+
+                {/* Contact & Areas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border p-4 rounded">
+                        <h4 className="font-bold text-md mb-2">Contact Information</h4>
+                        <ul className="text-sm space-y-1 text-gray-700" style={{ paddingLeft: "20px" }}>
+                            <li><span className="inline-block align-middle">< MdEmail /></span> <span className="inline-block align-middle">{vendor.email || "dsyhosp@gmail.com"}</span></li>
+                            <li><span className="inline-block align-middle">< FaPhoneAlt /></span> <span className="inline-block align-middle">{vendor.phone || "dsyhosp@gmail.com"}</span></li>
+                            <li>
+                                <span className="inline-block align-middle">< IoLocationOutline /></span>
+                                <span className="inline-block align-middle">
+                                    {/* {vendor.address ? (
+                                        typeof vendor.address === 'object' ?
+                                            `${vendor.address.street || ''}, ${vendor.address.city || ''}, ${vendor.address.state || ''} ${vendor.address.zipCode || ''}`
+                                            : vendor.address
+                                    ) : "Delhi, India"} */}
+                                    {vendorData?.vendor.address || "Delhi, India"}
+                                </span>
+                            </li>
+                            <Link to="https://mybestvenue.com" ><li><span className="inline-block align-middle">< FiGlobe /></span> <span className="inline-block align-middle text-[#0f4c81]"> MyBest Venue</span></li></Link>
+
+                        </ul>
+                    </div>
+                    <div className="border p-4 rounded">
+                        <h4 className=" text-md mb-2 font-bold text-black-500 ">Service Areas</h4>
+                        <div className="flex flex-wrap gap-2 text-sm">
+
+                            {(
+                                vendor?.serviceAreas?.length > 0
+                                    ? vendor.serviceAreas.flatMap(area =>
+                                        area.includes(',')
+                                            ? area.split(',').map(city => city.trim())
+                                            : [area.trim()]
+                                    )
+                                    : ["Noida", "Greater Noida", "Delhi", "Gurgaon"]
+                            ).map((area, index) => (
+                                <span key={index} className="bg-gray-100 px-2 py-1 rounded">
+                                    {area}
+                                </span>
+                            ))}
+
+
+                        </div>
+                    </div>
+                </div>
+
+                {/* Price Range */}
+                <div className="border p-4 rounded">
+                    <h4 className="font-bold text-sm mb-1 text-black-400">Pricing Range</h4>
+                    <p className="text-sm text-gray-700">
+
+
+
+                        {(() => {
+                            const packages = packagesData?.packages || [];
+
+                            // Extract all valid prices
+                            const prices = packages
+                                .map(pkg => pkg?.price)
+                                .filter(price => typeof price === 'number' && !isNaN(price));
+
+                            // If valid prices exist, find min and max
+                            if (prices.length > 0) {
+                                const minPrice = Math.min(...prices);
+                                const maxPrice = Math.max(...prices);
+
+                                return minPrice === maxPrice
+                                    ? `₹ ${minPrice.toLocaleString('en-IN')}`
+                                    : `₹ ${minPrice.toLocaleString('en-IN')} - ₹ ${maxPrice.toLocaleString('en-IN')}`;
+                            } else {
+                                // Fallback if no valid price found
+                                return `₹ 5000 - ₹ 10000`;
+                            }
+                        })()}
+
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                        <span className='text-gray-600 font-bold'>Deposit Info:</span> 30% advance payment required to confirm booking
+                    </p>
+                </div>
+
+                {/* Package Pricing */}
+                <div className="border p-4 rounded space-y-4">
+                    <h4 className="font-bold text-md">Package Pricing</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {packagesData?.packages?.length > 0 ? (
+                            packagesData.packages.map((pkg, index) => (
+                                <div key={index} className="border p-3 rounded text-sm">
+                                    <h5 className="font-semibold">{pkg.packageName}</h5>
+                                    <p>{pkg.description}</p>
+                                    <p>{pkg.services}</p>
+                                    <p className="font-bold mt-2">₹{pkg.price}</p>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 text-sm">No packages available.</p>
+                        )}
+                    </div>
+                </div>
+
+
+
+                {/* Payment Methods */}
+                <div className="border p-4 rounded">
+                    <h4 className="font-bold text-md mb-2 text-gray-900">Payment Methods</h4>
+
+                    <div className="flex gap-2 flex-wrap text-sm">
+                        <span className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded">
+                            <FaCreditCard /> Card
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded">
+                            <FaCreditCard /> Debit Card
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded">
+                            <FaCreditCard /> Bank Transfer
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded">
+                            <FaCreditCard /> UPI
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-gray-100 px-3 py-1 rounded">
+                            <FaCreditCard /> Cash
+                        </span>
+                    </div>
+
+                </div>
+
+
+                {/* Licenses & Certifications */}
+
+                <div className="border p-4 rounded">
+                    <h4 className="font-bold text-md mb-2 text-gray-800">Licenses & Certifications</h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        {[
+                            "Food Safety License",
+                            "Event Management Certification",
+                            "Safety Compliance",
+                            "Health & Sanitation Certificate",
+                        ].map((item, index) => (
+                            <div key={index} className="flex items-center text-base sm:text-lg">
+                                <FiShield className="text-green-600 mr-2 text-base sm:text-lg" />
+                                <span>{item}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+
+
+                {/* Social Media */}
+                <div className="border p-4 rounded">
+                    <h4 className="font-bold text-md mb-2 text-gray-800">Social Media</h4>
+                    <div className="flex space-x-4 text-xl text-gray-600">
+                        <FiFacebook size={30} className="hover:text-blue-600 text-blue-400" />
+                        <BsInstagram size={30} className="hover:text-pink-500 text-pink-500" />
+                        <FiTwitter size={30} className="hover:text-blue-700 text-blue-500" />
+                        <FaLinkedinIn size={30} className="hover:text-blue-700 text-blue-500" />
+                    </div>
+                </div>
+
+                {/* Gallery */}
+
+                <div className="border p-4 rounded">
+                    <h4 className="font-medium text-sm mb-2 text-gray-800">Gallery</h4>
+
+                    {imagesLoading ? (
+                        <p className="text-sm text-gray-500">Loading images...</p>
+                    ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {portfolioImagesData?.images?.length > 0 ? (
+                                // ✅ Show all gallery images
+                                portfolioImagesData.images.map((img, index) => (
+                                    <img
+                                        key={img._id}
+                                        src={img.url}
+                                        alt={img.title || `Gallery ${index + 1}`}
+                                        className="w-full h-45 object-cover rounded"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = '/default-profile.jpg';
+                                        }}
+                                    />
+                                ))
+                            ) : (
+                                // 🔁 Fallback to profilePicture
+                                <img
+                                    src={vendor?.profilePicture || '/default-profile.jpg'}
+                                    alt="Vendor"
+                                    className="w-full h-45 object-cover rounded"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/default-profile.jpg';
+                                    }}
+                                />
+                            )}
+                        </div>
+                    )}
+                </div>
+
+
             </div>
-          </section> */}
-  {/* Services */}
-<section>
-  <h2 className="text-xl font-semibold mb-2">Services</h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-gray-700 text-sm">
-    {vendor?.vendor?.services?.length > 0 &&
-    typeof vendor.vendor.services[0] === "string" ? (
-      vendor.vendor.services[0]
-        .split(",")
-        .map(service => service.trim())
-        .filter(service => service)
-        .map((service, index) => (
-          <span key={index} className="flex items-center">
-            <FaCamera className="inline mr-2 shrink-0" /> {service}
-          </span>
-        ))
-    ) : (
-      <span className="text-gray-500 col-span-2">No services available.</span>
-    )}
-  </div>
-</section>
-
-{/* Pricing */}
-<section>
-  <h2 className="text-xl font-semibold mb-2">Pricing</h2>
-  <p className="text-gray-700 mb-4 text-sm md:text-base">We offer customized packages to suit your needs:</p>
-
-  <div className="space-y-4 text-sm md:text-base">
-    {packages.length > 0 ? (
-      packages.map((pkg, index) => (
-        <div
-          key={pkg._id}
-          className={`p-4 rounded-md ${index % 2 === 1 ? 'bg-gray-50 border' : ''}`}
-        >
-          <h3 className="font-semibold">
-            {pkg.packageName}
-            {pkg.price > 0 && ` (₹${pkg.price.toLocaleString()})`}
-          </h3>
-
-          <ul className="list-disc list-inside text-gray-700 mt-2">
-            {pkg.description && <li>{pkg.description}</li>}
-
-            {pkg.services?.flatMap((s) =>
-              s.split('+').map((service, i) => (
-                <li key={`${service}-${i}`}>{service.trim()}</li>
-              ))
-            )}
-          </ul>
-
-          {pkg.offerPrice > 0 && (
-            <div className="text-green-600 mt-2 text-sm">
-              Offer Price: ₹{pkg.offerPrice.toLocaleString()} ({pkg.offerPercentage}% OFF)
-            </div>
-          )}
         </div>
-      ))
-    ) : (
-      <p className="text-gray-500 italic">No packages available.</p>
-    )}
-  </div>
-</section>
-
-        </div>
-
-        {/* Right Section */}
-        {/*  */}
-      </div>
-
-      {/* <SimilarVendors /> */}
-    </>
-  );
+    );
 };
 
-export default PreviewProfileScreen;
+export default VendorPreviewProfile;

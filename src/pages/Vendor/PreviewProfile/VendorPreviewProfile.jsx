@@ -10,7 +10,7 @@ import { FiFacebook, FiTwitter, FiShield } from "react-icons/fi";
 import { BsInstagram } from "react-icons/bs";
 import { FaCreditCard } from "react-icons/fa6";
 import { useSelector } from 'react-redux';
-import { useVendorservicesPackageListMutation, useGetPortfolioImagesQuery ,useGetVendorByIdQuery } from '../../../features/vendors/vendorAPI';
+import { useVendorservicesPackageListMutation, useGetPortfolioImagesQuery, useGetVendorByIdQuery } from '../../../features/vendors/vendorAPI';
 import { useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
 
 
@@ -30,15 +30,15 @@ const VendorPreviewProfile = ({ show, onClose }) => {
 
     //   const { vendorId } = useParams(); 
     const vendorId = vendor?.id;
-  
-  const {
-  data: vendorData,
-  isLoading,
-  isError,
-  error,
-} = useGetVendorByIdQuery(vendorId);
-// console.log("vednordata",vendorData.vendor.description)
-console.log("vendordd",vendorData?.vendor)
+
+    const {
+        data: vendorData,
+        isLoading,
+        isError,
+        error,
+    } = useGetVendorByIdQuery(vendorId);
+    // console.log("vednordata",vendorData.vendor.description)
+    console.log("vendordd", vendorData?.vendor)
 
     useEffect(() => {
         if (vendor?.id) {
@@ -114,9 +114,24 @@ console.log("vendordd",vendorData?.vendor)
                             </div>
 
                             <p className="text-md text-gray-500">{vendor.vendorType || "Hospitality"}</p>
-                            <p className="text-md text-gray-600 space-between" >Contact: {vendor.phone || "Navneet Yadav"} <span  className='ml-5  '>Address:{vendorData?.vendor.address || "New York"}</span> </p>
-                            
-                            <p className="text-md text-gray-600">Services: {vendorData?.vendor?.services || "Photographers,Gifts"}</p>
+                            <p className="text-md text-gray-600 space-between" >Contact: {vendor.phone || "Navneet Yadav"} <span className='ml-5  '>Address:{vendorData?.vendor.address || "New York"}</span> </p>
+
+                            {/* <p className="text-md text-gray-600">Services: {vendorData?.vendor?.services || "Photographers,Gifts"}</p> */}
+
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                {vendorData?.vendor?.services?.[0]
+                                    ?.split(',')
+                                    .map((service, index) => (
+                                        <span
+                                            key={index}
+                                            className="px-3 py-1 text-xs sm:text-sm bg-sky-100 text-gray-700 rounded-md border border-gray-300 font-serif"
+                                        >
+                                            {service.trim()}
+                                        </span>
+                                    )) || (
+                                        <span className="text-xs text-gray-500 font-serif">{vendor?.vendorType || "no more services"}</span>
+                                    )}
+                            </div>
 
                             <div className="flex items-center text-md text-gray-500">
                                 <HiOutlineCalendar className="mr-1" />
@@ -181,32 +196,35 @@ console.log("vendordd",vendorData?.vendor)
                     </div>
                 </div>
 
-
+                {/* Price Range */}
                 <div className="border p-4 rounded">
                     <h4 className="font-bold text-sm mb-1 text-black-400">Pricing Range</h4>
                     <p className="text-sm text-gray-700">
+
+
+
                         {(() => {
                             const packages = packagesData?.packages || [];
 
-                            const basic = packages.find(pkg =>
-                                pkg.packageName?.toLowerCase() === "basic package"
-                            );
-                            const luxury = packages.find(pkg =>
-                                pkg.packageName?.toLowerCase() === "luxury package"
-                            );
-                            const premium = packages.find(pkg =>
-                                pkg.packageName?.toLowerCase() === "premium package"
-                            );
+                            // Extract all valid prices
+                            const prices = packages
+                                .map(pkg => pkg?.price)
+                                .filter(price => typeof price === 'number' && !isNaN(price));
 
-                            const basicPrice = basic?.price;
-                            const endPrice = luxury?.price || premium?.price;
+                            // If valid prices exist, find min and max
+                            if (prices.length > 0) {
+                                const minPrice = Math.min(...prices);
+                                const maxPrice = Math.max(...prices);
 
-                            if (basicPrice && endPrice) {
-                                return `₹ ${basicPrice} - ₹ ${endPrice}`;
+                                return minPrice === maxPrice
+                                    ? `₹ ${minPrice.toLocaleString('en-IN')}`
+                                    : `₹ ${minPrice.toLocaleString('en-IN')} - ₹ ${maxPrice.toLocaleString('en-IN')}`;
                             } else {
+                                // Fallback if no valid price found
                                 return `₹ 5000 - ₹ 10000`;
                             }
                         })()}
+
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                         <span className='text-gray-600 font-bold'>Deposit Info:</span> 30% advance payment required to confirm booking

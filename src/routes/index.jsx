@@ -294,7 +294,7 @@ const index = () => {
                     <Route path="reviews" element={<Reviews />} />
                     <Route path="packages_and_faqs" element={<PackagesAndFaqs />} />
                     <Route path="portfolio" element={<Portfolio />} />
-                    <Route path="preview_profilescreen" element={<PreviewProfileScreen />} />
+                    {/* <Route path="preview_profilescreen" element={<PreviewProfileScreen />} /> */}
                     <Route path="similar_vendors" element={<SimilarVendors />} />
                     <Route path="reviews" element={<Reviews />} />
                     <Route path="customer_reviews" element={<CustomerReviews />} />

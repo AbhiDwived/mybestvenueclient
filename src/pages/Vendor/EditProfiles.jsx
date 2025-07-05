@@ -100,7 +100,9 @@ const EditProfile = () => {
   const [category, setCategory] = useState('');
   const [businessDescription, setBusinessDescription] = useState('');
   const [serviceAreas, setServiceAreas] = useState([]);
-  const [priceRange, setPriceRange] = useState('');
+  const [priceRange, setPriceRange] = useState([
+    { type: '', price: '', unit: 'per plate' }
+  ]);
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [website, setWebsite] = useState('');
@@ -109,6 +111,10 @@ const EditProfile = () => {
   const [contactName, setcontactName] = useState('');
   const [address, setAddress] = useState('');
   const [services, setServices] = useState(['']);
+  // const [pricingRange, setPricingRange] = useState([
+  //   { type: '', price: '', unit: 'per plate' }
+  // ]);
+
 
   const fileInputRef = useRef(null);
   const serverURL = "http://localhost:5000"
@@ -119,7 +125,7 @@ const EditProfile = () => {
       setCategory(vendor.vendorType || 'Photography');
       setBusinessDescription(vendor.description || 'This is a sample description.');
       setServiceAreas(vendor.serviceAreas || 'New Delhi, India');
-      setPriceRange(vendor.pricing || '10000 - 50000');
+      // setPriceRange(vendor.pricing || '10000 - 50000');
       setContactEmail(vendor.email || 'mybestvenuehelp@gmail.com');
       setContactPhone(vendor.phone || '+91 9999999999');
       setWebsite(vendor.website || 'mybestvenue.com');
@@ -138,9 +144,22 @@ const EditProfile = () => {
 
       }
 
+      const pricingData = data?.vendor?.pricing;
+      // console.log("pricingData", pricingData);
 
 
+      if (data?.vendor?.pricing && Array.isArray(data?.vendor.pricing)) {
+        // setPriceRange(vendor.pricing); 
+        setPriceRange(data?.vendor?.pricing.map(item => ({ ...item, isNew: false })));
+      } else {
+        setPriceRange([{ type: '', price: '', unit: 'per plate' }]); 
+      }
     }
+
+
+
+
+
   }, [vendor, data]);
 
 
@@ -161,7 +180,7 @@ const EditProfile = () => {
       : serviceAreas;
     formData.append("serviceAreas", formattedServiceAreas);
 
-    formData.append("pricing", priceRange);
+    // formData.append("pricing", priceRange);
     formData.append("email", contactEmail);
     formData.append("phone", contactPhone);
     formData.append("website", website);
@@ -172,7 +191,12 @@ const EditProfile = () => {
     formData.append("address", address);
     // formData.append("services", services);
     formData.append("services", Array.isArray(services) ? services.join(',') : services);
-
+    priceRange.forEach((item, index) => {
+      formData.append(`pricing[${index}][type]`, item.type);
+      formData.append(`pricing[${index}][price]`, item.price);
+      formData.append(`pricing[${index}][currency]`, item.currency || 'INR');
+      formData.append(`pricing[${index}][unit]`, item.unit || 'per plate');
+    });
 
     // If a new image file is provided, use it
     if (imageFile) {
@@ -311,6 +335,37 @@ const EditProfile = () => {
   };
 
 
+  // pricing 
+
+  const handlePricingChange = (index, field, value) => {
+    const updated = [...priceRange];
+    updated[index][field] = value;
+    setPriceRange(updated);
+  };
+
+  // const handleAddPricing = () => {
+  //   // setPriceRange([...priceRange, { type: '', price: '', unit: 'per plate' }]);
+
+  //   setPriceRange([
+  //   ...priceRange,
+  //   { type: '', price: '', unit: 'per plate', isNew: true }
+  // ]);
+  // };
+
+
+  const handleAddPricing = () => {
+    setPriceRange([
+      ...priceRange,
+      { type: '', price: '', unit: 'per plate', isNew: true }
+    ]);
+  };
+
+  const handleRemovePricing = (index) => {
+    const updated = priceRange.filter((_, i) => i !== index);
+    setPriceRange(updated);
+  };
+
+
   if (!isAuthenticated || !vendorId) {
     return null; // Return null as useEffect will handle the redirect
   }
@@ -372,10 +427,7 @@ const EditProfile = () => {
                 </select>
               </div>
 
-
-
-
-              <div className="mb-3">
+            <div className="mb-3">
                 <label className="form-label">Services</label>
                 {(services.length > 0 ? services : ['']).map((service, index) => (
                   <div key={index} className="d-flex align-items-center gap-2 mb-2">
@@ -414,10 +466,72 @@ const EditProfile = () => {
 
 
 
+
               <div className="mb-3">
+                
                 <label className="form-label">Price Range</label>
-                <input type="text" className="form-control" value={priceRange} onChange={(e) => setPriceRange(e.target.value)} />
+
+                {priceRange.map((item, index) => (
+                  
+                  <div key={index} className="d-flex gap-2 mb-2 align-items-center">
+
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Type (e.g. Veg)"
+                      value={item.type}
+                      onChange={(e) => handlePricingChange(index, 'type', e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Price"
+                      value={item.price}
+                      onChange={(e) => handlePricingChange(index, 'price', e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="form-control"
+                      list="pricing-units"
+                      placeholder="Unit (e.g. per plate)"
+                      value={item.unit}
+                      onChange={(e) => handlePricingChange(index, 'unit', e.target.value)}
+                    />
+                    <datalist id="pricing-units">
+                      <option value="per plate" />
+                      <option value="per head" />
+                      <option value="per person" />
+                    </datalist>
+
+                    {/* Show + button only on the last item */}
+                    {index === priceRange.length - 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-success"
+                        style={{ padding: "6px 10px", backgroundColor: '#0f4c81' }}
+                        onClick={handleAddPricing}
+                        title="Add another pricing"
+                      >
+                        <MdOutlineAddCircle size={20} color="white" />
+                      </button>
+                    )}
+
+                    {/* Show remove button only if it's a newly added row */}
+                    {item.isNew && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger"
+                        onClick={() => handleRemovePricing(index)}
+                        title="Remove pricing"
+                      >
+                        <FaTrash size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
+
+
               <button type="button" onClick={handleSave} className="btn text-white" style={{ backgroundColor: '#0f4c81' }}>
                 {isLoading ? 'Saving...' : 'Save Information'}
               </button>

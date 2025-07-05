@@ -13,19 +13,26 @@ import ReviewSection from './Reviews';
 import Analytics from './Analytics';
 import Bookings from './Bookings';
 import VendorPreviewProfile from "./PreviewProfile/VendorPreviewProfile";
+import EventModal from '../../components/EventModal';
 import { useSelector } from 'react-redux';
 import { FaAngleLeft, FaChevronRight } from "react-icons/fa6";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import { useGetVendorByIdQuery } from '../../features/vendors/vendorAPI';
+import { useGetVendorEventsQuery, useDeleteEventMutation, useGetUpcomingEventsQuery } from '../../features/events/eventAPI';
+import { toast } from 'react-toastify';
 
 const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDatePickerForWedding, setShowDatePickerForWedding] = useState(null);
   const [eventName, setEventName] = useState('');
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDateForEvent, setSelectedDateForEvent] = useState(null);
 
   const [activeTab, setActiveTab] = useState(() => {
     const savedTab = localStorage.getItem('activeTab') || 'Overview';
@@ -36,6 +43,23 @@ const Dashboard = () => {
 
   const { data: vendorData, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
   // console.log("vendorttttt", vendorData?.vendor?.services);
+
+  // Get events for the current month
+  const currentDate = new Date();
+  const { data: eventsData, isLoading: isEventsLoading, refetch: refetchEvents } = useGetVendorEventsQuery({
+    vendorId,
+    month: currentDate.getMonth() + 1,
+    year: currentDate.getFullYear()
+  });
+
+  // Get upcoming events
+  const { data: upcomingEventsData, isLoading: isUpcomingEventsLoading } = useGetUpcomingEventsQuery({
+    vendorId,
+    limit: 10
+  });
+
+  const [deleteEvent] = useDeleteEventMutation();
+
   const handleTabClick = (tab) => {
     console.log('Switching to tab:', tab);
     setActiveTab(tab);
@@ -55,10 +79,6 @@ const Dashboard = () => {
 
   const tabs = ['Overview', 'Bookings', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews', 'Analytics'];
 
-  const [events, setEvents] = useState([
-    { date: new Date('2024-11-15'), name: 'Arjun & Meera Kumar Wedding' },
-  ]);
-
   useEffect(() => {
     if (!isAuthenticated) {
       localStorage.removeItem('activeTab');
@@ -66,20 +86,67 @@ const Dashboard = () => {
   }, [isAuthenticated]);
 
   const handleDateSelect = (date, name) => {
-    setEvents(prev => [...prev, { date, name: name }]);
+    setSelectedDateForEvent(date);
+    setShowEventModal(true);
     setShowDatePicker(false);
   };
 
   const handleWeddingDateSelect = (index, date, weddingName) => {
-    setEvents(prev => [...prev, { date, name: weddingName }]);
+    setSelectedDateForEvent(date);
+    setShowEventModal(true);
     setShowDatePickerForWedding(null);
   };
 
-  const tileClassName = ({ date, view }) => {
-    if (view === 'month') {
-      const event = events.find(e => new Date(e.date).toDateString() === date.toDateString());
-      return event ? 'bg-red-500 text-white rounded-full relative group' : null;
+  const handleCalendarClick = (date) => {
+    console.log('Calendar clicked on date:', date);
+    setSelectedDateForEvent(date);
+    setShowEventModal(true);
+  };
+
+  const handleEditEvent = (event) => {
+    setSelectedEvent(event);
+    setShowEventModal(true);
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    if (window.confirm('Are you sure you want to delete this event?')) {
+      try {
+        await deleteEvent({ vendorId, eventId }).unwrap();
+        toast.success('Event deleted successfully');
+        refetchEvents();
+      } catch (error) {
+        toast.error('Failed to delete event');
+      }
     }
+  };
+
+  const tileClassName = ({ date, view }) => {
+    if (view === 'month' && eventsData?.events) {
+      const event = eventsData.events.find(e => 
+        new Date(e.eventDate).toDateString() === date.toDateString()
+      );
+      return event ? 'bg-red-500 text-white rounded-full relative group cursor-pointer' : 'cursor-pointer';
+    }
+    return 'cursor-pointer';
+  };
+
+  const tileContent = ({ date, view }) => {
+    if (view === 'month' && eventsData?.events) {
+      const event = eventsData.events.find(e => 
+        new Date(e.eventDate).toDateString() === date.toDateString()
+      );
+      return event ? (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="group relative">
+            <span className="text-white text-xs font-bold">●</span>
+            <div className="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 mb-1">
+              {event.eventName}
+            </div>
+          </div>
+        </div>
+      ) : null;
+    }
+    return null;
   };
 
   // Sample data
@@ -92,17 +159,6 @@ const Dashboard = () => {
       statusColor: 'text-green-600',
     },
     // ... other activities
-  ];
-
-  const upcomingWeddings = [
-    {
-      name: "Arjun & Meera Kumar",
-      date: "Friday, November 15, 2024",
-    },
-    {
-      name: "Rohan & Neha Agarwal",
-      date: "Saturday, December 7, 2024",
-    }
   ];
 
   // Format services for display
@@ -132,11 +188,21 @@ const Dashboard = () => {
               }
             </p>
             {/* Display services */}
-            <p className="text-xs sm:text-sm text-gray-600 font-serif mt-1">
-              {/* Services: {formatServices(vendor?.services) || 'Photographers, Gifts'} */}
-              {/* Services: {formatServices(vendorData?.vendor?.services) || 'Photographers, Gifts'} */}
-              Services: {vendorData?.vendor?.services || 'Photographers, Gifts'}
-            </p>
+
+          <div className="flex flex-wrap gap-2 mt-1">
+              {vendorData?.vendor?.services?.[0]
+                ?.split(',')
+                .map((service, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 text-xs sm:text-sm bg-sky-100 text-gray-700 rounded-md border border-gray-300 font-serif"
+                  >
+                    {service.trim()}
+                  </span>
+                )) || (
+                  <span className="text-xs text-gray-500 font-serif">{vendor?.vendorType || "no more services"}</span>
+                )}
+            </div>
           </div>
 
           <div className="flex flex-col w-full sm:w-auto sm:flex-row sm:items-center gap-2 sm:gap-3">
@@ -263,8 +329,8 @@ const Dashboard = () => {
                         />
                       </div>
                       <DatePicker
-                        selected={selectedDate}
-                        onChange={(date) => setSelectedDate(date)}
+                        selected={selectedDateForEvent}
+                        onChange={(date) => setSelectedDateForEvent(date)}
                         inline
                         className="w-full"
                       />
@@ -273,7 +339,7 @@ const Dashboard = () => {
                           onClick={() => {
                             setShowDatePicker(false);
                             setEventName('');
-                            setSelectedDate(null);
+                            setSelectedDateForEvent(null);
                           }}
                           className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
                         >
@@ -281,14 +347,13 @@ const Dashboard = () => {
                         </button>
                         <button 
                           onClick={() => {
-                            if (eventName && selectedDate) {
-                              handleDateSelect(selectedDate, eventName);
-                              setEventName('');
-                              setSelectedDate(null);
+                            if (eventName && selectedDateForEvent) {
+                              setShowEventModal(true);
+                              setShowDatePicker(false);
                             }
                           }}
                           className="px-4 py-2 bg-[#0f4c81] text-white rounded-md hover:bg-[#0d3f6a] transition-colors"
-                          disabled={!eventName || !selectedDate}
+                          disabled={!eventName || !selectedDateForEvent}
                         >
                           Add Event
                         </button>
@@ -297,26 +362,17 @@ const Dashboard = () => {
                   </div>
                 )}
 
-                <div className="mt-4 w-full">
+                <div className="mt-4 w-full calendar-container">
                   <Calendar
                     className="w-full border-none"
                     value={new Date()}
                     tileClassName={tileClassName}
-                    tileContent={({ date, view }) => {
-                      const event = events.find(e =>
-                        new Date(e.date).toDateString() === date.toDateString()
-                      );
-                      return event ? (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="group relative">
-                            <span className="text-white text-xs font-bold">●</span>
-                            <div className="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 mb-1">
-                              {event.name}
-                            </div>
-                          </div>
-                        </div>
-                      ) : null;
-                    }}
+                    tileContent={tileContent}
+                    onClickDay={handleCalendarClick}
+                    style={{ width: '100%', maxWidth: 'none' }}
+                    selectRange={false}
+                    maxDetail="month"
+                    minDetail="month"
                   />
                 </div>
               </div>
@@ -390,39 +446,168 @@ const Dashboard = () => {
       {/* Upcoming Weddings Section */}
       {activeTab === 'Overview' && (
         <div className="col-span-2 bg-white p-2 sm:p-4 rounded border mt-4 sm:mt-5">
-          <h2 className="text-base sm:text-lg font-semibold mb-2">Upcoming Weddings</h2>
-          <p className="text-xs sm:text-sm text-gray-500 mb-2">Your Scheduled Bookings</p>
+          <h2 className="text-base sm:text-lg font-semibold mb-2">Upcoming Events</h2>
+          <p className="text-xs sm:text-sm text-gray-500 mb-2">Your Scheduled Events</p>
 
-          {upcomingWeddings.map((wedding, index) => (
-            <div key={index} className="flex items-center space-x-2 sm:space-x-4 border p-2 sm:p-4 rounded mb-2 relative">
-              <span
-                className="text-gray-800 cursor-pointer mt-6"
-                onClick={() => setShowDatePickerForWedding(index === showDatePickerForWedding ? null : index)}
-              >
-                <MdOutlineCalendarMonth size={16} className="sm:w-5 sm:h-5" />
-              </span>
-              <div className="flex-1">
-                <p className="text-sm sm:text-base">{wedding.name.slice(0, 11) + "..."}</p>
-                <p className="text-xs sm:text-sm text-gray-500">{wedding.date}</p>
-              </div>
-              <button className="border border-gray-300 rounded px-2 sm:px-4 py-1 text-xs sm:text-sm">
-                Contact Client
-              </button>
-
-              {showDatePickerForWedding === index && (
-                <div className="absolute top-full left-0 z-10 mt-1 shadow-lg bg-white p-2 rounded">
-                  <DatePicker
-                    inline
-                    onChange={(date) => handleWeddingDateSelect(index, date, wedding.name)}
-                  />
-                </div>
-              )}
+          {isUpcomingEventsLoading ? (
+            <div className="text-center py-4">
+              <p className="text-gray-500">Loading upcoming events...</p>
             </div>
-          ))}
+          ) : upcomingEventsData?.events && upcomingEventsData.events.length > 0 ? (
+            upcomingEventsData.events.map((event, index) => (
+              <div key={event._id} className="border p-2 rounded mb-2 bg-gray-50 hover:bg-gray-100 transition-colors">
+                {/* Event Header - Compact */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    <span className="text-gray-600">
+                      <MdOutlineCalendarMonth size={16} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-gray-800 truncate">{event.eventName}</h3>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          event.status === 'Scheduled' ? 'bg-blue-100 text-blue-800' :
+                          event.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                          event.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {event.status}
+                        </span>
+                        <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                          {event.eventType}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 ml-2">
+                    <button
+                      onClick={() => handleEditEvent(event)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                      title="Edit Event"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(event._id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                      title="Delete Event"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                {/* Event Details - Compact Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 mb-2">
+                  {/* Date */}
+                  <div className="bg-white p-1.5 rounded border">
+                    <p className="text-xs text-gray-500 mb-0.5">📅 Date</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {new Date(event.eventDate).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(event.eventDate).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </p>
+                  </div>
+
+                  {/* Client */}
+                  {event.clientName && (
+                    <div className="bg-white p-1.5 rounded border">
+                      <p className="text-xs text-gray-500 mb-0.5">👤 Client</p>
+                      <p className="text-sm font-medium text-gray-800 truncate">{event.clientName}</p>
+                      {event.clientPhone && (
+                        <p className="text-xs text-gray-500 truncate">{event.clientPhone}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Venue */}
+                  {event.venue && (
+                    <div className="bg-white p-1.5 rounded border">
+                      <p className="text-xs text-gray-500 mb-0.5">📍 Venue</p>
+                      <p className="text-sm font-medium text-gray-800 truncate">{event.venue}</p>
+                    </div>
+                  )}
+
+                  {/* Stats */}
+                  <div className="bg-white p-1.5 rounded border">
+                    <p className="text-xs text-gray-500 mb-0.5">📊 Details</p>
+                    <div className="space-y-0.5">
+                      {event.guestCount && (
+                        <p className="text-xs text-gray-800">👥 {event.guestCount} guests</p>
+                      )}
+                      {event.budget && (
+                        <p className="text-xs text-green-600 font-medium">₹{event.budget.toLocaleString()}</p>
+                      )}
+                      <p className="text-xs text-blue-600 font-medium">
+                        {Math.ceil((new Date(event.eventDate) - new Date()) / (1000 * 60 * 60 * 24))} days left
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description and Notes - Improved */}
+                {(event.description || event.notes) && (
+                  <div className="bg-white p-2 rounded border">
+                    {event.description && (
+                      <div className="mb-2">
+                        <h4 className="text-xs font-semibold text-gray-700 mb-1 flex items-center">
+                          <span className="mr-1">📝</span> Description
+                        </h4>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {event.description.length > 120 ? 
+                            `${event.description.substring(0, 120)}...` : event.description}
+                        </p>
+                      </div>
+                    )}
+                    {event.notes && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-700 mb-1 flex items-center">
+                          <span className="mr-1">📋</span> Notes
+                        </h4>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          {event.notes.length > 120 ? 
+                            `${event.notes.substring(0, 120)}...` : event.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-6">
+              <div className="text-gray-400 mb-2">
+                <MdOutlineCalendarMonth size={32} className="mx-auto" />
+              </div>
+              <p className="text-gray-500 font-medium">No upcoming events found</p>
+              <p className="text-xs text-gray-400 mt-1">Click on any date in the calendar to add an event.</p>
+            </div>
+          )}
         </div>
       )}
 
       <VendorPreviewProfile show={showModal} onClose={() => setShowModal(false)} />
+      
+      {/* Event Modal */}
+      <EventModal
+        show={showEventModal}
+        onClose={() => {
+          setShowEventModal(false);
+          setSelectedEvent(null);
+          setSelectedDateForEvent(null);
+        }}
+        event={selectedEvent}
+        vendorId={vendorId}
+        selectedDate={selectedDateForEvent}
+      />
     </div>
   );
 };

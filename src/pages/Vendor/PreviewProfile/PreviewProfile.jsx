@@ -33,6 +33,8 @@ const PreviewProfile = () => {
   const { refetch: refetchBookings } = useGetUserBookingsQuery();
   const [packages, setPackages] = useState([]);
   const [getVendorPackages] = useVendorservicesPackageListMutation();
+  const [currentPage, setCurrentPage] = useState(1);
+  const imagesPerPage = 9;
 
   // console.log('URL Vendor ID:', vendorId);
   // console.log('Vendor Data:', vendor);
@@ -430,8 +432,33 @@ const PreviewProfile = () => {
 
           <h2 className="text-xl font-bold text-gray-800">{vendor?.vendor?.businessName}</h2>
           <p className="text-sm text-gray-500">{vendor?.vendor?.vendorType}</p>
-          <p className="text-sm text-gray-500">Services:{vendor?.vendor?.services}</p>
           
+          {/* Services */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {(() => {
+              let raw = vendor?.vendor?.services || [];
+              let vendorServices = Array.isArray(raw)
+                ? raw.length === 1 && typeof raw[0] === "string"
+                  ? raw[0].split(',').map(s => s.trim())
+                  : raw
+                : [];
+
+              return vendorServices.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {vendorServices.map((service, index) => (
+                    <span
+                      key={index}
+                      className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md"
+                    >
+                      {service}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-sm text-gray-400">No services available</span>
+              );
+            })()}
+          </div>
 
           {/* Rating & Location */}
           <div className="flex flex-wrap items-center gap-2 text-md text-gray-600 mt-1">
@@ -442,17 +469,18 @@ const PreviewProfile = () => {
             </span>
             <span>·</span>
 
-            <span>
-              <IoLocationOutline className="inline-block" />
-              {/* {vendorData?.serviceAreas?.length > 0
-                ? vendorData.serviceAreas.map((area, index) => (
-                  <span key={index}>
-                    {area.charAt(0).toUpperCase() + area.slice(1)}
-                    {index !== vendorData.serviceAreas.length - 1 && ', '}
-                  </span>
-                ))
-                : 'New Delhi, India'} */}
-                {vendor?.address || "New York"}
+            <span className="flex items-center">
+              <IoLocationOutline className="inline-block mr-1" />
+              {vendor?.vendor?.address || (
+                vendor?.vendor?.serviceAreas?.length > 0 ? (
+                  vendor.vendor.serviceAreas.map((area, index) => (
+                    <span key={index}>
+                      {area}
+                      {index !== vendor.vendor.serviceAreas.length - 1 && ', '}
+                    </span>
+                  ))
+                ) : 'Location not available'
+              )}
             </span>
             
 
@@ -520,30 +548,83 @@ const PreviewProfile = () => {
           </div>
           
           {activeGalleryTab === 'images' && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {vendorPortfolio.images.length > 0 ? (
-                vendorPortfolio.images.map((image, i) => (
-                  <div 
-                    key={image._id || i} 
-                    className="relative group cursor-pointer"
-                    onClick={() => handleImageView(image.url)}
-                  >
-                    <img
-                      src={image.url}
-                      alt={image.title || `Portfolio Image ${i + 1}`}
-                      className="rounded object-cover w-full h-60 transition-transform group-hover:scale-105"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-sm truncate">{image.title || 'Portfolio Image'}</p>
-                    </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {vendorPortfolio.images.length > 0 ? (
+                  vendorPortfolio.images
+                    .slice((currentPage - 1) * imagesPerPage, currentPage * imagesPerPage)
+                    .map((image, i) => (
+                      <div 
+                        key={image._id || i} 
+                        className="relative group cursor-pointer"
+                        onClick={() => handleImageView(image.url)}
+                      >
+                        <img
+                          src={image.url}
+                          alt={image.title || `Portfolio Image ${i + 1}`}
+                          className="rounded object-cover w-full h-56 transition-transform group-hover:scale-105"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-sm truncate">{image.title || 'Portfolio Image'}</p>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="col-span-full text-center text-gray-500 py-8">
+                    No portfolio images available
                   </div>
-                ))
-              ) : (
-                <div className="col-span-full text-center text-gray-500 py-8">
-                  No portfolio images available
+                )}
+              </div>
+
+              {/* Pagination */}
+              {vendorPortfolio.images.length > imagesPerPage && (
+                <div className="flex justify-center items-center gap-2 mt-6">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
+                    }`}
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page numbers */}
+                  {Array.from(
+                    { length: Math.ceil(vendorPortfolio.images.length / imagesPerPage) },
+                    (_, i) => i + 1
+                  ).map(pageNum => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 rounded-full ${
+                        currentPage === pageNum
+                          ? 'bg-[#0f4c81] text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => setCurrentPage(prev => 
+                      Math.min(prev + 1, Math.ceil(vendorPortfolio.images.length / imagesPerPage))
+                    )}
+                    disabled={currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
+                    }`}
+                  >
+                    Next
+                  </button>
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {activeGalleryTab === 'videos' && (
@@ -645,14 +726,14 @@ const PreviewProfile = () => {
             {formErrors.eventType && <span className="text-red-500 text-xs mt-1">{formErrors.eventType}</span>}
           </label>
 
-          <label className="sm:col-span-2">
+          <label>
             <span className="block mb-1">Package Name *</span>
             <select 
               value={bookingForm.packageName}
               onChange={(e) => {
-                console.log('Selected package ID:', e.target.value); // Debug log
+                console.log('Selected package ID:', e.target.value);
                 const selectedPackage = packages.find(pkg => pkg._id === e.target.value);
-                console.log('Found package:', selectedPackage); // Debug log
+                console.log('Found package:', selectedPackage);
                 handleBookingInputChange('packageName', e.target.value);
                 if (selectedPackage) {
                   handleBookingInputChange('plannedAmount', selectedPackage.price || 0);
@@ -787,7 +868,7 @@ const PreviewProfile = () => {
           {activeTab === 'FAQ' && <FaqQuestions />}
         </div>
 
-        {/* Right side: Inquiry + Contact Info */}
+        {/* Right side: Inquiry */}
         <div className="space-y-6  ">
           {/* Inquiry Form */}
           <div className="border rounded-lg p-4 shadow-sm bg-white">
@@ -795,7 +876,6 @@ const PreviewProfile = () => {
             <form className="space-y-3 text-sm" onSubmit={handleInquirySubmit}>
               <div>
                 <label className="block mb-1">Your Name</label>
-
                 <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
@@ -813,7 +893,6 @@ const PreviewProfile = () => {
               <input type="hidden" name="vendorId" value={vendorData._id} />
               <div>
                 <label className="block mb-1">Wedding Date</label>
-
                 <input
                   type="date"
                   name="weddingDateRaw"
@@ -827,7 +906,6 @@ const PreviewProfile = () => {
                   }}
                   className="w-full border rounded px-3 py-2"
                 />
-
               </div>
               <div>
                 <label className="block mb-1">Message</label>
@@ -838,38 +916,6 @@ const PreviewProfile = () => {
                 className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">
                 {inquiryLoading ? 'Sending...' : 'Send Inquiry'}</button>
             </form>
-          </div>
-
-
-          {/* Contact Info */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white w-full ">
-            <h3 className="font-semibold text-lg mb-4">Contact Information</h3>
-            <ul className="text-gray-700 text-sm space-y-3" style={{ paddingLeft: '20px' }}>
-              <li className="flex items-start gap-2">
-                <FiPhone className="mt-1 shrink-0" />
-                <span>{vendor?.phone || 'Contact number not available'}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <HiOutlineMail className="mt-1 shrink-0" />
-                <span className="break-all">{vendor?.email || 'Email not available'}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <FiGlobe className="mt-1 shrink-0" />
-                <span className="break-all">{vendor?.website || 'Website not available'}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <IoLocationOutline className="mt-1 shrink-0" />
-                <span>
-                  {vendor?.address?.city && vendor?.address?.state
-                    ? `${vendor.address.city}, ${vendor.address.state}`
-                    : 'Location not available'}
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <FiCalendar className="mt-1 shrink-0" />
-                <span>Available for bookings</span>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
