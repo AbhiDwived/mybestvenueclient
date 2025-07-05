@@ -36,10 +36,6 @@ const PreviewProfile = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const imagesPerPage = 9;
 
-  // console.log('URL Vendor ID:', vendorId);
-  // console.log('Vendor Data:', vendor);
-  // console.log('Current packages state:', packages); // Debug log for packages
-
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   // Booking form state with validation
@@ -115,26 +111,20 @@ const PreviewProfile = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       const actualVendorId = vendor?.vendor?._id;
-      console.log('Attempting to fetch packages with vendor ID:', actualVendorId);
 
       if (!actualVendorId) {
-        console.log('No vendor ID available yet');
         return;
       }
 
       try {
         const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
-        console.log('Raw package response:', response);
         
         if (response?.packages && Array.isArray(response.packages)) {
-          console.log('Setting packages:', response.packages);
           setPackages(response.packages);
         } else {
-          console.log('No packages found in response');
           setPackages([]);
         }
       } catch (error) {
-        console.error('Failed to fetch packages:', error);
         toast.error('Failed to load vendor packages');
         setPackages([]);
       }
@@ -214,7 +204,6 @@ const PreviewProfile = () => {
       }
     } catch (err) {
       toast.error(err.data?.message || 'Error creating booking');
-      console.error('Booking error:', err);
     }
   };
 
@@ -286,7 +275,6 @@ const PreviewProfile = () => {
         message: ''
       });
     } catch (err) {
-      console.error('Failed to send inquiry:', err);
       toast.error(err.data?.message || 'Failed to send inquiry. Please try again.');
     } finally {
       setInquiryLoading(false);

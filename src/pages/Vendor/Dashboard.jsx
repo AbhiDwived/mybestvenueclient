@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FiMessageSquare } from "react-icons/fi";
 import { MdOutlineCalendarMonth } from "react-icons/md";
+import { FiTrendingUp, FiCalendar } from "react-icons/fi";
+import { FaRegStar } from "react-icons/fa";
 import DatePicker from 'react-datepicker';
 import Calendar from 'react-calendar';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -10,14 +12,13 @@ import PortfolioTab from './Portfolio';
 import PackagesAndFaqs from './PackagesAndFaqs';
 import Inquiries from './Inquiries/Inquiries';
 import ReviewSection from './Reviews';
-import Analytics from './Analytics';
 import Bookings from './Bookings';
 import VendorPreviewProfile from "./PreviewProfile/VendorPreviewProfile";
 import EventModal from '../../components/EventModal';
 import { useSelector } from 'react-redux';
 import { FaAngleLeft, FaChevronRight } from "react-icons/fa6";
 import { FaEdit, FaTrash } from "react-icons/fa";
-import { useGetVendorByIdQuery } from '../../features/vendors/vendorAPI';
+import { useGetVendorByIdQuery, useUserInquiryListQuery, useGetVendorBookingsListQuery } from '../../features/vendors/vendorAPI';
 import { useGetVendorEventsQuery, useDeleteEventMutation, useGetUpcomingEventsQuery } from '../../features/events/eventAPI';
 import { toast } from 'react-toastify';
 
@@ -36,13 +37,11 @@ const Dashboard = () => {
 
   const [activeTab, setActiveTab] = useState(() => {
     const savedTab = localStorage.getItem('activeTab') || 'Overview';
-    // console.log('Initial active tab:', savedTab);
     return savedTab;
   });
    const vendorId = vendor.id;
 
   const { data: vendorData, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
-  // console.log("vendorttttt", vendorData?.vendor?.services);
 
   // Get events for the current month
   const currentDate = new Date();
@@ -60,24 +59,28 @@ const Dashboard = () => {
 
   const [deleteEvent] = useDeleteEventMutation();
 
+  // Get vendor inquiries for recent activity
+  const { data: inquiriesData, isLoading: isInquiriesLoading } = useUserInquiryListQuery(undefined, {
+    refetchOnMountOrArgChange: true
+  });
+
+  // Get vendor bookings for analytics
+  const { data: bookingsData, isLoading: isBookingsLoading } = useGetVendorBookingsListQuery(vendorId);
+
   const handleTabClick = (tab) => {
-    console.log('Switching to tab:', tab);
     setActiveTab(tab);
     localStorage.setItem('activeTab', tab);
   };
 
   useEffect(() => {
-    console.log('Current active tab:', activeTab);
-    console.log('Vendor data:', vendor);
-    console.log('Is authenticated:', isAuthenticated);
+    // Remove console.log statements
   }, [activeTab, vendor, isAuthenticated]);
 
   if (!isAuthenticated) {
-    console.log('Not authenticated, showing login message');
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
   }
 
-  const tabs = ['Overview', 'Bookings', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews', 'Analytics'];
+  const tabs = ['Overview', 'Bookings', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews'];
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -98,7 +101,6 @@ const Dashboard = () => {
   };
 
   const handleCalendarClick = (date) => {
-    console.log('Calendar clicked on date:', date);
     setSelectedDateForEvent(date);
     setShowEventModal(true);
   };
@@ -149,17 +151,112 @@ const Dashboard = () => {
     return null;
   };
 
-  // Sample data
-  const activities = [
-    {
-      name: 'Arjun & Meera Kumar',
-      date: '12/10/2023',
-      message: 'Hello, I am interested in your wedding photography services...',
-      status: 'Replied',
-      statusColor: 'text-green-600',
-    },
-    // ... other activities
-  ];
+  // Calculate analytics data
+  const calculateAnalytics = () => {
+    const currentYear = new Date().getFullYear();
+    const totalBookings = bookingsData?.data?.totalBookingsCount ?? 0;
+    const avgRating = 4.8; // This could be dynamic if you have rating data
+
+    // Calculate yearly inquiries
+    const totalInquiriesYearly = inquiriesData?.modifiedList?.filter((inq) => {
+      const inqYear = new Date(inq.createdAt).getFullYear();
+      return inqYear === currentYear;
+    }).length || 0;
+
+    // Calculate yearly bookings
+    const totalBookingsYearly = bookingsData?.data?.bookings?.filter((bk) => {
+      const bookingYear = new Date(bk.createdAt).getFullYear();
+      return bookingYear === currentYear;
+    }).length || 0;
+
+    return [
+      {
+        label: 'Profile Views',
+        value: '1,250',
+        change: '+15%',
+        icon: <FiTrendingUp size={24} className="text-[#0f4c81]" />,
+        percent: 75,
+        color: 'bg-blue-500'
+      },
+      {
+        label: 'Inquiries',
+        value: inquiriesData?.modifiedList?.length || 0,
+        change: '+8%',
+        icon: <FiMessageSquare size={24} className="text-[#0f4c81]" />,
+        percent: Math.min((totalInquiriesYearly / 100) * 100, 100),
+        color: 'bg-green-500'
+      },
+      {
+        label: 'Booking Rate',
+        value: totalBookings > 0 ? `${Math.round((totalBookings / (inquiriesData?.modifiedList?.length || 1)) * 100)}%` : '0%',
+        change: '+5%',
+        icon: <FiCalendar size={24} className="text-[#0f4c81]" />,
+        percent: totalBookings > 0 ? Math.min((totalBookings / 100) * 100, 100) : 5,
+        color: 'bg-purple-500'
+      },
+      {
+        label: 'Review Score',
+        value: avgRating.toString(),
+        change: '+0.2',
+        icon: <FaRegStar size={24} className="text-[#0f4c81]" />,
+        percent: (avgRating / 5) * 100,
+        color: 'bg-yellow-500'
+      },
+    ];
+  };
+
+  const analyticsData = calculateAnalytics();
+
+  // Format recent activities from real data
+  const formatRecentActivities = () => {
+    const activities = [];
+    
+    // Add recent inquiries
+    if (inquiriesData?.modifiedList) {
+      inquiriesData.modifiedList.slice(0, 5).forEach((inquiry) => {
+        const latestMessage = inquiry.userMessage?.[inquiry.userMessage.length - 1];
+        if (latestMessage) {
+          activities.push({
+            id: inquiry._id,
+            name: inquiry.name || 'Anonymous User',
+            date: new Date(inquiry.createdAt).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            }),
+            message: latestMessage.message || 'No message content',
+            status: inquiry.replyStatus || 'Pending',
+            statusColor: inquiry.replyStatus === 'Replied' ? 'text-green-600' : 'text-yellow-600',
+            type: 'inquiry',
+            timeAgo: getTimeAgo(inquiry.createdAt)
+          });
+        }
+      });
+    }
+
+    // Sort by date (most recent first)
+    return activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+  };
+
+  // Helper function to get time ago
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const past = new Date(date);
+    const diffInMs = now - past;
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInDays > 0) {
+      return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    } else if (diffInHours > 0) {
+      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    } else {
+      return 'Just now';
+    }
+  };
+
+  // Get formatted activities
+  const recentActivities = formatRecentActivities();
 
   // Format services for display
   const formatServices = (services) => {
@@ -188,8 +285,7 @@ const Dashboard = () => {
               }
             </p>
             {/* Display services */}
-
-          <div className="flex flex-wrap gap-2 mt-1">
+            <div className="flex flex-wrap gap-2 mt-1">
               {vendorData?.vendor?.services?.[0]
                 ?.split(',')
                 .map((service, index) => (
@@ -202,7 +298,7 @@ const Dashboard = () => {
                 )) || (
                   <span className="text-xs text-gray-500 font-serif">{vendor?.vendorType || "no more services"}</span>
                 )}
-            </div>
+            </div>
           </div>
 
           <div className="flex flex-col w-full sm:w-auto sm:flex-row sm:items-center gap-2 sm:gap-3">
@@ -217,7 +313,6 @@ const Dashboard = () => {
 
             <button
               onClick={() => setShowModal(true)}
-
               className="bg-[#0f4c81] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded text-md sm:text-sm w-full sm:w-auto text-center">
               Preview Profile
             </button>
@@ -276,7 +371,6 @@ const Dashboard = () => {
         </button>
       </div>
 
-
       {/* Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {activeTab === 'Overview' && (
@@ -286,18 +380,27 @@ const Dashboard = () => {
               <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Performance Overview</h2>
               <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">Your profile performance in the last 30 days</p>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4  mb-4 sm:mb-6">
-                {[
-                  { label: 'Profile Views', value: '1250', change: '+15%' },
-                  { label: 'Inquiries', value: '28', change: '+8%' },
-                  { label: 'Booking Rate', value: '35%', change: '+5%' },
-                  { label: 'Review Score', value: '4.8', change: '+0.2' },
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-white p-2 sm:p-4 rounded shadow text-center">
-                    <p className="text-xs sm:text-sm text-gray-500">{item.label}</p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {item.value} <span className="text-green-500 text-xs sm:text-sm">{item.change}</span>
-                    </p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                {analyticsData.map((item, idx) => (
+                  <div key={idx} className="bg-white p-3 sm:p-4 rounded shadow-sm border border-gray-200">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="text-sm sm:text-base font-medium text-gray-600">
+                        {item.label}
+                      </div>
+                      <div>{item.icon}</div>
+                    </div>
+                    <div className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
+                      {item.value}
+                    </div>
+                    <div className="text-xs sm:text-sm text-green-600 mb-2">
+                      {item.change}
+                    </div>
+                    <div className="w-full h-2 bg-gray-200 rounded-full">
+                      <div
+                        className={`h-2 ${item.color} rounded-full transition-all duration-500`}
+                        style={{ width: `${item.percent}%` }}
+                      ></div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -383,22 +486,39 @@ const Dashboard = () => {
               <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Recent Activity</h2>
               <p className="text-xs sm:text-sm text-gray-500 mb-2">Latest inquiries and reviews</p>
 
-              <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
-                {activities.map((activity, idx) => (
-                  <div key={idx} className="relative pl-6 sm:pl-8">
-                    <FiMessageSquare className="absolute top-1 left-0 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
-                    <p className="font-medium text-gray-800">{activity.name}</p>
-                    <p className="text-xs text-gray-400 mb-1">{activity.date}</p>
-                    <p className="mb-1 text-gray-700">{activity.message}</p>
-                    {activity.status && (
-                      <span className={`${activity.statusColor} text-xs font-medium`}>
-                        {activity.status}
-                      </span>
-                    )}
-                    <hr className="mt-3 border-gray-200" />
-                  </div>
-                ))}
-              </div>
+              {isInquiriesLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                  <span className="ml-2 text-sm text-gray-600">Loading activities...</span>
+                </div>
+              ) : recentActivities.length > 0 ? (
+                <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
+                  {recentActivities.map((activity, idx) => (
+                    <div key={activity.id || idx} className="relative pl-6 sm:pl-8">
+                      <FiMessageSquare className="absolute top-1 left-0 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-800">{activity.name}</p>
+                          <p className="text-xs text-gray-400 mb-1">{activity.timeAgo}</p>
+                          <p className="mb-1 text-gray-700 line-clamp-2">{activity.message}</p>
+                          {activity.status && (
+                            <span className={`${activity.statusColor} text-xs font-medium`}>
+                              {activity.status}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <hr className="mt-3 border-gray-200" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <FiMessageSquare className="mx-auto text-gray-300 w-8 h-8 mb-2" />
+                  <p className="text-gray-500 text-sm">No recent activity</p>
+                  <p className="text-xs text-gray-400 mt-1">New inquiries and reviews will appear here</p>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -434,11 +554,6 @@ const Dashboard = () => {
         {activeTab === 'Reviews' && (
           <div className="lg:col-span-3 -mt-4">
             <ReviewSection />
-          </div>
-        )}
-        {activeTab === 'Analytics' && (
-          <div className="lg:col-span-3 -mt-4">
-            <Analytics />
           </div>
         )}
       </div>
