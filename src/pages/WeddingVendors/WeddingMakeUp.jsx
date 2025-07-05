@@ -118,27 +118,31 @@ export default function WeddingMakeUp() {
 
                 <div className="border-t mt-3 pt-3 text-sm text-gray-800">
 
-                  <div className="flex items-start gap-8 mb-2">
-                    {/* Veg price */}
-                    <div>
-                      <div className="text-xs text-gray-500">Veg</div>
-                      <div className="text-base font-semibold text-gray-800">
-                        ₹ {vendor.priceVeg || "999"} <span className="text-xs font-normal text-gray-500">per plate</span>
-                      </div>
-                    </div>
-
-                    {/* Non-Veg price */}
-                    <div>
-                      <div className="text-xs text-gray-500">Non veg</div>
-                      <div className="text-base font-semibold text-gray-800">
-                        ₹ {vendor.priceNonVeg || "1,200"} <span className="text-xs font-normal text-gray-500">per plate</span>
-                      </div>
-                    </div>
+                  {/* Pricing */}
+                  <div className="flex items-center gap-5 text-sm text-gray-600 mb-3 border-amber-300">
+                    {vendor?.pricing?.filter(item => item?.type && item?.price)?.length > 0 ? (
+                      vendor.pricing
+                        .filter(item => item?.type && item?.price)
+                        .slice(0, 2)
+                        .map((item, index) => (
+                          <div key={item._id || index}>
+                            <div className="text-sm text-gray-500">{item.type}</div>
+                            <div className="flex items-center text-md font-bold text-gray-800">
+                              ₹ {item.price.toLocaleString('en-IN')}
+                              <span className="text-xs font-normal text-gray-500 ml-1">
+                                {item.unit || 'per person'}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <div className="text-sm text-gray-500">No Pricing Available</div>
+                    )}
                   </div>
 
                   {/* Capacity, Rooms, and More */}
                   <div className="flex flex-wrap gap-3 text-xs text-gray-600">
-                    
+
 
                     <span className="text-gray-600 hover:underline bg-gray-200 p-1 rounded"
                       onClick={() => handleVendorClick(vendor._id)}
