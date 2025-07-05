@@ -28,7 +28,9 @@ const PreviewProfile = () => {
   const [activeGalleryTab, setActiveGalleryTab] = useState('images');
   const navigate = useNavigate();
   const { vendorId } = useParams();
-  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
+  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
+    skip: !vendorId || vendorId === 'undefined'
+  });
   const [createBooking, { isLoading: isBookingLoading }] = useCreateBookingMutation();
   const { refetch: refetchBookings } = useGetUserBookingsQuery();
   const [packages, setPackages] = useState([]);
@@ -459,16 +461,31 @@ const PreviewProfile = () => {
 
             <span className="flex items-center">
               <IoLocationOutline className="inline-block mr-1" />
-              {vendor?.vendor?.address || (
-                vendor?.vendor?.serviceAreas?.length > 0 ? (
-                  vendor.vendor.serviceAreas.map((area, index) => (
+              {(() => {
+                const vendorAddress = vendor?.vendor?.address;
+                if (vendorAddress && typeof vendorAddress === 'object') {
+                  // Handle address object format
+                  const parts = [];
+                  if (vendorAddress.street) parts.push(vendorAddress.street);
+                  if (vendorAddress.city) parts.push(vendorAddress.city);
+                  if (vendorAddress.state) parts.push(vendorAddress.state);
+                  if (vendorAddress.zipCode) parts.push(vendorAddress.zipCode);
+                  return parts.length > 0 ? parts.join(', ') : 'Location not available';
+                } else if (typeof vendorAddress === 'string') {
+                  // Handle legacy string format
+                  return vendorAddress;
+                } else if (vendor?.vendor?.serviceAreas?.length > 0) {
+                  // Fallback to service areas
+                  return vendor.vendor.serviceAreas.map((area, index) => (
                     <span key={index}>
                       {area}
                       {index !== vendor.vendor.serviceAreas.length - 1 && ', '}
                     </span>
-                  ))
-                ) : 'Location not available'
-              )}
+                  ));
+                } else {
+                  return 'Location not available';
+                }
+              })()}
             </span>
             
 

@@ -142,7 +142,7 @@ export const vendorApi = createApi({
     getVendorById: builder.query({
       query: (vendorId) => {
         // Validate the ID before making the request
-        if (!vendorId || vendorId === 'undefined') {
+        if (!vendorId || vendorId === 'undefined' || vendorId === 'null') {
           throw new Error('Invalid vendor ID');
         }
         return {

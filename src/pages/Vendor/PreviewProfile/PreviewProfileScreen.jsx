@@ -10,7 +10,9 @@ const PreviewProfileScreen = () => {
   const [packages, setPackages] = useState([]);
   const [getVendorPackages] = useVendorservicesPackageListMutation();
 
-  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
+  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
+    skip: !vendorId || vendorId === 'undefined'
+  });
 
   // Handle vendor error
   useEffect(() => {

@@ -41,7 +41,9 @@ const Dashboard = () => {
   });
    const vendorId = vendor.id;
 
-  const { data: vendorData, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId);
+  const { data: vendorData, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
+    skip: !vendorId || vendorId === 'undefined'
+  });
 
   // Get events for the current month
   const currentDate = new Date();
@@ -278,10 +280,25 @@ const Dashboard = () => {
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 font-serif">
               {vendor?.vendorType || 'Banquet Halls'} • {
-                vendor?.address?.city || 
-                (vendor?.serviceAreas?.length > 0
-                  ? vendor.serviceAreas.join(', ')
-                  : 'Dwarka')
+                (() => {
+                  const vendorAddress = vendor?.address;
+                  if (vendorAddress && typeof vendorAddress === 'object') {
+                    // Handle address object format
+                    const parts = [];
+                    if (vendorAddress.street) parts.push(vendorAddress.street);
+                    if (vendorAddress.city) parts.push(vendorAddress.city);
+                    if (vendorAddress.state) parts.push(vendorAddress.state);
+                    return parts.length > 0 ? parts.join(', ') : 'Dwarka';
+                  } else if (typeof vendorAddress === 'string') {
+                    // Handle legacy string format
+                    return vendorAddress;
+                  } else if (vendor?.serviceAreas?.length > 0) {
+                    // Fallback to service areas
+                    return vendor.serviceAreas.join(', ');
+                  } else {
+                    return 'Dwarka';
+                  }
+                })()
               }
             </p>
             {/* Display services */}

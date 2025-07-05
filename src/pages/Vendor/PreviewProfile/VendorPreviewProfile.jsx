@@ -36,7 +36,9 @@ const VendorPreviewProfile = ({ show, onClose }) => {
         isLoading,
         isError,
         error,
-    } = useGetVendorByIdQuery(vendorId);
+    } = useGetVendorByIdQuery(vendorId, {
+      skip: !vendorId || vendorId === 'undefined'
+    });
     // console.log("vednordata",vendorData.vendor.description)
     console.log("vendordd", vendorData?.vendor)
 
@@ -114,7 +116,22 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                             </div>
 
                             <p className="text-md text-gray-500">{vendor.vendorType || "Hospitality"}</p>
-                            <p className="text-md text-gray-600 space-between" >Contact: {vendor.phone || "Navneet Yadav"} <span className='ml-5  '>Address:{vendorData?.vendor.address || "New York"}</span> </p>
+                            <p className="text-md text-gray-600 space-between" >Contact: {vendor.phone || "Navneet Yadav"} <span className='ml-5  '>Address: {(() => {
+                                const vendorAddress = vendorData?.vendor?.address;
+                                if (vendorAddress && typeof vendorAddress === 'object') {
+                                    // Handle address object format
+                                    const parts = [];
+                                    if (vendorAddress.street) parts.push(vendorAddress.street);
+                                    if (vendorAddress.city) parts.push(vendorAddress.city);
+                                    if (vendorAddress.state) parts.push(vendorAddress.state);
+                                    return parts.length > 0 ? parts.join(', ') : 'New York';
+                                } else if (typeof vendorAddress === 'string') {
+                                    // Handle legacy string format
+                                    return vendorAddress;
+                                } else {
+                                    return 'New York';
+                                }
+                            })()}</span> </p>
 
                             {/* <p className="text-md text-gray-600">Services: {vendorData?.vendor?.services || "Photographers,Gifts"}</p> */}
 
@@ -161,12 +178,23 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                             <li>
                                 <span className="inline-block align-middle">< IoLocationOutline /></span>
                                 <span className="inline-block align-middle">
-                                    {/* {vendor.address ? (
-                                        typeof vendor.address === 'object' ?
-                                            `${vendor.address.street || ''}, ${vendor.address.city || ''}, ${vendor.address.state || ''} ${vendor.address.zipCode || ''}`
-                                            : vendor.address
-                                    ) : "Delhi, India"} */}
-                                    {vendorData?.vendor.address || "Delhi, India"}
+                                    {(() => {
+                                        const vendorAddress = vendorData?.vendor?.address;
+                                        if (vendorAddress && typeof vendorAddress === 'object') {
+                                            // Handle address object format
+                                            const parts = [];
+                                            if (vendorAddress.street) parts.push(vendorAddress.street);
+                                            if (vendorAddress.city) parts.push(vendorAddress.city);
+                                            if (vendorAddress.state) parts.push(vendorAddress.state);
+                                            if (vendorAddress.zipCode) parts.push(vendorAddress.zipCode);
+                                            return parts.length > 0 ? parts.join(', ') : 'Delhi, India';
+                                        } else if (typeof vendorAddress === 'string') {
+                                            // Handle legacy string format
+                                            return vendorAddress;
+                                        } else {
+                                            return 'Delhi, India';
+                                        }
+                                    })()}
                                 </span>
                             </li>
                             <Link to="https://mybestvenue.com" ><li><span className="inline-block align-middle">< FiGlobe /></span> <span className="inline-block align-middle text-[#0f4c81]"> MyBest Venue</span></li></Link>

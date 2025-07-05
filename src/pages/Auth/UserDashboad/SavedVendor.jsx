@@ -1,12 +1,15 @@
 import React from "react";
-import { Heart, MapPin, Star, ExternalLink } from "lucide-react";
+import { FaStar, FaHeart } from "react-icons/fa";
+import { MapPin } from 'lucide-react';
 import { useGetSavedVendorsQuery, useUnsaveVendorMutation } from "../../../features/savedVendors/savedVendorAPI";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Loader from "../../../components/{Shared}/Loader";
+import { useNavigate } from "react-router-dom";
 
 export default function SavedVendor() {
     const { isAuthenticated } = useSelector((state) => state.auth);
+    const navigate = useNavigate();
     
     // RTK Query hooks
     const { 
@@ -25,12 +28,21 @@ export default function SavedVendor() {
     const savedVendors = savedVendorsData?.data || [];
 
     // Handle unsave vendor
-    const handleRemoveSavedVendor = async (vendorId) => {
+    const handleRemoveSavedVendor = async (e, vendorId) => {
+        e.stopPropagation();
         try {
             await unsaveVendor(vendorId).unwrap();
             toast.success("Vendor removed from favorites");
         } catch (err) {
             toast.error(`Error removing vendor: ${err.data?.message || 'Unknown error'}`);
+        }
+    };
+
+    const handleVendorClick = (vendorId) => {
+        if (vendorId) {
+            navigate(`/preview-profile/${vendorId}`);
+        } else {
+            toast.error('Unable to open vendor profile');
         }
     };
 
@@ -63,62 +75,107 @@ export default function SavedVendor() {
                     <h2 className="text-xl font-bold mb-6">Saved Vendors</h2>
 
                     {savedVendors.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {savedVendors.map((vendor) => (
-                                <div key={vendor.id} className="border rounded-lg overflow-hidden shadow-sm">
-                                    <div className="relative">
+                                <div 
+                                    key={vendor.id} 
+                                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
+                                    onClick={() => handleVendorClick(vendor.id)}
+                                >
+                                    <div className="relative group">
                                         <img
-                                            src={vendor.featuredImage}
+                                            src={vendor.featuredImage || 'default-vendor-image.jpg'}
                                             alt={vendor.name}
-                                            className="w-full h-48 object-cover"
+                                            className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
                                         />
                                         <button
-                                            onClick={() => handleRemoveSavedVendor(vendor.id)}
+                                            onClick={(e) => handleRemoveSavedVendor(e, vendor.id)}
                                             disabled={isUnsaving}
-                                            className="absolute top-2 right-2 bg-white p-1.5 rounded-full text-red-500 hover:text-red-700 disabled:opacity-50"
+                                            className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-red-500 hover:bg-gray-50 disabled:opacity-50"
                                         >
-                                            <Heart size={18} fill="currentColor" />
+                                            <FaHeart className="text-red-500" />
                                         </button>
                                     </div>
 
-                                    <div className="p-4">
-                                        <div className="flex items-center mb-2">
-                                            <span className="bg-wedding-blush-light text-wedding-blush px-2 py-1 rounded text-xs font-medium">
-                                                {vendor.category}
-                                            </span>
+                                    {/* Details */}
+                                    <div className="flex flex-col justify-between flex-grow p-2 font-serif">
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.category || "Vendor"}</p>
+                                            <div className="flex justify-between items-center gap-2 mb-2">
+                                                <h5 className="text-md font-semibold truncate max-w-[65%] font-serif">
+                                                    {vendor.name || "Vendor Name"}
+                                                </h5>
+
+                                                <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
+                                                    <FaStar size={18} className="text-yellow-500" />
+                                                    <span>{vendor.rating || "4.5"}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Location */}
+                                            <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
+                                                <MapPin size={14} />
+                                                <span className="truncate">{vendor.location || "Location not specified"}</span>
+                                            </div>
+
+                                            {/* Tags */}
+                                            <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1">
+                                            </div>
                                         </div>
 
-                                        <h3 className="text-lg font-semibold mb-2 text-wedding-dark">{vendor.name}</h3>
+                                        {/* Price / Rooms / Pax */}
+                                        <div className="border-t mt-3 pt-3 text-sm text-gray-800">
+                                            <div className="flex items-start gap-8 mb-2">
+                                                {/* Veg price */}
+                                                <div>
+                                                    <div className="text-xs text-gray-500">Veg</div>
+                                                    <div className="text-base font-semibold text-gray-800">
+                                                        ₹ {vendor.priceVeg || "999"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                                                    </div>
+                                                </div>
 
-                                        <div className="flex items-center text-sm text-gray-500 mb-3">
-                                            <MapPin size={14} className="mr-1" />
-                                            <span>{vendor.location}</span>
-                                        </div>
+                                                {/* Non-Veg price */}
+                                                <div>
+                                                    <div className="text-xs text-gray-500">Non veg</div>
+                                                    <div className="text-base font-semibold text-gray-800">
+                                                        ₹ {vendor.priceNonVeg || "1,200"} <span className="text-xs font-normal text-gray-500">per plate</span>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex items-center">
-                                                <Star size={16} className="text-wedding-gold mr-1" fill="currentColor" />
-                                                <span className="text-sm font-medium">{vendor.rating}</span>
-                                                <span className="text-sm text-gray-500 ml-1">
-                                                    ({vendor.reviewCount} reviews)
+                                            {/* Capacity, Rooms, and More */}
+                                            <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                                                <span className="text-gray-600 p-1 rounded">
+                                                    {(() => {
+                                                        let raw = vendor.services || [];
+                                                        let vendorServices = Array.isArray(raw)
+                                                            ? raw.length === 1 && typeof raw[0] === "string"
+                                                                ? raw[0].split(',').map(s => s.trim())
+                                                                : raw
+                                                            : [];
+
+                                                        return vendorServices.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {vendorServices.slice(0, 2).map((service, index) => (
+                                                                    <span
+                                                                        key={index}
+                                                                        className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md"
+                                                                    >
+                                                                        {service}
+                                                                    </span>
+                                                                ))}
+                                                                {vendorServices.length > 2 && (
+                                                                    <span className="text-sm text-gray-600 hover:underline">
+                                                                        +{vendorServices.length - 2} more
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-sm text-gray-400">No services available</span>
+                                                        );
+                                                    })()}
                                                 </span>
                                             </div>
-                                            <span className="text-wedding-dark font-semibold">{vendor.priceRange}</span>
-                                        </div>
-
-                                        <div className="flex space-x-2">
-                                            <a
-                                                href={`mailto:${vendor.contactEmail}`}
-                                                className="flex-1 text-sm border border-gray-300 rounded-md py-2 text-center hover:bg-gray-50"
-                                            >
-                                                Message
-                                            </a>
-                                            <a
-                                                href={`/vendors/${vendor.id}`}
-                                                className="flex-1 text-sm bg-wedding-blush text-wedding-dark rounded-md py-2 text-center hover:bg-wedding-blush/90"
-                                            >
-                                                View Details
-                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -126,17 +183,17 @@ export default function SavedVendor() {
                         </div>
                     ) : (
                         <div className="text-center py-8">
-                            <Heart size={48} className="mx-auto text-gray-300 mb-4" />
+                            <FaHeart size={48} className="mx-auto text-gray-300 mb-4" />
                             <h3 className="text-lg font-medium mb-2">No Saved Vendors</h3>
                             <p className="text-gray-600 mb-4">
                                 You haven't saved any vendors yet. Browse vendors and click the heart icon to save them.
                             </p>
-                            <a
-                                href="/vendors"
-                                className="inline-block bg-wedding-blush text-wedding-dark px-4 py-2 rounded-md text-sm hover:bg-wedding-blush/90"
+                            <button
+                                onClick={() => navigate('/')}
+                                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
                             >
                                 Browse Vendors
-                            </a>
+                            </button>
                         </div>
                     )}
                 </div>

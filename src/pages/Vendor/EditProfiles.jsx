@@ -131,7 +131,34 @@ const EditProfile = () => {
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
       setCoverImage(vendor.profilePicture || null);
-      setAddress(vendor.address || 'New Delhi, India');
+      
+      // Initialize address from API data first, then fallback to vendor state
+      const apiAddress = data?.vendor?.address;
+      const vendorAddress = vendor.address;
+      
+      if (typeof apiAddress === 'string') {
+        setAddress(apiAddress);
+      } else if (typeof vendorAddress === 'string') {
+        setAddress(vendorAddress);
+      } else if (apiAddress && typeof apiAddress === 'object') {
+        // Handle legacy object format - convert to string
+        const addressParts = [];
+        if (apiAddress.street) addressParts.push(apiAddress.street);
+        if (apiAddress.city) addressParts.push(apiAddress.city);
+        if (apiAddress.state) addressParts.push(apiAddress.state);
+        if (apiAddress.zipCode) addressParts.push(apiAddress.zipCode);
+        setAddress(addressParts.join(', ') || 'New Delhi, India');
+      } else if (vendorAddress && typeof vendorAddress === 'object') {
+        // Handle legacy object format - convert to string
+        const addressParts = [];
+        if (vendorAddress.street) addressParts.push(vendorAddress.street);
+        if (vendorAddress.city) addressParts.push(vendorAddress.city);
+        if (vendorAddress.state) addressParts.push(vendorAddress.state);
+        if (vendorAddress.zipCode) addressParts.push(vendorAddress.zipCode);
+        setAddress(addressParts.join(', ') || 'New Delhi, India');
+      } else {
+        setAddress('New Delhi, India');
+      }
       // setServices(data?.vendor.services || 'Photographers,Gifts');
       const servicesData = data?.vendor?.services;
       if (Array.isArray(servicesData)) {
@@ -161,6 +188,13 @@ const EditProfile = () => {
 
 
   }, [vendor, data]);
+
+  // Additional useEffect to handle address updates when API data loads
+  useEffect(() => {
+    if (data?.vendor?.address && typeof data.vendor.address === 'string') {
+      setAddress(data.vendor.address);
+    }
+  }, [data?.vendor?.address]);
 
 
 
