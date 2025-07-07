@@ -71,8 +71,6 @@ const VendorSignup = () => {
     password: '',
     confirmPassword: '',
     termsAccepted: false,
-    location: '',
-    otherLocation: '',
     serviceAreas: []
   });
 
@@ -183,10 +181,6 @@ const VendorSignup = () => {
     if (selectedLocation) {
       const serviceAreasArray = [selectedLocation];
       data.append('serviceAreas', JSON.stringify(serviceAreasArray));
-      data.append('address', JSON.stringify({
-        city: selectedLocation,
-        state: 'India'
-      }));
     }
 
     if (profilePicture) {
