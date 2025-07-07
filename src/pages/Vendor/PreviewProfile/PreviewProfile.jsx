@@ -4,7 +4,7 @@ import { FiPhone, FiGlobe, FiCalendar } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 import { HiOutlineCalendar } from "react-icons/hi";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
 import { useCreateBookingMutation, useGetUserBookingsQuery } from '../../../features/bookings/bookingAPI';
 import { toast } from 'react-toastify';
@@ -294,6 +294,9 @@ const PreviewProfile = () => {
     }
   };
 
+  const location = useLocation();
+
+  // Only scroll to top on initial page load, not after form submit or any form interaction
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);

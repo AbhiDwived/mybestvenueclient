@@ -5,7 +5,6 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const PreviewProfileScreen = () => {
-  window.scrollTo({ top: 0, category: "top" })
   const { vendorId } = useParams();
   const [packages, setPackages] = useState([]);
   const [getVendorPackages] = useVendorservicesPackageListMutation();
