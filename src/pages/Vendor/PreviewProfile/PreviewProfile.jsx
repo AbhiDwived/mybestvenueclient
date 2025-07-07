@@ -20,6 +20,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useSelector } from 'react-redux';
 import Loader from '../../../components/{Shared}/Loader';
 import { useAddUserInquiryMessageMutation } from '../../../features/auth/authAPI';
+import { useCreateAnonymousInquiryMutation } from '../../../features/inquiries/inquiryAPI';
 import { ImCross } from 'react-icons/im';
 import { useGetPortfolioImagesQuery, useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
 
@@ -219,12 +220,13 @@ const PreviewProfile = () => {
     name: '',
     email: '',
     phone: '',
-    weddingDate: '',
+    eventDate: '',
     message: ''
   });
 
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
+  const [createAnonymousInquiry] = useCreateAnonymousInquiryMutation();
 
   const userRecord = useSelector((state) => state.auth);
   const userId = userRecord?.user?.id;
@@ -240,11 +242,7 @@ const PreviewProfile = () => {
   const handleInquirySubmit = async (e) => {
     e.preventDefault();
 
-    if (!userId) {
-      toast.error('Please login to send an inquiry');
-      return;
-    }
-
+    // Remove login restriction: allow all users to submit
     if (userRecord?.user?.role === 'vendor') {
       toast.error('Vendors cannot send inquiries');
       return;
@@ -258,22 +256,35 @@ const PreviewProfile = () => {
 
     setInquiryLoading(true);
     try {
-      await addUserInquiryMessage({
-        userId,
-        vendorId: vendorData._id,
-        name: inquiryForm.name,
-        email: inquiryForm.email,
-        phone: inquiryForm.phone,
-        weddingDate: inquiryForm.weddingDate,
-        message: inquiryForm.message
-      }).unwrap();
-
-      toast.success('Inquiry sent successfully!');
+      if (userId) {
+        // Logged-in user: use regular inquiry
+        await addUserInquiryMessage({
+          userId,
+          vendorId: vendorData._id,
+          name: inquiryForm.name,
+          email: inquiryForm.email,
+          phone: inquiryForm.phone,
+          eventDate: inquiryForm.eventDate,
+          message: inquiryForm.message
+        }).unwrap();
+        toast.success('Inquiry sent successfully!');
+      } else {
+        // Anonymous user: use anonymous inquiry
+        await createAnonymousInquiry({
+          vendorId: vendorData._id,
+          name: inquiryForm.name,
+          email: inquiryForm.email,
+          phone: inquiryForm.phone,
+          eventDate: inquiryForm.eventDate,
+          message: inquiryForm.message
+        }).unwrap();
+        toast.success('Inquiry sent successfully as guest!');
+      }
       setInquiryForm({
         name: '',
         email: '',
         phone: '',
-        weddingDate: '',
+        eventDate: '',
         message: ''
       });
     } catch (err) {
@@ -784,7 +795,7 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Wedding Date *</span>
+            <span className="block mb-1">Event Date *</span>
             <input 
               type="date" 
               value={bookingForm.eventDate}
@@ -919,16 +930,16 @@ const PreviewProfile = () => {
               </div>
               <input type="hidden" name="vendorId" value={vendorData._id} />
               <div>
-                <label className="block mb-1">Wedding Date</label>
+                <label className="block mb-1">Event Date</label>
                 <input
                   type="date"
-                  name="weddingDateRaw"
+                  name="eventDateRaw"
                   onChange={(e) => {
                     const [year, month, day] = e.target.value.split("-");
                     const formatted = `${day}/${month}/${year}`;
                     setInquiryForm(prev => ({
                       ...prev,
-                      weddingDate: formatted
+                      eventDate: formatted
                     }));
                   }}
                   className="w-full border rounded px-3 py-2"
@@ -939,7 +950,7 @@ const PreviewProfile = () => {
                 <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <button type="submit"
-                disabled={!userId || inquiryLoading || userRecord?.user?.role === 'vendor'}
+                disabled={inquiryLoading || userRecord?.user?.role === 'vendor'}
                 className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">
                 {inquiryLoading ? 'Sending...' : 'Send Inquiry'}</button>
             </form>

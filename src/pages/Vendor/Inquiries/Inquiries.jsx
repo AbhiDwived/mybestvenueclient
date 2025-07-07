@@ -3,7 +3,7 @@ import { FaChevronDown } from "react-icons/fa";
 import { RiCheckboxCircleFill } from "react-icons/ri";
 import InquiryReply from './InquiryReply';
 import { useSelector } from 'react-redux';
-import { useGetVendorInquiriesQuery } from "../../../features/inquiries/inquiryAPI";
+import { useGetVendorInquiriesQuery, useGetAnonymousInquiriesQuery } from "../../../features/inquiries/inquiryAPI";
 import { toast } from 'react-toastify';
 import { FaUser, FaUserSecret } from 'react-icons/fa';
 
@@ -34,6 +34,10 @@ const InquiriesSection = () => {
     const typeMatch = inquiryType === 'all' || inquiry.type === inquiryType;
     return statusMatch && typeMatch;
   });
+
+  const { data: anonData, isLoading: isAnonLoading } = useGetAnonymousInquiriesQuery(vendor?.id, { skip: !vendor?.id });
+
+  console.log('anonData', anonData, 'vendor', vendor);
 
   if (!vendor) {
     return (
@@ -234,9 +238,9 @@ const InquiriesSection = () => {
                       <div>
                         <span className="font-medium">Phone:</span> {inquiry.phone || inquiry.userId?.phone}
                       </div>
-                      {inquiry.weddingDate && (
+                      {inquiry.eventDate && (
                         <div className="col-span-2">
-                          <span className="font-medium">Wedding Date:</span> {inquiry.weddingDate}
+                          <span className="font-medium">Event Date:</span> {inquiry.eventDate}
                         </div>
                       )}
                     </div>
@@ -265,6 +269,43 @@ const InquiriesSection = () => {
               )}
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Anonymous Inquiries Table - Full Width */}
+      <div className="mt-10 col-span-1 lg:col-span-3 w-full">
+        <h3 className="font-semibold text-lg mb-2">All Anonymous Inquiries</h3>
+        {isAnonLoading ? (
+          <div>Loading anonymous inquiries...</div>
+        ) : anonData?.data?.length > 0 ? (
+          <div className="overflow-x-auto w-full">
+            <table className="min-w-full border text-sm w-full">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border px-2 py-1">Your Name</th>
+                  <th className="border px-2 py-1">Your Email</th>
+                  <th className="border px-2 py-1">Phone Number</th>
+                  <th className="border px-2 py-1">Event Date</th>
+                  <th className="border px-2 py-1">Message</th>
+                  <th className="border px-2 py-1">Created At</th>
+                </tr>
+              </thead>
+              <tbody>
+                {anonData.data.map((inq) => (
+                  <tr key={inq._id}>
+                    <td className="border px-2 py-1">{inq.name}</td>
+                    <td className="border px-2 py-1">{inq.email}</td>
+                    <td className="border px-2 py-1">{inq.phone}</td>
+                    <td className="border px-2 py-1">{inq.eventDate}</td>
+                    <td className="border px-2 py-1">{inq.message}</td>
+                    <td className="border px-2 py-1">{new Date(inq.createdAt).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-gray-500">No anonymous inquiries found.</div>
         )}
       </div>
     </div>

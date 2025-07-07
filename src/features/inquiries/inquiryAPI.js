@@ -35,6 +35,12 @@ export const inquiryAPI = api.injectEndpoints({
       }),
       invalidatesTags: ['Inquiries'],
     }),
+
+    // Get all anonymous inquiries for a vendor
+    getAnonymousInquiries: builder.query({
+      query: (vendorId) => `/inquiries/anonymous/${vendorId}`,
+      providesTags: ['AnonymousInquiries'],
+    }),
   }),
 });
 
@@ -43,4 +49,5 @@ export const {
   useCreateAnonymousInquiryMutation,
   useGetVendorInquiriesQuery,
   useReplyToInquiryMutation,
+  useGetAnonymousInquiriesQuery,
 } = inquiryAPI;
