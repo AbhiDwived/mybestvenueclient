@@ -217,10 +217,6 @@ const VendorSignup = () => {
     if (selectedLocation) {
       const serviceAreasArray = [selectedLocation];
       data.append("serviceAreas", JSON.stringify(serviceAreasArray));
-      data.append("address", JSON.stringify({
-        city: selectedLocation,
-        state: "India"
-      }));
     }
 
     if (profilePicture) {
@@ -234,8 +230,7 @@ const VendorSignup = () => {
       );
 
       const res = await Promise.race([registrationPromise, timeoutPromise]);
-
-      if (!isMounted.current) return;
+      setIsLoading(false);
 
       const vendorId = res?.vendor?._id || res?.vendorId;
       if (vendorId) {
@@ -246,7 +241,6 @@ const VendorSignup = () => {
           closeOnClick: true,
           pauseOnHover: false,
           draggable: true,
-          position: "top-right",
           closeButton: true,
         });
 
@@ -264,16 +258,19 @@ const VendorSignup = () => {
               vendorType: formData.vendorType === "Other" ? formData.otherVendorType : formData.vendorType,
             },
           });
-        }, 2000);
+        }, 1000);
+      } else {
+        toast.error('Registration incomplete. Please try again.', {
+          position: "top-right"
+        });
       }
     } catch (err) {
+      setIsLoading(false);
       if (!isMounted.current) return;
-
       const errorMessage = err.data?.message ||
         (err.message === "Registration took too long"
           ? "Registration is taking longer than expected. Please check your internet connection."
           : "Registration failed. Please try again.");
-
       toast.error(errorMessage, {
         position: "top-right",
         autoClose: 3000,
@@ -283,9 +280,6 @@ const VendorSignup = () => {
         draggable: true,
         closeButton: true,
       });
-    } finally {
-      if (!isMounted.current) return;
-      setIsLoading(false);
     }
   };
 
