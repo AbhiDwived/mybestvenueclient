@@ -19,7 +19,7 @@ import FaqQuestions from './FaqQuestions';
 import { FaArrowLeft } from "react-icons/fa";
 import { useSelector } from 'react-redux';
 import Loader from '../../../components/{Shared}/Loader';
-import { useCreateAnonymousInquiryMutation } from '../../../features/inquiries/inquiryAPI';
+import { useAddUserInquiryMessageMutation } from '../../../features/auth/authAPI';
 import { ImCross } from 'react-icons/im';
 import { useGetPortfolioImagesQuery, useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
 
@@ -224,7 +224,7 @@ const PreviewProfile = () => {
   });
 
   const [inquiryLoading, setInquiryLoading] = useState(false);
-  const [createAnonymousInquiry] = useCreateAnonymousInquiryMutation();
+  const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
 
   const userRecord = useSelector((state) => state.auth);
   const userId = userRecord?.user?.id;
@@ -240,21 +240,26 @@ const PreviewProfile = () => {
   const handleInquirySubmit = async (e) => {
     e.preventDefault();
 
+    if (!userId) {
+      toast.error('Please login to send an inquiry');
+      return;
+    }
+
+    if (userRecord?.user?.role === 'vendor') {
+      toast.error('Vendors cannot send inquiries');
+      return;
+    }
+
     // Validate required fields
     if (!inquiryForm.name || !inquiryForm.email || !inquiryForm.phone || !inquiryForm.message) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    // If user is logged in and is a vendor, prevent them from sending inquiries
-    if (isAuthenticated && userRecord?.user?.role === 'vendor') {
-      toast.error('Vendors cannot send inquiries');
-      return;
-    }
-
     setInquiryLoading(true);
     try {
-      await createAnonymousInquiry({
+      await addUserInquiryMessage({
+        userId,
         vendorId: vendorData._id,
         name: inquiryForm.name,
         email: inquiryForm.email,
@@ -417,6 +422,10 @@ const PreviewProfile = () => {
 
           <h2 className="text-xl font-bold text-gray-800">{vendor?.vendor?.businessName}</h2>
           <p className="text-sm text-gray-500">{vendor?.vendor?.vendorType}</p>
+
+          
+
+
           
           {/* Services */}
           <div className="flex flex-wrap gap-2 mt-2">
@@ -443,6 +452,24 @@ const PreviewProfile = () => {
                 <span className="text-sm text-gray-400">No services available</span>
               );
             })()}
+          </div>
+
+          {/* Pricing */}
+          <div className="flex overflow-x-auto flex-nowrap  gap-4 mt-2 whitespace-nowrap">
+            {vendorData?.pricing?.filter(item => item?.type && item?.price)?.length > 0 ? (
+              vendorData.pricing
+                .filter(item => item?.type && item?.price)
+                .map((item, index) => (
+                  <div
+                    key={item._id || index}
+                    className="inline-block min-w-[200px] border-blue-400 rounded-xl p-2  text-sm font-bold text-gray-800"
+                  >
+                   <span className="text-gray-500">{item.type}:</span>  ₹{item.price.toLocaleString('en-IN')}  <span className='text-gray-500'>{item.unit || 'per person'}</span>
+                  </div>
+                ))
+            ) : (
+              <div className="text-sm text-gray-500">No Pricing Available</div>
+            )}
           </div>
 
           {/* Rating & Location */}
@@ -912,7 +939,7 @@ const PreviewProfile = () => {
                 <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <button type="submit"
-                disabled={inquiryLoading || (isAuthenticated && userRecord?.user?.role === 'vendor')}
+                disabled={!userId || inquiryLoading || userRecord?.user?.role === 'vendor'}
                 className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">
                 {inquiryLoading ? 'Sending...' : 'Send Inquiry'}</button>
             </form>

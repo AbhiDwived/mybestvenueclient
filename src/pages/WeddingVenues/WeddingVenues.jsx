@@ -22,7 +22,7 @@ export default function WeddingVenues() {
             <div className="bg-white text-sm rounded-lg p-2 flex flex-col sm:flex-row gap-2 shadow-lg">
               <input
                 type="text"
-                placeholder="Search by name or location..."
+                placeholder="Search..."
                 className="flex-1 border focus:outline-none text-gray-800 p-2 rounded-md"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -32,7 +32,7 @@ export default function WeddingVenues() {
                 className="bg-[#10497a] hover:bg-[#062b4b] text-white px-3 py-2"
               // You can add an onClick here if needed
               >
-                Search Venue
+                Search 
               </button>
             </div>
           </div>

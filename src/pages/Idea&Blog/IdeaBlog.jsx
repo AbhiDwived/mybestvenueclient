@@ -8,32 +8,27 @@ import Loader from "../../components/{Shared}/Loader";
 export default function IdeaBlog() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 6;
-  
-  // Fetch blogs from Admin API
-  const { data: adminBlogsData, isLoading, isError, error } = useGetAllBlogsQuery();
 
-  // Process API data - ensure we're using the admin blogs structure
+  const { data: adminBlogsData, isLoading, isError, error } = useGetAllBlogsQuery();
   const blogs = adminBlogsData?.blogs || [];
 
-  // Format blogs for display
   const formattedBlogs = useMemo(() => {
     return blogs.map((blog) => {
       let imageUrl;
 
       if (blog.featuredImage) {
-        // Check if it's already a full URL
         if (blog.featuredImage.startsWith('http')) {
           imageUrl = blog.featuredImage;
         } else {
-          // For admin blog images, use the full URL from the server
           const baseUrl = import.meta.env.VITE_API_URL.replace('/api/v1', '');
           imageUrl = `${baseUrl}${blog.featuredImage}`;
         }
       } else {
-        imageUrl = IdeaBlogHeader; // Fallback to default image
+        imageUrl = IdeaBlogHeader;
       }
 
       return {
@@ -53,20 +48,17 @@ export default function IdeaBlog() {
     });
   }, [blogs]);
 
-  // Handle navigation to blog details
   const handleReadBlog = (blogId) => {
     navigate(`/blog/${blogId}`);
   };
 
-  // Get unique categories from blogs
   const categories = useMemo(() => {
     const uniqueCategories = [...new Set(formattedBlogs.map(blog => blog.category))];
     return ["All", ...uniqueCategories];
   }, [formattedBlogs]);
 
-  // Featured article (first blog or fallback)
-  const featuredArticle = formattedBlogs.length > 0 ? 
-    { ...formattedBlogs[0], featured: true } : 
+  const featuredArticle = formattedBlogs.length > 0 ?
+    { ...formattedBlogs[0], featured: true } :
     {
       title: "Welcome to Our Blog",
       description: "Discover amazing ideas and tips for your events.",
@@ -77,7 +69,6 @@ export default function IdeaBlog() {
       featured: true
     };
 
-  // Filter logic: category AND search query
   const filteredArticles = formattedBlogs
     .filter(article => {
       const matchesCategory = selectedCategory === "All" || article.category === selectedCategory;
@@ -87,17 +78,14 @@ export default function IdeaBlog() {
       return matchesCategory && matchesSearch;
     });
 
-  // Pagination
   const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
   const paginatedArticles = filteredArticles.slice(0, page * ITEMS_PER_PAGE);
   const hasMore = page * ITEMS_PER_PAGE < filteredArticles.length;
 
-  // Loading state
   if (isLoading) {
     return <Loader fullScreen />;
   }
 
-  // Error state
   if (isError) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -125,140 +113,137 @@ export default function IdeaBlog() {
               type="text"
               placeholder="Search by title or description..."
               className="flex-1 border focus:outline-none text-gray-800 p-2 rounded-md"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setPage(1); // Reset page when searching
-              }}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
             <button
               style={{ borderRadius: '5px' }}
               className="bg-[#10497a] hover:bg-[#062b4b] text-white px-5 py-2"
               onClick={() => {
-                setSearchQuery("");
-                setPage(1); // Reset page when clearing search
+                setSearchQuery(searchInput);
+                setPage(1);
               }}
             >
-              Clear
+              Search
             </button>
+            
           </div>
         </div>
       </div>
 
       {/* Featured Article */}
       {formattedBlogs.length > 0 && (
-      <div className="py-12 bg-white px-4 sm:px-6 lg:px-12">
-        <div 
-          className="grid md:grid-cols-2 gap-8 items-center mb-12 cursor-pointer group"
+        <div className="py-12 bg-white px-4 sm:px-6 lg:px-12">
+          <div
+            className="grid md:grid-cols-2 gap-8 items-center mb-12 cursor-pointer group"
             onClick={() => handleReadBlog(featuredArticle.id)}
-        >
-          <img
-            src={featuredArticle.image}
-            alt={featuredArticle.title}
-            className="w-full h-[320px] sm:h-[400px] lg:h-[420px] object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = IdeaBlogHeader;
-            }}
-          />
-          <div>
-            <span className="inline-block bg-blue-900 text-white px-3 py-1 rounded-full text-sm mb-2">
-              {featuredArticle.category}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2 font-playfair group-hover:text-blue-900 transition-colors">
-              {featuredArticle.title}
-            </h2>
-            <p className="text-gray-600 mb-4 text-base sm:text-lg">{featuredArticle.description}</p>
-            <div className="flex items-center text-sm text-gray-500 mb-4 gap-2 flex-wrap">
-              <Calendar size={16} />
-              <span>{featuredArticle.date}</span>
-              <span>• By {featuredArticle.author}</span>
+          >
+            <img
+              src={featuredArticle.image}
+              alt={featuredArticle.title}
+              className="w-full h-[320px] sm:h-[400px] lg:h-[420px] object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = IdeaBlogHeader;
+              }}
+            />
+            <div>
+              <span className="inline-block bg-blue-900 text-white px-3 py-1 rounded-full text-sm mb-2">
+                {featuredArticle.category}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 font-playfair group-hover:text-blue-900 transition-colors">
+                {featuredArticle.title}
+              </h2>
+              <p className="text-gray-600 mb-4 text-base sm:text-lg">{featuredArticle.description}</p>
+              <div className="flex items-center text-sm text-gray-500 mb-4 gap-2 flex-wrap">
+                <Calendar size={16} />
+                <span>{featuredArticle.date}</span>
+                <span>• By {featuredArticle.author}</span>
+              </div>
+              <button className="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800 transition">
+                Read Article
+              </button>
             </div>
-            <button className="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800 transition">
-              Read Article
-            </button>
           </div>
-        </div>
 
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
-          {categories.map((cat) => (
-            <button
-              key={cat}
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap justify-center gap-3 mb-10">
+            {categories.map((cat) => (
+              <button
+                key={cat}
                 onClick={() => {
                   setSelectedCategory(cat);
-                  setPage(1); // Reset page when changing category
+                  setPage(1);
                 }}
-              style={{borderRadius:'25px', height:'50px'}}
-                className={`border px-4 py-1 text-sm sm:text-base transition ${
-                  selectedCategory === cat
-                  ? "bg-[#062945] text-white "
-                  : "text-gray-800 hover:text-white hover:bg-[#062945]"
-                }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+                style={{ borderRadius: '25px', height: '50px' }}
+                className={`border px-4 py-1 text-sm sm:text-base transition ${selectedCategory === cat
+                    ? "bg-[#062945] text-white"
+                    : "text-gray-800 hover:text-white hover:bg-[#062945]"
+                  }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-        {/* Blog Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Blog Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedArticles.length > 0 ? (
               paginatedArticles.map((post) => (
-              <div 
-                key={post.id} 
-                className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-pointer group"
-                onClick={() => handleReadBlog(post.id)}
-              >
-                <div className="relative overflow-hidden">
-                  <img 
-                    src={post.image} 
-                    alt={post.title} 
-                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = IdeaBlogHeader;
-                    }}
-                  />
-                  <span className="absolute top-3 left-4 bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full capitalize">
-                    {post.category}
-                  </span>
-                </div>
-
-                <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
-                  <div className="mb-4">
-                    <h5 className="text-lg font-playfair font-semibold mb-1 leading-snug group-hover:text-blue-900 transition-colors">
-                      {post.title}
-                    </h5>
-                    <p className="text-sm text-gray-600 mb-5 mt-2 leading-relaxed">
-                      {post.description}
-                    </p>
-                  </div>
-                  <div className="border-t pt-3 mt-auto flex justify-between items-center text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      <span>{post.date}</span>
-                    </div>
-                    <span className="text-blue-900 font-medium group-hover:text-blue-700 transition-colors">
-                      Read More →
+                <div
+                  key={post.id}
+                  className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-pointer group"
+                  onClick={() => handleReadBlog(post.id)}
+                >
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={post.image}
+                      alt={post.title}
+                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = IdeaBlogHeader;
+                      }}
+                    />
+                    <span className="absolute top-3 left-4 bg-blue-900 text-white text-xs font-medium px-2 py-1 rounded-full capitalize">
+                      {post.category}
                     </span>
                   </div>
+
+                  <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
+                    <div className="mb-4">
+                      <h5 className="text-lg font-playfair font-semibold mb-1 leading-snug group-hover:text-blue-900 transition-colors">
+                        {post.title}
+                      </h5>
+                      <p className="text-sm text-gray-600 mb-5 mt-2 leading-relaxed">
+                        {post.description}
+                      </p>
+                    </div>
+                    <div className="border-t pt-3 mt-auto flex justify-between items-center text-sm text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Calendar size={14} />
+                        <span>{post.date}</span>
+                      </div>
+                      <span className="text-blue-900 font-medium group-hover:text-blue-700 transition-colors">
+                        Read More →
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center col-span-full text-gray-600">
-              {formattedBlogs.length === 0 ? 'No blogs available.' : 'No articles found for your search.'}
-            </p>
-          )}
+              ))
+            ) : (
+              <p className="text-center col-span-full text-gray-600">
+                {formattedBlogs.length === 0 ? 'No blogs available.' : 'No articles found for your search.'}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       {/* Load More */}
       {hasMore && (
         <section className="mt-2 mb-8 text-center px-4 sm:px-6 lg:px-12">
-          <button 
+          <button
             onClick={() => setPage(prev => prev + 1)}
             className="inline-block bg-white text-black px-5 py-2 mb-10 border rounded hover:bg-[#09365d] hover:text-white transition-colors duration-300"
           >

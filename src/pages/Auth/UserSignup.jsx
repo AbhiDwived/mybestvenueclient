@@ -24,7 +24,7 @@ const UserSignup = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    window.scrollTo({top:0, category:"top"})
+    window.scrollTo({ top: 0, category: "top" })
     const { name, value, type, checked, files } = e.target;
 
     if (type === 'checkbox') {
@@ -40,8 +40,24 @@ const UserSignup = () => {
     }
   };
 
+  //Define validation function
+  const isValidIndianMobile = (number) => {
+  const invalidNumbers = ['0000000000', '1234567890', '9999999999'];
+  const mobileRegex = /^[6-9]\d{9}$/;
+  return mobileRegex.test(number) && !invalidNumbers.includes(number);
+};
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    //Call validation before submitting
+    const phone = formData.phone.toString();
+
+    if (!isValidIndianMobile(phone)) {
+      toast.error("Please enter a valid Indian mobile number.");
+      return;
+    }
+
 
     if (formData.password !== formData.confirmPassword) {
       toast.error("⚠️ Passwords do not match!");
@@ -147,6 +163,8 @@ const UserSignup = () => {
               <input
                 id="phone"
                 name="phone"
+                type="tel"
+                maxLength={10}
                 placeholder="+91 9876543210"
                 value={formData.phone}
                 onChange={handleChange}

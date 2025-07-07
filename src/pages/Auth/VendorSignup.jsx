@@ -71,10 +71,13 @@ const VendorSignup = () => {
     password: '',
     confirmPassword: '',
     termsAccepted: false,
+    location: '',
+    otherLocation: '',
     serviceAreas: []
   });
 
   const [profilePicture, setProfilePicture] = useState(null);
+  const [phoneError, setPhoneError] = useState('');
   const [userType, setUserType] = useState('vendor');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -99,7 +102,7 @@ const VendorSignup = () => {
 
   const handleChange = (e) => {
     const { name, value, type: inputType, checked } = e.target;
-    
+
     if (name === 'location') {
       if (value === 'Other') {
         setFormData(prev => ({
@@ -125,73 +128,109 @@ const VendorSignup = () => {
     }
   };
 
+
+  //Define validation function
+  const isValidIndianMobile = (number) => {
+    const invalidNumbers = ['0000000000', '1234567890', '9999999999'];
+    const mobileRegex = /^[6-9]\d{9}$/;
+    return mobileRegex.test(number) && !invalidNumbers.includes(number);
+  };
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return;
 
-    // Comprehensive form validation
     const errors = [];
 
-    if (formData.password !== formData.confirmPassword) {
+    // 🔹 Custom Required Fields
+    if (!formData.contactName.trim()) errors.push("Full Name is required");
+    if (!formData.businessName.trim()) errors.push("Business Name is required");
+    if (!formData.email.trim()) errors.push("Email is required");
+    if (!formData.phone.trim()) errors.push("Phone number is required");
+    if (!formData.password.trim()) errors.push("Password is required");
+    if (!formData.confirmPassword.trim()) errors.push("Confirm Password is required");
+
+    // 🔹 Email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+    if (formData.email && !emailRegex.test(formData.email.trim())) {
+      errors.push("Please enter a valid email address");
+    }
+
+    // 🔹 Phone validation
+    const phone = formData.phone.trim();
+    if (!/^[6-9]\d{9}$/.test(phone) || ['1234567890', '0000000000', '9999999999'].includes(phone)) {
+      errors.push("Please enter a valid Indian mobile number.");
+    }
+
+    // 🔹 Password match
+    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
       errors.push("Passwords do not match");
     }
 
+    // 🔹 Vendor type and location
     if (!formData.vendorType) {
-      errors.push('Please select a vendor type');
+      errors.push("Please select a vendor type");
     }
 
-    if (formData.vendorType === 'Other' && !formData.otherVendorType.trim()) {
-      errors.push('Please specify your custom vendor type');
+    if (formData.vendorType === "Other" && !formData.otherVendorType.trim()) {
+      errors.push("Please specify your custom vendor type");
     }
-    
+
     if (!formData.location) {
-      errors.push('Please select a location');
+      errors.push("Please select a location");
     }
-    
-    if (formData.location === 'Other' && !formData.otherLocation.trim()) {
-      errors.push('Please specify your location');
+
+    if (formData.location === "Other" && !formData.otherLocation.trim()) {
+      errors.push("Please specify your location");
     }
 
     if (!formData.termsAccepted) {
-      errors.push('You must accept the terms and conditions');
+      errors.push("You must accept the terms and conditions");
     }
 
-    // Display all validation errors at once
+    // Show errors
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach((err) => toast.error(err));
       return;
     }
 
+
+    if (isLoading) return;
+
     setIsLoading(true);
     const { confirmPassword, otherLocation, location, serviceAreas, ...vendorData } = formData;
-
     const data = new FormData();
-    
-    // Handle basic vendor data
+
     Object.entries(vendorData).forEach(([key, value]) => {
-      if (key === 'vendorType' && vendorData.vendorType === 'Other') {
+      if (key === "vendorType" && vendorData.vendorType === "Other") {
         data.append(key, vendorData.otherVendorType.trim());
-      } else if (key !== 'otherVendorType') {
+      } else if (key === "contactName" || key === "businessName" || key === "email") {
+        data.append(key, value.trim()); // Trim spaces for specific fields
+      } else if (key !== "otherVendorType") {
         data.append(key, value);
       }
     });
-    
-    // Handle serviceAreas and address
-    const selectedLocation = formData.location === 'Other' ? formData.otherLocation : formData.location;
+
+
+    const selectedLocation = formData.location === "Other" ? formData.otherLocation : formData.location;
     if (selectedLocation) {
       const serviceAreasArray = [selectedLocation];
-      data.append('serviceAreas', JSON.stringify(serviceAreasArray));
+      data.append("serviceAreas", JSON.stringify(serviceAreasArray));
+      data.append("address", JSON.stringify({
+        city: selectedLocation,
+        state: "India"
+      }));
     }
 
     if (profilePicture) {
-      data.append('profilePicture', profilePicture);
+      data.append("profilePicture", profilePicture);
     }
 
     try {
-      // Use Promise.race to implement a timeout
       const registrationPromise = registerVendor(data).unwrap();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Registration took too long')), 15000)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Registration took too long")), 15000)
       );
 
       const res = await Promise.race([registrationPromise, timeoutPromise]);
@@ -199,65 +238,57 @@ const VendorSignup = () => {
       if (!isMounted.current) return;
 
       const vendorId = res?.vendor?._id || res?.vendorId;
-
       if (vendorId) {
-        // Immediate success feedback
-        toast.success('Registration successful!', {
-          position: "top-center",
-          autoClose: 2000,
+        toast.success("Registration successful!", {
+          position: "top-right",
+          autoClose: 1000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: false,
           draggable: true,
-          progress: undefined,
+          position: "top-right",
+          closeButton: true,
         });
 
-        // Preload OTP verification page
         const otpVerifyUrl = `/vendor/verify-otp?vendorId=${vendorId}`;
-        
-        // Prefetch the next page
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
+        const link = document.createElement("link");
+        link.rel = "prefetch";
         link.href = otpVerifyUrl;
         document.head.appendChild(link);
 
-        // Slightly delayed navigation to ensure user sees success message
         setTimeout(() => {
-          navigate(otpVerifyUrl, { 
+          navigate(otpVerifyUrl, {
             replace: true,
-            state: { 
-              email: formData.email, 
-              vendorType: formData.vendorType === 'Other' ? formData.otherVendorType : formData.vendorType 
-            }
+            state: {
+              email: formData.email,
+              vendorType: formData.vendorType === "Other" ? formData.otherVendorType : formData.vendorType,
+            },
           });
         }, 2000);
-      } else {
-        toast.error('Registration incomplete. Please try again.', {
-          position: "top-center"
-        });
       }
     } catch (err) {
       if (!isMounted.current) return;
-      
-      // Detailed error handling
-      const errorMessage = err.data?.message || 
-        (err.message === 'Registration took too long' 
-          ? 'Registration is taking longer than expected. Please check your internet connection.' 
-          : 'Registration failed. Please try again.');
-      
+
+      const errorMessage = err.data?.message ||
+        (err.message === "Registration took too long"
+          ? "Registration is taking longer than expected. Please check your internet connection."
+          : "Registration failed. Please try again.");
+
       toast.error(errorMessage, {
-        position: "top-center",
+        position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
+        closeButton: true,
       });
     } finally {
       if (!isMounted.current) return;
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="flex items-center justify-center px-4 mt-6">
@@ -271,17 +302,15 @@ const VendorSignup = () => {
           <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-md">
             <button
               onClick={() => handleUserTypeSwitch('couple')}
-              className={`flex-1 py-1 px-4 rounded-md transition-all ${
-                userType === 'couple' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`flex-1 py-1 px-4 rounded-md transition-all ${userType === 'couple' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               User
             </button>
             <button
               onClick={() => handleUserTypeSwitch('vendor')}
-              className={`flex-1 py-1 px-4 rounded-md transition-all ${
-                userType === 'vendor' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`flex-1 py-1 px-4 rounded-md transition-all ${userType === 'vendor' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               Vendor
             </button>
@@ -397,8 +426,11 @@ const VendorSignup = () => {
                 onChange={handleChange}
                 placeholder="you@example.com"
                 required
+                pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                title="Please enter a valid email address (e.g. user@example.com)"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+
             </div>
 
             <div>
@@ -407,6 +439,7 @@ const VendorSignup = () => {
                 id="phone"
                 name="phone"
                 type="tel"
+                maxLength={10}
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="+91 9876543210"
@@ -516,30 +549,30 @@ const VendorSignup = () => {
               type="submit"
               disabled={isLoading}
               className={`w-full py-2 px-4 mt-2 text-white font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-[#0F4C81] 
-                ${isLoading 
-                  ? 'bg-gray-400 cursor-not-allowed' 
+                ${isLoading
+                  ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-[#0F4C81] hover:bg-[#0D3F6A]'
                 }`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
-                  <svg 
-                    className="animate-spin h-5 w-5 mr-3" 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
+                  <svg
+                    className="animate-spin h-5 w-5 mr-3"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
                     viewBox="0 0 24 24"
                   >
-                    <circle 
-                      className="opacity-25" 
-                      cx="12" 
-                      cy="12" 
-                      r="10" 
-                      stroke="currentColor" 
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
                       strokeWidth="4"
                     ></circle>
-                    <path 
-                      className="opacity-75" 
-                      fill="currentColor" 
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
@@ -558,7 +591,10 @@ const VendorSignup = () => {
             </Link>
           </p>
 
-          <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />
+          <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick
+
+            hideProgressBar={false}
+            draggable />
         </div>
       </div>
     </div>
