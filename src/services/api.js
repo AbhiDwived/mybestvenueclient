@@ -145,3 +145,6 @@ export const apiSlice = createApi({
   ],
   endpoints: () => ({}),
 });
+
+// Export the api instance for use in other files
+export const api = apiSlice;

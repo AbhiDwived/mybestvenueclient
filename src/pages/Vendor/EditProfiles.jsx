@@ -111,7 +111,9 @@ const EditProfile = () => {
   const [contactName, setcontactName] = useState('');
   const [address, setAddress] = useState('');
   const [services, setServices] = useState(['']);
-  
+  // const [pricingRange, setPricingRange] = useState([
+  //   { type: '', price: '', unit: 'per plate' }
+  // ]);
 
 
   const fileInputRef = useRef(null);
@@ -129,7 +131,34 @@ const EditProfile = () => {
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
       setCoverImage(vendor.profilePicture || null);
-      setAddress(vendor.address || 'New Delhi, India');
+      
+      // Initialize address from API data first, then fallback to vendor state
+      const apiAddress = data?.vendor?.address;
+      const vendorAddress = vendor.address;
+      
+      if (typeof apiAddress === 'string') {
+        setAddress(apiAddress);
+      } else if (typeof vendorAddress === 'string') {
+        setAddress(vendorAddress);
+      } else if (apiAddress && typeof apiAddress === 'object') {
+        // Handle legacy object format - convert to string
+        const addressParts = [];
+        if (apiAddress.street) addressParts.push(apiAddress.street);
+        if (apiAddress.city) addressParts.push(apiAddress.city);
+        if (apiAddress.state) addressParts.push(apiAddress.state);
+        if (apiAddress.zipCode) addressParts.push(apiAddress.zipCode);
+        setAddress(addressParts.join(', ') || 'New Delhi, India');
+      } else if (vendorAddress && typeof vendorAddress === 'object') {
+        // Handle legacy object format - convert to string
+        const addressParts = [];
+        if (vendorAddress.street) addressParts.push(vendorAddress.street);
+        if (vendorAddress.city) addressParts.push(vendorAddress.city);
+        if (vendorAddress.state) addressParts.push(vendorAddress.state);
+        if (vendorAddress.zipCode) addressParts.push(vendorAddress.zipCode);
+        setAddress(addressParts.join(', ') || 'New Delhi, India');
+      } else {
+        setAddress('New Delhi, India');
+      }
       // setServices(data?.vendor.services || 'Photographers,Gifts');
       const servicesData = data?.vendor?.services;
       if (Array.isArray(servicesData)) {
@@ -142,25 +171,30 @@ const EditProfile = () => {
 
       }
 
+      const pricingData = data?.vendor?.pricing;
+      // console.log("pricingData", pricingData);
 
 
-    }
-}, [vendor, data]);
-
-
-  useEffect(() => {
-    if (data?.vendor) {
-      const pricingData = data.vendor.pricing;
-
-      if (Array.isArray(pricingData) && pricingData.length > 0) {
-        setPriceRange(pricingData.map(item => ({ ...item, isNew: false })));
+      if (data?.vendor?.pricing && Array.isArray(data?.vendor.pricing)) {
+        // setPriceRange(vendor.pricing); 
+        setPriceRange(data?.vendor?.pricing.map(item => ({ ...item, isNew: false })));
       } else {
-        // This will make sure even when no pricing is present, a default input is shown
-        setPriceRange([{ type: '', price: '', unit: 'per plate', isNew: true }]);
+        setPriceRange([{ type: '', price: '', unit: 'per plate' }]); 
       }
     }
-  }, [data?.vendor?.pricing]);
 
+
+
+
+
+  }, [vendor, data]);
+
+  // Additional useEffect to handle address updates when API data loads
+  useEffect(() => {
+    if (data?.vendor?.address && typeof data.vendor.address === 'string') {
+      setAddress(data.vendor.address);
+    }
+  }, [data?.vendor?.address]);
 
 
 
@@ -343,6 +377,14 @@ const EditProfile = () => {
     setPriceRange(updated);
   };
 
+  // const handleAddPricing = () => {
+  //   // setPriceRange([...priceRange, { type: '', price: '', unit: 'per plate' }]);
+
+  //   setPriceRange([
+  //   ...priceRange,
+  //   { type: '', price: '', unit: 'per plate', isNew: true }
+  // ]);
+  // };
 
 
   const handleAddPricing = () => {
@@ -353,11 +395,9 @@ const EditProfile = () => {
   };
 
   const handleRemovePricing = (index) => {
-    if (priceRange.length <= 1) return; // prevent deletion of the only row
-    setPriceRange(priceRange.filter((_, i) => i !== index));
+    const updated = priceRange.filter((_, i) => i !== index);
+    setPriceRange(updated);
   };
-
-
 
 
   if (!isAuthenticated || !vendorId) {
@@ -421,7 +461,7 @@ const EditProfile = () => {
                 </select>
               </div>
 
-              <div className="mb-3">
+            <div className="mb-3">
                 <label className="form-label">Services</label>
                 {(services.length > 0 ? services : ['']).map((service, index) => (
                   <div key={index} className="d-flex align-items-center gap-2 mb-2">
@@ -462,10 +502,11 @@ const EditProfile = () => {
 
 
               <div className="mb-3">
-
+                
                 <label className="form-label">Price Range</label>
 
                 {priceRange.map((item, index) => (
+                  
                   <div key={index} className="d-flex gap-2 mb-2 align-items-center">
 
                     <input
@@ -496,7 +537,7 @@ const EditProfile = () => {
                       <option value="per person" />
                     </datalist>
 
-                    {/* Show Add Button only on the last row */}
+                    {/* Show + button only on the last item */}
                     {index === priceRange.length - 1 && (
                       <button
                         type="button"
@@ -509,8 +550,8 @@ const EditProfile = () => {
                       </button>
                     )}
 
-                    {/* Show Remove Button only if it's NOT the first item */}
-                    {index !== 0 && (
+                    {/* Show remove button only if it's a newly added row */}
+                    {item.isNew && (
                       <button
                         type="button"
                         className="btn btn-outline-danger"
@@ -522,7 +563,6 @@ const EditProfile = () => {
                     )}
                   </div>
                 ))}
-
               </div>
 
 

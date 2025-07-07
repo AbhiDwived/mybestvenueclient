@@ -19,7 +19,7 @@ import FaqQuestions from './FaqQuestions';
 import { FaArrowLeft } from "react-icons/fa";
 import { useSelector } from 'react-redux';
 import Loader from '../../../components/{Shared}/Loader';
-import { useAddUserInquiryMessageMutation } from '../../../features/auth/authAPI';
+import { useCreateAnonymousInquiryMutation } from '../../../features/inquiries/inquiryAPI';
 import { ImCross } from 'react-icons/im';
 import { useGetPortfolioImagesQuery, useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
 
@@ -224,7 +224,7 @@ const PreviewProfile = () => {
   });
 
   const [inquiryLoading, setInquiryLoading] = useState(false);
-  const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
+  const [createAnonymousInquiry] = useCreateAnonymousInquiryMutation();
 
   const userRecord = useSelector((state) => state.auth);
   const userId = userRecord?.user?.id;
@@ -240,26 +240,21 @@ const PreviewProfile = () => {
   const handleInquirySubmit = async (e) => {
     e.preventDefault();
 
-    if (!userId) {
-      toast.error('Please login to send an inquiry');
-      return;
-    }
-
-    if (userRecord?.user?.role === 'vendor') {
-      toast.error('Vendors cannot send inquiries');
-      return;
-    }
-
     // Validate required fields
     if (!inquiryForm.name || !inquiryForm.email || !inquiryForm.phone || !inquiryForm.message) {
       toast.error('Please fill in all required fields');
       return;
     }
 
+    // If user is logged in and is a vendor, prevent them from sending inquiries
+    if (isAuthenticated && userRecord?.user?.role === 'vendor') {
+      toast.error('Vendors cannot send inquiries');
+      return;
+    }
+
     setInquiryLoading(true);
     try {
-      await addUserInquiryMessage({
-        userId,
+      await createAnonymousInquiry({
         vendorId: vendorData._id,
         name: inquiryForm.name,
         email: inquiryForm.email,
@@ -917,7 +912,7 @@ const PreviewProfile = () => {
                 <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <button type="submit"
-                disabled={!userId || inquiryLoading || userRecord?.user?.role === 'vendor'}
+                disabled={inquiryLoading || (isAuthenticated && userRecord?.user?.role === 'vendor')}
                 className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">
                 {inquiryLoading ? 'Sending...' : 'Send Inquiry'}</button>
             </form>

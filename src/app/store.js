@@ -24,6 +24,7 @@ import { savedVendorApi } from '../features/savedVendors/savedVendorAPI';  // Sa
 import { guestApi } from '../features/guests/guestAPI';  // Guest API
 import { subscriberApi } from '../features/subscribers/subscriberAPI';
 import { eventApi } from '../features/events/eventAPI';  // Event API
+import { inquiryAPI } from '../features/inquiries/inquiryAPI';  // Inquiry API
 
 export const store = configureStore({
   reducer: {
@@ -49,6 +50,7 @@ export const store = configureStore({
     [guestApi.reducerPath]: guestApi.reducer,            // Guest API reducer
     [subscriberApi.reducerPath]: subscriberApi.reducer,
     [eventApi.reducerPath]: eventApi.reducer,            // Event API reducer
+
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

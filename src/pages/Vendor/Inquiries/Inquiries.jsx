@@ -3,25 +3,37 @@ import { FaChevronDown } from "react-icons/fa";
 import { RiCheckboxCircleFill } from "react-icons/ri";
 import InquiryReply from './InquiryReply';
 import { useSelector } from 'react-redux';
-import { useUserInquiryListQuery } from "../../../features/vendors/vendorAPI";
+import { useGetVendorInquiriesQuery } from "../../../features/inquiries/inquiryAPI";
 import { toast } from 'react-toastify';
+import { FaUser, FaUserSecret } from 'react-icons/fa';
 
 const InquiriesSection = () => {
   const [filter, setFilter] = useState('All');
   const [showFilter, setShowFilter] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [inquiryType, setInquiryType] = useState('all'); // 'all', 'logged-in', 'anonymous'
 
   const vendor = useSelector((state) => state.vendor.vendor);
   
-  const { data, isLoading, isError, error, refetch } = useUserInquiryListQuery(undefined, {
-    // The query will use the auth token from the state, so we don't need to pass vendorId
+  const { data, isLoading, isError, error, refetch } = useGetVendorInquiriesQuery(vendor?._id, {
+    skip: !vendor?._id,
     refetchOnMountOrArgChange: true
   });
   
-  const inquiries = data?.modifiedList || [];
+  const userInquiries = data?.data?.userInquiries || [];
+  const anonymousInquiries = data?.data?.anonymousInquiries || [];
+  
+  // Combine all inquiries for filtering
+  const allInquiries = [
+    ...userInquiries.map(inquiry => ({ ...inquiry, type: 'logged-in' })),
+    ...anonymousInquiries.map(inquiry => ({ ...inquiry, type: 'anonymous' }))
+  ];
 
-  const filteredInquiries =
-    filter === 'All' ? inquiries : inquiries.filter((i) => i.replyStatus === filter);
+  const filteredInquiries = allInquiries.filter(inquiry => {
+    const statusMatch = filter === 'All' || inquiry.replyStatus === filter || inquiry.status === filter;
+    const typeMatch = inquiryType === 'all' || inquiry.type === inquiryType;
+    return statusMatch && typeMatch;
+  });
 
   if (!vendor) {
     return (
@@ -55,6 +67,10 @@ const InquiriesSection = () => {
     );
   }
 
+  const totalInquiries = allInquiries.length;
+  const pendingInquiries = allInquiries.filter(i => (i.replyStatus || i.status) === 'Pending').length;
+  const repliedInquiries = allInquiries.filter(i => (i.replyStatus || i.status) === 'Replied').length;
+
   return (
     <div className="p-2 grid grid-cols-1 lg:grid-cols-3 gap-6 bg-gray-50 min-h-screen font-serif">
       {/* Summary Section */}
@@ -64,39 +80,38 @@ const InquiriesSection = () => {
           <ul className="text-sm space-y-2 mt-2">
             <li className="flex items-center justify-between">
               <p>Total Inquiries</p>
-              <strong className="text-black">{inquiries.length}</strong>
+              <strong className="text-black">{totalInquiries}</strong>
+            </li>
+            <li className="flex items-center justify-between">
+              <p>Logged-in Users</p>
+              <strong className="text-blue-500">{userInquiries.length}</strong>
+            </li>
+            <li className="flex items-center justify-between">
+              <p>Anonymous Users</p>
+              <strong className="text-orange-500">{anonymousInquiries.length}</strong>
             </li>
             <li className="flex items-center justify-between">
               <p>Pending Reply</p>
-              <strong className="text-yellow-500">
-                {inquiries.filter((i) => i.replyStatus === 'Pending').length}
-              </strong>
+              <strong className="text-yellow-500">{pendingInquiries}</strong>
             </li>
             <li className="flex items-center justify-between">
               <p>Replied</p>
-              <strong className="text-green-500">
-                {inquiries.filter((i) => i.replyStatus === 'Replied').length}
-              </strong>
+              <strong className="text-green-500">{repliedInquiries}</strong>
             </li>
           </ul>
           <hr className="my-3" />
           <div>
             <p className="text-sm">Response Rate</p>
             <p className="text-right text-sm font-bold text-gray-600 mb-1">
-              {inquiries.length > 0
-                ? `${Math.round(
-                  (inquiries.filter((i) => i.replyStatus === 'Replied').length / inquiries.length) * 100
-                )}%`
+              {totalInquiries > 0
+                ? `${Math.round((repliedInquiries / totalInquiries) * 100)}%`
                 : '0%'}
             </p>
             <div className="w-full h-4 bg-gray-200 rounded-full">
               <div
                 className="h-4 bg-[#0f4c81] rounded-full"
                 style={{
-                  width: `${inquiries.length > 0
-                    ? (inquiries.filter((i) => i.replyStatus === 'Replied').length / inquiries.length) * 100
-                    : 0
-                    }%`,
+                  width: `${totalInquiries > 0 ? (repliedInquiries / totalInquiries) * 100 : 0}%`,
                 }}
               ></div>
             </div>
@@ -127,6 +142,7 @@ const InquiriesSection = () => {
         {selectedInquiry ? (
           <InquiryReply 
             inquiry={selectedInquiry} 
+            inquiryType={inquiryType}
             onBack={() => setSelectedInquiry(null)} 
           />
         ) : (
@@ -136,29 +152,36 @@ const InquiriesSection = () => {
                 <h2 className="font-semibold text-lg">Client Inquiries</h2>
                 <p className="text-sm text-gray-600">Manage and respond to client messages</p>
               </div>
-              <div className="relative">
-                <button
-                  onClick={() => setShowFilter(!showFilter)}
-                  className="flex items-center px-3 py-1 border border-gray-300 rounded text-sm"
-                >
-                  Filter: {filter} <FaChevronDown className="ml-2 h-4 w-4" />
-                </button>
-                {showFilter && (
-                  <div className="absolute right-0 mt-2 bg-white border rounded shadow z-10">
-                    {['All', 'Pending', 'Replied'].map((opt) => (
-                      <div
-                        key={opt}
-                        onClick={() => {
-                          setFilter(opt);
-                          setShowFilter(false);
-                        }}
-                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                      >
-                        {opt}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="flex gap-2">
+                {/* Type Filter */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFilter(!showFilter)}
+                    className="flex items-center px-3 py-1 border border-gray-300 rounded text-sm"
+                  >
+                    Type: {inquiryType === 'all' ? 'All' : inquiryType === 'logged-in' ? 'Logged-in' : 'Anonymous'} <FaChevronDown className="ml-2 h-4 w-4" />
+                  </button>
+                  {showFilter && (
+                    <div className="absolute right-0 mt-2 bg-white border rounded shadow z-10">
+                      {[
+                        { value: 'all', label: 'All Types' },
+                        { value: 'logged-in', label: 'Logged-in Users' },
+                        { value: 'anonymous', label: 'Anonymous Users' }
+                      ].map((opt) => (
+                        <div
+                          key={opt.value}
+                          onClick={() => {
+                            setInquiryType(opt.value);
+                            setShowFilter(false);
+                          }}
+                          className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                        >
+                          {opt.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -172,32 +195,69 @@ const InquiriesSection = () => {
                 filteredInquiries.map((inquiry) => (
                   <div
                     key={inquiry._id}
-                    className={`p-4 border rounded ${inquiry.replyStatus === 'Replied'
+                    className={`p-4 border rounded ${(inquiry.replyStatus || inquiry.status) === 'Replied'
                       ? 'border-green-100 bg-green-50'
                       : 'border-yellow-200 bg-yellow-50'
                       }`}
                   >
-                      <p className="text-sm text-gray-600">UserId:{inquiry.userId}</p>
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium text-md">{inquiry.name}</h3>
+                      <div className="flex items-center gap-2">
+                        {inquiry.type === 'logged-in' ? (
+                          <FaUser className="text-blue-500" />
+                        ) : (
+                          <FaUserSecret className="text-orange-500" />
+                        )}
+                        <h3 className="font-medium text-md">{inquiry.name || inquiry.userId?.name}</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                          inquiry.type === 'logged-in' 
+                            ? 'bg-blue-100 text-blue-700' 
+                            : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {inquiry.type === 'logged-in' ? 'Logged-in' : 'Anonymous'}
+                        </span>
+                      </div>
                       <span
-                        className={`text-xs px-2 py-1 rounded-full font-semibold ${inquiry.replyStatus === 'Replied'
+                        className={`text-xs px-2 py-1 rounded-full font-semibold ${(inquiry.replyStatus || inquiry.status) === 'Replied'
                           ? 'bg-green-100 text-green-700'
                           : 'bg-yellow-100 text-yellow-700'
                           }`}
                       >
-                        {inquiry.replyStatus}
+                        {inquiry.replyStatus || inquiry.status}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-700 mb-2">
-                      {inquiry.userMessage?.[inquiry.userMessage.length - 1]?.message}
+
+                    {/* Inquiry Details */}
+                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-700 mb-2">
+                      <div>
+                        <span className="font-medium">Email:</span> {inquiry.email || inquiry.userId?.email}
+                      </div>
+                      <div>
+                        <span className="font-medium">Phone:</span> {inquiry.phone || inquiry.userId?.phone}
+                      </div>
+                      {inquiry.weddingDate && (
+                        <div className="col-span-2">
+                          <span className="font-medium">Wedding Date:</span> {inquiry.weddingDate}
+                        </div>
+                      )}
                     </div>
+
+                    <div className="text-sm text-gray-700 mb-2">
+                      <span className="font-medium">Message:</span> {inquiry.message || inquiry.userMessage?.[inquiry.userMessage.length - 1]?.message}
+                    </div>
+
+                    <div className="text-xs text-gray-500 mb-2">
+                      Received: {new Date(inquiry.createdAt).toLocaleDateString()}
+                    </div>
+
                     <div className="mt-2 flex justify-end">
                       <button
                         className="text-sm text-gray-700 hover:underline"
-                        onClick={() => setSelectedInquiry(inquiry)}
+                        onClick={() => {
+                          setSelectedInquiry(inquiry);
+                          setInquiryType(inquiry.type);
+                        }}
                       >
-                        {inquiry.replyStatus === 'Replied' ? 'View Details' : 'Reply Now'}
+                        {(inquiry.replyStatus || inquiry.status) === 'Replied' ? 'View Details' : 'Reply Now'}
                       </button>
                     </div>
                   </div>
