@@ -178,8 +178,17 @@ const UserProfile = () => {
   // Handle password update
   const handlePasswordUpdate = async () => {
     try {
-      if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      if (
+        !passwordData.currentPassword ||
+        !passwordData.newPassword ||
+        !passwordData.confirmPassword
+      ) {
         toast.error("All password fields are required");
+        return;
+      }
+
+      if (passwordData.currentPassword === passwordData.newPassword) {
+        toast.error("New password must be different from current password");
         return;
       }
 
@@ -211,7 +220,6 @@ const UserProfile = () => {
       toast.error(error?.data?.message || "Failed to update password");
     }
   };
-
   if (!isAuthenticated) {
     return <p>Please log in to view your profile.</p>;
   }

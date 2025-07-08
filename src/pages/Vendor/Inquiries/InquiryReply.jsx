@@ -5,32 +5,41 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { FaUser, FaUserSecret } from 'react-icons/fa';
 
-const InquiryReply = ({ inquiry, inquiryType, onBack }) => {
+const InquiryReply = ({ inquiry, onBack }) => {
   const [replyToInquiry, { isLoading }] = useReplyToInquiryMutation();
   const vendor = useSelector((state) => state.vendor.vendor);
   const [replyText, setReplyText] = useState("");
+  const [activeMessageId, setActiveMessageId] = useState(null);
+
+  // Determine if inquiry is anonymous (no userId)
+  const isAnonymous = !inquiry.userId;
 
   // Format date safely
   const formatDate = (date) => {
     return date ? moment(date).format("DD/MM/YYYY hh:mm") : "N/A";
   };
 
-  const handleSendReply = async () => {
+  // For threaded reply (logged-in user)
+  const handleSendReply = async (messageData) => {
     if (!replyText.trim()) {
       toast.error("Please type a reply before sending.");
       return;
     }
-
     const payload = {
       inquiryId: inquiry._id,
-      inquiryType: inquiryType,
-      message: replyText
+      inquiryType: isAnonymous ? 'anonymous' : 'logged-in',
+      message: replyText,
+      // For logged-in user, reply to a specific message
+      ...(messageData && !isAnonymous ? {
+        userId: inquiry.userId?._id || inquiry.userId,
+        messageId: messageData?._id
+      } : {})
     };
-
     try {
       await replyToInquiry(payload).unwrap();
       toast.success("Reply sent successfully!");
       setReplyText("");
+      setActiveMessageId(null);
       onBack(); // Go back to list to refresh
     } catch (error) {
       toast.error(error.data?.message || "Failed to send reply");
@@ -38,24 +47,13 @@ const InquiryReply = ({ inquiry, inquiryType, onBack }) => {
   };
 
   const handleUseTemplate = () => {
-    const template = `Thank you for your interest in our services! We would love to be a part of your special day.
-
-For the date you mentioned, we are available and offer several packages:
-
-- Basic: ₹10,000 (4 hours coverage)
-- Standard: ₹25,000 (Full day)
-- Premium: ₹50,000 (Full day + Pre-wedding)
-
-Please let me know if you'd like to schedule a call to discuss further details or have any questions.
-
-Best regards,
-${vendor?.businessName || 'Your Business Name'}`;
+    const template = `Thank you for your interest in our services! We would love to be a part of your special day.\n\nFor the date you mentioned, we are available and offer several packages:\n\n- Basic: ₹10,000 (4 hours coverage)\n- Standard: ₹25,000 (Full day)\n- Premium: ₹50,000 (Full day + Pre-wedding)\n\nPlease let me know if you'd like to schedule a call to discuss further details or have any questions.\n\nBest regards,\n${vendor?.businessName || 'Your Business Name'}`;
     setReplyText(template);
   };
 
   // Get inquiry details based on type
   const getInquiryDetails = () => {
-    if (inquiryType === 'anonymous') {
+    if (isAnonymous) {
       return {
         name: inquiry.name,
         email: inquiry.email,
@@ -83,22 +81,24 @@ ${vendor?.businessName || 'Your Business Name'}`;
   const details = getInquiryDetails();
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-md shadow border font-serif">
+    <div className="max-w-4xl mx-auto p-3 bg-white rounded-md shadow border font-serif">
       <div className="flex justify-between items-start mb-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            {inquiryType === 'logged-in' ? (
-              <FaUser className="text-blue-500" />
-            ) : (
+            {isAnonymous ? (
               <FaUserSecret className="text-orange-500" />
+            ) : (
+              <FaUser className="text-blue-500" />
             )}
-            <h2 className="text-xl font-semibold">Reply to Inquiry</h2>
+            <h2 className="text-xl font-semibold">
+              {isAnonymous ? 'Inquiry Details' : 'Reply to Inquiry'}
+            </h2>
             <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-              inquiryType === 'logged-in' 
-                ? 'bg-blue-100 text-blue-700' 
-                : 'bg-orange-100 text-orange-700'
+              isAnonymous
+                ? 'bg-orange-100 text-orange-700'
+                : 'bg-blue-100 text-blue-700'
             }`}>
-              {inquiryType === 'logged-in' ? 'Logged-in User' : 'Anonymous User'}
+              {isAnonymous ? 'Anonymous User' : 'Logged-in User'}
             </span>
           </div>
           <p className="text-sm text-gray-600">
@@ -114,9 +114,9 @@ ${vendor?.businessName || 'Your Business Name'}`;
       </div>
 
       {/* Inquiry Details */}
-      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+      <div className="bg-gray-50 p-2 rounded-lg mb-4">
         <h3 className="font-semibold text-lg mb-3">Inquiry Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
           <div>
             <span className="font-medium">Name:</span> {details.name}
           </div>
@@ -144,65 +144,104 @@ ${vendor?.businessName || 'Your Business Name'}`;
         </div>
       </div>
 
-      {/* Message Thread */}
-      <div className="space-y-4">
-        {/* Original Message */}
-        <div className="border-b pb-4">
-          <div className="bg-gray-100 p-3 rounded-lg max-w-[80%]">
-            <p className="text-gray-800">{details.message}</p>
-            <span className="text-xs text-gray-500 block mt-1">
-              {formatDate(details.createdAt)}
-            </span>
-          </div>
-        </div>
+      {/* Message Thread for logged-in user inquiries */}
+      {!isAnonymous ? (
+        <div className="space-y-2">
+          {inquiry?.userMessage?.map((msg, i) => (
+            <div key={i} className="border-b pb-2 last:border-b-0">
+              <div className="bg-gray-100 p-2 rounded-lg max-w-[80%]">
+                <p className="text-gray-800">{msg?.message}</p>
+                <span className="text-xs text-gray-500 block mt-1">
+                  {formatDate(msg?.createdAt)}
+                </span>
+              </div>
 
-        {/* Vendor Reply (if exists) */}
-        {details.vendorReply?.message && (
-          <div className="flex justify-end">
-            <div className="bg-sky-100 p-3 rounded-lg max-w-[80%]">
-              <p className="text-gray-800">{details.vendorReply.message}</p>
+              {msg?.vendorReply?.message && (
+                <div className="flex justify-end mt-1">
+                  <div className="bg-sky-100 p-2 rounded-lg max-w-[80%]">
+                    <p className="text-gray-800">{msg?.vendorReply?.message}</p>
+                    <span className="text-xs text-gray-500 block mt-1">
+                      {formatDate(msg?.vendorReply?.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {!msg?.vendorReply?.message && (
+                <div className="mt-2">
+                  {activeMessageId === msg._id ? (
+                    <>
+                      <textarea
+                        className="w-full border rounded p-2 text-sm min-h-[80px] focus:outline-none focus:ring focus:border-blue-300"
+                        placeholder="Type your response here..."
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                      />
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button
+                          className={`text-white px-3 py-1 rounded bg-[#0f4c81] text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          onClick={() => handleSendReply(msg)}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? 'Sending...' : 'Send Reply'}
+                        </button>
+                        <button
+                          className="border px-3 py-1 rounded text-sm hover:bg-[#DEBF78]"
+                          onClick={handleUseTemplate}
+                          disabled={isLoading}
+                        >
+                          Use Template
+                        </button>
+                        <button
+                          className="border px-3 py-1 rounded text-sm hover:bg-gray-100"
+                          onClick={() => {
+                            setActiveMessageId(null);
+                            setReplyText("");
+                          }}
+                          disabled={isLoading}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <button
+                      className="text-[#0f4c81] text-sm hover:underline"
+                      onClick={() => setActiveMessageId(msg._id)}
+                    >
+                      Reply to this message
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        // Anonymous inquiry: show only details and original message
+        <div className="space-y-2">
+          {/* Original Message */}
+          <div className="border-b pb-2">
+            <div className="bg-gray-100 p-2 rounded-lg max-w-[80%]">
+              <p className="text-gray-800">{details.message}</p>
               <span className="text-xs text-gray-500 block mt-1">
-                {formatDate(details.vendorReply.createdAt)}
+                {formatDate(details.createdAt)}
               </span>
             </div>
           </div>
-        )}
-
-        {/* Reply Form */}
-        {details.status !== 'Replied' && (
-          <div className="mt-4">
-            <textarea
-              className="w-full border rounded p-3 text-sm min-h-[100px] focus:outline-none focus:ring focus:border-blue-300"
-              placeholder="Type your response here..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-            />
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                className={`text-white px-4 py-2 rounded bg-[#0f4c81] text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                onClick={handleSendReply}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Sending...' : 'Send Reply'}
-              </button>
-              <button
-                className="border px-4 py-2 rounded text-sm hover:bg-[#DEBF78]"
-                onClick={handleUseTemplate}
-                disabled={isLoading}
-              >
-                Use Template
-              </button>
-              <button
-                className="border px-4 py-2 rounded text-sm hover:bg-gray-100"
-                onClick={() => setReplyText("")}
-                disabled={isLoading}
-              >
-                Clear
-              </button>
+          {/* Vendor Reply (if exists) */}
+          {details.vendorReply?.message && (
+            <div className="flex justify-end">
+              <div className="bg-sky-100 p-2 rounded-lg max-w-[80%]">
+                <p className="text-gray-800">{details.vendorReply.message}</p>
+                <span className="text-xs text-gray-500 block mt-1">
+                  {formatDate(details.vendorReply.createdAt)}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

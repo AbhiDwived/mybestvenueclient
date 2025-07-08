@@ -33,6 +33,18 @@ import Musics from './Music';
 
 // Data
 const vendorCategories = [
+
+  { title: 'Choreographers', icon: Activity },
+  { title: 'Photobooth', icon: MdAddAPhoto },
+  { title: 'DJ', icon: SiPioneerdj },
+  { title: 'Cakes', icon: BsCake2 },
+  { title: 'Musics', icon: Music },
+  { title: 'TentHouse', icon: Tent },
+  { title: 'Transportation', icon: MdEmojiTransportation },
+  { title: 'Videography', icon: Video },
+];
+
+const additionalServices = [
   { title: 'Photographers', icon: Camera },
   { title: 'Caterers', icon: Utensils },
   { title: 'Wedding Decorators', icon: Gift },
@@ -42,17 +54,6 @@ const vendorCategories = [
   { title: 'Gifts', icon: Gift },
   { title: 'Florist', icon: BiSolidFlorist },
   { title: 'Invitation', icon: MdInsertInvitation },
-];
-
-const additionalServices = [
-  { title: 'Choreographers', icon: Activity },
-  { title: 'Photobooth', icon: MdAddAPhoto },
-  { title: 'DJ', icon: SiPioneerdj },
-  { title: 'Cakes', icon: BsCake2 },
-  { title: 'Musics', icon: Music },
-  { title: 'TentHouse', icon: Tent },
-  { title: 'Transportation', icon: MdEmojiTransportation },
-  { title: 'Videography', icon: Video },
 ];
 
 const categoryComponents = {
@@ -144,7 +145,7 @@ export default function WeddingVendor() {
             <div className="w-full max-w-2xl bg-white text-sm rounded-lg p-2 flex flex-col sm:flex-row gap-2 shadow-lg">
               <input
                 type="text"
-                placeholder="Search by name or location..."
+                placeholder="Search..."
                 className="flex-1 border focus:outline-none text-gray-800 p-2 rounded-md"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -153,7 +154,7 @@ export default function WeddingVendor() {
                 style={{ borderRadius: '5px' }}
                 className="bg-[#10497a] hover:bg-[#062b4b] text-white px-3 py-2"
               >
-                Search Venue
+                Search
               </button>
             </div>
           </div>

@@ -298,9 +298,9 @@ const BookingBudget = () => {
     <div className="min-h-screen p-2 mt-3 md:p-6 lg:mx-3">
       <div className="">
         {/* Header */}
-        <div className="text-center space-y-2 ">
+        <div className="text-center space-y-2 mb-3">
           <h3 className="font-bold mb-3 text-gray-800 flex items-left  gap-2">
-            <DollarSign className="h-7 w-7 " />
+            
             Booking Budget Summary
           </h3>
         </div>
@@ -411,7 +411,7 @@ const BookingBudget = () => {
               </div>
               <div className="space-y-2">
                 <label htmlFor="eventType" className="block text-sm font-medium text-gray-700">
-                  Event Type <span className="text-red-500">*</span>
+                  Event Type 
                 </label>
                 <select
                   id="eventType"
@@ -455,7 +455,7 @@ const BookingBudget = () => {
               </div>
               <div className="space-y-2">
                 <label htmlFor="plannedAmount" className="block text-sm font-medium text-gray-700">
-                  Final Amount (₹) <span className="text-red-500">*</span>
+                  Final Amount 
                 </label>
                 <input
                   id="plannedAmount"

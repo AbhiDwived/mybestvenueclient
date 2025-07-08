@@ -102,7 +102,7 @@ const VendorSignup = () => {
 
   const handleChange = (e) => {
     const { name, value, type: inputType, checked } = e.target;
-
+    
     if (name === 'location') {
       if (value === 'Other') {
         setFormData(prev => ({
@@ -176,11 +176,11 @@ const VendorSignup = () => {
     if (formData.vendorType === "Other" && !formData.otherVendorType.trim()) {
       errors.push("Please specify your custom vendor type");
     }
-
+    
     if (!formData.location) {
       errors.push("Please select a location");
     }
-
+    
     if (formData.location === "Other" && !formData.otherLocation.trim()) {
       errors.push("Please specify your location");
     }
@@ -201,7 +201,7 @@ const VendorSignup = () => {
     setIsLoading(true);
     const { confirmPassword, otherLocation, location, serviceAreas, ...vendorData } = formData;
     const data = new FormData();
-
+    
     Object.entries(vendorData).forEach(([key, value]) => {
       if (key === "vendorType" && vendorData.vendorType === "Other") {
         data.append(key, vendorData.otherVendorType.trim());
@@ -211,7 +211,7 @@ const VendorSignup = () => {
         data.append(key, value);
       }
     });
-
+    
 
     const selectedLocation = formData.location === "Other" ? formData.otherLocation : formData.location;
     if (selectedLocation) {
@@ -225,7 +225,7 @@ const VendorSignup = () => {
 
     try {
       const registrationPromise = registerVendor(data).unwrap();
-      const timeoutPromise = new Promise((_, reject) =>
+      const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error("Registration took too long")), 15000)
       );
 
@@ -251,10 +251,10 @@ const VendorSignup = () => {
         document.head.appendChild(link);
 
         setTimeout(() => {
-          navigate(otpVerifyUrl, {
+          navigate(otpVerifyUrl, { 
             replace: true,
-            state: {
-              email: formData.email,
+            state: { 
+              email: formData.email, 
               vendorType: formData.vendorType === "Other" ? formData.otherVendorType : formData.vendorType,
             },
           });
@@ -267,7 +267,7 @@ const VendorSignup = () => {
     } catch (err) {
       setIsLoading(false);
       if (!isMounted.current) return;
-      const errorMessage = err.data?.message ||
+      const errorMessage = err.data?.message || 
         (err.message === "Registration took too long"
           ? "Registration is taking longer than expected. Please check your internet connection."
           : "Registration failed. Please try again.");
@@ -297,14 +297,14 @@ const VendorSignup = () => {
             <button
               onClick={() => handleUserTypeSwitch('couple')}
               className={`flex-1 py-1 px-4 rounded-md transition-all ${userType === 'couple' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+              }`}
             >
               User
             </button>
             <button
               onClick={() => handleUserTypeSwitch('vendor')}
               className={`flex-1 py-1 px-4 rounded-md transition-all ${userType === 'vendor' ? 'bg-white text-black' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+              }`}
             >
               Vendor
             </button>
@@ -543,30 +543,30 @@ const VendorSignup = () => {
               type="submit"
               disabled={isLoading}
               className={`w-full py-2 px-4 mt-2 text-white font-semibold rounded-lg transition focus:outline-none focus:ring-2 focus:ring-[#0F4C81] 
-                ${isLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
+                ${isLoading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
                   : 'bg-[#0F4C81] hover:bg-[#0D3F6A]'
                 }`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin h-5 w-5 mr-3"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
+                  <svg 
+                    className="animate-spin h-5 w-5 mr-3" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
                     viewBox="0 0 24 24"
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
                       strokeWidth="4"
                     ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>

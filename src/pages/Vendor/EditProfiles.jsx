@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload } from 'react-icons/fi';
 import { RiCheckboxCircleLine } from "react-icons/ri";
-import { FaExclamationCircle } from "react-icons/fa";
 import coverimage from '../../assets/Images/Navneegt.jpeg';
 import { useSelector, useDispatch } from 'react-redux';
 import { useUpdateProfileMutation, useGetVendorByIdQuery } from "../../features/vendors/vendorAPI";
@@ -581,7 +580,7 @@ const EditProfile = () => {
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
               <img
                 src={coverImage || vendor.profilePicture || coverimage}
-                className="w-100 h-100 object-fit-cover"
+                className="w-40 h-40 object-fit-cover lg:mx-40 md:mx-70 mx-18 mt-3"
                 alt="Cover"
                 onError={(e) => {
                   e.target.onerror = null;

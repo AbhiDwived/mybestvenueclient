@@ -533,13 +533,13 @@ export default function BookingManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {!isEditMode && (
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium">Search User by ID</label>
+                  <label className="text-sm font-medium">Search Client by ID</label>
                   <div className="flex gap-2 mt-1">
                     <input
                       type="text"
                       value={userIdSearch}
                       onChange={(e) => setUserIdSearch(e.target.value)}
-                      placeholder="Enter User ID"
+                      placeholder="Enter Client ID"
                       className="w-full border rounded p-2"
                     />
                     <button

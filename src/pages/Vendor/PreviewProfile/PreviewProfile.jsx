@@ -264,8 +264,8 @@ const PreviewProfile = () => {
           name: inquiryForm.name,
           email: inquiryForm.email,
           phone: inquiryForm.phone,
-          eventDate: inquiryForm.eventDate,
-          message: inquiryForm.message
+          weddingDate: inquiryForm.eventDate, // Fix: send as weddingDate
+          message: inquiryForm.message // Fix: send as message
         }).unwrap();
         toast.success('Inquiry sent successfully!');
       } else {

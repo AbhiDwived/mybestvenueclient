@@ -12,11 +12,14 @@ const InquiriesSection = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [inquiryType, setInquiryType] = useState('all'); // 'all', 'logged-in', 'anonymous'
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
 
   const vendor = useSelector((state) => state.vendor.vendor);
+  const vendorId = vendor?._id || vendor?.id;
   
-  const { data, isLoading, isError, error, refetch } = useGetVendorInquiriesQuery(vendor?._id, {
-    skip: !vendor?._id,
+  const { data, isLoading, isError, error, refetch } = useGetVendorInquiriesQuery(vendorId, {
+    skip: !vendorId,
     refetchOnMountOrArgChange: true
   });
   
@@ -35,7 +38,16 @@ const InquiriesSection = () => {
     return statusMatch && typeMatch;
   });
 
-  const { data: anonData, isLoading: isAnonLoading } = useGetAnonymousInquiriesQuery(vendor?.id, { skip: !vendor?.id });
+  // Pagination logic
+  const totalPages = Math.ceil(filteredInquiries.length / pageSize);
+  const paginatedInquiries = filteredInquiries.slice((page - 1) * pageSize, page * pageSize);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setPage(1);
+  }, [filter, inquiryType]);
+
+  const { data: anonData, isLoading: isAnonLoading } = useGetAnonymousInquiriesQuery(vendorId, { skip: !vendorId });
 
   console.log('anonData', anonData, 'vendor', vendor);
 
@@ -196,7 +208,7 @@ const InquiriesSection = () => {
                   No inquiries found
                 </div>
               ) : (
-                filteredInquiries.map((inquiry) => (
+                paginatedInquiries.map((inquiry) => (
                   <div
                     key={inquiry._id}
                     className={`p-4 border rounded ${(inquiry.replyStatus || inquiry.status) === 'Replied'
@@ -204,6 +216,12 @@ const InquiriesSection = () => {
                       : 'border-yellow-200 bg-yellow-50'
                       }`}
                   >
+                    {/* Show UserId for logged-in user inquiries */}
+                    {inquiry.userId && (
+                      <p className="text-sm text-gray-600 mb-1">
+                        Client Id: {inquiry.userId?._id}
+                      </p>
+                    )}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {inquiry.type === 'logged-in' ? (
@@ -220,14 +238,16 @@ const InquiriesSection = () => {
                           {inquiry.type === 'logged-in' ? 'Logged-in' : 'Anonymous'}
                         </span>
                       </div>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-semibold ${(inquiry.replyStatus || inquiry.status) === 'Replied'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                          }`}
-                      >
-                        {inquiry.replyStatus || inquiry.status}
-                      </span>
+                      {inquiry.userId && (
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-semibold ${inquiry.replyStatus === 'Replied'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                            }`}
+                        >
+                          {inquiry.replyStatus}
+                        </span>
+                      )}
                     </div>
 
                     {/* Inquiry Details */}
@@ -254,60 +274,53 @@ const InquiriesSection = () => {
                     </div>
 
                     <div className="mt-2 flex justify-end">
-                      <button
-                        className="text-sm text-gray-700 hover:underline"
-                        onClick={() => {
-                          setSelectedInquiry(inquiry);
-                          setInquiryType(inquiry.type);
-                        }}
-                      >
-                        {(inquiry.replyStatus || inquiry.status) === 'Replied' ? 'View Details' : 'Reply Now'}
-                      </button>
+                      {inquiry.userId && (
+                        inquiry.replyStatus !== 'Replied' ? (
+                          <button
+                            className="text-sm text-gray-700 hover:underline"
+                            onClick={() => setSelectedInquiry(inquiry)}
+                          >
+                            Reply Now
+                          </button>
+                        ) : (
+                          <button
+                            className="text-sm text-gray-700 hover:underline"
+                            onClick={() => setSelectedInquiry(inquiry)}
+                          >
+                            View Details
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
                 ))
               )}
             </div>
+            {/* Pagination Controls */}
+            {filteredInquiries.length > pageSize && (
+              <div className="flex justify-center items-center gap-4 mt-4">
+                <button
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+                <span className="text-sm">Page {page} of {totalPages}</span>
+                <button
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Anonymous Inquiries Table - Full Width */}
-      <div className="mt-10 col-span-1 lg:col-span-3 w-full">
-        <h3 className="font-semibold text-lg mb-2">All Anonymous Inquiries</h3>
-        {isAnonLoading ? (
-          <div>Loading anonymous inquiries...</div>
-        ) : anonData?.data?.length > 0 ? (
-          <div className="overflow-x-auto w-full">
-            <table className="min-w-full border text-sm w-full">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border px-2 py-1">Your Name</th>
-                  <th className="border px-2 py-1">Your Email</th>
-                  <th className="border px-2 py-1">Phone Number</th>
-                  <th className="border px-2 py-1">Event Date</th>
-                  <th className="border px-2 py-1">Message</th>
-                  <th className="border px-2 py-1">Created At</th>
-                </tr>
-              </thead>
-              <tbody>
-                {anonData.data.map((inq) => (
-                  <tr key={inq._id}>
-                    <td className="border px-2 py-1">{inq.name}</td>
-                    <td className="border px-2 py-1">{inq.email}</td>
-                    <td className="border px-2 py-1">{inq.phone}</td>
-                    <td className="border px-2 py-1">{inq.eventDate}</td>
-                    <td className="border px-2 py-1">{inq.message}</td>
-                    <td className="border px-2 py-1">{new Date(inq.createdAt).toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-gray-500">No anonymous inquiries found.</div>
-        )}
-      </div>
+     
     </div>
   );
 };
