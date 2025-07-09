@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGetUserBudgetQuery, useAddBudgetItemMutation, useUpdateBudgetItemMutation, useDeleteBudgetItemMutation } from '../../../features/budget/budgetAPI';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -21,16 +21,56 @@ export default function Budget() {
     refetch 
   } = useGetUserBudgetQuery(undefined, {
     skip: !isAuthenticated,
+    // Add polling to keep data fresh
+    pollingInterval: 100, // 30 seconds
   });
   
   const [addBudgetItem, { isLoading: isAddingItem }] = useAddBudgetItemMutation();
   const [updateBudgetItem, { isLoading: isUpdatingItem }] = useUpdateBudgetItemMutation();
   const [deleteBudgetItem, { isLoading: isDeletingItem }] = useDeleteBudgetItemMutation();
 
-  // Extract budget items and totals from API response
-  const budget = budgetData?.data?.items || [];
-  const totalPlanned = budgetData?.data?.totalPlanned || 0;
-  const totalActual = budgetData?.data?.totalActual || 0;
+  // State to manage local budget items for real-time updates
+  const [localBudgetItems, setLocalBudgetItems] = useState([]);
+
+  // Sync local budget items with API data
+  useEffect(() => {
+    if (budgetData?.data?.items) {
+      setLocalBudgetItems(budgetData.data.items);
+    }
+  }, [budgetData]);
+
+  // Memoized update function to avoid unnecessary re-renders
+  const updateActualBudget = useCallback(async (id, actual) => {
+    try {
+      // Optimistically update local state
+      setLocalBudgetItems(prevItems => 
+        prevItems.map(item => 
+          item._id === id ? { ...item, actual: Number(actual) } : item
+        )
+      );
+
+      // Send update to backend
+      await updateBudgetItem({
+        itemId: id,
+        itemData: { actual: Number(actual) }
+      }).unwrap();
+
+      // Refetch to ensure consistency
+      refetch();
+    } catch (err) {
+      // Revert local state on error
+      setLocalBudgetItems(prevItems => 
+        prevItems.map(item => 
+          item._id === id ? { ...item, actual: item.actual } : item
+        )
+      );
+      toast.error(`Error updating budget: ${err.data?.message || 'Unknown error'}`);
+    }
+  }, [updateBudgetItem, refetch]);
+
+  // Compute budget totals from local state
+  const totalPlanned = localBudgetItems.reduce((sum, item) => sum + item.planned, 0);
+  const totalActual = localBudgetItems.reduce((sum, item) => sum + (item.actual || 0), 0);
   const budgetRemaining = totalPlanned - totalActual;
 
   // Show error if API request fails
@@ -39,18 +79,6 @@ export default function Budget() {
       toast.error(`Error loading budget: ${error?.data?.message || 'Unknown error'}`);
     }
   }, [isError, error]);
-
-  // Update actual cost input handler
-  const updateActualBudget = async (id, actual) => {
-    try {
-      await updateBudgetItem({
-        itemId: id,
-        itemData: { actual: Number(actual) }
-      }).unwrap();
-    } catch (err) {
-      toast.error(`Error updating budget: ${err.data?.message || 'Unknown error'}`);
-    }
-  };
 
   // Add new budget item handler
   const handleAddBudgetItem = async () => {
@@ -77,6 +105,27 @@ export default function Budget() {
     } catch (err) {
       toast.error(`Error deleting budget item: ${err.data?.message || 'Unknown error'}`);
     }
+  };
+
+  // Render method for actual budget input
+  const renderActualInput = (item) => {
+    return (
+      <input
+        type="number"
+        value={item.actual || ''}
+        onChange={(e) => {
+          // Update local state immediately
+          setLocalBudgetItems(prevItems => 
+            prevItems.map(i => 
+              i._id === item._id ? { ...i, actual: Number(e.target.value) } : i
+            )
+          );
+        }}
+        onBlur={(e) => updateActualBudget(item._id, e.target.value)}
+        className="w-24 border rounded px-2 py-1"
+        min={0}
+      />
+    );
   };
 
   // Show loading state
@@ -110,29 +159,21 @@ export default function Budget() {
                     </tr>
                   </thead>
                   <tbody>
-                    {budget.map((item) => (
+                    {localBudgetItems.map((item) => (
                       <tr key={item._id} style={{ borderBottom: '1px solid gray' }}>
                         <td className="py-3 px-4">{item.category}</td>
                         <td className="py-3 px-4 ">{item.planned.toLocaleString()}</td>
                         <td className="py-3 px-4 ">
-                          <input
-                            type="number"
-                            value={item.actual || ""}
-                            onChange={(e) =>
-                              updateActualBudget(item._id, Number(e.target.value))
-                            }
-                            className="w-24  border rounded px-2 py-1"
-                            min={0}
-                          />
+                          {renderActualInput(item)}
                         </td>
                         <td
-                          className={`py-3 px-4  font-medium ${item.actual && item.actual > item.planned
+                          className={`py-3 px-4  font-medium ${(item.actual || 0) > item.planned
                             ? "text-red-500"
                             : "text-green-500"
                             }`}
                         >
                           {item.actual
-                            ? (item.planned - item.actual).toLocaleString()
+                            ? (item.planned - (item.actual || 0)).toLocaleString()
                             : "-"}
                         </td>
                         <td className="py-3 px-4 ">
@@ -146,7 +187,7 @@ export default function Budget() {
                         </td>
                       </tr>
                     ))}
-                    {budget.length === 0 && (
+                    {localBudgetItems.length === 0 && (
                       <tr>
                         <td colSpan="5" className="py-4 text-center text-gray-500">
                           No budget items yet. Add your first item!

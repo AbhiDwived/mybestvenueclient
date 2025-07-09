@@ -94,28 +94,24 @@ const Navbar = () => {
     return (
       <div className="py-2">
         {renderLink(`/${role}/dashboard`, <FiUser size={16} />, 'Dashboard')}
-        {renderLink(`/${role}/profile`, <FiSettings size={16} />, 'Profile')}
+
 
         {role === 'user' && (
           <>
-            {renderLink('/user/cart', <FiShoppingCart size={16} />, 'Cart')}
-            {renderLink('/user/orders', <FiPackage size={16} />, 'Orders')}
-            {renderLink('/user/bookings', <FiPackage size={16} />, 'Bookings')}
+            {renderLink(`/${role}/profile`, <FiSettings size={16} />, 'Profile')}
+            {renderLink('booking', <FiPackage size={16} />, 'Bookings')}
           </>
         )}
         {role === 'vendor' && (
           <>
-            {renderLink('/vendor/services', <FiBriefcase size={16} />, 'Services')}
-            {renderLink('/vendor/bookings', <FiPackage size={16} />, 'Bookings')}
-            {renderLink('/vendor/analytics', <FiSettings size={16} />, 'Analytics')}
+            {renderLink(`/${role}/edit_profile`, <FiSettings size={16} />, 'Profile')}
+            {renderLink('bookings', <FiPackage size={16} />, 'Bookings')}
           </>
         )}
         {role === 'admin' && (
           <>
-            {renderLink('/admin/users', <FiUsers size={16} />, 'Users')}
-            {renderLink('/admin/vendors', <FiBriefcase size={16} />, 'Vendors')}
-            {renderLink('/admin/bookings', <FiPackage size={16} />, 'All Bookings')}
-            {renderLink('/admin/settings', <FiSettings size={16} />, 'Settings')}
+            {renderLink('user_management', <FiUsers size={16} />, 'Users')}
+            {renderLink('vendor_management', <FiBriefcase size={16} />, 'Vendors')}
           </>
         )}
 
@@ -173,24 +169,20 @@ const Navbar = () => {
 
                 {role === 'user' && (
                   <>
-                    {renderLink('/user/cart', <FiShoppingCart size={16} />, 'Cart')}
-                    {renderLink('/user/orders', <FiPackage size={16} />, 'Orders')}
-                    {renderLink('/user/bookings', <FiPackage size={16} />, 'Bookings')}
+
+                    {renderLink('booking', <FiPackage size={16} />, 'Bookings')}
                   </>
                 )}
                 {role === 'vendor' && (
                   <>
-                    {renderLink('/vendor/services', <FiBriefcase size={16} />, 'Services')}
                     {renderLink('/vendor/bookings', <FiPackage size={16} />, 'Bookings')}
-                    {renderLink('/vendor/analytics', <FiSettings size={16} />, 'Analytics')}
                   </>
                 )}
                 {role === 'admin' && (
                   <>
-                    {renderLink('/admin/users', <FiUsers size={16} />, 'Users')}
-                    {renderLink('/admin/vendors', <FiBriefcase size={16} />, 'Vendors')}
+                    {renderLink('user_management', <FiUsers size={16} />, 'Users')}
+                    {renderLink('vendor_management', <FiBriefcase size={16} />, 'Vendors')}
                     {renderLink('/admin/bookings', <FiPackage size={16} />, 'All Bookings')}
-                    {renderLink('/admin/settings', <FiSettings size={16} />, 'Settings')}
                   </>
                 )}
 
@@ -233,7 +225,7 @@ const Navbar = () => {
           {renderLink('/about', 'About')}
 
           {!isUserLoggedIn ? (
-            <div style={{marginTop:'-2px'}}>
+            <div style={{ marginTop: '-2px' }}>
               <Link to="/user/login" className="text-black text-decoration-none">Login</Link>
               <Link to="/user/signup" className="btn text-white mx-3" style={{ backgroundColor: '#0F4C81' }}>Sign Up</Link>
             </div>
