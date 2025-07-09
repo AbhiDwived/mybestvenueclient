@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useGetUserBudgetQuery, useAddBudgetItemMutation, useUpdateBudgetItemMutation, useDeleteBudgetItemMutation } from '../../../features/budget/budgetAPI';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { MdDelete } from "react-icons/md";
+import { Tooltip } from 'react-tooltip';
 import Loader from "../../../components/{Shared}/Loader";
 
 export default function Budget() {
@@ -12,7 +13,7 @@ export default function Budget() {
   // Get user authentication state
   const { isAuthenticated } = useSelector((state) => state.auth);
   
-  // RTK Query hooks
+  // RTK Query hooks with optimized configuration
   const { 
     data: budgetData, 
     isLoading, 
@@ -21,8 +22,11 @@ export default function Budget() {
     refetch 
   } = useGetUserBudgetQuery(undefined, {
     skip: !isAuthenticated,
-    // Add polling to keep data fresh
-    pollingInterval: 100, // 30 seconds
+    // Remove automatic polling
+    // Use manual refetch when necessary
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: false,
+    refetchOnReconnect: true,
   });
   
   const [addBudgetItem, { isLoading: isAddingItem }] = useAddBudgetItemMutation();
@@ -42,36 +46,162 @@ export default function Budget() {
   // Memoized update function to avoid unnecessary re-renders
   const updateActualBudget = useCallback(async (id, actual) => {
     try {
+      // Validate input
+      const parsedActual = actual === '' ? 0 : Number(actual);
+      
+      if (isNaN(parsedActual)) {
+        toast.error('Please enter a valid number');
+        return;
+      }
+
       // Optimistically update local state
-      setLocalBudgetItems(prevItems => 
-        prevItems.map(item => 
-          item._id === id ? { ...item, actual: Number(actual) } : item
-        )
+      const updatedItems = localBudgetItems.map(item => 
+        item._id === id ? { ...item, actual: parsedActual } : item
       );
+      setLocalBudgetItems(updatedItems);
 
       // Send update to backend
-      await updateBudgetItem({
+      const response = await updateBudgetItem({
         itemId: id,
-        itemData: { actual: Number(actual) }
+        itemData: { actual: parsedActual }
       }).unwrap();
 
-      // Refetch to ensure consistency
-      refetch();
+      // Optional: Show success toast
+      toast.success('Budget updated successfully');
     } catch (err) {
       // Revert local state on error
-      setLocalBudgetItems(prevItems => 
-        prevItems.map(item => 
-          item._id === id ? { ...item, actual: item.actual } : item
-        )
-      );
+      setLocalBudgetItems(localBudgetItems);
+      
+      // Show error toast
       toast.error(`Error updating budget: ${err.data?.message || 'Unknown error'}`);
     }
-  }, [updateBudgetItem, refetch]);
+  }, [localBudgetItems, updateBudgetItem]);
 
-  // Compute budget totals from local state
-  const totalPlanned = localBudgetItems.reduce((sum, item) => sum + item.planned, 0);
-  const totalActual = localBudgetItems.reduce((sum, item) => sum + (item.actual || 0), 0);
-  const budgetRemaining = totalPlanned - totalActual;
+  // Memoized budget calculations to prevent unnecessary recalculations
+  const budgetSummary = useMemo(() => {
+    const totalPlanned = localBudgetItems.reduce((sum, item) => sum + item.planned, 0);
+    const totalActual = localBudgetItems.reduce((sum, item) => sum + (item.actual || 0), 0);
+    const budgetRemaining = totalPlanned - totalActual;
+
+    return {
+      totalPlanned,
+      totalActual,
+      budgetRemaining
+    };
+  }, [localBudgetItems]);
+
+  // Delete budget item with optimistic update
+  const handleDeleteItem = useCallback(async (itemId) => {
+    try {
+      // Optimistically remove item from local state
+      const updatedItems = localBudgetItems.filter(item => item._id !== itemId);
+      setLocalBudgetItems(updatedItems);
+
+      // Delete from backend
+      await deleteBudgetItem(itemId).unwrap();
+      
+      toast.success('Budget item deleted successfully');
+    } catch (err) {
+      // Revert local state on error
+      setLocalBudgetItems(localBudgetItems);
+      
+      toast.error(`Error deleting budget item: ${err.data?.message || 'Unknown error'}`);
+    }
+  }, [localBudgetItems, deleteBudgetItem]);
+
+  // Render method for actual budget input
+  const renderActualInput = useCallback((item) => {
+    return (
+      <input
+        type="number"
+        value={item.actual || ''}
+        onChange={(e) => {
+          // Update local state immediately without API call
+          setLocalBudgetItems(prevItems => 
+            prevItems.map(i => 
+              i._id === item._id ? { ...i, actual: Number(e.target.value) } : i
+            )
+          );
+        }}
+        onBlur={(e) => updateActualBudget(item._id, e.target.value)}
+        className="w-24 border rounded px-2 py-1"
+        min={0}
+      />
+    );
+  }, [updateActualBudget]);
+
+  // Render budget items table
+  const renderBudgetItemsTable = useMemo(() => {
+    return (
+      <>
+        <table className="min-w-full table-auto">
+          <thead>
+            <tr style={{ borderBottom: '1px solid gray' }}>
+              <th className="text-left py-3 px-4">Category</th>
+              <th className="text-right py-3 px-4">Planned</th>
+              <th className="text-right py-3 px-4">Actual</th>
+              <th className="text-right py-3 px-4">Difference</th>
+              <th className="text-right py-3 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {localBudgetItems.map((item) => (
+              <tr key={item._id} style={{ borderBottom: '1px solid gray' }}>
+                <td className="py-3 px-4">{item.category}</td>
+                <td className="py-3 px-4">{item.planned.toLocaleString()}</td>
+                <td className="py-3 px-4">{renderActualInput(item)}</td>
+                <td
+                  className={`py-3 px-4 font-medium ${(item.actual || 0) > item.planned
+                    ? "text-red-500"
+                    : "text-green-500"
+                    }`}
+                >
+                  {item.actual
+                    ? (item.planned - (item.actual || 0)).toLocaleString()
+                    : "-"}
+                </td>
+                <td className="py-3 px-4">
+                  <button
+                    id={`delete-budget-${item._id}`}
+                    onClick={() => handleDeleteItem(item._id)}
+                    className="text-red-500 hover:text-red-700 relative"
+                    disabled={isDeletingItem}
+                  >
+                    <MdDelete size={25} />
+                  </button>
+                  <Tooltip 
+                    anchorId={`delete-budget-${item._id}`}
+                    content="Delete Budget Item"
+                    place="top"
+                  />
+                </td>
+              </tr>
+            ))}
+            {localBudgetItems.length === 0 && (
+              <tr>
+                <td colSpan="5" className="py-4 text-center text-gray-500">
+                  No budget items yet. Add your first item!
+                </td>
+              </tr>
+            )}
+          </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-gray-300 font-bold">
+              <td className="py-3 px-4">Total</td>
+              <td className="py-3 px-4">{budgetSummary.totalPlanned.toLocaleString()}</td>
+              <td className="py-3 px-4">{budgetSummary.totalActual.toLocaleString()}</td>
+              <td
+                className={`py-3 px-4 ${budgetSummary.budgetRemaining < 0 ? "text-red-500" : "text-green-500"}`}
+              >
+                {budgetSummary.budgetRemaining.toLocaleString()}
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </>
+    );
+  }, [localBudgetItems, budgetSummary, renderActualInput, handleDeleteItem, isDeletingItem]);
 
   // Show error if API request fails
   useEffect(() => {
@@ -97,37 +227,6 @@ export default function Budget() {
     }
   };
 
-  // Delete budget item handler
-  const handleDeleteItem = async (itemId) => {
-    try {
-      await deleteBudgetItem(itemId).unwrap();
-      toast.success('Budget item deleted successfully');
-    } catch (err) {
-      toast.error(`Error deleting budget item: ${err.data?.message || 'Unknown error'}`);
-    }
-  };
-
-  // Render method for actual budget input
-  const renderActualInput = (item) => {
-    return (
-      <input
-        type="number"
-        value={item.actual || ''}
-        onChange={(e) => {
-          // Update local state immediately
-          setLocalBudgetItems(prevItems => 
-            prevItems.map(i => 
-              i._id === item._id ? { ...i, actual: Number(e.target.value) } : i
-            )
-          );
-        }}
-        onBlur={(e) => updateActualBudget(item._id, e.target.value)}
-        className="w-24 border rounded px-2 py-1"
-        min={0}
-      />
-    );
-  };
-
   // Show loading state
   if (isLoading || isAddingItem || isUpdatingItem || isDeletingItem) {
     return <Loader fullScreen />;
@@ -145,71 +244,10 @@ export default function Budget() {
               </div>
               <div className="text-sm">
                 <span className="font-medium text-gray-700">Total Budget:</span>{" "}
-                <span className="font-bold">Rs {totalPlanned.toLocaleString()}</span>
+                <span className="font-bold">Rs {budgetSummary.totalPlanned.toLocaleString()}</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full table-auto">
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid gray' }}>
-                      <th className="text-left py-3 px-4">Category</th>
-                      <th className="text-right py-3 px-4">Planned</th>
-                      <th className="text-right py-3 px-4">Actual</th>
-                      <th className="text-right py-3 px-4">Difference</th>
-                      <th className="text-right py-3 px-4">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {localBudgetItems.map((item) => (
-                      <tr key={item._id} style={{ borderBottom: '1px solid gray' }}>
-                        <td className="py-3 px-4">{item.category}</td>
-                        <td className="py-3 px-4 ">{item.planned.toLocaleString()}</td>
-                        <td className="py-3 px-4 ">
-                          {renderActualInput(item)}
-                        </td>
-                        <td
-                          className={`py-3 px-4  font-medium ${(item.actual || 0) > item.planned
-                            ? "text-red-500"
-                            : "text-green-500"
-                            }`}
-                        >
-                          {item.actual
-                            ? (item.planned - (item.actual || 0)).toLocaleString()
-                            : "-"}
-                        </td>
-                        <td className="py-3 px-4 ">
-                          <button
-                            onClick={() => handleDeleteItem(item._id)}
-                            className="text-red-500 hover:text-red-700"
-                            disabled={isDeletingItem}
-                          >
-                            <MdDelete size={25} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {localBudgetItems.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="py-4 text-center text-gray-500">
-                          No budget items yet. Add your first item!
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t-2 border-gray-300 font-bold">
-                      <td className="py-3 px-4">Total</td>
-                      <td className="py-3 px-4">{totalPlanned.toLocaleString()}</td>
-                      <td className="py-3 px-4 ">{totalActual.toLocaleString()}</td>
-                      <td
-                        className={`py-3 px-4 ${budgetRemaining < 0 ? "text-red-500" : "text-green-500"
-                          }`}
-                      >
-                        {budgetRemaining.toLocaleString()}
-                      </td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
-                </table>
+                {renderBudgetItemsTable}
               </div>
             </div>
           </div>
@@ -270,21 +308,21 @@ export default function Budget() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Planned:</span>
-                  <span className="font-bold">₹{totalPlanned.toLocaleString()}</span>
+                  <span className="font-bold">₹{budgetSummary.totalPlanned.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Spent:</span>
-                  <span className="font-bold ">₹{totalActual.toLocaleString()}</span>
+                  <span className="font-bold ">₹{budgetSummary.totalActual.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between border-t border-gray-300 pt-2">
                   <span className="text-gray-600">Remaining:</span>
                   <span
-                    className={`font-bold ${budgetRemaining < 0 ? "text-red-500" : "text-green-500"
+                    className={`font-bold ${budgetSummary.budgetRemaining < 0 ? "text-red-500" : "text-green-500"
                       }`}
                   >
-                    ₹{budgetRemaining.toLocaleString()}
+                    ₹{budgetSummary.budgetRemaining.toLocaleString()}
                   </span>
                 </div>
               </div>
