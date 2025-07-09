@@ -380,36 +380,8 @@ const UserSignup = () => {
                 value={formData.confirmPassword}
                 onChange={handleConfirmPasswordChange}
                 required
-                className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              {/* Profile Photo Upload with Preview */}
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Profile Picture</label>
-                <>
-                  {/* Preview Image */}
-                  {previewImage && (
-                    <img
-                      src={previewImage}
-                      alt="Profile Preview"
-                      className="w-16 h-16 mb-4 rounded-full object-cover border border-gray-300"
-                    />
-                  )}
-                  {/* File Input */}
-                  <div className="flex flex-col">
-                    <input
-                      id="profilePhoto"
-                      name="profilePhoto"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    {formData.profilePhoto && (
-                      <p className="text-sm text-gray-500 mt-1">{formData.profilePhoto.name}</p>
-                    )}
-                  </div>
-                </>
-              </div>
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -417,6 +389,35 @@ const UserSignup = () => {
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            </div>
+
+            {/* Profile Photo Upload with Preview */}
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-1">Profile Picture</label>
+              <>
+                {/* Preview Image */}
+                {previewImage && (
+                  <img
+                    src={previewImage}
+                    alt="Profile Preview"
+                    className="w-16 h-16 mb-4 rounded-full object-cover border border-gray-300"
+                  />
+                )}
+                {/* File Input */}
+                <div className="flex flex-col">
+                  <input
+                    id="profilePhoto"
+                    name="profilePhoto"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {formData.profilePhoto && (
+                    <p className="text-sm text-gray-500 mt-1">{formData.profilePhoto.name}</p>
+                  )}
+                </div>
+              </>
             </div>
 
             {/* Terms Checkbox */}

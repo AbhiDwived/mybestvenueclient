@@ -157,16 +157,16 @@ export default function Budget() {
             {localBudgetItems.map((item) => (
               <tr key={item._id} style={{ borderBottom: '1px solid gray' }}>
                 <td className="py-3 px-4">{item.category}</td>
-                <td className="py-3 px-4">{item.planned.toLocaleString()}</td>
+                <td className="py-3 px-4">{(item.planned ?? 0).toLocaleString()}</td>
                 <td className="py-3 px-4">{renderActualInput(item)}</td>
                 <td
-                  className={`py-3 px-4 font-medium ${(item.actual || 0) > item.planned
+                  className={`py-3 px-4 font-medium ${(item.actual ?? 0) > (item.planned ?? 0)
                     ? "text-red-500"
                     : "text-green-500"
                     }`}
                 >
-                  {item.actual
-                    ? (item.planned - (item.actual || 0)).toLocaleString()
+                  {(item.planned != null && item.actual != null)
+                    ? ((item.planned - item.actual).toLocaleString())
                     : "-"}
                 </td>
                 <td className="py-3 px-4">

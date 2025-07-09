@@ -85,6 +85,12 @@ const VendorSignup = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const isMounted = useRef(true);
+  const [passwordStrength, setPasswordStrength] = useState({
+    strength: 'Weak',
+    strengthColor: 'text-red-500',
+    strengthWidth: '20%',
+    failedCriteria: []
+  });
 
   useEffect(() => {
     return () => {
@@ -136,6 +142,77 @@ const VendorSignup = () => {
     return mobileRegex.test(number) && !invalidNumbers.includes(number);
   };
 
+  // Password strength validation logic (copied from UserSignup)
+  const isStrongPassword = (password) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
+    return passwordRegex.test(password);
+  };
+
+  const evaluatePasswordStrength = (password) => {
+    const criteria = [
+      { test: (p) => p.length >= 8 && p.length <= 20, message: "Length (8-20 characters)" },
+      { test: (p) => /[A-Z]/.test(p), message: "At least 1 uppercase letter" },
+      { test: (p) => /[a-z]/.test(p), message: "At least 1 lowercase letter" },
+      { test: (p) => /\d/.test(p), message: "At least 1 number" },
+      { test: (p) => /[@$!%*?&]/.test(p), message: "At least 1 special character" }
+    ];
+    const passedCriteria = criteria.filter(c => c.test(password));
+    let strength = 'Weak';
+    let strengthColor = 'text-red-500';
+    let strengthWidth = '20%';
+    if (passedCriteria.length === 5) {
+      strength = 'Strong';
+      strengthColor = 'text-green-500';
+      strengthWidth = '100%';
+    } else if (passedCriteria.length >= 4) {
+      strength = 'Good';
+      strengthColor = 'text-yellow-500';
+      strengthWidth = '80%';
+    } else if (passedCriteria.length >= 3) {
+      strength = 'Medium';
+      strengthColor = 'text-orange-500';
+      strengthWidth = '60%';
+    } else if (passedCriteria.length >= 2) {
+      strength = 'Weak';
+      strengthColor = 'text-red-500';
+      strengthWidth = '40%';
+    }
+    return {
+      strength,
+      strengthColor,
+      strengthWidth,
+      failedCriteria: criteria.filter(c => !c.test(password)).map(c => c.message)
+    };
+  };
+
+  // Render method for password strength scale
+  const renderPasswordStrengthScale = () => (
+    <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+      <div
+        className={`h-2.5 rounded-full transition-all duration-500 ease-in-out ${passwordStrength.strengthColor.replace('text-', 'bg-')}`}
+        style={{ width: passwordStrength.strengthWidth }}
+      ></div>
+    </div>
+  );
+
+  // Update password strength on change
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'password') {
+      const strengthEvaluation = evaluatePasswordStrength(value);
+      setPasswordStrength(strengthEvaluation);
+    }
+  };
+
+  // Update confirm password change to check match
+  const handleConfirmPasswordChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (formData.password !== value) {
+      toast.warn("Passwords do not match");
+    }
+  };
 
 
   const handleSubmit = async (e) => {
@@ -161,6 +238,12 @@ const VendorSignup = () => {
     const phone = formData.phone.trim();
     if (!/^[6-9]\d{9}$/.test(phone) || ['1234567890', '0000000000', '9999999999'].includes(phone)) {
       errors.push("Please enter a valid Indian mobile number.");
+    }
+
+    // 🔹 Password strength validation
+    const strengthCheck = evaluatePasswordStrength(formData.password);
+    if (strengthCheck.strength !== 'Strong') {
+      errors.push("Please strengthen your password. Missing requirements: " + strengthCheck.failedCriteria.join(', '));
     }
 
     // 🔹 Password match
@@ -450,7 +533,7 @@ const VendorSignup = () => {
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
-                onChange={handleChange}
+                onChange={handlePasswordChange}
                 placeholder="••••••••"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -463,7 +546,24 @@ const VendorSignup = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-
+            {/* Password Strength Indicator */}
+            <div className="flex justify-between items-center mt-2">
+              <div className="w-1/2">
+                {renderPasswordStrengthScale()}
+              </div>
+              <div className="w-1/2 text-right">
+                <div className="inline-block text-right">
+                  <span className={`text-sm font-semibold ${passwordStrength.strengthColor}`}>
+                    Password Strength: {passwordStrength.strength}
+                  </span>
+                  <ul className="text-xs text-gray-500 mt-1">
+                    {passwordStrength.failedCriteria.map((criteria, index) => (
+                      <li key={index} className="text-right">{criteria}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
             {/* Confirm Password */}
             <div className="relative">
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
@@ -472,7 +572,7 @@ const VendorSignup = () => {
                 name="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={formData.confirmPassword}
-                onChange={handleChange}
+                onChange={handleConfirmPasswordChange}
                 placeholder="••••••••"
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
