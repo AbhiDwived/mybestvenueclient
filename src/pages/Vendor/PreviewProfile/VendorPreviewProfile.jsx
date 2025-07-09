@@ -39,8 +39,6 @@ const VendorPreviewProfile = ({ show, onClose }) => {
     } = useGetVendorByIdQuery(vendorId, {
       skip: !vendorId || vendorId === 'undefined'
     });
-    // console.log("vednordata",vendorData.vendor.description)
-    console.log("vendordd", vendorData?.vendor)
 
     useEffect(() => {
         if (vendor?.id) {

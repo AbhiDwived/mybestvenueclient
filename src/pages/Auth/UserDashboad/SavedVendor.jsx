@@ -54,12 +54,22 @@ export default function SavedVendor() {
             toast.error('Please log in to save vendors.');
             return;
         }
+        
         if (savedVendorIds.includes(id)) {
-            // Optionally, implement unsave logic here
+            try {
+                await unsaveVendor(id).unwrap();
+                toast.success('Vendor removed from favorites!');
+                // Optionally, manually update the list
+                await refetch();
+            } catch (err) {
+                toast.error(err?.data?.message || 'Failed to unsave vendor');
+            }
         } else {
             try {
                 await saveVendor(id).unwrap();
                 toast.success('Vendor saved to favorites!');
+                // Optionally, manually update the list
+                await refetch();
             } catch (err) {
                 toast.error(err?.data?.message || 'Failed to save vendor');
             }

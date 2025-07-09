@@ -49,8 +49,6 @@ const InquiriesSection = () => {
 
   const { data: anonData, isLoading: isAnonLoading } = useGetAnonymousInquiriesQuery(vendorId, { skip: !vendorId });
 
-  console.log('anonData', anonData, 'vendor', vendor);
-
   if (!vendor) {
     return (
       <div className="p-4 text-red-500 text-center">
