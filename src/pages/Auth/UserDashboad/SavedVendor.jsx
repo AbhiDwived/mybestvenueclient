@@ -3,9 +3,9 @@ import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MapPin } from 'lucide-react';
 import { useGetSavedVendorsQuery, useUnsaveVendorMutation, useSaveVendorMutation } from "../../../features/savedVendors/savedVendorAPI";
 import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import Loader from "../../../components/{Shared}/Loader";
 import { useNavigate } from "react-router-dom";
+import { showToast, handleApiError } from '../../../utils/toast';
 
 export default function SavedVendor() {
     const { isAuthenticated } = useSelector((state) => state.auth);
@@ -34,9 +34,9 @@ export default function SavedVendor() {
         e.stopPropagation();
         try {
             await unsaveVendor(vendorId).unwrap();
-            toast.success("Vendor removed from favorites");
+            showToast.success("Vendor removed from favorites");
         } catch (err) {
-            toast.error(`Error removing vendor: ${err.data?.message || 'Unknown error'}`);
+            handleApiError(err, 'Error removing vendor');
         }
     };
 
@@ -44,34 +44,34 @@ export default function SavedVendor() {
         if (vendorId) {
             navigate(`/preview-profile/${vendorId}`);
         } else {
-            toast.error('Unable to open vendor profile');
+            showToast.error('Unable to open vendor profile');
         }
     };
 
     const toggleFavorite = async (e, id) => {
         e.stopPropagation();
         if (!isAuthenticated) {
-            toast.error('Please log in to save vendors.');
+            showToast.error('Please log in to save vendors.');
             return;
         }
         
         if (savedVendorIds.includes(id)) {
             try {
                 await unsaveVendor(id).unwrap();
-                toast.success('Vendor removed from favorites!');
+                showToast.success('Vendor removed from favorites!');
                 // Optionally, manually update the list
                 await refetch();
             } catch (err) {
-                toast.error(err?.data?.message || 'Failed to unsave vendor');
+                handleApiError(err, 'Failed to unsave vendor');
             }
         } else {
             try {
                 await saveVendor(id).unwrap();
-                toast.success('Vendor saved to favorites!');
+                showToast.success('Vendor saved to favorites!');
                 // Optionally, manually update the list
                 await refetch();
             } catch (err) {
-                toast.error(err?.data?.message || 'Failed to save vendor');
+                handleApiError(err, 'Failed to save vendor');
             }
         }
     };

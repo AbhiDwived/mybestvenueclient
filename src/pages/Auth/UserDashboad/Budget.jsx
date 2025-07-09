@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useGetUserBudgetQuery, useAddBudgetItemMutation, useUpdateBudgetItemMutation, useDeleteBudgetItemMutation } from '../../../features/budget/budgetAPI';
 import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
 import { MdDelete } from "react-icons/md";
 import { Tooltip } from 'react-tooltip';
 import Loader from "../../../components/{Shared}/Loader";
+import { showToast, handleApiError } from '../../../utils/toast';
 
 export default function Budget() {
   // Local state for new budget item form
@@ -22,8 +22,6 @@ export default function Budget() {
     refetch 
   } = useGetUserBudgetQuery(undefined, {
     skip: !isAuthenticated,
-    // Remove automatic polling
-    // Use manual refetch when necessary
     refetchOnMountOrArgChange: true,
     refetchOnFocus: false,
     refetchOnReconnect: true,
@@ -43,6 +41,13 @@ export default function Budget() {
     }
   }, [budgetData]);
 
+  // Show error if API request fails
+  useEffect(() => {
+    if (isError) {
+      handleApiError(error, 'Error loading budget');
+    }
+  }, [isError, error]);
+
   // Memoized update function to avoid unnecessary re-renders
   const updateActualBudget = useCallback(async (id, actual) => {
     try {
@@ -50,9 +55,13 @@ export default function Budget() {
       const parsedActual = actual === '' ? 0 : Number(actual);
       
       if (isNaN(parsedActual)) {
-        toast.error('Please enter a valid number');
+        showToast.error('Please enter a valid number');
         return;
       }
+
+      // Find the current item
+      const currentItem = localBudgetItems.find(item => item._id === id);
+      if (!currentItem) return;
 
       // Optimistically update local state
       const updatedItems = localBudgetItems.map(item => 
@@ -61,19 +70,16 @@ export default function Budget() {
       setLocalBudgetItems(updatedItems);
 
       // Send update to backend
-      const response = await updateBudgetItem({
+      await updateBudgetItem({
         itemId: id,
         itemData: { actual: parsedActual }
       }).unwrap();
 
-      // Optional: Show success toast
-      toast.success('Budget updated successfully');
+      showToast.success('Budget updated successfully');
     } catch (err) {
       // Revert local state on error
       setLocalBudgetItems(localBudgetItems);
-      
-      // Show error toast
-      toast.error(`Error updating budget: ${err.data?.message || 'Unknown error'}`);
+      handleApiError(err, 'Error updating budget');
     }
   }, [localBudgetItems, updateBudgetItem]);
 
@@ -92,6 +98,10 @@ export default function Budget() {
 
   // Delete budget item with optimistic update
   const handleDeleteItem = useCallback(async (itemId) => {
+    // Find the item to be deleted
+    const itemToDelete = localBudgetItems.find(item => item._id === itemId);
+    if (!itemToDelete) return;
+
     try {
       // Optimistically remove item from local state
       const updatedItems = localBudgetItems.filter(item => item._id !== itemId);
@@ -100,12 +110,11 @@ export default function Budget() {
       // Delete from backend
       await deleteBudgetItem(itemId).unwrap();
       
-      toast.success('Budget item deleted successfully');
+      showToast.success('Budget item deleted successfully');
     } catch (err) {
       // Revert local state on error
-      setLocalBudgetItems(localBudgetItems);
-      
-      toast.error(`Error deleting budget item: ${err.data?.message || 'Unknown error'}`);
+      setLocalBudgetItems(prev => [...prev, itemToDelete]);
+      handleApiError(err, 'Error deleting budget item');
     }
   }, [localBudgetItems, deleteBudgetItem]);
 
@@ -203,32 +212,49 @@ export default function Budget() {
     );
   }, [localBudgetItems, budgetSummary, renderActualInput, handleDeleteItem, isDeletingItem]);
 
-  // Show error if API request fails
-  useEffect(() => {
-    if (isError) {
-      toast.error(`Error loading budget: ${error?.data?.message || 'Unknown error'}`);
-    }
-  }, [isError, error]);
-
   // Add new budget item handler
   const handleAddBudgetItem = async () => {
     if (!newBudgetItem.category || newBudgetItem.planned <= 0) return;
 
+    // Optimistic update
+    const optimisticItem = {
+      _id: `temp-${Date.now()}`, // Temporary ID
+      category: newBudgetItem.category,
+      planned: Number(newBudgetItem.planned),
+      actual: 0
+    };
+
     try {
-      await addBudgetItem({
+      // Immediately update local state
+      setLocalBudgetItems(prev => [...prev, optimisticItem]);
+
+      // Send to backend
+      const result = await addBudgetItem({
         category: newBudgetItem.category,
         planned: Number(newBudgetItem.planned)
       }).unwrap();
       
+      // Replace temporary item with server-returned item
+      setLocalBudgetItems(prev => 
+        prev.map(item => 
+          item._id === optimisticItem._id ? result : item
+        )
+      );
+      
+      // Reset form
       setNewBudgetItem({ category: "", planned: 0 });
-      toast.success('Budget item added successfully');
+      showToast.success('Budget item added successfully');
     } catch (err) {
-      toast.error(`Error adding budget item: ${err.data?.message || 'Unknown error'}`);
+      // Revert local state on error
+      setLocalBudgetItems(prev => 
+        prev.filter(item => item._id !== optimisticItem._id)
+      );
+      handleApiError(err, 'Error adding budget item');
     }
   };
 
   // Show loading state
-  if (isLoading || isAddingItem || isUpdatingItem || isDeletingItem) {
+  if (isLoading) {
     return <Loader fullScreen />;
   }
 
@@ -294,10 +320,10 @@ export default function Budget() {
 
                 <button
                   onClick={handleAddBudgetItem}
-                  disabled={!newBudgetItem.category || newBudgetItem.planned <= 0 || isAddingItem}
+                  disabled={!newBudgetItem.category || newBudgetItem.planned <= 0}
                   className="w-full bg-[#0D3F6A] hover:bg-[#0D3F6A] disabled:bg-gray-300 text-white font-medium py-2 px-4 rounded-md"
                 >
-                  {isAddingItem ? "Adding..." : "Add Budget Item"}
+                  Add Budget Item
                 </button>
               </div>
             </div>

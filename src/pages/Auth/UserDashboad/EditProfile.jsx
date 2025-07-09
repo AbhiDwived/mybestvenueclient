@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useUpdateProfileMutation } from "../../../features/auth/authAPI";
 import { setCredentials } from "../../../features/auth/authSlice";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+import { showToast, handleApiError } from '../../../utils/toast';
 
 const EditProfile = () => {
   const dispatch = useDispatch();
@@ -73,13 +72,13 @@ const EditProfile = () => {
 
       const updatedUser = res.user || res;
       dispatch(setCredentials({ token: localStorage.getItem("token"), user: updatedUser }));
-      toast.success("Profile updated successfully!");
+      showToast.success("Profile updated successfully!");
       setTimeout(() => {
         navigate("/profile");
       }, 2000);
     } catch (err) {
       console.error("Update failed", err);
-      toast.error("Failed to update profile.");
+      handleApiError(err, "Failed to update profile");
     }
   };
 
@@ -154,7 +153,7 @@ const EditProfile = () => {
         </div>
       </div>
 
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* ToastContainer is removed as per the new_code, as the showToast utility handles it */}
     </div>
   );
 };

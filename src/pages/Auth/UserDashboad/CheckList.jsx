@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, Trash2 } from "lucide-react";
 import { useGetUserChecklistQuery, useAddChecklistTaskMutation, useToggleTaskCompletionMutation, useDeleteChecklistTaskMutation } from "../../../features/checklist/checklistAPI";
 import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import Loader from "../../../components/{Shared}/Loader";
+import { showToast, handleApiError } from '../../../utils/toast';
 
 export default function CheckList() {
     const [newTask, setNewTask] = useState("");
@@ -24,52 +24,130 @@ export default function CheckList() {
     const [toggleTask, { isLoading: isToggling }] = useToggleTaskCompletionMutation();
     const [deleteTask, { isLoading: isDeleting }] = useDeleteChecklistTaskMutation();
 
-    // Extract data from API response
-    const tasks = checklistData?.data?.items || [];
-    const completedTasks = checklistData?.data?.completedCount || 0;
-    const totalTasks = checklistData?.data?.totalCount || 0;
+    // Local state to manage tasks without full page reload
+    const [localTasks, setLocalTasks] = useState([]);
+    const [localCompletedCount, setLocalCompletedCount] = useState(0);
+    const [localTotalCount, setLocalTotalCount] = useState(0);
 
-    // Calculate completion percentage
-    const completionPercentage = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    // Sync local state with API data
+    useEffect(() => {
+        if (checklistData?.data?.items) {
+            setLocalTasks(checklistData.data.items);
+            setLocalCompletedCount(checklistData.data.completedCount || 0);
+            setLocalTotalCount(checklistData.data.totalCount || 0);
+        }
+    }, [checklistData]);
 
     // Show error if API request fails
     useEffect(() => {
         if (isError) {
-            toast.error(`Error loading checklist: ${error?.data?.message || 'Unknown error'}`);
+            handleApiError(error, 'Error loading checklist');
         }
     }, [isError, error]);
+
+    // Calculate completion percentage
+    const completionPercentage = localTotalCount 
+        ? Math.round((localCompletedCount / localTotalCount) * 100) 
+        : 0;
 
     const handleAddTask = async () => {
         if (!newTask.trim()) return;
 
+        // Optimistic update
+        const optimisticTask = {
+            _id: `temp-${Date.now()}`, // Temporary ID
+            task: newTask.trim(),
+            completed: false,
+            createdAt: new Date().toISOString()
+        };
+
         try {
-            await addTask(newTask.trim()).unwrap();
+            // Immediately update local state
+            setLocalTasks(prev => [...prev, optimisticTask]);
+            setLocalTotalCount(prev => prev + 1);
+
+            // Send to backend
+            const result = await addTask(newTask.trim()).unwrap();
+            
+            // Replace temporary task with server-returned task
+            setLocalTasks(prev => {
+                const updatedTasks = prev.map(task => 
+                    task._id === optimisticTask._id ? result : task
+                );
+                return updatedTasks;
+            });
+
             setNewTask("");
-            toast.success("Task added successfully");
+            showToast.success("Task added successfully");
         } catch (err) {
-            toast.error(`Error adding task: ${err.data?.message || 'Unknown error'}`);
+            // Revert local state on error
+            setLocalTasks(prev => prev.filter(task => task._id !== optimisticTask._id));
+            setLocalTotalCount(prev => prev - 1);
+            handleApiError(err, 'Error adding task');
         }
     };
 
     const handleToggleTaskCompletion = async (id) => {
+        // Find the current task
+        const currentTask = localTasks.find(task => task._id === id);
+        if (!currentTask) return;
+
+        // Optimistic update
+        const updatedTasks = localTasks.map(task => 
+            task._id === id ? { ...task, completed: !task.completed } : task
+        );
+        
+        // Update local state immediately
+        setLocalTasks(updatedTasks);
+        setLocalCompletedCount(prev => 
+            currentTask.completed ? prev - 1 : prev + 1
+        );
+
         try {
+            // Send update to backend
             await toggleTask(id).unwrap();
         } catch (err) {
-            toast.error(`Error updating task: ${err.data?.message || 'Unknown error'}`);
+            // Revert local state on error
+            setLocalTasks(localTasks);
+            setLocalCompletedCount(prev => 
+                currentTask.completed ? prev + 1 : prev - 1
+            );
+            handleApiError(err, 'Error updating task');
         }
     };
 
     const handleDeleteTask = async (id) => {
+        // Find the task to be deleted
+        const taskToDelete = localTasks.find(task => task._id === id);
+        if (!taskToDelete) return;
+
+        // Optimistic update
+        const updatedTasks = localTasks.filter(task => task._id !== id);
+        
+        // Update local state immediately
+        setLocalTasks(updatedTasks);
+        setLocalTotalCount(prev => prev - 1);
+        if (taskToDelete.completed) {
+            setLocalCompletedCount(prev => prev - 1);
+        }
+
         try {
+            // Send delete to backend
             await deleteTask(id).unwrap();
-            toast.success("Task deleted successfully");
+            showToast.success("Task deleted successfully");
         } catch (err) {
-            toast.error(`Error deleting task: ${err.data?.message || 'Unknown error'}`);
+            // Revert local state on error
+            setLocalTasks(prev => [...prev, taskToDelete]);
+            setLocalTotalCount(prev => prev + 1);
+            if (taskToDelete.completed) {
+                setLocalCompletedCount(prev => prev + 1);
+            }
+            handleApiError(err, 'Error deleting task');
         }
     };
 
     // Show loading state
-    if (isLoading || isAdding || isToggling || isDeleting) {
+    if (isLoading) {
         return <Loader fullScreen />;
     }
 
@@ -83,7 +161,7 @@ export default function CheckList() {
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-bold text-wedding-dark">Wedding Checklist</h2>
                                 <div className="text-sm text-gray-600">
-                                    {completedTasks} of {totalTasks} tasks completed
+                                    {localCompletedCount} of {localTotalCount} tasks completed
                                 </div>
                             </div>
 
@@ -97,12 +175,12 @@ export default function CheckList() {
 
                             {/* Task List */}
                             <div className="space-y-4">
-                                {tasks.length === 0 ? (
+                                {localTasks.length === 0 ? (
                                     <div className="text-center py-8 text-gray-500">
                                         No tasks added yet. Add your first task!
                                     </div>
                                 ) : (
-                                    tasks.map((task) => (
+                                    localTasks.map((task) => (
                                         <div
                                             key={task._id}
                                             className={`flex justify-between items-start p-2 rounded-md border transition bg-[#f0f2f5] hover:shadow-sm ${task.completed ? "opacity-90" : ""

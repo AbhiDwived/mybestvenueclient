@@ -3,8 +3,6 @@ import { Calendar, Clock, Plus, DollarSign, Trash2, AlertCircle } from 'lucide-r
 import { useGetUserBookingsQuery, useCreateBookingMutation, useDeleteBookingMutation, useGetAvailableVendorsQuery } from '../../../features/bookings/bookingAPI';
 import { useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
 import { useSelector, useDispatch } from 'react-redux';
-import { toast, ToastContainer } from 'react-toastify';
-import Loader from "../../../components/{Shared}/Loader";
 import {
   selectBookings,
   selectTotalPlanned,
@@ -16,6 +14,8 @@ import {
   setFilters,
   clearFilters
 } from '../../../features/bookings/bookingSlice';
+import Loader from "../../../components/{Shared}/Loader";
+import { showToast, handleApiError } from '../../../utils/toast';
 
 const BookingBudget = () => {
   const dispatch = useDispatch();
@@ -68,7 +68,7 @@ const BookingBudget = () => {
   // Check authentication status
   useEffect(() => {
     if (!isAuthenticated || !token) {
-      toast.error('Please log in to access bookings');
+      showToast.error('Please log in to access bookings');
       return;
     }
   }, [isAuthenticated, token]);
@@ -88,7 +88,7 @@ const BookingBudget = () => {
   // Show error if API request fails
   useEffect(() => {
     if (isError && error) {
-      toast.error(`Error loading bookings: ${error}`);
+      handleApiError(error, 'Error loading bookings');
     }
   }, [isError, error]);
 
@@ -109,7 +109,7 @@ const BookingBudget = () => {
       }
     } catch (err) {
       console.error('Error fetching packages:', err);
-      toast.error('Failed to fetch vendor packages');
+      showToast.error('Failed to fetch vendor packages');
       setVendorPackages([]);
     } finally {
       setIsLoadingPackages(false);
@@ -209,7 +209,7 @@ const BookingBudget = () => {
 
   const handleAddBooking = async () => {
     if (!validateForm()) {
-      toast.error('Please fill in all required fields');
+      showToast.error('Please fill in all required fields');
       return;
     }
     
@@ -234,8 +234,6 @@ const BookingBudget = () => {
         }
       }
 
-      console.log('Sending booking data:', bookingData);
-      
       const result = await createBooking(bookingData).unwrap();
       
       // Reset form
@@ -260,19 +258,18 @@ const BookingBudget = () => {
       // Clear filters
       dispatch(clearFilters());
 
-      toast.success('Booking added successfully');
+      showToast.success('Booking added successfully');
     } catch (err) {
-      console.error('Booking error:', err);
-      toast.error(`Error adding booking: ${err.data?.message || 'Unknown error'}`);
+      handleApiError(err, 'Error adding booking');
     }
   };
 
   const handleDeleteBooking = async (bookingId) => {
     try {
       await deleteBooking(bookingId).unwrap();
-      toast.success('Booking deleted successfully');
+      showToast.success('Booking deleted successfully');
     } catch (err) {
-      toast.error(`Error deleting booking: ${err.data?.message || 'Unknown error'}`);
+      handleApiError(err, 'Error deleting booking');
     }
   };
 
@@ -587,13 +584,7 @@ const BookingBudget = () => {
         </div>
       </div>
       {/* Toast Container */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        pauseOnHover
-        closeOnClick
-        toastClassName="custom-toast"
-      />
+      {/* The ToastContainer component is no longer needed as showToast handles its own rendering */}
     </div>
   );
 };

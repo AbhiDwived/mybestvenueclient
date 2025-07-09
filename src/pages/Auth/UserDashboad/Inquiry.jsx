@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGetUserInquiriesMutation, useSendUserReplyMutation } from "../../../features/auth/authAPI";
 import moment from 'moment';
+import { showToast, handleApiError } from '../../../utils/toast';
 
 export default function Inquiry() {
     const user = useSelector((state) => state.auth.user);
@@ -30,17 +31,20 @@ export default function Inquiry() {
             userId,
             vendorId: inquiry.vendorId,
         }
-        console.log("payload", payload)
-        // if (!message?.trim()) return;
+
+        if (!message?.trim()) {
+            showToast.warning('Please enter a message');
+            return;
+        }
 
         try {
             const res = await sendUserReply(payload).unwrap();
 
             setMessages((prev) => ({ ...prev, [inquiry._id]: '' }));
             setActiveReplyId(null);
-            alert("Reply sent successfully");
+            showToast.success("Reply sent successfully");
         } catch (error) {
-            console.error("Error sending message:", error);
+            handleApiError(error, "Error sending message");
         }
     };
 

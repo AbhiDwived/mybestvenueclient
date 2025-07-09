@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { CiImport, CiExport } from "react-icons/ci";
-import { toast } from 'react-toastify';
 import { useGetUserGuestsQuery, useAddGuestMutation, useUpdateGuestStatusMutation, useDeleteGuestMutation } from '../../../features/guests/guestAPI';
+import { showToast, handleApiError } from '../../../utils/toast';
 
 export default function GuestManager() {
     const { data: guestData, isLoading, isError, error } = useGetUserGuestsQuery();
@@ -23,41 +23,40 @@ export default function GuestManager() {
     // Display error if API request fails
     useEffect(() => {
         if (isError) {
-            toast.error(`Error: ${error?.data?.message || 'Failed to load guests'}`);
+            handleApiError(error, 'Failed to load guests');
         }
     }, [isError, error]);
 
     const handleUpdateGuestStatus = async (guestId, status) => {
         try {
             await updateGuestStatus({ guestId, status }).unwrap();
-            toast.success('Guest status updated successfully');
+            showToast.success('Guest status updated successfully');
         } catch (err) {
-            console.error('Update status error:', err);
-            toast.error(`Error: ${err?.data?.message || 'Failed to update guest status'}`);
+            handleApiError(err, 'Failed to update guest status');
         }
     };
 
     const handleDeleteGuest = async (guestId) => {
         try {
             await deleteGuest(guestId).unwrap();
-            toast.success('Guest deleted successfully');
+            showToast.success('Guest deleted successfully');
         } catch (err) {
-            toast.error(`Error: ${err?.data?.message || 'Failed to delete guest'}`);
+            handleApiError(err, 'Failed to delete guest');
         }
     };
 
     const handleAddGuest = async () => {
         if (!newGuest.name || (!newGuest.email && !newGuest.phone)) {
-            toast.warning('Please provide name and either email or phone number');
+            showToast.warning('Please provide name and either email or phone number');
             return;
         }
 
         try {
             await addGuest(newGuest).unwrap();
             setNewGuest({ name: '', email: '', phone: '', status: 'pending' });
-            toast.success('Guest added successfully');
+            showToast.success('Guest added successfully');
         } catch (err) {
-            toast.error(`Error: ${err?.data?.message || 'Failed to add guest'}`);
+            handleApiError(err, 'Failed to add guest');
         }
     };
 
