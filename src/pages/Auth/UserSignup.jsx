@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRegisterUserMutation } from '../../features/auth/authAPI';
-import 'react-toastify/dist/ReactToastify.css';
+import { showToast } from '../../utils/toast';
 import { Eye, EyeOff } from 'react-feather';
 
 const UserSignup = () => {
@@ -14,18 +14,30 @@ const UserSignup = () => {
     termsAccepted: false,
     profilePhoto: null,
   });
-
   const [previewImage, setPreviewImage] = useState(null);
   const [userType, setUserType] = useState('couple');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerUser, { isLoading }] = useRegisterUserMutation();
   const navigate = useNavigate();
+  const nameInputRef = useRef(null);
+  const isMounted = useRef(true);
+  const timeoutRef = useRef();
+
+  useEffect(() => {
+    isMounted.current = true;
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+    return () => {
+      isMounted.current = false;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const handleChange = (e) => {
-    window.scrollTo({ top: 0, category: "top" })
+    window.scrollTo({top:0, category:"top"})
     const { name, value, type, checked, files } = e.target;
-
     if (type === 'checkbox') {
       setFormData((prev) => ({ ...prev, [name]: checked }));
     } else if (type === 'file') {
@@ -166,7 +178,7 @@ const UserSignup = () => {
     
     // Check password match
     if (formData.password !== value) {
-      showToast("warn", "Passwords do not match");
+      showToast.warn("Passwords do not match");
     }
   };
 
@@ -176,7 +188,7 @@ const UserSignup = () => {
     // Validate Password Strength
     const strengthCheck = evaluatePasswordStrength(formData.password);
     if (strengthCheck.strength !== 'Strong') {
-      showToast("error", "Please strengthen your password. Missing requirements:\n" + 
+      showToast.error("Please strengthen your password. Missing requirements:\n" + 
         strengthCheck.failedCriteria.join('\n'));
       return;
     }
@@ -188,35 +200,35 @@ const UserSignup = () => {
 
     // Validate Name
     if (formData.name.trim().length < 3) {
-      showToast("error", "Name must be at least 3 characters long.");
+      showToast.error("Name must be at least 3 characters long.");
       return;
     }
 
     // Validate Email
     if (!isValidEmail(email)) {
-      showToast("error", "Please enter a valid email address.");
+      showToast.error("Please enter a valid email address.");
       return;
     }
 
     // Validate Phone
     if (!isValidIndianMobile(phone)) {
-      showToast("error", "Please enter a valid Indian mobile number.");
+      showToast.error("Please enter a valid Indian mobile number.");
       return;
     }
 
     // Validate Password Strength
     if (!isStrongPassword(password)) {
-      showToast("error", "Password must:\n- Be 8-20 characters long\n- Include at least 1 uppercase letter\n- Include at least 1 lowercase letter\n- Include at least 1 number\n- Include at least 1 special character (@$!%*?&)");
+      showToast.error("Password must:\n- Be 8-20 characters long\n- Include at least 1 uppercase letter\n- Include at least 1 lowercase letter\n- Include at least 1 number\n- Include at least 1 special character (@$!%*?&)");
       return;
     }
 
     if (password !== formData.confirmPassword) {
-      showToast("error", "⚠️ Passwords do not match!");
+      showToast.error("⚠️ Passwords do not match!");
       return;
     }
 
     if (!formData.termsAccepted) {
-      showToast("error", "⚠️ You must agree to the terms and conditions.");
+      showToast.error("⚠️ You must agree to the terms and conditions.");
       return;
     }
 
@@ -230,21 +242,24 @@ const UserSignup = () => {
 
     try {
       const res = await registerUser(payload).unwrap();
-
+      console.log("Registration response:", res);
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
-
-      showToast("success", "✅ Registration successful!");
-
+      showToast.success("✅ Registration successful!");
       if (res?.userId || res.user?.id) {
-        setTimeout(() => {
-          navigate(`/verify-otp?userId=${res.userId || res.user.id}`);
-        }, 2000);
+        console.log("Attempting navigation to /verify-otp?userId=", res.userId || res.user.id);
+        // Try immediate navigation for debug
+        navigate(`/verify-otp?userId=${res.userId || res.user.id}`);
+        // If you want to keep the timeout, comment out the above and uncomment below:
+        // timeoutRef.current = setTimeout(() => {
+        //   if (isMounted.current) {
+        //     navigate(`/verify-otp?userId=${res.userId || res.user.id}`);
+        //   }
+        // }, 2000);
       }
-
     } catch (err) {
       console.error('Registration failed:', err);
-      showToast("error", `❌ ${err.data?.message || 'Registration failed. Try again.'}`);
+      showToast.error(`❌ ${err.data?.message || 'Registration failed. Try again.'}`);
     }
   };
 
@@ -292,6 +307,7 @@ const UserSignup = () => {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ref={nameInputRef}
               />
             </div>
 
