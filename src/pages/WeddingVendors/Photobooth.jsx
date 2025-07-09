@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin } from 'lucide-react';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaHeart, FaRegHeart } from 'react-icons/fa';
 import WeVendorr2 from '../../assets/newPics/WeVendor4.avif'; // Adjust path & filename
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 import { useNavigate } from 'react-router-dom';
+import { useSaveVendorMutation } from '../../features/savedVendors/savedVendorAPI';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 
 
@@ -13,6 +16,9 @@ export default function Photobooth() {
   const [vendors, setVendors] = useState([]);
   const [filteredVendors, setFilteredVendors] = useState([]);
   const { data, isLoading, isError, error } = useGetAllVendorsQuery();
+  const [favorites, setFavorites] = useState([]);
+  const [saveVendor] = useSaveVendorMutation();
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   //  console.log("vendorsList", data);
   // const photobooth = data?.vendors?.filter(v => v.vendorType === "Photobooth");
@@ -39,6 +45,26 @@ export default function Photobooth() {
 
   const handleVendorClick = (vendorId) => {
     navigate(`/preview-profile/${vendorId}`);
+  };
+
+  const toggleFavorite = async (e, id) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.error('Please log in to save vendors.');
+      return;
+    }
+    if (favorites.includes(id)) {
+      setFavorites((prev) => prev.filter((fid) => fid !== id));
+      // Optionally, implement unsave logic here
+    } else {
+      try {
+        await saveVendor(id).unwrap();
+        setFavorites((prev) => [...prev, id]);
+        toast.success('Vendor saved to favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to save vendor');
+      }
+    }
   };
 
   if (isLoading) {
@@ -74,7 +100,16 @@ export default function Photobooth() {
                   alt={vendor.businessName || vendor.name}
                   className="w-full h-[220px] object-cover"
                 />
-
+                <button
+                  onClick={(e) => toggleFavorite(e, vendor._id)}
+                  className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md"
+                >
+                  {favorites.includes(vendor._id) ? (
+                    <FaHeart className="text-red-500" />
+                  ) : (
+                    <FaRegHeart />
+                  )}
+                </button>
               </div>
 
               {/* Details */}

@@ -8,6 +8,8 @@ import { FiArrowLeft } from "react-icons/fi";
 import { MapPin } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useGetVendorByIdQuery } from "../../features/vendors/vendorAPI";
+import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from "../../features/savedVendors/savedVendorAPI";
+import { toast } from 'react-toastify';
 
 const VendorListPage = () => {
   const navigate = useNavigate();
@@ -16,6 +18,8 @@ const VendorListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [favorites, setFavorites] = useState([]);
   const [activeTab, setActiveTab] = useState('popular');
+  const [saveVendor] = useSaveVendorMutation();
+  const [unsaveVendor] = useUnsaveVendorMutation();
 
   const vendor = useSelector((state) => state.vendor.vendor);
   const vendorId = vendor?._id;
@@ -23,6 +27,10 @@ const VendorListPage = () => {
 
   const { data, error: vendorError, isLoading: isLoadingVendor } = useGetVendorByIdQuery(vendorId);
   // console.log("data", data?.vendor.services);
+
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { data: savedVendorsData, isLoading: isLoadingSaved } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
+  const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
   // Format inputs
   const formattedCategory = category
@@ -34,17 +42,6 @@ const VendorListPage = () => {
     ? 'All India'
     : city.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-  // Load favorites
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('favorites') || '[]');
-    setFavorites(saved);
-  }, []);
-
-  // Save favorites
-  useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
   const {
     data: vendorsData,
     isLoading,
@@ -52,11 +49,27 @@ const VendorListPage = () => {
     refetch,
   } = useGetAllVendorsQuery();
 
-  const toggleFavorite = (e, id) => {
+  const toggleFavorite = async (e, id) => {
     e.stopPropagation();
-    setFavorites(prev =>
-      prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]
-    );
+    if (!isAuthenticated) {
+      toast.error('Please log in to save vendors.');
+      return;
+    }
+    if (savedVendorIds.includes(id)) {
+      try {
+        await unsaveVendor(id).unwrap();
+        toast.success('Vendor removed from favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to unsave vendor');
+      }
+    } else {
+      try {
+        await saveVendor(id).unwrap();
+        toast.success('Vendor saved to favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to save vendor');
+      }
+    }
   };
 
   const handleVendorClick = (vendorId) => {
@@ -225,7 +238,7 @@ const VendorListPage = () => {
                     onClick={(e) => toggleFavorite(e, vendor._id)}
                     className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md"
                   >
-                    {favorites.includes(vendor._id) ? (
+                    {savedVendorIds.includes(vendor._id) ? (
                       <FaHeart className="text-red-500" />
                     ) : (
                       <FaRegHeart />

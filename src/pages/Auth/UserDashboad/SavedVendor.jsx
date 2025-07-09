@@ -1,7 +1,7 @@
 import React from "react";
-import { FaStar, FaHeart } from "react-icons/fa";
+import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MapPin } from 'lucide-react';
-import { useGetSavedVendorsQuery, useUnsaveVendorMutation } from "../../../features/savedVendors/savedVendorAPI";
+import { useGetSavedVendorsQuery, useUnsaveVendorMutation, useSaveVendorMutation } from "../../../features/savedVendors/savedVendorAPI";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Loader from "../../../components/{Shared}/Loader";
@@ -23,9 +23,11 @@ export default function SavedVendor() {
     });
     
     const [unsaveVendor, { isLoading: isUnsaving }] = useUnsaveVendorMutation();
+    const [saveVendor] = useSaveVendorMutation();
 
     // Extract data from API response
     const savedVendors = savedVendorsData?.data || [];
+    const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
     // Handle unsave vendor
     const handleRemoveSavedVendor = async (e, vendorId) => {
@@ -43,6 +45,24 @@ export default function SavedVendor() {
             navigate(`/preview-profile/${vendorId}`);
         } else {
             toast.error('Unable to open vendor profile');
+        }
+    };
+
+    const toggleFavorite = async (e, id) => {
+        e.stopPropagation();
+        if (!isAuthenticated) {
+            toast.error('Please log in to save vendors.');
+            return;
+        }
+        if (savedVendorIds.includes(id)) {
+            // Optionally, implement unsave logic here
+        } else {
+            try {
+                await saveVendor(id).unwrap();
+                toast.success('Vendor saved to favorites!');
+            } catch (err) {
+                toast.error(err?.data?.message || 'Failed to save vendor');
+            }
         }
     };
 
@@ -89,11 +109,14 @@ export default function SavedVendor() {
                                             className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
                                         />
                                         <button
-                                            onClick={(e) => handleRemoveSavedVendor(e, vendor.id)}
-                                            disabled={isUnsaving}
+                                            onClick={(e) => toggleFavorite(e, vendor.id)}
                                             className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-red-500 hover:bg-gray-50 disabled:opacity-50"
                                         >
-                                            <FaHeart className="text-red-500" />
+                                            {savedVendorIds.includes(vendor.id) ? (
+                                                <FaHeart className="text-red-500" />
+                                            ) : (
+                                                <FaRegHeart />
+                                            )}
                                         </button>
                                     </div>
 

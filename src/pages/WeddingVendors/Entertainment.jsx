@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin } from 'lucide-react';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaHeart, FaRegHeart } from 'react-icons/fa';
 import WeVendorr2 from '../../assets/newPics/WeVendor2avif.avif'; // Update with actual path
 
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 import { useNavigate } from 'react-router-dom';
+import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from '../../features/savedVendors/savedVendorAPI';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 
 
@@ -14,6 +17,12 @@ export default function Entertainment() {
   const [vendors, setVendors] = useState([]);
   const [filteredVendors, setFilteredVendors] = useState([]);
   const { data, isLoading, isError, error } = useGetAllVendorsQuery();
+  const [favorites, setFavorites] = useState([]);
+  const [saveVendor] = useSaveVendorMutation();
+  const [unsaveVendor] = useUnsaveVendorMutation();
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { data: savedVendorsData, isLoading: isLoadingSaved } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
+  const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
   //  console.log("vendorsList", data);
   // const entertainment = data?.vendors?.filter(v => v.vendorType === "Entertainment");
@@ -38,6 +47,29 @@ export default function Entertainment() {
 
   const handleVendorClick = (vendorId) => {
     navigate(`/preview-profile/${vendorId}`);
+  };
+
+  const toggleFavorite = async (e, id) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.error('Please log in to save vendors.');
+      return;
+    }
+    if (savedVendorIds.includes(id)) {
+      try {
+        await unsaveVendor(id).unwrap();
+        toast.success('Vendor removed from favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to unsave vendor');
+      }
+    } else {
+      try {
+        await saveVendor(id).unwrap();
+        toast.success('Vendor saved to favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to save vendor');
+      }
+    }
   };
 
 
@@ -74,7 +106,16 @@ export default function Entertainment() {
                   alt={vendor.businessName || vendor.name}
                   className="w-full h-[220px] object-cover"
                 />
-
+                <button
+                  onClick={(e) => toggleFavorite(e, vendor._id)}
+                  className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md"
+                >
+                  {savedVendorIds.includes(vendor._id) ? (
+                    <FaHeart className="text-red-500" />
+                  ) : (
+                    <FaRegHeart />
+                  )}
+                </button>
               </div>
 
               {/* Details */}

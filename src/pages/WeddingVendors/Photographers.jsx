@@ -1,18 +1,26 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin } from 'lucide-react';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaHeart, FaRegHeart } from 'react-icons/fa';
 import WeVendorr1 from '../../assets/newPics/WeVendorr1.avif';
 import WeVendorr2 from '../../assets/newPics/WeVendor3.avif';
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
-
 import { useNavigate } from 'react-router-dom';
+import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from '../../features/savedVendors/savedVendorAPI';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 export default function Photographers() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("Wedding Photographers");
   const [sortType, setSortType] = useState("popular");
   const [filteredVendors, setFilteredVendors] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [saveVendor] = useSaveVendorMutation();
+  const [unsaveVendor] = useUnsaveVendorMutation();
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const { data, isLoading, isError, error } = useGetAllVendorsQuery();
+  const { data: savedVendorsData, isLoading: isLoadingSaved } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
+  const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
   // console.log("vendorsList photo", data);
   // const photographers = data?.vendors?.filter(v => v.vendorType === "Photographers");
@@ -38,6 +46,30 @@ export default function Photographers() {
   const handleVendorClick = (vendorId) => {
     navigate(`/preview-profile/${vendorId}`);
   };
+
+  const toggleFavorite = async (e, id) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.error('Please log in to save vendors.');
+      return;
+    }
+    if (savedVendorIds.includes(id)) {
+      try {
+        await unsaveVendor(id).unwrap();
+        toast.success('Vendor removed from favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to unsave vendor');
+      }
+    } else {
+      try {
+        await saveVendor(id).unwrap();
+        toast.success('Vendor saved to favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to save vendor');
+      }
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center py-10">Loading vendors...</div>;
   }
@@ -81,16 +113,16 @@ export default function Photographers() {
                   alt={vendor.businessName || vendor.name}
                   className="w-full h-[220px] object-cover"
                 />
-                {/* Handpicked Tag */}
-                {/* <span className="absolute top-3 left-3 bg-[#ec407a] text-white text-xs font-semibold px-2 py-1 rounded-tr-md rounded-bl-md">
-            Handpicked
-          </span> */}
-
-                {/* Rating Top Right */}
-                {/* <span className="absolute top-3 right-3 bg-white text-gray-600 text-xs font-medium px-2 py-1 rounded-full shadow flex items-center"> */}
-                {/* <FaStar size={14} className='text-yellow-400 mr-1' /> */}
-                {/* {vendor.rating || "5.0"} */}
-                {/* </span> */}
+                <button
+                  onClick={(e) => toggleFavorite(e, vendor._id)}
+                  className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md"
+                >
+                  {savedVendorIds.includes(vendor._id) ? (
+                    <FaHeart className="text-red-500" />
+                  ) : (
+                    <FaRegHeart />
+                  )}
+                </button>
               </div>
 
               {/* Details */}

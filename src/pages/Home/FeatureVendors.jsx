@@ -6,20 +6,44 @@ import { MapPin } from 'lucide-react';
 import { IoIosArrowForward } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { useGetlatestVendorTypeDataQuery } from "../../features/vendors/vendorAPI";
+import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from "../../features/savedVendors/savedVendorAPI";
+import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
 
 
 const FeaturedVendors = ({ showAll = false }) => {
   const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
   const { data: vendorsData, isLoading, error } = useGetlatestVendorTypeDataQuery();
+  const [saveVendor] = useSaveVendorMutation();
+  const [unsaveVendor] = useUnsaveVendorMutation();
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { data: savedVendorsData, isLoading: isLoadingSaved } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
+  const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
   // console.log("vendorsDatafff", vendorsData)
 
-  const toggleFavorite = (e, id) => {
+  const toggleFavorite = async (e, id) => {
     e.stopPropagation();
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
-    );
+    if (!isAuthenticated) {
+      toast.error('Please log in to save vendors.');
+      return;
+    }
+    if (savedVendorIds.includes(id)) {
+      try {
+        await unsaveVendor(id).unwrap();
+        toast.success('Vendor removed from favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to unsave vendor');
+      }
+    } else {
+      try {
+        await saveVendor(id).unwrap();
+        toast.success('Vendor saved to favorites!');
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to save vendor');
+      }
+    }
   };
 
   const handleVendorClick = (vendor) => {
@@ -90,7 +114,7 @@ const FeaturedVendors = ({ showAll = false }) => {
                 onClick={(e) => toggleFavorite(e, vendor.id)}
                 className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-gray-800"
               >
-                {favorites.includes(vendor.id) ? (
+                {savedVendorIds.includes(vendor.id) ? (
                   <FaHeart className="text-red-500" />
                 ) : (
                   <FaRegHeart />

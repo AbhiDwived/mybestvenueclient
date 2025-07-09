@@ -1,5 +1,5 @@
 import { FaStar, FaRegStar, FaStarHalfAlt } from "react-icons/fa";
-import reviewImage1 from "../../../assets/Images/Navneegt.jpeg";
+import reviewImage1 from "../../../assets/Images/user.png";
 import reviewImage2 from "../../../assets/Images/priya.png";
 
 const reviews = [

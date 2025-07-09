@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload } from 'react-icons/fi';
 import { RiCheckboxCircleLine } from "react-icons/ri";
-import coverimage from '../../assets/Images/Navneegt.jpeg';
+import coverimage from '../../assets/Images/user.png';
 import { useSelector, useDispatch } from 'react-redux';
 import { useUpdateProfileMutation, useGetVendorByIdQuery } from "../../features/vendors/vendorAPI";
 import { setVendorCredentials } from '../../features/vendors/vendorSlice';
@@ -580,8 +580,9 @@ const EditProfile = () => {
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
               <img
                 src={coverImage || vendor.profilePicture || coverimage}
-                className="w-40 h-40 object-fit-cover lg:mx-40 md:mx-70 mx-18 mt-3"
+                className="w-full h-full object-cover rounded"
                 alt="Cover"
+                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = coverimage; // Fallback to default image

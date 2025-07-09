@@ -10,7 +10,8 @@ import { useSelector } from 'react-redux';
 import { 
   useSaveVendorMutation, 
   useUnsaveVendorMutation, 
-  useCheckVendorSavedQuery 
+  useCheckVendorSavedQuery,
+  useGetSavedVendorsQuery
 } from "../../features/savedVendors/savedVendorAPI";
 import { toast } from "react-toastify";
 
@@ -24,10 +25,9 @@ const SearchResults = () => {
   
   const { isAuthenticated } = useSelector((state) => state.auth);
   const { data: vendorData, isLoading, error } = useGetAllPublicVendorsQuery();
-
-  // Save/Unsave vendor mutations
-  const [saveVendor, { isLoading: isSaving }] = useSaveVendorMutation();
-  const [unsaveVendor, { isLoading: isUnsaving }] = useUnsaveVendorMutation();
+  const { data: savedVendorsData } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
+  const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
+  const [saveVendor] = useSaveVendorMutation();
 
   const handleSaveVendor = async (e, vendorId) => {
     e.stopPropagation();
@@ -113,7 +113,7 @@ const SearchResults = () => {
       </div>
 
       {/* Results */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-2 py-8">
         {filteredVendors.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg mb-4">No vendors found matching your search criteria.</p>
@@ -130,12 +130,11 @@ const SearchResults = () => {
               <VendorCard 
                 key={vendor._id}
                 vendor={vendor}
+                savedVendorIds={savedVendorIds}
+                toggleFavorite={handleSaveVendor}
                 onVendorClick={handleVendorClick}
-                onSaveVendor={handleSaveVendor}
                 onUnsaveVendor={handleUnsaveVendor}
                 isAuthenticated={isAuthenticated}
-                isSaving={isSaving}
-                isUnsaving={isUnsaving}
               />
             ))}
           </div>
@@ -148,12 +147,11 @@ const SearchResults = () => {
 // Separate component for vendor card to handle individual save state
 const VendorCard = ({ 
   vendor, 
+  savedVendorIds,
+  toggleFavorite,
   onVendorClick, 
-  onSaveVendor, 
   onUnsaveVendor, 
-  isAuthenticated,
-  isSaving,
-  isUnsaving 
+  isAuthenticated
 }) => {
   const [isSaved, setIsSaved] = useState(false);
   
@@ -174,7 +172,7 @@ const VendorCard = ({
       onUnsaveVendor(e, vendor._id);
       setIsSaved(false); // Optimistic update
     } else {
-      onSaveVendor(e, vendor._id);
+      toggleFavorite(e, vendor._id);
       setIsSaved(true); // Optimistic update
     }
   };
@@ -192,7 +190,6 @@ const VendorCard = ({
         />
         <button
           onClick={handleHeartClick}
-          disabled={isSaving || isUnsaving}
           className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-gray-800 hover:bg-gray-50 disabled:opacity-50"
         >
           {isSaved ? (
