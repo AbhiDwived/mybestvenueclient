@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Trash2 } from "lucide-react";
 import { useGetUserChecklistQuery, useAddChecklistTaskMutation, useToggleTaskCompletionMutation, useDeleteChecklistTaskMutation } from "../../../features/checklist/checklistAPI";
 import { useSelector } from "react-redux";
@@ -6,6 +6,11 @@ import Loader from "../../../components/{Shared}/Loader";
 import { showToast, handleApiError } from '../../../utils/toast';
 
 export default function CheckList() {
+    const isMounted = useRef(true);
+    useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
     const [newTask, setNewTask] = useState("");
     const { isAuthenticated } = useSelector((state) => state.auth);
     
@@ -78,12 +83,12 @@ export default function CheckList() {
             });
 
             setNewTask("");
-            showToast.success("Task added successfully");
+            if (isMounted.current) showToast.success("Task added successfully");
         } catch (err) {
             // Revert local state on error
             setLocalTasks(prev => prev.filter(task => task._id !== optimisticTask._id));
             setLocalTotalCount(prev => prev - 1);
-            handleApiError(err, 'Error adding task');
+            if (isMounted.current) handleApiError(err, 'Error adding task');
         }
     };
 
@@ -112,7 +117,7 @@ export default function CheckList() {
             setLocalCompletedCount(prev => 
                 currentTask.completed ? prev + 1 : prev - 1
             );
-            handleApiError(err, 'Error updating task');
+            if (isMounted.current) handleApiError(err, 'Error updating task');
         }
     };
 
@@ -134,7 +139,10 @@ export default function CheckList() {
         try {
             // Send delete to backend
             await deleteTask(id).unwrap();
-            showToast.success("Task deleted successfully");
+            if (isMounted.current) {
+                console.log("Show toast: Task deleted successfully");
+                showToast.success("Task deleted successfully", { autoClose: 5000 });
+            }
         } catch (err) {
             // Revert local state on error
             setLocalTasks(prev => [...prev, taskToDelete]);
@@ -142,7 +150,7 @@ export default function CheckList() {
             if (taskToDelete.completed) {
                 setLocalCompletedCount(prev => prev + 1);
             }
-            handleApiError(err, 'Error deleting task');
+            if (isMounted.current) handleApiError(err, 'Error deleting task');
         }
     };
 

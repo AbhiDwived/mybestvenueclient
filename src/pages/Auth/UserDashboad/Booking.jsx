@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Clock, Plus, DollarSign, Trash2, AlertCircle } from 'lucide-react';
 import { useGetUserBookingsQuery, useCreateBookingMutation, useDeleteBookingMutation, useGetAvailableVendorsQuery } from '../../../features/bookings/bookingAPI';
 import { useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
@@ -18,6 +18,11 @@ import Loader from "../../../components/{Shared}/Loader";
 import { showToast, handleApiError } from '../../../utils/toast';
 
 const BookingBudget = () => {
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
   const dispatch = useDispatch();
   const { isAuthenticated, user, token } = useSelector((state) => state.auth);
   
@@ -209,7 +214,7 @@ const BookingBudget = () => {
 
   const handleAddBooking = async () => {
     if (!validateForm()) {
-      showToast.error('Please fill in all required fields');
+      if (isMounted.current) showToast.error('Please fill in all required fields');
       return;
     }
     
@@ -258,18 +263,18 @@ const BookingBudget = () => {
       // Clear filters
       dispatch(clearFilters());
 
-      showToast.success('Booking added successfully');
+      if (isMounted.current) showToast.success('Booking added successfully');
     } catch (err) {
-      handleApiError(err, 'Error adding booking');
+      if (isMounted.current) handleApiError(err, 'Error adding booking');
     }
   };
 
   const handleDeleteBooking = async (bookingId) => {
     try {
       await deleteBooking(bookingId).unwrap();
-      showToast.success('Booking deleted successfully');
+      if (isMounted.current) showToast.success('Booking deleted successfully');
     } catch (err) {
-      handleApiError(err, 'Error deleting booking');
+      if (isMounted.current) handleApiError(err, 'Error deleting booking');
     }
   };
 

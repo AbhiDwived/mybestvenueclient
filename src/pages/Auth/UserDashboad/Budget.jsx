@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useGetUserBudgetQuery, useAddBudgetItemMutation, useUpdateBudgetItemMutation, useDeleteBudgetItemMutation } from '../../../features/budget/budgetAPI';
 import { useSelector } from 'react-redux';
 import { MdDelete } from "react-icons/md";
@@ -7,6 +7,11 @@ import Loader from "../../../components/{Shared}/Loader";
 import { showToast, handleApiError } from '../../../utils/toast';
 
 export default function Budget() {
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
   // Local state for new budget item form
   const [newBudgetItem, setNewBudgetItem] = useState({ category: "", planned: 0 });
   
@@ -75,7 +80,7 @@ export default function Budget() {
         itemData: { actual: parsedActual }
       }).unwrap();
 
-      showToast.success('Budget updated successfully');
+      if (isMounted.current) showToast.success('Budget updated successfully');
     } catch (err) {
       // Revert local state on error
       setLocalBudgetItems(localBudgetItems);
@@ -110,7 +115,7 @@ export default function Budget() {
       // Delete from backend
       await deleteBudgetItem(itemId).unwrap();
       
-      showToast.success('Budget item deleted successfully');
+      if (isMounted.current) showToast.success('Budget item deleted successfully');
     } catch (err) {
       // Revert local state on error
       setLocalBudgetItems(prev => [...prev, itemToDelete]);
@@ -243,7 +248,7 @@ export default function Budget() {
       
       // Reset form
       setNewBudgetItem({ category: "", planned: 0 });
-      showToast.success('Budget item added successfully');
+      if (isMounted.current) showToast.success('Budget item added successfully');
     } catch (err) {
       // Revert local state on error
       setLocalBudgetItems(prev => 

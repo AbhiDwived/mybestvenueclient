@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRegisterUserMutation } from '../../features/auth/authAPI';
-import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, EyeOff } from 'react-feather';
 
@@ -167,7 +166,7 @@ const UserSignup = () => {
     
     // Check password match
     if (formData.password !== value) {
-      toast.warn("Passwords do not match");
+      showToast("warn", "Passwords do not match");
     }
   };
 
@@ -177,7 +176,7 @@ const UserSignup = () => {
     // Validate Password Strength
     const strengthCheck = evaluatePasswordStrength(formData.password);
     if (strengthCheck.strength !== 'Strong') {
-      toast.error("Please strengthen your password. Missing requirements:\n" + 
+      showToast("error", "Please strengthen your password. Missing requirements:\n" + 
         strengthCheck.failedCriteria.join('\n'));
       return;
     }
@@ -189,35 +188,35 @@ const UserSignup = () => {
 
     // Validate Name
     if (formData.name.trim().length < 3) {
-      toast.error("Name must be at least 3 characters long.");
+      showToast("error", "Name must be at least 3 characters long.");
       return;
     }
 
     // Validate Email
     if (!isValidEmail(email)) {
-      toast.error("Please enter a valid email address.");
+      showToast("error", "Please enter a valid email address.");
       return;
     }
 
     // Validate Phone
     if (!isValidIndianMobile(phone)) {
-      toast.error("Please enter a valid Indian mobile number.");
+      showToast("error", "Please enter a valid Indian mobile number.");
       return;
     }
 
     // Validate Password Strength
     if (!isStrongPassword(password)) {
-      toast.error("Password must:\n- Be 8-20 characters long\n- Include at least 1 uppercase letter\n- Include at least 1 lowercase letter\n- Include at least 1 number\n- Include at least 1 special character (@$!%*?&)");
+      showToast("error", "Password must:\n- Be 8-20 characters long\n- Include at least 1 uppercase letter\n- Include at least 1 lowercase letter\n- Include at least 1 number\n- Include at least 1 special character (@$!%*?&)");
       return;
     }
 
     if (password !== formData.confirmPassword) {
-      toast.error("⚠️ Passwords do not match!");
+      showToast("error", "⚠️ Passwords do not match!");
       return;
     }
 
     if (!formData.termsAccepted) {
-      toast.error("⚠️ You must agree to the terms and conditions.");
+      showToast("error", "⚠️ You must agree to the terms and conditions.");
       return;
     }
 
@@ -235,7 +234,7 @@ const UserSignup = () => {
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
 
-      toast.success("✅ Registration successful!");
+      showToast("success", "✅ Registration successful!");
 
       if (res?.userId || res.user?.id) {
         setTimeout(() => {
@@ -245,7 +244,7 @@ const UserSignup = () => {
 
     } catch (err) {
       console.error('Registration failed:', err);
-      toast.error(`❌ ${err.data?.message || 'Registration failed. Try again.'}`);
+      showToast("error", `❌ ${err.data?.message || 'Registration failed. Try again.'}`);
     }
   };
 
@@ -394,30 +393,33 @@ const UserSignup = () => {
             {/* Profile Photo Upload with Preview */}
             <div className="mb-4">
               <label className="block text-gray-700 mb-1">Profile Picture</label>
-              <>
-                {/* Preview Image */}
+              <div className="flex items-center space-x-4">
                 {previewImage && (
                   <img
                     src={previewImage}
                     alt="Profile Preview"
-                    className="w-16 h-16 mb-4 rounded-full object-cover border border-gray-300"
+                    className="h-16 w-16 rounded-full object-cover border"
                   />
                 )}
-                {/* File Input */}
-                <div className="flex flex-col">
+                <label
+                  htmlFor="profilePhoto"
+                  className="cursor-pointer inline-block px-4 py-2 text-white text-sm font-medium rounded-md shadow transition"
+                  style={{ backgroundColor: 'rgb(15, 76, 129)' }}
+                >
+                  Choose File
                   <input
                     id="profilePhoto"
                     name="profilePhoto"
                     type="file"
                     accept="image/*"
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="hidden"
                   />
-                  {formData.profilePhoto && (
-                    <p className="text-sm text-gray-500 mt-1">{formData.profilePhoto.name}</p>
-                  )}
-                </div>
-              </>
+                </label>
+              </div>
+              {formData.profilePhoto && (
+                <p className="mt-2 text-sm text-gray-500">{formData.profilePhoto.name}</p>
+              )}
             </div>
 
             {/* Terms Checkbox */}
@@ -456,7 +458,6 @@ const UserSignup = () => {
             </Link>
           </p>
 
-          <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />
         </div>
       </div>
     </div>

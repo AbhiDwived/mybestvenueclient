@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useRegisterVendorMutation } from '../../features/vendors/vendorAPI';
-import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, EyeOff } from 'react-feather';
 
@@ -210,7 +209,7 @@ const VendorSignup = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (formData.password !== value) {
-      toast.warn("Passwords do not match");
+      showToast("warn", "Passwords do not match");
     }
   };
 
@@ -274,7 +273,7 @@ const VendorSignup = () => {
 
     // Show errors
     if (errors.length > 0) {
-      errors.forEach((err) => toast.error(err));
+      errors.forEach((err) => showToast("error", err));
       return;
     }
 
@@ -317,7 +316,7 @@ const VendorSignup = () => {
 
       const vendorId = res?.vendor?._id || res?.vendorId;
       if (vendorId) {
-        toast.success("Registration successful!", {
+        showToast("success", "Registration successful!", {
           position: "top-right",
           autoClose: 1000,
           hideProgressBar: false,
@@ -343,7 +342,7 @@ const VendorSignup = () => {
           });
         }, 1000);
       } else {
-        toast.error('Registration incomplete. Please try again.', {
+        showToast("error", 'Registration incomplete. Please try again.', {
           position: "top-right"
         });
       }
@@ -354,7 +353,7 @@ const VendorSignup = () => {
         (err.message === "Registration took too long"
           ? "Registration is taking longer than expected. Please check your internet connection."
           : "Registration failed. Please try again.");
-      toast.error(errorMessage, {
+      showToast("error", errorMessage, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -599,7 +598,8 @@ const VendorSignup = () => {
                 )}
                 <label
                   htmlFor="profilePicture"
-                  className="cursor-pointer inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow hover:bg-blue-700 transition"
+                  className="cursor-pointer inline-block px-4 py-2 text-white text-sm font-medium rounded-md shadow transition"
+                  style={{ backgroundColor: 'rgb(15, 76, 129)' }}
                 >
                   Choose File
                   <input
@@ -685,10 +685,6 @@ const VendorSignup = () => {
             </Link>
           </p>
 
-          <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick
-
-            hideProgressBar={false}
-            draggable />
         </div>
       </div>
     </div>
