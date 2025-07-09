@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, Bell, Lock, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -27,28 +27,61 @@ const UserProfile = () => {
   const backendURL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  // Form Data
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    address: user?.address || "",
-    city: user?.city || "",
-    state: user?.state || "",
-    country: user?.country || "",
-    weddingDate: user?.weddingDate?.split("T")[0] || "",
-    profilePhoto: user?.profilePhoto || null,
+  // Persistent Wedding Date and Countdown
+  const [weddingDate, setWeddingDate] = useState(() => {
+    // Try to get from localStorage first
+    const storedWeddingDate = localStorage.getItem('userWeddingDate');
+    return storedWeddingDate || (user?.weddingDate?.split("T")[0] || "");
   });
 
-  // Preview Image
-  const [previewImage, setPreviewImage] = useState(
-    user?.profilePhoto
-      ? user.profilePhoto.startsWith("data:") ||
-        user.profilePhoto.startsWith("http")
-        ? user.profilePhoto
-        : `${backendURL}/${user.profilePhoto.replace(/^\/+/, "")}`
-      : null
-  );
+  // Form Data with persistent storage
+  const [formData, setFormData] = useState(() => {
+    // Try to get from localStorage first
+    const storedFormData = localStorage.getItem('userProfileData');
+    if (storedFormData) {
+      try {
+        const parsedData = JSON.parse(storedFormData);
+        return {
+          name: user?.name || parsedData.name || "",
+          email: user?.email || parsedData.email || "",
+          phone: user?.phone || parsedData.phone || "",
+          address: user?.address || parsedData.address || "",
+          city: user?.city || parsedData.city || "",
+          state: user?.state || parsedData.state || "",
+          country: user?.country || parsedData.country || "",
+          weddingDate: weddingDate,
+          profilePhoto: user?.profilePhoto || parsedData.profilePhoto || null,
+        };
+      } catch (error) {
+        console.error("Error parsing stored form data:", error);
+      }
+    }
+    
+    // Fallback to user data or empty strings
+    return {
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
+      city: user?.city || "",
+      state: user?.state || "",
+      country: user?.country || "",
+      weddingDate: weddingDate,
+      profilePhoto: user?.profilePhoto || null,
+    };
+  });
+
+  // Preview Image with persistent storage
+  const [previewImage, setPreviewImage] = useState(() => {
+    const storedPreviewImage = localStorage.getItem('userProfileImage');
+    return storedPreviewImage || 
+      (user?.profilePhoto
+        ? user.profilePhoto.startsWith("data:") ||
+          user.profilePhoto.startsWith("http")
+          ? user.profilePhoto
+          : `${backendURL}/${user.profilePhoto.replace(/^\/+/, "")}`
+        : null);
+  });
 
   // Password Change State
   const [passwordData, setPasswordData] = useState({
@@ -65,9 +98,38 @@ const UserProfile = () => {
     marketingEmails: false,
   });
 
-  // Wedding Countdown
-  const [daysUntilWedding, setDaysUntilWedding] = useState(0);
-  const [tasksCompleted, setTasksCompleted] = useState(142);
+  // Wedding Countdown Calculation
+  const [daysUntilWedding, setDaysUntilWedding] = useState(() => {
+    // Try to get from localStorage first
+    const storedDaysUntilWedding = localStorage.getItem('userWeddingCountdown');
+    if (storedDaysUntilWedding) {
+      return parseInt(storedDaysUntilWedding, 10);
+    }
+    return 0;
+  });
+
+  // Tasks Completed with persistent storage
+  const [tasksCompleted, setTasksCompleted] = useState(() => {
+    // Try to get from localStorage first
+    const storedTasksCompleted = localStorage.getItem('userTasksCompleted');
+    if (storedTasksCompleted) {
+      return parseInt(storedTasksCompleted, 10);
+    }
+    // Default value if not found
+    return 142;
+  });
+
+  // Update tasks completed with localStorage persistence
+  const updateTasksCompleted = (newTasksCount) => {
+    // Ensure the value is within a reasonable range (0-200)
+    const validatedTasksCount = Math.max(0, Math.min(200, newTasksCount));
+    
+    // Update state
+    setTasksCompleted(validatedTasksCount);
+    
+    // Store in localStorage
+    localStorage.setItem('userTasksCompleted', validatedTasksCount.toString());
+  };
 
   // RTK Mutation
   const [triggerUpdateProfile, { isLoading }] = useUpdateProfileMutation();
@@ -75,16 +137,27 @@ const UserProfile = () => {
   // Modal state for delete confirmation
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Calculate days until wedding
-  useEffect(() => {
-    if (formData.weddingDate) {
-      const weddingDate = new Date(formData.weddingDate);
+  // Calculate days until wedding (with persistent storage)
+  const calculateWeddingCountdown = useCallback(() => {
+    if (weddingDate) {
+      const weddingDateObj = new Date(weddingDate);
       const today = new Date();
-      const timeDiff = weddingDate.getTime() - today.getTime();
+      const timeDiff = weddingDateObj.getTime() - today.getTime();
       const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      setDaysUntilWedding(Math.max(0, daysDiff));
+      const calculatedDays = Math.max(0, daysDiff);
+      
+      // Store in localStorage
+      localStorage.setItem('userWeddingDate', weddingDate);
+      localStorage.setItem('userWeddingCountdown', calculatedDays.toString());
+      
+      setDaysUntilWedding(calculatedDays);
     }
-  }, [formData.weddingDate]);
+  }, [weddingDate]);
+
+  // Recalculate wedding countdown on component mount and when wedding date changes
+  useEffect(() => {
+    calculateWeddingCountdown();
+  }, [calculateWeddingCountdown]);
 
   // Handle form input changes
   const handleInputChange = (field, value) => {
@@ -166,7 +239,22 @@ const UserProfile = () => {
         const photoURL = normalizedUser.profilePhoto.startsWith("http")
           ? normalizedUser.profilePhoto
           : `${backendURL}/${normalizedUser.profilePhoto.replace(/^\/+/, "")}`;
+        
+        // Update preview image and store in localStorage
         setPreviewImage(photoURL);
+        localStorage.setItem('userProfileImage', photoURL);
+      }
+
+      // Store updated form data in localStorage
+      localStorage.setItem('userProfileData', JSON.stringify({
+        ...formData,
+        profilePhoto: previewImage
+      }));
+
+      // Update wedding date and recalculate countdown
+      if (formData.weddingDate) {
+        setWeddingDate(formData.weddingDate);
+        calculateWeddingCountdown();
       }
 
       toast.success("Profile updated successfully!");
@@ -413,9 +501,24 @@ const UserProfile = () => {
                     style={{ width: `${(tasksCompleted / 200) * 100}%` }}
                   ></div>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
-                  {tasksCompleted} / 200
-                </p>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-sm text-gray-600">
+                    {tasksCompleted} / 200
+                  </p>
+                  <button 
+                    onClick={() => updateTasksCompleted(tasksCompleted + 1)}
+                    className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
+                  >
+                    Complete Task
+                  </button>
+                  <button 
+                    onClick={() => updateTasksCompleted(tasksCompleted - 1)}
+                    className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200"
+                    disabled={tasksCompleted <= 0}
+                  >
+                    Undo Task
+                  </button>
+                </div>
               </div>
             </div>
           </div>
