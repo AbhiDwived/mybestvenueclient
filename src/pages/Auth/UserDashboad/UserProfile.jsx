@@ -110,33 +110,58 @@ const UserProfile = () => {
         toast.error("User ID is missing. Please log in again.");
         return;
       }
-      let finalPayload;
-      if (formData.profilePhoto instanceof File) {
-        finalPayload = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            finalPayload.append(key, value);
-          }
-        });
-      } else {
-        finalPayload = { ...formData };
+
+      // Validate required fields
+      const requiredFields = ['name', 'email', 'phone'];
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      
+      if (missingFields.length > 0) {
+        toast.error(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+        return;
       }
 
+      // Prepare payload
+      const finalPayload = new FormData();
+      
+      // Append all non-null form data
+      Object.entries(formData).forEach(([key, value]) => {
+        // Special handling for profile photo
+        if (key === 'profilePhoto' && value instanceof File) {
+          finalPayload.append(key, value);
+        } else if (value !== undefined && value !== null && value !== '') {
+          // Append other fields, ensuring they're not empty
+          finalPayload.append(key, value);
+        }
+      });
+
+      // Ensure at least one field is being updated
+      if (finalPayload.keys().next().done) {
+        toast.error("No changes to update.");
+        return;
+      }
+
+      // Add user ID to payload
+      finalPayload.append('userId', user._id);
+
+      // Perform update
       const response = await triggerUpdateProfile({
         userId: user._id,
         profileData: finalPayload,
       }).unwrap();
 
+      // Normalize user data
       const normalizedUser = {
         ...response.user,
         _id: response.user.id,
       };
 
+      // Update Redux store
       dispatch(setCredentials({
         token: localStorage.getItem("token"),
         user: normalizedUser,
       }));
 
+      // Update preview image if a new photo was uploaded
       if (normalizedUser.profilePhoto) {
         const photoURL = normalizedUser.profilePhoto.startsWith("http")
           ? normalizedUser.profilePhoto
