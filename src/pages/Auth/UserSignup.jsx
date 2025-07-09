@@ -42,24 +42,176 @@ const UserSignup = () => {
 
   //Define validation function
   const isValidIndianMobile = (number) => {
-  const invalidNumbers = ['0000000000', '1234567890', '9999999999'];
-  const mobileRegex = /^[6-9]\d{9}$/;
-  return mobileRegex.test(number) && !invalidNumbers.includes(number);
-};
+    const invalidNumbers = ['0000000000', '1234567890', '9999999999'];
+    const mobileRegex = /^[6-9]\d{9}$/;
+    return mobileRegex.test(number) && !invalidNumbers.includes(number);
+  };
+
+  // Enhanced email validation
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Password strength validation
+  const isStrongPassword = (password) => {
+    // At least 8 characters, max 20
+    // Must contain:
+    // - At least 1 uppercase letter
+    // - At least 1 lowercase letter
+    // - At least 1 number
+    // - At least 1 special character
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
+    return passwordRegex.test(password);
+  };
+
+  // Comprehensive password strength evaluation
+  const evaluatePasswordStrength = (password) => {
+    // Criteria for password strength
+    const criteria = [
+      { 
+        test: (p) => p.length >= 8 && p.length <= 20, 
+        message: "Length (8-20 characters)" 
+      },
+      { 
+        test: (p) => /[A-Z]/.test(p), 
+        message: "At least 1 uppercase letter" 
+      },
+      { 
+        test: (p) => /[a-z]/.test(p), 
+        message: "At least 1 lowercase letter" 
+      },
+      { 
+        test: (p) => /\d/.test(p), 
+        message: "At least 1 number" 
+      },
+      { 
+        test: (p) => /[@$!%*?&]/.test(p), 
+        message: "At least 1 special character" 
+      }
+    ];
+
+    // Evaluate strength
+    const passedCriteria = criteria.filter(c => c.test(password));
+    
+    let strength = 'Weak';
+    let strengthColor = 'text-red-500';
+    let strengthWidth = '20%';
+    
+    if (passedCriteria.length === 5) {
+      strength = 'Strong';
+      strengthColor = 'text-green-500';
+      strengthWidth = '100%';
+    } else if (passedCriteria.length >= 4) {
+      strength = 'Good';
+      strengthColor = 'text-yellow-500';
+      strengthWidth = '80%';
+    } else if (passedCriteria.length >= 3) {
+      strength = 'Medium';
+      strengthColor = 'text-orange-500';
+      strengthWidth = '60%';
+    } else if (passedCriteria.length >= 2) {
+      strength = 'Weak';
+      strengthColor = 'text-red-500';
+      strengthWidth = '40%';
+    }
+
+    return {
+      strength,
+      strengthColor,
+      strengthWidth,
+      failedCriteria: criteria.filter(c => !c.test(password)).map(c => c.message)
+    };
+  };
+
+  // State for password strength
+  const [passwordStrength, setPasswordStrength] = useState({
+    strength: 'Weak',
+    strengthColor: 'text-red-500',
+    strengthWidth: '20%',
+    failedCriteria: []
+  });
+
+  // Render method for password strength scale
+  const renderPasswordStrengthScale = () => {
+    return (
+      <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+        <div 
+          className={`h-2.5 rounded-full transition-all duration-500 ease-in-out ${passwordStrength.strengthColor.replace('text-', 'bg-')}`}
+          style={{ width: passwordStrength.strengthWidth }}
+        ></div>
+      </div>
+    );
+  };
+
+  // Update password strength on change
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Update form data
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Evaluate password strength if it's the password field
+    if (name === 'password') {
+      const strengthEvaluation = evaluatePasswordStrength(value);
+      setPasswordStrength(strengthEvaluation);
+    }
+  };
+
+  // Update confirm password change to check match
+  const handleConfirmPasswordChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Update form data
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Check password match
+    if (formData.password !== value) {
+      toast.warn("Passwords do not match");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    //Call validation before submitting
-    const phone = formData.phone.toString();
+    // Validate Password Strength
+    const strengthCheck = evaluatePasswordStrength(formData.password);
+    if (strengthCheck.strength !== 'Strong') {
+      toast.error("Please strengthen your password. Missing requirements:\n" + 
+        strengthCheck.failedCriteria.join('\n'));
+      return;
+    }
 
+    // Comprehensive validation
+    const phone = formData.phone.toString();
+    const email = formData.email.trim();
+    const password = formData.password;
+
+    // Validate Name
+    if (formData.name.trim().length < 3) {
+      toast.error("Name must be at least 3 characters long.");
+      return;
+    }
+
+    // Validate Email
+    if (!isValidEmail(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    // Validate Phone
     if (!isValidIndianMobile(phone)) {
       toast.error("Please enter a valid Indian mobile number.");
       return;
     }
 
+    // Validate Password Strength
+    if (!isStrongPassword(password)) {
+      toast.error("Password must:\n- Be 8-20 characters long\n- Include at least 1 uppercase letter\n- Include at least 1 lowercase letter\n- Include at least 1 number\n- Include at least 1 special character (@$!%*?&)");
+      return;
+    }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== formData.confirmPassword) {
       toast.error("⚠️ Passwords do not match!");
       return;
     }
@@ -69,6 +221,7 @@ const UserSignup = () => {
       return;
     }
 
+    // Rest of the existing submit logic remains the same
     const payload = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== '') {
@@ -177,14 +330,14 @@ const UserSignup = () => {
 
             {/* Password */}
             <div className="relative">
-              <label htmlFor="password" className="block text-gray-700 mb-1">Password</label>
+              <label htmlFor="password" className="block text-gray-700 mb-1">Create Password</label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 placeholder="••••••••"
                 value={formData.password}
-                onChange={handleChange}
+                onChange={handlePasswordChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -197,6 +350,25 @@ const UserSignup = () => {
               </button>
             </div>
 
+            {/* Password Strength Indicator */}
+            <div className="flex justify-between items-center mt-2">
+              <div className="w-1/2">
+                {renderPasswordStrengthScale()}
+              </div>
+              <div className="w-1/2 text-right">
+                <div className="inline-block text-right">
+                  <span className={`text-sm font-semibold ${passwordStrength.strengthColor}`}>
+                    Password Strength: {passwordStrength.strength}
+                  </span>
+                  <ul className="text-xs text-gray-500 mt-1">
+                    {passwordStrength.failedCriteria.map((criteria, index) => (
+                      <li key={index} className="text-right">{criteria}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
             {/* Confirm Password */}
             <div className="relative">
               <label htmlFor="confirmPassword" className="block text-gray-700 mb-1">Confirm Password</label>
@@ -206,7 +378,7 @@ const UserSignup = () => {
                 name="confirmPassword"
                 placeholder="••••••••"
                 value={formData.confirmPassword}
-                onChange={handleChange}
+                onChange={handleConfirmPasswordChange}
                 required
                 className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
