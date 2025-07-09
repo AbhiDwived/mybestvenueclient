@@ -308,13 +308,19 @@ const EditProfile = () => {
       formData.append("vendorType", category);
       formData.append("description", businessDescription);
       formData.append("serviceAreas", Array.isArray(serviceAreas) ? serviceAreas.join(",") : serviceAreas);
-      formData.append("pricing", priceRange);
+      // FIX: Append pricing fields as in prepareFormData
+      priceRange.forEach((item, index) => {
+        formData.append(`pricing[${index}][type]`, item.type);
+        formData.append(`pricing[${index}][price]`, item.price);
+        formData.append(`pricing[${index}][currency]`, item.currency || 'INR');
+        formData.append(`pricing[${index}][unit]`, item.unit || 'per plate');
+      });
       formData.append("email", contactEmail);
       formData.append("phone", contactPhone);
       formData.append("website", website);
       formData.append("contactName", contactName);
       formData.append("address", address);
-      formData.append("services", services);
+      formData.append("services", Array.isArray(services) ? services.join(',') : services);
 
       const res = await updateProfile({
         vendorId,

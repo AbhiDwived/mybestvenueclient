@@ -280,12 +280,39 @@ export const vendorApi = createApi({
 
     // Portfolio management endpoints
     uploadPortfolioImage: builder.mutation({
-      query: (formData) => ({
-        url: '/vendor/portfolio/image',
-        method: 'POST',
-        body: formData,
-        formData: true,
-      }),
+      query: (formData) => {
+        // Retrieve token from multiple sources
+        let token = null;
+        
+        // Try Redux store (if available)
+        try {
+          const store = require('../../app/store').default;
+          token = store.getState().vendor?.token || 
+                  store.getState().auth?.token;
+        } catch (storeError) {
+          // Silently handle store access error
+        }
+        
+        // Fallback to localStorage
+        token = token || 
+                localStorage.getItem('vendorToken') || 
+                localStorage.getItem('adminToken') || 
+                localStorage.getItem('token');
+
+        // Prepare headers
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        return {
+          url: '/vendor/portfolio/image',
+          method: 'POST',
+          body: formData,
+          formData: true,
+          headers,
+        };
+      },
     }),
 
     getPortfolioImages: builder.query({

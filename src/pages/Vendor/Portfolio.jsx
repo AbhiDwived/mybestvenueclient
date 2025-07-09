@@ -133,11 +133,7 @@ const PortfolioTab = () => {
 
   // Extensive logging for debugging
   useEffect(() => {
-    console.log('Authentication State:', {
-      user,
-      token: token ? token.substring(0, 10) + '...' : null,
-      isAuthenticated
-    });
+    // Removed debugging logs
   }, [user, token, isAuthenticated]);
 
   // Get vendorId from user object or local storage
@@ -145,7 +141,6 @@ const PortfolioTab = () => {
     const extractVendorId = () => {
       // Try getting vendor ID from different sources
       if (user?.id) {
-        console.log('Vendor ID from user:', user.id);
         return user.id;
       }
 
@@ -155,10 +150,9 @@ const PortfolioTab = () => {
         try {
           const parsedData = JSON.parse(vendorData);
           const storedId = parsedData.id || parsedData._id;
-          console.log('Vendor ID from localStorage:', storedId);
           return storedId;
         } catch (error) {
-          console.error('Error parsing vendor data:', error);
+          // Silently handle parsing error
         }
       }
 
@@ -169,11 +163,10 @@ const PortfolioTab = () => {
           const tokenParts = vendorToken.split('.');
           if (tokenParts.length === 3) {
             const payload = JSON.parse(atob(tokenParts[1]));
-            console.log('Vendor ID from token payload:', payload.id);
             return payload.id;
           }
         } catch (error) {
-          console.error('Error decoding token:', error);
+          // Silently handle token decoding error
         }
       }
 
@@ -181,7 +174,6 @@ const PortfolioTab = () => {
     };
 
     const id = extractVendorId();
-    console.log('Final extracted vendorId:', id);
     setVendorId(id);
   }, [user]);
 
@@ -254,6 +246,11 @@ const PortfolioTab = () => {
     try {
       setIsLoading(true);
 
+      // Validate vendor ID
+      if (!vendorId) {
+        throw new Error('Vendor ID is missing. Please log in again.');
+      }
+
       // If editing a single image
       if (editingImageIndex !== null && files.length === 1) {
         // Delete the old image first
@@ -286,8 +283,20 @@ const PortfolioTab = () => {
       fileInputRef.current.value = null;
       toast.success(files.length > 1 ? `${files.length} images uploaded successfully` : 'Image uploaded successfully');
     } catch (error) {
-      console.error('Error uploading image(s):', error);
-      toast.error(error?.data?.message || 'Failed to upload image(s)');
+      // User-friendly error messages
+      if (error.name === 'TypeError') {
+        toast.error('Authentication failed. Please log out and log in again.');
+      } else if (error.status === 401) {
+        toast.error('Unauthorized. Please log in again.');
+      } else if (error.status === 413) {
+        toast.error('Image file is too large. Maximum file size is 10MB.');
+      } else {
+        toast.error(
+          error.data?.message || 
+          error.message || 
+          'Failed to upload image(s). Please try again.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -344,31 +353,16 @@ const PortfolioTab = () => {
   };
 
   const handleRemoveVideo = async (index) => {
-    // Comprehensive logging before operation
-    console.group('Video Removal Process');
-    console.log('Attempting to remove video at index:', index);
-    console.log('Current Videos:', portfolioVideos);
-
     // Validate index and video existence
     if (index < 0 || index >= portfolioVideos.length) {
-      console.error('Invalid video index:', index);
       toast.error('Invalid video selection');
-      console.groupEnd();
       return;
     }
 
     const videoToRemove = portfolioVideos[index];
 
-    // Detailed video info logging
-    console.log('Video to Remove:', {
-      index,
-      id: videoToRemove?._id,
-      url: videoToRemove?.url
-    });
-
     // Prevent multiple simultaneous removals
     if (isLoading) {
-      console.warn('Video removal already in progress');
       return;
     }
 
@@ -381,9 +375,7 @@ const PortfolioTab = () => {
       }
 
       // Attempt video deletion
-      const deletionResponse = await deletePortfolioVideo(videoToRemove._id).unwrap();
-
-      console.log('Deletion Response:', deletionResponse);
+      await deletePortfolioVideo(videoToRemove._id).unwrap();
 
       // Optimistic update of local state
       const updatedVideos = portfolioVideos.filter((_, i) => i !== index);
@@ -394,20 +386,7 @@ const PortfolioTab = () => {
 
       // Success notification
       toast.success('Video removed successfully');
-
-      console.log('Video removal completed successfully');
     } catch (error) {
-      // Comprehensive error handling
-      console.error('Video Removal Error:', error);
-
-      // Detailed error logging
-      console.error('Error Details:', {
-        message: error.message,
-        status: error.status,
-        data: error.data,
-        stack: error.stack
-      });
-
       // Specific error handling based on error type
       if (error.status === 404) {
         toast.error('Video not found. It may have been already deleted.');
@@ -427,7 +406,6 @@ const PortfolioTab = () => {
     } finally {
       // Ensure loading state is reset
       setIsLoading(false);
-      console.groupEnd();
     }
   };
 
