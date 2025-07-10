@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useRegisterVendorMutation } from '../../features/vendors/vendorAPI';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, EyeOff } from 'react-feather';
+import { showToast } from '../../utils/toast';  // Import showToast from the correct path
 
 const VENDOR_TYPES = [
   // Venues
@@ -84,6 +85,7 @@ const VendorSignup = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const isMounted = useRef(true);
+  const timeoutRef = useRef(null);
   const [passwordStrength, setPasswordStrength] = useState({
     strength: 'Weak',
     strengthColor: 'text-red-500',
@@ -92,8 +94,10 @@ const VendorSignup = () => {
   });
 
   useEffect(() => {
+    isMounted.current = true;
     return () => {
       isMounted.current = false;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
@@ -306,62 +310,44 @@ const VendorSignup = () => {
     }
 
     try {
-      const registrationPromise = registerVendor(data).unwrap();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Registration took too long")), 15000)
-      );
+      const res = await registerVendor(data).unwrap();
+      console.log("Registration response:", res);
 
-      const res = await Promise.race([registrationPromise, timeoutPromise]);
+      // Ensure loading state is reset
+      if (!isMounted.current) return;
       setIsLoading(false);
 
-      const vendorId = res?.vendor?._id || res?.vendorId;
+      const vendorId = res?.vendor?._id || res?.vendorId || res?.user?.id;
       if (vendorId) {
-        showToast("success", "Registration successful!", {
-          position: "top-right",
-          autoClose: 1000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: false,
-          draggable: true,
-          closeButton: true,
-        });
-
-        const otpVerifyUrl = `/vendor/verify-otp?vendorId=${vendorId}`;
+        showToast.success("✅ Registration successful!");
+        
+        // Prefetch the OTP verification page
         const link = document.createElement("link");
         link.rel = "prefetch";
-        link.href = otpVerifyUrl;
+        link.href = `/vendor/verify-otp?vendorId=${vendorId}`;
         document.head.appendChild(link);
 
-        setTimeout(() => {
-          navigate(otpVerifyUrl, { 
-            replace: true,
-            state: { 
-              email: formData.email, 
-              vendorType: formData.vendorType === "Other" ? formData.otherVendorType : formData.vendorType,
-            },
-          });
+        // Use timeout similar to UserSignup for navigation
+        timeoutRef.current = setTimeout(() => {
+          if (isMounted.current) {
+            navigate(`/vendor/verify-otp?vendorId=${vendorId}`, {
+              state: { 
+                email: formData.email, 
+                vendorType: formData.vendorType === "Other" ? formData.otherVendorType : formData.vendorType 
+              }
+            });
+          }
         }, 1000);
       } else {
-        showToast("error", 'Registration incomplete. Please try again.', {
-          position: "top-right"
-        });
+        showToast.error('Registration incomplete. Please try again.');
       }
     } catch (err) {
-      setIsLoading(false);
+      // Ensure loading state is reset
       if (!isMounted.current) return;
-      const errorMessage = err.data?.message || 
-        (err.message === "Registration took too long"
-          ? "Registration is taking longer than expected. Please check your internet connection."
-          : "Registration failed. Please try again.");
-      showToast("error", errorMessage, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        closeButton: true,
-      });
+      setIsLoading(false);
+
+      const errorMessage = err.data?.message || 'Registration failed. Please try again.';
+      showToast.error(`❌ ${errorMessage}`);
     }
   };
 

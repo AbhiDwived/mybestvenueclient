@@ -238,7 +238,7 @@ const BookingBudget = () => {
           bookingData.packageName = selectedPackage.packageName;
         }
       }
-
+      
       const result = await createBooking(bookingData).unwrap();
       
       // Reset form

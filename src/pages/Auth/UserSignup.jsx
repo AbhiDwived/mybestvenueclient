@@ -53,10 +53,10 @@ const UserSignup = () => {
 
   //Define validation function
   const isValidIndianMobile = (number) => {
-    const invalidNumbers = ['0000000000', '1234567890', '9999999999'];
-    const mobileRegex = /^[6-9]\d{9}$/;
-    return mobileRegex.test(number) && !invalidNumbers.includes(number);
-  };
+  const invalidNumbers = ['0000000000', '1234567890', '9999999999'];
+  const mobileRegex = /^[6-9]\d{9}$/;
+  return mobileRegex.test(number) && !invalidNumbers.includes(number);
+};
 
   // Enhanced email validation
   const isValidEmail = (email) => {
@@ -249,7 +249,7 @@ const UserSignup = () => {
       if (res?.userId || res.user?.id) {
         console.log("Attempting navigation to /verify-otp?userId=", res.userId || res.user.id);
         // Try immediate navigation for debug
-        navigate(`/verify-otp?userId=${res.userId || res.user.id}`);
+          navigate(`/verify-otp?userId=${res.userId || res.user.id}`);
         // If you want to keep the timeout, comment out the above and uncomment below:
         // timeoutRef.current = setTimeout(() => {
         //   if (isMounted.current) {
