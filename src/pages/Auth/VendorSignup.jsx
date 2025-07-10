@@ -271,13 +271,27 @@ const VendorSignup = () => {
       errors.push("Please specify your location");
     }
 
+    // 🔹 Terms and Conditions - Specific Toast Notification
     if (!formData.termsAccepted) {
-      errors.push("You must accept the terms and conditions");
+      // Show a more descriptive toast notification
+      showToast.warning("Please accept the Terms of Service and Privacy Policy to continue", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light"
+      });
+      
+      // Prevent form submission
+      e.preventDefault();
+      return;
     }
 
-    // Show errors
+    // Show errors if any
     if (errors.length > 0) {
-      errors.forEach((err) => showToast("error", err));
+      errors.forEach((err) => showToast.error(err));
       return;
     }
 
