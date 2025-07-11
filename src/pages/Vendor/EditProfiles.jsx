@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload } from 'react-icons/fi';
 import { RiCheckboxCircleLine } from "react-icons/ri";
-import coverimage from '../../assets/Images/user.png';
+import { FaExclamationCircle } from "react-icons/fa";
+import coverimage from '../../assets/Images/Navneegt.jpeg';
 import { useSelector, useDispatch } from 'react-redux';
 import { useUpdateProfileMutation, useGetVendorByIdQuery } from "../../features/vendors/vendorAPI";
 import { setVendorCredentials } from '../../features/vendors/vendorSlice';
@@ -110,9 +111,10 @@ const EditProfile = () => {
   const [contactName, setcontactName] = useState('');
   const [address, setAddress] = useState('');
   const [services, setServices] = useState(['']);
-  // const [pricingRange, setPricingRange] = useState([
-  //   { type: '', price: '', unit: 'per plate' }
-  // ]);
+  const [isSavingInfo, setIsSavingInfo] = useState(false);
+  const [isSavingContact, setIsSavingContact] = useState(false);
+
+
 
 
   const fileInputRef = useRef(null);
@@ -130,34 +132,7 @@ const EditProfile = () => {
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
       setCoverImage(vendor.profilePicture || null);
-      
-      // Initialize address from API data first, then fallback to vendor state
-      const apiAddress = data?.vendor?.address;
-      const vendorAddress = vendor.address;
-      
-      if (typeof apiAddress === 'string') {
-        setAddress(apiAddress);
-      } else if (typeof vendorAddress === 'string') {
-        setAddress(vendorAddress);
-      } else if (apiAddress && typeof apiAddress === 'object') {
-        // Handle legacy object format - convert to string
-        const addressParts = [];
-        if (apiAddress.street) addressParts.push(apiAddress.street);
-        if (apiAddress.city) addressParts.push(apiAddress.city);
-        if (apiAddress.state) addressParts.push(apiAddress.state);
-        if (apiAddress.zipCode) addressParts.push(apiAddress.zipCode);
-        setAddress(addressParts.join(', ') || 'New Delhi, India');
-      } else if (vendorAddress && typeof vendorAddress === 'object') {
-        // Handle legacy object format - convert to string
-        const addressParts = [];
-        if (vendorAddress.street) addressParts.push(vendorAddress.street);
-        if (vendorAddress.city) addressParts.push(vendorAddress.city);
-        if (vendorAddress.state) addressParts.push(vendorAddress.state);
-        if (vendorAddress.zipCode) addressParts.push(vendorAddress.zipCode);
-        setAddress(addressParts.join(', ') || 'New Delhi, India');
-      } else {
-        setAddress('New Delhi, India');
-      }
+      setAddress(vendor.address || 'New Delhi, India');
       // setServices(data?.vendor.services || 'Photographers,Gifts');
       const servicesData = data?.vendor?.services;
       if (Array.isArray(servicesData)) {
@@ -170,30 +145,25 @@ const EditProfile = () => {
 
       }
 
-      const pricingData = data?.vendor?.pricing;
-      // console.log("pricingData", pricingData);
 
 
-      if (data?.vendor?.pricing && Array.isArray(data?.vendor.pricing)) {
-        // setPriceRange(vendor.pricing); 
-        setPriceRange(data?.vendor?.pricing.map(item => ({ ...item, isNew: false })));
-      } else {
-        setPriceRange([{ type: '', price: '', unit: 'per plate' }]); 
-      }
     }
-
-
-
-
-
   }, [vendor, data]);
 
-  // Additional useEffect to handle address updates when API data loads
+
   useEffect(() => {
-    if (data?.vendor?.address && typeof data.vendor.address === 'string') {
-      setAddress(data.vendor.address);
+    if (data?.vendor) {
+      const pricingData = data.vendor.pricing;
+
+      if (Array.isArray(pricingData) && pricingData.length > 0) {
+        setPriceRange(pricingData.map(item => ({ ...item, isNew: false })));
+      } else {
+        // This will make sure even when no pricing is present, a default input is shown
+        setPriceRange([{ type: '', price: '', unit: 'per plate', isNew: true }]);
+      }
     }
-  }, [data?.vendor?.address]);
+  }, [data?.vendor?.pricing]);
+
 
 
 
@@ -247,12 +217,14 @@ const EditProfile = () => {
     return formData;
   };
 
-  const handleSave = async () => {
+  const handleSave = async (type = "info") => {
     if (!vendorId) {
       toast.error("Error: Vendor ID is missing. Please try logging in again.");
       navigate('/vendor/login');
       return;
     }
+    if (type === 'info') setIsSavingInfo(true);
+    if (type === 'contact') setIsSavingContact(true);
 
     try {
       // console.log('Attempting to update vendor with ID:', vendorId);
@@ -284,6 +256,11 @@ const EditProfile = () => {
         toast.error("Failed to update profile: " + (err.data?.message || err.message || "Unknown error"));
       }
     }
+    finally {
+    // Reset both loaders
+    setIsSavingInfo(false);
+    setIsSavingContact(false);
+  }
   };
 
   const handleImageChange = async (file) => {
@@ -308,19 +285,13 @@ const EditProfile = () => {
       formData.append("vendorType", category);
       formData.append("description", businessDescription);
       formData.append("serviceAreas", Array.isArray(serviceAreas) ? serviceAreas.join(",") : serviceAreas);
-      // FIX: Append pricing fields as in prepareFormData
-      priceRange.forEach((item, index) => {
-        formData.append(`pricing[${index}][type]`, item.type);
-        formData.append(`pricing[${index}][price]`, item.price);
-        formData.append(`pricing[${index}][currency]`, item.currency || 'INR');
-        formData.append(`pricing[${index}][unit]`, item.unit || 'per plate');
-      });
+      formData.append("pricing", priceRange);
       formData.append("email", contactEmail);
       formData.append("phone", contactPhone);
       formData.append("website", website);
       formData.append("contactName", contactName);
       formData.append("address", address);
-      formData.append("services", Array.isArray(services) ? services.join(',') : services);
+      formData.append("services", services);
 
       const res = await updateProfile({
         vendorId,
@@ -382,14 +353,6 @@ const EditProfile = () => {
     setPriceRange(updated);
   };
 
-  // const handleAddPricing = () => {
-  //   // setPriceRange([...priceRange, { type: '', price: '', unit: 'per plate' }]);
-
-  //   setPriceRange([
-  //   ...priceRange,
-  //   { type: '', price: '', unit: 'per plate', isNew: true }
-  // ]);
-  // };
 
 
   const handleAddPricing = () => {
@@ -400,9 +363,11 @@ const EditProfile = () => {
   };
 
   const handleRemovePricing = (index) => {
-    const updated = priceRange.filter((_, i) => i !== index);
-    setPriceRange(updated);
+    if (priceRange.length <= 1) return; // prevent deletion of the only row
+    setPriceRange(priceRange.filter((_, i) => i !== index));
   };
+
+
 
 
   if (!isAuthenticated || !vendorId) {
@@ -466,7 +431,7 @@ const EditProfile = () => {
                 </select>
               </div>
 
-            <div className="mb-3">
+              <div className="mb-3">
                 <label className="form-label">Services</label>
                 {(services.length > 0 ? services : ['']).map((service, index) => (
                   <div key={index} className="d-flex align-items-center gap-2 mb-2">
@@ -507,11 +472,10 @@ const EditProfile = () => {
 
 
               <div className="mb-3">
-                
+
                 <label className="form-label">Price Range</label>
 
                 {priceRange.map((item, index) => (
-                  
                   <div key={index} className="d-flex gap-2 mb-2 align-items-center">
 
                     <input
@@ -542,7 +506,7 @@ const EditProfile = () => {
                       <option value="per person" />
                     </datalist>
 
-                    {/* Show + button only on the last item */}
+                    {/* Show Add Button only on the last row */}
                     {index === priceRange.length - 1 && (
                       <button
                         type="button"
@@ -555,8 +519,8 @@ const EditProfile = () => {
                       </button>
                     )}
 
-                    {/* Show remove button only if it's a newly added row */}
-                    {item.isNew && (
+                    {/* Show Remove Button only if it's NOT the first item */}
+                    {index !== 0 && (
                       <button
                         type="button"
                         className="btn btn-outline-danger"
@@ -568,12 +532,22 @@ const EditProfile = () => {
                     )}
                   </div>
                 ))}
+
               </div>
 
 
-              <button type="button" onClick={handleSave} className="btn text-white" style={{ backgroundColor: '#0f4c81' }}>
+              {/* <button type="button" onClick={handleSave} className="btn text-white" style={{ backgroundColor: '#0f4c81' }}>
                 {isLoading ? 'Saving...' : 'Save Information'}
+              </button> */}
+              <button
+                type="button"
+                onClick={() => handleSave("info")}
+                className="btn text-white"
+                style={{ backgroundColor: '#0f4c81' }}
+              >
+                {isSavingInfo ? 'Saving...' : 'Save Information'}
               </button>
+
             </form>
           </div>
         </div>
@@ -586,9 +560,8 @@ const EditProfile = () => {
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
               <img
                 src={coverImage || vendor.profilePicture || coverimage}
-                className="w-full h-full object-cover rounded"
+                className="w-100 h-100 object-fit-cover"
                 alt="Cover"
-                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = coverimage; // Fallback to default image
@@ -667,9 +640,18 @@ const EditProfile = () => {
                 <label className="form-label">Website (optional)</label>
                 <input type="url" className="form-control" value={website} onChange={(e) => setWebsite(e.target.value)} />
               </div>
-              <button type="button" onClick={handleSave} className="btn text-white" style={{ backgroundColor: '#0f4c81' }}>
+              {/* <button type="button" onClick={handleSave} className="btn text-white" style={{ backgroundColor: '#0f4c81' }}>
                 {isLoading ? 'Saving...' : 'Save Contact Info'}
+              </button> */}
+              <button
+                type="button"
+                onClick={() => handleSave("contact")}
+                className="btn text-white"
+                style={{ backgroundColor: '#0f4c81' }}
+              >
+                {isSavingContact ? 'Saving...' : 'Save Contact Info'}
               </button>
+
             </form>
           </div>
         </div>

@@ -1,0 +1,13 @@
+# Robots.txt for MyBestVenue Project
+
+# Allow all crawlers to access the entire site
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://mybestvenue.com/sitemap.xml
+
+# Directories or pages to disallow
+Disallow: /admin/
+Disallow: /vendor/dashboard/
+Disallow: /user/private/ 

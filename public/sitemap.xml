@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <!-- Main Pages -->
+    <url>
+        <loc>https://mybestvenue.com/</loc>
+        <priority>1.0</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/about</loc>
+        <priority>0.8</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/terms</loc>
+        <priority>0.5</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+
+    <!-- Wedding Vendors -->
+    <url>
+        <loc>https://mybestvenue.com/wedding-vendor</loc>
+        <priority>0.9</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/Cakes</loc>
+        <priority>0.7</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/caterers</loc>
+        <priority>0.7</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/choreographers</loc>
+        <priority>0.7</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/photographers</loc>
+        <priority>0.7</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/videography</loc>
+        <priority>0.7</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/makeUp</loc>
+        <priority>0.7</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/planners</loc>
+        <priority>0.7</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+
+    <!-- Wedding Venues -->
+    <url>
+        <loc>https://mybestvenue.com/Wedding_Venues</loc>
+        <priority>0.9</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/Wedding_Venues_city</loc>
+        <priority>0.8</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+
+    <!-- Corporate -->
+    <url>
+        <loc>https://mybestvenue.com/corporate</loc>
+        <priority>0.6</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/conference</loc>
+        <priority>0.6</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/contactUs</loc>
+        <priority>0.6</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+
+    <!-- Blogs and Ideas -->
+    <url>
+        <loc>https://mybestvenue.com/IdeaBlog</loc>
+        <priority>0.7</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+
+    <!-- Additional Pages -->
+    <url>
+        <loc>https://mybestvenue.com/HowItWorks</loc>
+        <priority>0.6</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/ProjectList</loc>
+        <priority>0.6</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/SuccessfullEvents</loc>
+        <priority>0.6</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+
+    <!-- Authentication Pages -->
+    <url>
+        <loc>https://mybestvenue.com/user/login</loc>
+        <priority>0.4</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/user/signup</loc>
+        <priority>0.4</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+    <url>
+        <loc>https://mybestvenue.com/forgot-password</loc>
+        <priority>0.4</priority>
+        <changefreq>monthly</changefreq>
+    </url>
+</urlset> 

@@ -104,12 +104,27 @@ const AboutUs = () => {
             Search Venues
           </Link>
 
-          <button
-            className="flex items-center bg-white text-gray-700 px-4 py-2 rounded hover:bg-[#0f4c81e7] transition sm:px-3 sm:py-2 text-sm sm:text-base"
+          {/* <button
+            className="flex items-center bg-white text-gray-700 px-4 py-2 rounded hover:bg-[#0f4c81e7] transition sm:px-3 sm:py-2 text-sm sm:text-base hover:cursor-default"
           >
+            <a
+        href="tel:+919990555740"
+        className=" text-white p-3 rounded-full shadow-lg transition duration-200"
+        title="Call Now"
+      ></a>
             <FaPhoneVolume size={20} className="mr-2" />
-            Get Expert Help
+            {/* Get Expert Help */}
+          {/* +91-9990555740 */}
+          {/* </button> */}
+          <button
+            onClick={() => window.location.href = 'tel:+919990555740'}
+            className="flex items-center bg-white text-gray-700 px-4 py-2 rounded hover:bg-[#0f4c81e7] transition sm:px-3 sm:py-2 text-sm sm:text-base"
+            title="Call Now"
+          >
+            <FaPhoneVolume size={20} className="mr-2 text-gray-700" />
+            +91-9990555740
           </button>
+
         </div>
       </section>
 
@@ -124,8 +139,8 @@ const AboutUs = () => {
               Leading India's Venue Discovery Revolution
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
-              To become the most preferred venue discovery platform in India by setting new standards of convenience, 
-              credibility, and customer satisfaction. We aim to transform how people discover, evaluate, and book 
+              To become the most preferred venue discovery platform in India by setting new standards of convenience,
+              credibility, and customer satisfaction. We aim to transform how people discover, evaluate, and book
               venues, making every event planning journey seamless and memorable.
             </p>
           </div>
@@ -138,8 +153,8 @@ const AboutUs = () => {
               Connecting Venues and Dreamers
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
-              We are committed to bridging the gap between venue seekers and venue owners through innovative technology, 
-              unwavering transparency, and a service-oriented approach. Leveraging years of hospitality expertise, 
+              We are committed to bridging the gap between venue seekers and venue owners through innovative technology,
+              unwavering transparency, and a service-oriented approach. Leveraging years of hospitality expertise,
               we create a seamless, trustworthy platform that empowers both venue owners and event planners.
             </p>
           </div>
@@ -238,7 +253,7 @@ const AboutUs = () => {
       <div className='mt-5 bg-gray-100 py-16 px-4 sm:px-8 md:px-16 text-center font-serif'>
         <p className='text-3xl sm:text-4xl text-[#0F4C81] mb-6'>A Commitment to Excellence</p>
         <p className='max-w-3xl mx-auto text-lg text-gray-700 mb-8'>
-          At My Best Venue, we don't just provide listings — we deliver complete peace of mind. 
+          At My Best Venue, we don't just provide listings — we deliver complete peace of mind.
           Every event matters, every detail counts, and every memory begins with the right venue.
         </p>
         <p className='text-2xl text-[#0F4C81] italic'>

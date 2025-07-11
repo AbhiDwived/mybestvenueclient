@@ -1,45 +1,40 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useGetVendorsFaqsMutation } from '../../../features/vendors/vendorAPI';
+import { useParams } from 'react-router-dom';
 
 const FaqQuestions = () => {
+  // const vendor = useSelector((state) => state.vendor.vendor);
+  // const vendorId = vendor?.id;
+  const { vendorId } = useParams();
+  // console.log("vendorId", vendorId);
+
+  const [getVendorsFaqs, { data, isLoading, isError, error }] = useGetVendorsFaqsMutation();
+  //  console.log("datafaqqqq", data);
+
+  useEffect(() => {
+    if (vendorId) {
+      getVendorsFaqs({ vendorId });
+    }
+  }, [vendorId, getVendorsFaqs]);
+
+  if (isLoading) return <div>Loading FAQs...</div>;
+  if (isError) return <div>Error loading FAQs: {error?.data?.message || 'Something went wrong'}</div>;
+
   return (
     <div className="bg-white p-2 md:p-10 rounded-lg shadow-sm text-gray-800 font-serif">
       <h2 className="text-2xl md:text-3xl font-semibold mb-6">Frequently Asked Questions</h2>
-
       <div className="space-y-6 text-base leading-relaxed">
-        <div>
-          <h3 className="font-semibold text-lg">How far in advance should I book?</h3>
-          <p>
-            We recommend booking at least 6–8 months in advance for wedding dates during peak season (October–February). For other months, 3–4 months in advance is usually sufficient.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-lg">How many photos will I receive?</h3>
-          <p>
-            The number of photos depends on your package. Our basic package includes 100 edited photos, premium offers 300, and deluxe provides 500+. All photos are professionally edited and delivered in high resolution.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-lg">Do you travel to other cities?</h3>
-          <p>
-            Yes, we are available for destination weddings across India and internationally. Travel and accommodation charges apply for locations outside Delhi NCR.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-lg">What is your payment policy?</h3>
-          <p>
-            We require a 30% advance booking fee to reserve your date, with the balance payable one week before the event. We accept bank transfers, credit/debit cards, and UPI payments.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-lg">How long until we receive our photos?</h3>
-          <p>
-            You’ll receive a preview of selected photos within a week after the event. The complete set of edited photos is typically delivered within 3–4 weeks.
-          </p>
-        </div>
+        {data?.faqs && data.faqs.length > 0 ? (
+          data.faqs.map((faq, index) => (
+            <div key={index}>
+              <p className="font-semibold text-xl text-gray-600">{faq.question}</p>
+              <p>{faq.answer}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-600">No FAQs available for this vendor.</p>
+        )}
       </div>
     </div>
   );
