@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { GrContact } from "react-icons/gr";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { RxCrossCircled } from "react-icons/rx";
@@ -22,10 +22,10 @@ const DISTINCT_COLORS = [
 // Get readable text color for a given background
 function getContrastYIQ(hexcolor) {
   hexcolor = hexcolor.replace("#", "");
-  const r = parseInt(hexcolor.substr(0,2),16);
-  const g = parseInt(hexcolor.substr(2,2),16);
-  const b = parseInt(hexcolor.substr(4,2),16);
-  const yiq = ((r*299)+(g*587)+(b*114))/1000;
+  const r = parseInt(hexcolor.substr(0, 2), 16);
+  const g = parseInt(hexcolor.substr(2, 2), 16);
+  const b = parseInt(hexcolor.substr(4, 2), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
   return (yiq >= 180) ? "#222" : "#fff";
 }
 
@@ -42,11 +42,13 @@ const PendingVendorApprovals = () => {
   const [approveVendor, { isLoading: isApproving }] = useApproveVendorMutation();
   const [deleteVendor, { isLoading: isDeleting }] = useDeleteVendorByAdminMutation();
 
+  const [vendorToReject, setVendorToReject] = useState(null); // For modal
+
   const vendors = Array.isArray(data)
     ? data
     : Array.isArray(data?.vendors)
-    ? data.vendors
-    : [];
+      ? data.vendors
+      : [];
 
   // Assign distinct colors for category and vendorType
   const categoryColorMap = useMemo(() => {
@@ -72,18 +74,6 @@ const PendingVendorApprovals = () => {
     } catch (err) {
       console.error("Approval failed:", err);
       toast.error(err.data?.message || "Error approving vendor.");
-    }
-  };
-
-  const handleReject = async (vendorId) => {
-    if (window.confirm("Are you sure you want to reject this vendor?")) {
-      try {
-        await deleteVendor({ vendorId }).unwrap();
-        toast.success("Vendor rejected and removed.");
-      } catch (err) {
-        console.error("Rejection failed:", err);
-        toast.error(err.data?.message || "Error rejecting vendor.");
-      }
     }
   };
 
@@ -155,23 +145,23 @@ const PendingVendorApprovals = () => {
                   <button
                     onClick={() => handleApprove(vendor._id)}
                     disabled={isApproving || isDeleting}
-                    className={`bg-green-100 text-green-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-green-200 transition ${
-                      (isApproving || isDeleting) ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className={`bg-green-100 text-green-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-green-200 transition ${(isApproving || isDeleting) ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                   >
-                    <FaRegCheckCircle className="mr-1" /> 
+                    <FaRegCheckCircle className="mr-1" />
                     {isApproving ? 'Approving...' : 'Approve'}
                   </button>
+
                   <button
-                    onClick={() => handleReject(vendor._id)}
+                    onClick={() => setVendorToReject(vendor)}
                     disabled={isApproving || isDeleting}
-                    className={`bg-red-100 text-red-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-red-200 transition ${
-                      (isApproving || isDeleting) ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className={`bg-red-100 text-red-600 inline-flex items-center px-4 py-1 rounded text-sm hover:bg-red-200 transition ${(isApproving || isDeleting) ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                   >
-                    <RxCrossCircled className="mr-1" /> 
-                    {isDeleting ? 'Rejecting...' : 'Reject'}
+                    <RxCrossCircled className="mr-1" />
+                    Reject
                   </button>
+
                   <button className="text-gray-600 text-sm underline hover:text-gray-800 hover:bg-[#DEBF78] p-1 rounded">
                     View Details
                   </button>
@@ -181,6 +171,44 @@ const PendingVendorApprovals = () => {
           ))
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {vendorToReject && (
+        <div className="fixed inset-0 bg-white/40  flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-11/12 max-w-md shadow-lg relative">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Confirm Rejection</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to reject <strong>{vendorToReject.businessName}</strong>?<br />
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 text-gray-600 hover:text-black underline"
+                onClick={() => setVendorToReject(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+                onClick={async () => {
+                  try {
+                    await deleteVendor({ vendorId: vendorToReject._id }).unwrap();
+                    toast.success("Vendor rejected and removed.");
+                    setVendorToReject(null);
+                  } catch (err) {
+                    console.error("Rejection failed:", err);
+                    toast.error(err?.data?.message || "Error rejecting vendor.");
+                    setVendorToReject(null);
+                  }
+                }}
+              >
+                {isDeleting ? "Rejecting..." : "Reject"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );

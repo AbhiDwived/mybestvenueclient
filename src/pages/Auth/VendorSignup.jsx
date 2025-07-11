@@ -275,7 +275,7 @@ const VendorSignup = () => {
     if (!formData.termsAccepted) {
       // Show a more descriptive toast notification
       showToast.warning("Please accept the Terms of Service and Privacy Policy to continue", {
-        position: "top-right",
+        position: "top-center",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,

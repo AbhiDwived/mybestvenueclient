@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   useVerifyOtpMutation, 
-  useResendOtpMutation 
+  useResendVendorOtpMutation 
 } from '../../features/vendors/vendorAPI';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // ✅ make sure to import the CSS
@@ -20,7 +20,7 @@ const VendorVerifyOTP = () => {
   const cooldownIntervalRef = useRef(null);
 
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
-  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
+  const [resendOtp, { isLoading: isResending }] = useResendVendorOtpMutation();
 
   // Start cooldown timer
   const startResendCooldown = () => {
@@ -75,10 +75,14 @@ const VendorVerifyOTP = () => {
     if (!canResendOtp || isResending) return;
 
     try {
-      await resendOtp({ vendorId }).unwrap();
+      console.log('Attempting to resend OTP for vendorId:', vendorId);
+      // Ensure vendorId is passed as a string
+      const response = await resendOtp(vendorId).unwrap();
+      console.log('Resend OTP response:', response);
       toast.success("New OTP sent successfully!");
       startResendCooldown();
     } catch (err) {
+      console.error('Resend OTP Error:', err);
       toast.error(err?.data?.message || "Failed to resend OTP. Please try again.");
     }
   };

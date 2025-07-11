@@ -1,43 +1,17 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import axios from 'axios';
 
 export const vendorApi = createApi({
   reducerPath: 'vendorApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', // Updated URL with v1 prefix
-    prepareHeaders: (headers, { getState, endpoint }) => {
-      // List of public endpoints that don't require authentication
-      const publicEndpoints = [
-        'forgotPassword',
-        'verifyOtp',
-        'resendOtp',
-        'loginVendor',
-        'registerVendor',
-        'verifyPasswordReset',
-        'resendPasswordResetOtp'
-      ];
-
-      // Skip adding token for public endpoints
-      if (publicEndpoints.includes(endpoint)) {
-        return headers;
-      }
-
-      // Try to get token from Redux state first
-      const token = getState().vendor?.token;
-      // Try vendor token from localStorage
-      const vendorToken = localStorage.getItem('vendorToken');
-      // Try admin token from localStorage (for admin operations on vendors)
-      const adminToken = localStorage.getItem('adminToken');
-      // Regular user token as last resort
-      const userToken = localStorage.getItem('token');
-      
-      // Use the first available token
-      const finalToken = token || vendorToken || adminToken || userToken;
-      
-      if (finalToken) {
-        headers.set('Authorization', `Bearer ${finalToken}`);
+    baseUrl: '/api/v1',
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem('vendorToken');  // Change to vendorToken
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
       }
       return headers;
-    },
+    }
   }),
 
   endpoints: (builder) => ({
@@ -390,6 +364,15 @@ export const vendorApi = createApi({
       }),
     }),
 
+    // Resend Vendor OTP
+    resendVendorOtp: builder.mutation({
+      query: (vendorId) => ({
+        url: '/vendor/resendvendor-otp',
+        method: 'POST',
+        body: { vendorId },
+      }),
+    }),
+
   //get latest vendor type Data
     getlatestVendorTypeData: builder.query({
       query: () => ({
@@ -401,8 +384,9 @@ export const vendorApi = createApi({
   })
 });
 
-
-
+export const resendVendorOtpAPI = (vendorId) => {
+  return axios.post(`/api/v1/vendor/resendvendor-otp`, { vendorId });
+};
 
 
 // Export hooks for usage in components
@@ -438,5 +422,6 @@ export const {
   useGetPortfolioVideosQuery,
   useDeletePortfolioVideoMutation,
   useResendPasswordResetOtpMutation,
+  useResendVendorOtpMutation,
   useGetlatestVendorTypeDataQuery
 } = vendorApi;

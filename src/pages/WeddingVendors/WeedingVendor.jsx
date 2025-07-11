@@ -1,122 +1,134 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-  Camera, Video, Music, Utensils, Gift, Activity, Smile, Cake, Sparkles, Tent
-} from 'lucide-react';
-import { useLocation } from 'react-router-dom';
-import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+  Camera,
+  Video,
+  Music,
+  Utensils,
+  Gift,
+  Activity,
+  Smile,
+  Cake,
+  Sparkles,
+  Tent,
+} from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { useGetAllVendorsQuery } from "../../features/admin/adminAPI";
 import { BiSolidFlorist, BiSolidParty } from "react-icons/bi";
 import { SiPioneerdj } from "react-icons/si";
 import { BsCake2 } from "react-icons/bs";
-import { MdInsertInvitation, MdEmojiTransportation, MdAddAPhoto } from "react-icons/md";
-
-
+import {
+  MdInsertInvitation,
+  MdEmojiTransportation,
+  MdAddAPhoto,
+} from "react-icons/md";
 
 // Components
-import WeddingPhotographers from '../WeddingVendors/Photographers';
-import Caterers from '../WeddingVendors/Caterers';
-import WeddingDecorators from '../WeddingVendors/Decorators';
-import WeddingMakeUp from '../WeddingVendors/WeddingMakeUp';
-import WeddingPlanners from '../WeddingVendors/Planners';
-import PartyPlaces from '../WeddingVendors/PartyPlaces';
-import Choreographers from '../WeddingVendors/Choreographers';
-import Photobooth from '../WeddingVendors/Photobooth';
-import Cakes from './Cakes';
-import DJ from './DJ';
-import TentHouse from './TentHouse';
-import Transportation from './Transportation';
-import Videography from './Videography';
-import Florist from './Florists';
-import Gifts from './Gifts';
-import Invitation from './Invitations';
-import Musics from './Music';
-
+import WeddingPhotographers from "../WeddingVendors/Photographers";
+import Caterers from "../WeddingVendors/Caterers";
+import WeddingDecorators from "../WeddingVendors/Decorators";
+import WeddingMakeUp from "../WeddingVendors/WeddingMakeUp";
+import WeddingPlanners from "../WeddingVendors/Planners";
+import PartyPlaces from "../WeddingVendors/PartyPlaces";
+import Choreographers from "../WeddingVendors/Choreographers";
+import Photobooth from "../WeddingVendors/Photobooth";
+import Cakes from "./Cakes";
+import DJ from "./DJ";
+import TentHouse from "./TentHouse";
+import Transportation from "./Transportation";
+import Videography from "./Videography";
+import Florist from "./Florists";
+import Gifts from "./Gifts";
+import Invitation from "./Invitations";
+import Musics from "./Music";
 
 // Data
 const vendorCategories = [
-
-  { title: 'Choreographers', icon: Activity },
-  { title: 'Photobooth', icon: MdAddAPhoto },
-  { title: 'DJ', icon: SiPioneerdj },
-  { title: 'Cakes', icon: BsCake2 },
-  { title: 'Musics', icon: Music },
-  { title: 'TentHouse', icon: Tent },
-  { title: 'Transportation', icon: MdEmojiTransportation },
-  { title: 'Videography', icon: Video },
+  { title: "Choreographers", icon: Activity },
+  { title: "Photobooth", icon: MdAddAPhoto },
+  { title: "DJ", icon: SiPioneerdj },
+  { title: "Cakes", icon: BsCake2 },
+  { title: "Musics", icon: Music },
+  { title: "TentHouse", icon: Tent },
+  { title: "Transportation", icon: MdEmojiTransportation },
+  { title: "Videography", icon: Video },
 ];
 
 const additionalServices = [
-  { title: 'Photographers', icon: Camera },
-  { title: 'Caterers', icon: Utensils },
-  { title: 'Wedding Decorators', icon: Gift },
-  { title: 'Wedding MakeUp', icon: Gift },
-  { title: 'Wedding Planners', icon: Utensils },
-  { title: 'Party Places', icon: BiSolidParty },
-  { title: 'Gifts', icon: Gift },
-  { title: 'Florist', icon: BiSolidFlorist },
-  { title: 'Invitation', icon: MdInsertInvitation },
+  { title: "Photographers", icon: Camera },
+  { title: "Caterers", icon: Utensils },
+  { title: "Wedding Decorators", icon: Gift },
+  { title: "Wedding MakeUp", icon: Gift },
+  { title: "Wedding Planners", icon: Utensils },
+  { title: "Party Places", icon: BiSolidParty },
+  { title: "Gifts", icon: Gift },
+  { title: "Florist", icon: BiSolidFlorist },
+  { title: "Invitation", icon: MdInsertInvitation },
 ];
 
 const categoryComponents = {
-  'Caterers': <Caterers />,
-  'Photographers': <WeddingPhotographers />,
-  'Wedding Decorators': <WeddingDecorators />,
-  'Wedding MakeUp': <WeddingMakeUp />,
-  'Wedding Planners': <WeddingPlanners />,
-  'Party Places': <PartyPlaces />,
-  'Choreographers': <Choreographers />,
-  'Photobooth': <Photobooth />,
-  'Cakes': <Cakes />,
-  'Musics': <Musics />,
-  'DJ': <DJ />,
-  'TentHouse': <TentHouse />,
-  'Transportation': <Transportation />,
-  'Videography': <Videography />,
-  'Florist': <Florist />,
-  'Gifts': <Gifts />,
-  'Invitation': <Invitation />,
+  Caterers: <Caterers />,
+  Photographers: <WeddingPhotographers />,
+  "Wedding Decorators": <WeddingDecorators />,
+  "Wedding MakeUp": <WeddingMakeUp />,
+  "Wedding Planners": <WeddingPlanners />,
+  "Party Places": <PartyPlaces />,
+  Choreographers: <Choreographers />,
+  Photobooth: <Photobooth />,
+  Cakes: <Cakes />,
+  Musics: <Musics />,
+  DJ: <DJ />,
+  TentHouse: <TentHouse />,
+  Transportation: <Transportation />,
+  Videography: <Videography />,
+  Florist: <Florist />,
+  Gifts: <Gifts />,
+  Invitation: <Invitation />,
 };
 
 export default function WeddingVendor() {
-  const [activeTab, setActiveTab] = useState('primary');
+  const [activeTab, setActiveTab] = useState("primary");
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const location = useLocation();
   const initialCategory = location.state?.category || null;
   const combinedCategories = [...vendorCategories, ...additionalServices];
-  window.scrollTo({ top: 0, category: "top" })
+  window.scrollTo({ top: 0, category: "top" });
   // Filtered categories based on active tab and search term
   const { data, isLoading, isError, error } = useGetAllVendorsQuery();
-
 
   //  const caterers = data?.vendors?.filter(v => v.vendorType === "Caterers");
   //  const Hospitality = data?.vendors?.filter(v => v.vendorType ==="Hospitality");
 
   const filteredCategories = searchTerm
-    ? combinedCategories.filter(({ title }) =>
-      title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    : activeTab === 'primary'
-      ? vendorCategories
-      : additionalServices;
+    ? (activeTab === "primary" ? vendorCategories : additionalServices).filter(
+        ({ title }) => title.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : activeTab === "primary"
+    ? vendorCategories
+    : additionalServices;
 
   useEffect(() => {
     if (initialCategory) {
       setSelectedCategory(initialCategory);
 
-      const isPrimary = vendorCategories.some(cat => cat.title === initialCategory);
-      const isAdditional = additionalServices.some(cat => cat.title === initialCategory);
+      const isPrimary = vendorCategories.some(
+        (cat) => cat.title === initialCategory
+      );
+      const isAdditional = additionalServices.some(
+        (cat) => cat.title === initialCategory
+      );
 
       if (isPrimary) {
-        setActiveTab('primary');
+        setActiveTab("primary");
       } else if (isAdditional) {
-        setActiveTab('additional');
+        setActiveTab("additional");
       }
     }
   }, [initialCategory]);
 
   const handleCategoryClick = (category) => {
-    setSelectedCategory(prev => (prev === category ? null : category));
+    setSelectedCategory((prev) => (prev === category ? null : category));
   };
 
   if (isLoading) {
@@ -126,7 +138,7 @@ export default function WeddingVendor() {
   if (isError) {
     return (
       <div className="text-center text-red-500 py-10">
-        Error: {error?.data?.message || 'Failed to fetch vendors.'}
+        Error: {error?.data?.message || "Failed to fetch vendors."}
       </div>
     );
   }
@@ -151,14 +163,13 @@ export default function WeddingVendor() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <button
-                style={{ borderRadius: '5px' }}
+                style={{ borderRadius: "5px" }}
                 className="bg-[#10497a] hover:bg-[#062b4b] text-white px-3 py-2"
               >
                 Search
               </button>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -174,27 +185,29 @@ export default function WeddingVendor() {
             <div className="inline-flex bg-gray-200 rounded-md overflow-hidden p-1">
               <button
                 onClick={() => {
-                  setActiveTab('primary');
+                  setActiveTab("additional");
                   setSelectedCategory(null);
-                  setSearchTerm('');
+                  setSearchTerm("");
                 }}
-                className={`px-3 py-2 text-sm font-medium transition ${activeTab === 'primary'
-                  ? 'bg-corporate-primary text-black'
-                  : 'bg-white text-gray-700 border border-gray-300'
-                  }`}
+                className={`px-3 py-2 text-sm font-medium transition ${
+                  activeTab === "additional"
+                    ? "bg-white text-black shadow-md"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
               >
                 Primary Vendors
               </button>
               <button
                 onClick={() => {
-                  setActiveTab('additional');
+                  setActiveTab("primary");
                   setSelectedCategory(null);
-                  setSearchTerm('');
+                  setSearchTerm("");
                 }}
-                className={`px-3 py-2 text-sm font-medium transition ${activeTab === 'additional'
-                  ? 'bg-corporate-primary text-black'
-                  : 'bg-white text-gray-700 border border-gray-300'
-                  }`}
+                className={`px-3 py-2 text-sm font-medium transition ${
+                  activeTab === "primary"
+                    ? "bg-white text-black shadow-md"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
               >
                 Additional Services
               </button>
@@ -208,10 +221,11 @@ export default function WeddingVendor() {
                 <button
                   key={idx}
                   onClick={() => handleCategoryClick(title)}
-                  className={`flex items-center rounded transition group bg-white py-2 w-full ${selectedCategory === title
-                    ? 'border-2 border-[#0f4c81]'
-                    : 'border border-transparent'
-                    } hover:border-[#0f4c81]`}
+                  className={`flex items-center rounded transition group bg-white py-2 w-full ${
+                    selectedCategory === title
+                      ? "border-2 border-[#0f4c81]"
+                      : "border border-transparent"
+                  } hover:border-[#0f4c81]`}
                 >
                   <div className="flex items-center justify-center mr-2 px-3 py-2">
                     <Icon className="w-9 h-9 text-black bg-gray-100 px-2 rounded-full" />
@@ -225,16 +239,12 @@ export default function WeddingVendor() {
               </div>
             )}
           </div>
-
         </div>
       </div>
 
       {/* Render Category Component if selected */}
       {selectedCategory && (
         <div className="p-2 lg:mx-20 lg:mt-15">
-
-
-
           <div className="grid grid-cols-[1fr_auto] items-start mb-6 gap-4">
             <h3 className="text-xl font-bold break-words">
               {selectedCategory}
@@ -247,15 +257,14 @@ export default function WeddingVendor() {
             </button>
           </div>
 
-          {activeTab === 'primary' &&
-            vendorCategories.some((cat) => cat.title === selectedCategory) &&
-            (categoryComponents[selectedCategory] || <p>No component available.</p>)
-          }
-
-          {activeTab === 'additional' &&
+          {/* Render only if the selected category is in the current active tab */}
+          {(activeTab === "primary" &&
             additionalServices.some((cat) => cat.title === selectedCategory) &&
-            (categoryComponents[selectedCategory] || <p>No component available.</p>)
-          }
+            (categoryComponents[selectedCategory] || (
+              <p>No component available.</p>
+            ))) ||
+            (activeTab === "additional" &&
+              vendorCategories.some((cat) => cat.title === selectedCategory))}
         </div>
       )}
     </div>

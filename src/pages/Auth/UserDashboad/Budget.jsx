@@ -1,267 +1,85 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useGetUserBudgetQuery, useAddBudgetItemMutation, useUpdateBudgetItemMutation, useDeleteBudgetItemMutation } from '../../../features/budget/budgetAPI';
+import React, { useState, useEffect } from 'react';
+import {
+  useGetUserBudgetQuery,
+  useAddBudgetItemMutation,
+  useUpdateBudgetItemMutation,
+  useDeleteBudgetItemMutation,
+} from '../../../features/budget/budgetAPI';
 import { useSelector } from 'react-redux';
-import { MdDelete } from "react-icons/md";
-import { Tooltip } from 'react-tooltip';
-import Loader from "../../../components/{Shared}/Loader";
-import { showToast, handleApiError } from '../../../utils/toast';
+import { toast } from 'react-toastify';
+import { MdDelete } from 'react-icons/md';
+import Loader from '../../../components/{Shared}/Loader';
 
 export default function Budget() {
-  const isMounted = useRef(true);
-  useEffect(() => {
-    isMounted.current = true;
-    return () => { isMounted.current = false; };
-  }, []);
-  // Local state for new budget item form
-  const [newBudgetItem, setNewBudgetItem] = useState({ category: "", planned: 0 });
-  
-  // Get user authentication state
+  const [newBudgetItem, setNewBudgetItem] = useState({ category: '', planned: 0 });
   const { isAuthenticated } = useSelector((state) => state.auth);
-  
-  // RTK Query hooks with optimized configuration
-  const { 
-    data: budgetData, 
-    isLoading, 
-    isError, 
+
+  /* ──────────────── RTK Query hooks ──────────────── */
+  const {
+    data: budgetData,
+    isLoading,
+    isError,
     error,
-    refetch 
-  } = useGetUserBudgetQuery(undefined, {
-    skip: !isAuthenticated,
-    refetchOnMountOrArgChange: true,
-    refetchOnFocus: false,
-    refetchOnReconnect: true,
-  });
-  
+  } = useGetUserBudgetQuery(undefined, { skip: !isAuthenticated });
+
   const [addBudgetItem, { isLoading: isAddingItem }] = useAddBudgetItemMutation();
   const [updateBudgetItem, { isLoading: isUpdatingItem }] = useUpdateBudgetItemMutation();
   const [deleteBudgetItem, { isLoading: isDeletingItem }] = useDeleteBudgetItemMutation();
 
-  // State to manage local budget items for real-time updates
-  const [localBudgetItems, setLocalBudgetItems] = useState([]);
+  /* ──────────────── Derived values ──────────────── */
+  const budget = budgetData?.data?.items ?? [];
+  const totalPlanned = budgetData?.data?.totalPlanned ?? 0;
+  const totalActual = budgetData?.data?.totalActual ?? 0;
+  const budgetRemaining = totalPlanned - totalActual;
 
-  // Sync local budget items with API data
-  useEffect(() => {
-    if (budgetData?.data?.items) {
-      setLocalBudgetItems(budgetData.data.items);
-    }
-  }, [budgetData]);
-
-  // Show error if API request fails
+  /* ──────────────── Global load / error handling ──────────────── */
   useEffect(() => {
     if (isError) {
-      handleApiError(error, 'Error loading budget');
+      toast.error(`Error loading budget: ${error?.data?.message || 'Unknown error'}`);
     }
   }, [isError, error]);
 
-  // Memoized update function to avoid unnecessary re-renders
-  const updateActualBudget = useCallback(async (id, actual) => {
+  /* ──────────────── Handlers ──────────────── */
+  const updateActualBudget = async (id, actual) => {
     try {
-      // Validate input
-      const parsedActual = actual === '' ? 0 : Number(actual);
-      
-      if (isNaN(parsedActual)) {
-        showToast.error('Please enter a valid number');
-        return;
-      }
-
-      // Find the current item
-      const currentItem = localBudgetItems.find(item => item._id === id);
-      if (!currentItem) return;
-
-      // Optimistically update local state
-      const updatedItems = localBudgetItems.map(item => 
-        item._id === id ? { ...item, actual: parsedActual } : item
-      );
-      setLocalBudgetItems(updatedItems);
-
-      // Send update to backend
-      await updateBudgetItem({
-        itemId: id,
-        itemData: { actual: parsedActual }
-      }).unwrap();
-
-      if (isMounted.current) showToast.success('Budget updated successfully');
+      await updateBudgetItem({ itemId: id, itemData: { actual: Number(actual) } }).unwrap();
+      toast.success('Actual amount updated');                   // ✅ green
     } catch (err) {
-      // Revert local state on error
-      setLocalBudgetItems(localBudgetItems);
-      handleApiError(err, 'Error updating budget');
-    }
-  }, [localBudgetItems, updateBudgetItem]);
-
-  // Memoized budget calculations to prevent unnecessary recalculations
-  const budgetSummary = useMemo(() => {
-    const totalPlanned = localBudgetItems.reduce((sum, item) => sum + item.planned, 0);
-    const totalActual = localBudgetItems.reduce((sum, item) => sum + (item.actual || 0), 0);
-    const budgetRemaining = totalPlanned - totalActual;
-
-    return {
-      totalPlanned,
-      totalActual,
-      budgetRemaining
-    };
-  }, [localBudgetItems]);
-
-  // Delete budget item with optimistic update
-  const handleDeleteItem = useCallback(async (itemId) => {
-    // Find the item to be deleted
-    const itemToDelete = localBudgetItems.find(item => item._id === itemId);
-    if (!itemToDelete) return;
-
-    try {
-      // Optimistically remove item from local state
-      const updatedItems = localBudgetItems.filter(item => item._id !== itemId);
-      setLocalBudgetItems(updatedItems);
-
-      // Delete from backend
-      await deleteBudgetItem(itemId).unwrap();
-      
-      if (isMounted.current) showToast.success('Budget item deleted successfully');
-    } catch (err) {
-      // Revert local state on error
-      setLocalBudgetItems(prev => [...prev, itemToDelete]);
-      handleApiError(err, 'Error deleting budget item');
-    }
-  }, [localBudgetItems, deleteBudgetItem]);
-
-  // Render method for actual budget input
-  const renderActualInput = useCallback((item) => {
-    return (
-      <input
-        type="number"
-        value={item.actual || ''}
-        onChange={(e) => {
-          // Update local state immediately without API call
-          setLocalBudgetItems(prevItems => 
-            prevItems.map(i => 
-              i._id === item._id ? { ...i, actual: Number(e.target.value) } : i
-            )
-          );
-        }}
-        onBlur={(e) => updateActualBudget(item._id, e.target.value)}
-        className="w-24 border rounded px-2 py-1"
-        min={0}
-      />
-    );
-  }, [updateActualBudget]);
-
-  // Render budget items table
-  const renderBudgetItemsTable = useMemo(() => {
-    return (
-      <>
-        <table className="min-w-full table-auto">
-          <thead>
-            <tr style={{ borderBottom: '1px solid gray' }}>
-              <th className="text-left py-3 px-4">Category</th>
-              <th className="text-right py-3 px-4">Planned</th>
-              <th className="text-right py-3 px-4">Actual</th>
-              <th className="text-right py-3 px-4">Difference</th>
-              <th className="text-right py-3 px-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {localBudgetItems.map((item) => (
-              <tr key={item._id} style={{ borderBottom: '1px solid gray' }}>
-                <td className="py-3 px-4">{item.category}</td>
-                <td className="py-3 px-4">{(item.planned ?? 0).toLocaleString()}</td>
-                <td className="py-3 px-4">{renderActualInput(item)}</td>
-                <td
-                  className={`py-3 px-4 font-medium ${(item.actual ?? 0) > (item.planned ?? 0)
-                    ? "text-red-500"
-                    : "text-green-500"
-                    }`}
-                >
-                  {(item.planned != null && item.actual != null)
-                    ? ((item.planned - item.actual).toLocaleString())
-                    : "-"}
-                </td>
-                <td className="py-3 px-4">
-                  <button
-                    id={`delete-budget-${item._id}`}
-                    onClick={() => handleDeleteItem(item._id)}
-                    className="text-red-500 hover:text-red-700 relative"
-                    disabled={isDeletingItem}
-                  >
-                    <MdDelete size={25} />
-                  </button>
-                  <Tooltip 
-                    anchorId={`delete-budget-${item._id}`}
-                    content="Delete Budget Item"
-                    place="top"
-                  />
-                </td>
-              </tr>
-            ))}
-            {localBudgetItems.length === 0 && (
-              <tr>
-                <td colSpan="5" className="py-4 text-center text-gray-500">
-                  No budget items yet. Add your first item!
-                </td>
-              </tr>
-            )}
-          </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-gray-300 font-bold">
-              <td className="py-3 px-4">Total</td>
-              <td className="py-3 px-4">{budgetSummary.totalPlanned.toLocaleString()}</td>
-              <td className="py-3 px-4">{budgetSummary.totalActual.toLocaleString()}</td>
-              <td
-                className={`py-3 px-4 ${budgetSummary.budgetRemaining < 0 ? "text-red-500" : "text-green-500"}`}
-              >
-                {budgetSummary.budgetRemaining.toLocaleString()}
-              </td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-      </>
-    );
-  }, [localBudgetItems, budgetSummary, renderActualInput, handleDeleteItem, isDeletingItem]);
-
-  // Add new budget item handler
-  const handleAddBudgetItem = async () => {
-    if (!newBudgetItem.category || newBudgetItem.planned <= 0) return;
-
-    // Optimistic update
-    const optimisticItem = {
-      _id: `temp-${Date.now()}`, // Temporary ID
-      category: newBudgetItem.category,
-      planned: Number(newBudgetItem.planned),
-      actual: 0
-    };
-
-    try {
-      // Immediately update local state
-      setLocalBudgetItems(prev => [...prev, optimisticItem]);
-
-      // Send to backend
-      const result = await addBudgetItem({
-        category: newBudgetItem.category,
-        planned: Number(newBudgetItem.planned)
-      }).unwrap();
-      
-      // Replace temporary item with server-returned item
-      setLocalBudgetItems(prev => 
-        prev.map(item => 
-          item._id === optimisticItem._id ? result : item
-        )
-      );
-      
-      // Reset form
-      setNewBudgetItem({ category: "", planned: 0 });
-      if (isMounted.current) showToast.success('Budget item added successfully');
-    } catch (err) {
-      // Revert local state on error
-      setLocalBudgetItems(prev => 
-        prev.filter(item => item._id !== optimisticItem._id)
-      );
-      handleApiError(err, 'Error adding budget item');
+      toast.error(`Error updating budget: ${err.data?.message || 'Unknown error'}`); // 🔴 red
     }
   };
 
-  // Show loading state
-  if (isLoading) {
+  const handleAddBudgetItem = async () => {
+    if (!newBudgetItem.category || newBudgetItem.planned <= 0) return;
+
+    try {
+      await addBudgetItem({
+        category: newBudgetItem.category,
+        planned: Number(newBudgetItem.planned),
+      }).unwrap();
+
+      setNewBudgetItem({ category: '', planned: 0 });
+      toast.success('Budget item added successfully');          // ✅ green
+    } catch (err) {
+      toast.error(`Error adding budget item: ${err.data?.message || 'Unknown error'}`); // 🔴 red
+    }
+  };
+
+  const handleDeleteItem = async (itemId) => {
+    try {
+      await deleteBudgetItem(itemId).unwrap();
+      /*  👇  “Success but visually RED” – treat as error type so bg = red  */
+      toast.error('Budget item deleted');                       // 🔴 red
+    } catch (err) {
+      toast.error(`Error deleting budget item: ${err.data?.message || 'Unknown error'}`); // 🔴 red
+    }
+  };
+
+  /* ──────────────── Loading state ──────────────── */
+  if (isLoading || isAddingItem || isUpdatingItem || isDeletingItem) {
     return <Loader fullScreen />;
   }
+
 
   return (
     <div className="flex min-h-screen">
@@ -275,10 +93,79 @@ export default function Budget() {
               </div>
               <div className="text-sm">
                 <span className="font-medium text-gray-700">Total Budget:</span>{" "}
-                <span className="font-bold">Rs {budgetSummary.totalPlanned.toLocaleString()}</span>
+                <span className="font-bold">Rs {totalPlanned.toLocaleString()}</span>
               </div>
               <div className="overflow-x-auto">
-                {renderBudgetItemsTable}
+                <table className="min-w-full table-auto">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid gray' }}>
+                      <th className="text-left py-3 px-4">Category</th>
+                      <th className="text-right py-3 px-4">Planned</th>
+                      <th className="text-right py-3 px-4">Actual</th>
+                      <th className="text-right py-3 px-4">Difference</th>
+                      <th className="text-right py-3 px-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {budget.map((item) => (
+                      <tr key={item._id} style={{ borderBottom: '1px solid gray' }}>
+                        <td className="py-3 px-4">{item.category}</td>
+                        <td className="py-3 px-4 ">{item.planned.toLocaleString()}</td>
+                        <td className="py-3 px-4 ">
+                          <input
+                            type="number"
+                            value={item.actual || ""}
+                            onChange={(e) =>
+                              updateActualBudget(item._id, Number(e.target.value))
+                            }
+                            className="w-24  border rounded px-2 py-1"
+                            min={0}
+                          />
+                        </td>
+                        <td
+                          className={`py-3 px-4  font-medium ${item.actual && item.actual > item.planned
+                            ? "text-red-500"
+                            : "text-green-500"
+                            }`}
+                        >
+                          {item.actual
+                            ? (item.planned - item.actual).toLocaleString()
+                            : "-"}
+                        </td>
+                        <td className="py-3 px-4 ">
+                          <button
+                            onClick={() => handleDeleteItem(item._id)}
+                            className="text-red-500 hover:text-red-700"
+                            disabled={isDeletingItem}
+                          >
+                            <MdDelete size={25} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {budget.length === 0 && (
+                      <tr>
+                        <td colSpan="5" className="py-4 text-center text-gray-500">
+                          No budget items yet. Add your first item!
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-gray-300 font-bold">
+                      <td className="py-3 px-4">Total</td>
+                      <td className="py-3 px-4">{totalPlanned.toLocaleString()}</td>
+                      <td className="py-3 px-4 ">{totalActual.toLocaleString()}</td>
+                      <td
+                        className={`py-3 px-4 ${budgetRemaining < 0 ? "text-red-500" : "text-green-500"
+                          }`}
+                      >
+                        {budgetRemaining.toLocaleString()}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
             </div>
           </div>
@@ -325,10 +212,10 @@ export default function Budget() {
 
                 <button
                   onClick={handleAddBudgetItem}
-                  disabled={!newBudgetItem.category || newBudgetItem.planned <= 0}
+                  disabled={!newBudgetItem.category || newBudgetItem.planned <= 0 || isAddingItem}
                   className="w-full bg-[#0D3F6A] hover:bg-[#0D3F6A] disabled:bg-gray-300 text-white font-medium py-2 px-4 rounded-md"
                 >
-                  Add Budget Item
+                  {isAddingItem ? "Adding..." : "Add Budget Item"}
                 </button>
               </div>
             </div>
@@ -339,21 +226,21 @@ export default function Budget() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Planned:</span>
-                  <span className="font-bold">₹{budgetSummary.totalPlanned.toLocaleString()}</span>
+                  <span className="font-bold">₹{totalPlanned.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Spent:</span>
-                  <span className="font-bold ">₹{budgetSummary.totalActual.toLocaleString()}</span>
+                  <span className="font-bold ">₹{totalActual.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between border-t border-gray-300 pt-2">
                   <span className="text-gray-600">Remaining:</span>
                   <span
-                    className={`font-bold ${budgetSummary.budgetRemaining < 0 ? "text-red-500" : "text-green-500"
+                    className={`font-bold ${budgetRemaining < 0 ? "text-red-500" : "text-green-500"
                       }`}
                   >
-                    ₹{budgetSummary.budgetRemaining.toLocaleString()}
+                    ₹{budgetRemaining.toLocaleString()}
                   </span>
                 </div>
               </div>

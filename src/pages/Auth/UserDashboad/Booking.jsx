@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Clock, Plus, DollarSign, Trash2, AlertCircle } from 'lucide-react';
-import { useGetUserBookingsQuery, useCreateBookingMutation, useDeleteBookingMutation, useGetAvailableVendorsQuery } from '../../../features/bookings/bookingAPI';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Plus, Trash2, AlertCircle } from 'lucide-react';
+import {
+  useGetUserBookingsQuery,
+  useCreateBookingMutation,
+  useDeleteBookingMutation,
+  useGetAvailableVendorsQuery
+} from '../../../features/bookings/bookingAPI';
 import { useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
 import { useSelector, useDispatch } from 'react-redux';
+// Ensure proper import of ToastContainer and toast
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';  // Import CSS for styling
+import Loader from "../../../components/{Shared}/Loader";
 import {
   selectBookings,
   selectTotalPlanned,
@@ -14,18 +23,11 @@ import {
   setFilters,
   clearFilters
 } from '../../../features/bookings/bookingSlice';
-import Loader from "../../../components/{Shared}/Loader";
-import { showToast, handleApiError } from '../../../utils/toast';
 
 const BookingBudget = () => {
-  const isMounted = useRef(true);
-  useEffect(() => {
-    isMounted.current = true;
-    return () => { isMounted.current = false; };
-  }, []);
   const dispatch = useDispatch();
   const { isAuthenticated, user, token } = useSelector((state) => state.auth);
-  
+
   // Redux selectors
   const bookings = useSelector(selectBookings);
   const totalPlanned = useSelector(selectTotalPlanned);
@@ -73,7 +75,7 @@ const BookingBudget = () => {
   // Check authentication status
   useEffect(() => {
     if (!isAuthenticated || !token) {
-      showToast.error('Please log in to access bookings');
+      toast.error('Please log in to access bookings');
       return;
     }
   }, [isAuthenticated, token]);
@@ -93,10 +95,11 @@ const BookingBudget = () => {
   // Show error if API request fails
   useEffect(() => {
     if (isError && error) {
-      handleApiError(error, 'Error loading bookings');
+      toast.error(`Error loading bookings: ${error}`);
     }
   }, [isError, error]);
 
+  
   // Fetch vendor packages when vendor is selected
   const fetchVendorPackages = async (vendorId) => {
     if (!vendorId || vendorId === 'custom') {
@@ -114,7 +117,7 @@ const BookingBudget = () => {
       }
     } catch (err) {
       console.error('Error fetching packages:', err);
-      showToast.error('Failed to fetch vendor packages');
+      toast.error('Failed to fetch vendor packages');
       setVendorPackages([]);
     } finally {
       setIsLoadingPackages(false);
@@ -125,7 +128,7 @@ const BookingBudget = () => {
   const handleVendorChange = (vendorId) => {
     // Clear vendor name error when changing vendor
     setFormErrors(prev => ({ ...prev, vendorName: '' }));
-    
+
     if (vendorId === 'custom') {
       setFormData(prev => ({
         ...prev,
@@ -137,7 +140,7 @@ const BookingBudget = () => {
       setVendorPackages([]);
       return;
     }
-    
+
     const selectedVendor = availableVendors.find(vendor => vendor._id === vendorId);
     if (selectedVendor) {
       setFormData(prev => ({
@@ -148,7 +151,7 @@ const BookingBudget = () => {
         plannedAmount: ''
       }));
       fetchVendorPackages(vendorId);
-      
+
       // Update filters in Redux
       dispatch(setFilters({ vendorId }));
     } else {
@@ -181,7 +184,7 @@ const BookingBudget = () => {
   const handleInputChange = (field, value) => {
     // Clear error for the field being changed
     setFormErrors(prev => ({ ...prev, [field]: '' }));
-    
+
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -190,34 +193,41 @@ const BookingBudget = () => {
 
   const validateForm = () => {
     const errors = {};
-    
+
     // Check vendor name
     if (!formData.vendorName || !formData.vendorName.trim()) {
       errors.vendorName = 'Vendor name is required';
     }
-    
+
     // Check event type
     if (!formData.eventType) {
       errors.eventType = 'Event type is required';
     }
-    
+
     // Check planned amount
     if (!formData.plannedAmount) {
       errors.plannedAmount = 'Planned amount is required';
     } else if (isNaN(parseFloat(formData.plannedAmount)) || parseFloat(formData.plannedAmount) <= 0) {
       errors.plannedAmount = 'Please enter a valid amount';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleAddBooking = async () => {
     if (!validateForm()) {
-      if (isMounted.current) showToast.error('Please fill in all required fields');
+      toast.error('Please fill in all required fields correctly', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       return;
     }
-    
+
     try {
       const bookingData = {
         vendorId: formData.vendorId === 'custom' ? null : formData.vendorId,
@@ -238,9 +248,9 @@ const BookingBudget = () => {
           bookingData.packageName = selectedPackage.packageName;
         }
       }
-      
+
       const result = await createBooking(bookingData).unwrap();
-      
+
       // Reset form
       setFormData({
         vendorId: '',
@@ -256,25 +266,61 @@ const BookingBudget = () => {
         phone: user?.phone || '',
         notes: ''
       });
-      
+
       // Clear errors
       setFormErrors({});
 
       // Clear filters
       dispatch(clearFilters());
 
-      if (isMounted.current) showToast.success('Booking added successfully');
+      // Success toast with more details
+      toast.success(`Booking for ${bookingData.vendorName} added successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
     } catch (err) {
-      if (isMounted.current) handleApiError(err, 'Error adding booking');
+      console.error('Booking error:', err);
+      
+      // Detailed error toast
+      toast.error(`Failed to add booking: ${err.data?.message || 'Unknown error occurred'}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
   const handleDeleteBooking = async (bookingId) => {
     try {
       await deleteBooking(bookingId).unwrap();
-      if (isMounted.current) showToast.success('Booking deleted successfully');
+      
+      // Success toast for deletion
+      toast.success('Booking deleted successfully', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } catch (err) {
-      if (isMounted.current) handleApiError(err, 'Error deleting booking');
+      // Error toast for deletion failure
+      toast.error(`Error deleting booking: ${err.data?.message || 'Unknown error'}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
@@ -302,7 +348,6 @@ const BookingBudget = () => {
         {/* Header */}
         <div className="text-center space-y-2 mb-3">
           <h3 className="font-bold mb-3 text-gray-800 flex items-left  gap-2">
-            
             Booking Budget Summary
           </h3>
         </div>
@@ -413,7 +458,7 @@ const BookingBudget = () => {
               </div>
               <div className="space-y-2">
                 <label htmlFor="eventType" className="block text-sm font-medium text-gray-700">
-                  Event Type 
+                  Event Type
                 </label>
                 <select
                   id="eventType"
@@ -457,7 +502,7 @@ const BookingBudget = () => {
               </div>
               <div className="space-y-2">
                 <label htmlFor="plannedAmount" className="block text-sm font-medium text-gray-700">
-                  Final Amount 
+                  Final Amount
                 </label>
                 <input
                   id="plannedAmount"
@@ -564,7 +609,7 @@ const BookingBudget = () => {
                   <p className="text-sm text-purple-600 font-medium">{booking.eventType}</p>
                   {booking.eventDate && (
                     <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> {new Date(booking.eventDate).toLocaleDateString('en-IN', { 
+                      <Calendar className="h-3 w-3" /> {new Date(booking.eventDate).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
@@ -588,8 +633,21 @@ const BookingBudget = () => {
           )}
         </div>
       </div>
+
       {/* Toast Container */}
-      {/* The ToastContainer component is no longer needed as showToast handles its own rendering */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}  // Increased duration
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"  // Add colored theme for better visibility
+        style={{ zIndex: 9999 }}
+      />
     </div>
   );
 };

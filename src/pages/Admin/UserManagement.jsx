@@ -15,6 +15,36 @@ import Loader from "../../components/{Shared}/Loader";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
+// ConfirmModal component for delete confirmation
+const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, isLoading }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-  backdrop-blur-sm flex justify-center items-center px-2 z-50">
+      <div className="bg-white w-full max-w-md rounded-lg p-6 shadow-lg">
+        <h3 className="text-lg font-semibold mb-4">{title}</h3>
+        <p className="mb-6">{message}</p>
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100"
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const UserManagement = () => {
   const { data: usersDataRaw, isLoading: usersLoading, isError: usersError, refetch: refetchUsers } = useGetAllUsersQuery();
   const { data: vendorsDataRaw, isLoading: vendorsLoading, isError: vendorsError, refetch: refetchVendors } = useGetAllVendorsQuery();
@@ -61,6 +91,11 @@ const UserManagement = () => {
   const [editFormData, setEditFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // New states for delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Query for user data with proper error handling
   const { 
     data: userProfileData, 
@@ -102,7 +137,6 @@ const UserManagement = () => {
   }, []);
   
   // Add useEffect to check for userId in URL query parameter
-  // Moved after handleView definition to avoid "cannot access before initialization" error
   useEffect(() => {
     if (!hasProcessedUrl.current) {
       const queryParams = new URLSearchParams(window.location.search);
@@ -236,25 +270,34 @@ const UserManagement = () => {
       setIsSubmitting(false);
     }
   };
-  const handleDelete = async (user) => {
-    console.log('Delete clicked for:', user);
-    if (window.confirm(`Delete ${user.displayName}?`)) {
-      try {
-        const userId = user.id || user._id;
-        if (user.role === 'vendor') {
-          const result = await deleteVendorByAdmin({ vendorId: userId }).unwrap();
-          console.log('Delete vendor result:', result);
-        } else {
-          const result = await deleteUserByAdmin({ userId: userId }).unwrap();
-          console.log('Delete user result:', result);
-        }
-        toast.success(`${user.displayName} deleted successfully`);
-        refetchUsers();
-        refetchVendors();
-      } catch (error) {
-        console.error('Delete error:', error);
-        toast.error(`Failed to delete ${user.displayName}: ${error.message || 'Unknown error'}`);
+
+  // New delete handlers
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const userId = userToDelete.id || userToDelete._id;
+      if (userToDelete.role === 'vendor') {
+        await deleteVendorByAdmin({ vendorId: userId }).unwrap();
+      } else {
+        await deleteUserByAdmin({ userId }).unwrap();
       }
+      toast.success(`${userToDelete.displayName} deleted successfully`);
+      refetchUsers();
+      refetchVendors();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error(`Failed to delete ${userToDelete.displayName}: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setUserToDelete(null);
     }
   };
 
@@ -380,7 +423,7 @@ const UserManagement = () => {
                     <button onClick={() => handleEdit(user)} className="p-1 hover:bg-gray-100 rounded mx-2" title="Edit">
                       <FaPen className="inline w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(user)} className="p-1 hover:bg-gray-100 rounded" title="Delete">
+                    <button onClick={() => handleDeleteClick(user)} className="p-1 hover:bg-gray-100 rounded" title="Delete">
                       <FaTrash className="inline w-4 h-4 text-red-500" />
                     </button>
                   </td>
@@ -567,6 +610,7 @@ const UserManagement = () => {
           </div>
         </div>
       )}
+
       {/* Edit Modal */}
       {showEditModal && selectedUser && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 backdrop-blur-sm flex justify-center items-center px-2 z-50">
@@ -724,6 +768,16 @@ const UserManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Confirm Delete"
+        message={`Are you sure you want to delete ${userToDelete?.displayName || 'this user'}? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteModal(false)}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
