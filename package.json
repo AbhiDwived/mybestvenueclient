@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "start": "vite",
-    "build": "vite build",
+    "generate-sitemap": "node scripts/generate-sitemap.js",
+    "build": "vite build && npm run generate-sitemap",
+    "dev": "vite dev && npm run generate-sitemap",
     "lint": "eslint .",
     "proxy": "http://localhost:5000",
     "preview": "vite preview",
