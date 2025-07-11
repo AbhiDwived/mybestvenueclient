@@ -112,20 +112,5 @@
         <changefreq>monthly</changefreq>
     </url>
 
-    <!-- Authentication Pages -->
-    <url>
-        <loc>https://mybestvenue.com/user/login</loc>
-        <priority>0.4</priority>
-        <changefreq>monthly</changefreq>
-    </url>
-    <url>
-        <loc>https://mybestvenue.com/user/signup</loc>
-        <priority>0.4</priority>
-        <changefreq>monthly</changefreq>
-    </url>
-    <url>
-        <loc>https://mybestvenue.com/forgot-password</loc>
-        <priority>0.4</priority>
-        <changefreq>monthly</changefreq>
-    </url>
+    
 </urlset> 
