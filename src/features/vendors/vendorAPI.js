@@ -390,6 +390,15 @@ export const vendorApi = createApi({
       }),
     }),
 
+    // Resend Vendor OTP
+    resendVendorOtp: builder.mutation({
+      query: ({ vendorId }) => ({
+        url: '/vendor/resend-vendor-otp',
+        method: 'POST',
+        body: { vendorId },
+      }),
+    }),
+
   //get latest vendor type Data
     getlatestVendorTypeData: builder.query({
       query: () => ({
@@ -438,5 +447,6 @@ export const {
   useGetPortfolioVideosQuery,
   useDeletePortfolioVideoMutation,
   useResendPasswordResetOtpMutation,
+  useResendVendorOtpMutation,
   useGetlatestVendorTypeDataQuery
 } = vendorApi;
