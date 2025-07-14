@@ -6,9 +6,13 @@ import { MdLocationOn } from "react-icons/md";
 import Loader from '../../components/{Shared}/Loader';
 import { FiArrowLeft } from "react-icons/fi";
 import { MapPin } from 'lucide-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useGetVendorByIdQuery } from "../../features/vendors/vendorAPI";
-import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from "../../features/savedVendors/savedVendorAPI";
+import {
+  useSaveVendorMutation,
+  useGetSavedVendorsQuery,
+  useUnsaveVendorMutation
+} from "../../features/savedVendors/savedVendorAPI";
 import { toast } from 'react-toastify';
 
 const VendorListPage = () => {
@@ -16,38 +20,46 @@ const VendorListPage = () => {
   const { city = '', category = '' } = useParams();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [favorites, setFavorites] = useState([]);
   const [activeTab, setActiveTab] = useState('popular');
+  const [pendingSearchTerm, setPendingSearchTerm] = useState('');
+
   const [saveVendor] = useSaveVendorMutation();
   const [unsaveVendor] = useUnsaveVendorMutation();
 
   const vendor = useSelector((state) => state.vendor.vendor);
   const vendorId = vendor?._id;
-  // console.log("vendorvvvv",vendor);
 
-  const { data, error: vendorError, isLoading: isLoadingVendor } = useGetVendorByIdQuery(vendorId);
-  // console.log("data", data?.vendor.services);
+  // Needed only if you show vendor‑specific info; can remove if unused
+  useGetVendorByIdQuery(vendorId, { skip: !vendorId });
 
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const { data: savedVendorsData, isLoading: isLoadingSaved } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
-  const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
+  const { data: savedVendorsData, isLoading: isLoadingSaved } =
+    useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
+  const savedVendorIds =
+    savedVendorsData?.data?.map((v) => v._id || v.id) || [];
 
-  // Format inputs
+  // Format inputs from URL
   const formattedCategory = category
     .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 
-  const formattedCity = city === 'all-india'
-    ? 'All India'
-    : city.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  const formattedCity =
+    city === 'all-india'
+      ? 'All India'
+      : city
+        .split('-')
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
 
   const {
     data: vendorsData,
     isLoading,
     error,
-    refetch,
+    refetch
   } = useGetAllVendorsQuery();
+
+  /* ------------------------- helpers ------------------------- */
 
   const toggleFavorite = async (e, id) => {
     e.stopPropagation();
@@ -55,47 +67,92 @@ const VendorListPage = () => {
       toast.error('Please log in to save vendors.');
       return;
     }
-    if (savedVendorIds.includes(id)) {
-      try {
+    try {
+      if (savedVendorIds.includes(id)) {
         await unsaveVendor(id).unwrap();
         toast.success('Vendor removed from favorites!');
-      } catch (err) {
-        toast.error(err?.data?.message || 'Failed to unsave vendor');
-      }
-    } else {
-      try {
+      } else {
         await saveVendor(id).unwrap();
         toast.success('Vendor saved to favorites!');
-      } catch (err) {
-        toast.error(err?.data?.message || 'Failed to save vendor');
       }
+    } catch (err) {
+      toast.error(
+        err?.data?.message ||
+        `Failed to ${savedVendorIds.includes(id) ? 'unsave' : 'save'} vendor`
+      );
     }
   };
 
-  const handleVendorClick = (vendorId) => {
-    navigate(`/preview-profile/${vendorId}`);
-  };
-  // console.log("vendorServices",vendorsData);
-  const formatPrice = (pricingRange) => {
-    if (!pricingRange || typeof pricingRange.min !== 'number' || typeof pricingRange.max !== 'number') {
-      return 'Price on request';
+  const handleVendorClick = (id) => navigate(`/preview-profile/${id}`);
+
+  /* ------------------------- filtering ----------------------- */
+
+  const filteredVendors =
+    vendorsData?.vendors?.filter((v) => {
+      const lowerSearch = searchTerm.toLowerCase().trim();
+
+      /** category match */
+      const matchesCategory = v.vendorType === formattedCategory;
+
+      /** city / service‑area match */
+      let matchesLocation = city === 'all-india';
+      if (!matchesLocation) {
+        const searchCity = formattedCity.toLowerCase();
+        const vendorLocations = [
+          ...(v.serviceAreas ?? []),
+          v.address?.city
+        ]
+          .filter(Boolean)
+          .map((loc) => loc.toLowerCase());
+        matchesLocation = vendorLocations.includes(searchCity);
+      }
+
+      /** free‑text search match */
+      let matchesSearch = true;
+      if (lowerSearch) {
+        const searchable = [
+          v.businessName,
+          ...(v.serviceAreas ?? []),
+          v.address?.city ?? ''
+        ]
+          .filter(Boolean)
+          .map((s) => s.toLowerCase());
+        matchesSearch = searchable.some((field) => field.includes(lowerSearch));
+      }
+
+      return matchesCategory && matchesLocation && matchesSearch;
+    }) ?? [];
+
+  /* ------------------------- sorting ------------------------- */
+  const sortedVendors = [...filteredVendors].sort((a, b) => {
+    if (activeTab === 'popular') {
+      // higher rating first; fallback 0
+      return (b.rating || 0) - (a.rating || 0);
     }
-    return `₹${pricingRange.min.toLocaleString()} - ₹${pricingRange.max.toLocaleString()}`;
-  };
+    if (activeTab === 'newest') {
+      // newest createdAt first; ensure Date objects
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+    return 0;
+  });
 
-  if (!category || !city) {
-    return <div className="text-center py-10 text-red-500">Invalid category or location in URL.</div>;
-  }
+  /* ------------------------- early states -------------------- */
 
-  if (isLoading) {
+  if (!category || !city)
+    return (
+      <div className="text-center py-10 text-red-500">
+        Invalid category or location in URL.
+      </div>
+    );
+
+  if (isLoading)
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader />
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <div className="text-center py-10 text-red-500">
         Error loading vendors: {error.message}
@@ -107,79 +164,55 @@ const VendorListPage = () => {
         </button>
       </div>
     );
-  }
 
-  const rawServices = data?.vendor?.services || [];
-  const services = Array.isArray(rawServices)
-    ? rawServices.length === 1 && typeof rawServices[0] === "string"
-      ? rawServices[0].split(',').map(s => s.trim())
-      : rawServices
-    : [];
-  const filteredVendors = vendorsData?.vendors?.filter(vendor => {
-    const lowerSearchTerm = searchTerm.toLowerCase().trim();
-    const matchesCategory = vendor.vendorType === formattedCategory;
+  /* ------------------------- render -------------------------- */
 
-    let matchesLocation = city === 'all-india';
-    if (!matchesLocation) {
-      const searchCity = formattedCity.toLowerCase();
-      const vendorLocations = [
-        ...(vendor.serviceAreas || []),
-        vendor.address?.city
-      ].filter(Boolean).map(loc => loc.toLowerCase());
-
-      matchesLocation = vendorLocations.includes(searchCity);
-    }
-
-
-    let matchesSearch = true;
-    if (lowerSearchTerm) {
-      const searchable = [
-        vendor.businessName.toLowerCase(),
-        ...(vendor.serviceAreas || []).map(sa => sa.toLowerCase()),
-        vendor.address?.city?.toLowerCase() || ''
-      ];
-      matchesSearch = searchable.some(field => field.includes(lowerSearchTerm));
-    }
-
-    return matchesCategory && matchesLocation && matchesSearch;
-  }) || [];
-
-  // console.log(filteredVendors.services, "filteredVendors");
   return (
     <>
-      {/* Header */}
+      {/* ---------- HEADER ---------- */}
       <div className="bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] py-12 md:py-16 text-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-bold text-xl sm:text-2xl md:text-3xl mb-2">Find the Perfect {formattedCategory}</h1>
+            <h1 className="font-bold text-xl sm:text-2xl md:text-3xl mb-2">
+              Find the Perfect {formattedCategory}
+            </h1>
             <h2 className="text-lg mb-2">In {formattedCity}</h2>
-            <p className="mb-6 text-sm sm:text-base">{filteredVendors.length} {filteredVendors.length === 1 ? 'Vendor' : 'Vendors'} Available</p>
+            <p className="mb-6 text-sm sm:text-base">
+              {sortedVendors.length}{' '}
+              {sortedVendors.length === 1 ? 'Vendor' : 'Vendors'} Available
+            </p>
 
+            {/* ----------- SEARCH BAR ------------ */}
             <div className="bg-white rounded-lg p-2 flex flex-col sm:flex-row gap-2 shadow-lg">
               <input
                 type="text"
                 placeholder="Search by name or location..."
                 className="flex-1 border focus:outline-none text-gray-800 p-2 rounded-md text-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={pendingSearchTerm}
+                onChange={(e) => setPendingSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault(); // prevent form submission
+                    setSearchTerm(pendingSearchTerm.trim());
+                  }
+                }}
               />
-              {searchTerm && (
-                <button onClick={() => setSearchTerm('')} className="text-gray-400 hover:text-gray-600 font-bold" aria-label="Clear search">
-                  &times;
-                </button>
-              )}
+             
+
               <button
-                style={{ borderRadius: "5px" }}
+                style={{ borderRadius: '5px' }}
                 className="bg-[#10497a] hover:bg-[#062b4b] text-white px-4 py-2 text-sm whitespace-nowrap"
+                onClick={() => setSearchTerm(pendingSearchTerm.trim())}
               >
-                Search Venue
+                Search
               </button>
+
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filter and Sort */}
+      {/* ---------- FILTER + SORT ---------- */}
       <div className="min-h-screen p-4 md:p-10">
         <div className="flex flex-col md:flex-row justify-between items-center mb-10">
           <p className="text-2xl sm:text-3xl md:text-3xl w-full text-gray-800">
@@ -195,13 +228,19 @@ const VendorListPage = () => {
               Back to Home
             </Link>
             <button
-              className={`px-3 py-2 text-sm rounded ${activeTab === 'popular' ? 'bg-[#062b4b] text-white' : 'border text-gray-700 hover:bg-gray-100'}`}
+              className={`px-3 py-2 mx-2 text-sm rounded ${activeTab === 'popular'
+                ? 'bg-[#062b4b] text-white'
+                : 'border text-gray-700 hover:bg-gray-100'
+                }`}
               onClick={() => setActiveTab('popular')}
             >
               Popular
             </button>
             <button
-              className={`px-3 py-2 text-sm rounded ${activeTab === 'newest' ? 'bg-[#062b4b] text-white' : 'border text-gray-700 hover:bg-gray-100'}`}
+              className={`px-3 py-2 text-sm rounded ${activeTab === 'newest'
+                ? 'bg-[#062b4b] text-white'
+                : 'border text-gray-700 hover:bg-gray-100'
+                }`}
               onClick={() => setActiveTab('newest')}
             >
               Newest
@@ -209,12 +248,14 @@ const VendorListPage = () => {
           </div>
         </div>
 
-        {/* Vendor Cards */}
-        {filteredVendors.length === 0 ? (
+        {/* ---------- VENDOR CARDS ---------- */}
+        {sortedVendors.length === 0 ? (
           <div className="text-center mt-20 text-gray-500">
-            <p className="text-lg mb-6">No vendors found matching your criteria.</p>
+            <p className="text-lg mb-6">
+              No vendors found matching your criteria.
+            </p>
             <button
-              onClick={() => setSearchTerm("")}
+              onClick={() => setSearchTerm('')}
               className="px-5 py-2 border text-sm rounded-md hover:bg-gray-100 text-blue-800"
             >
               Clear Filters
@@ -222,23 +263,28 @@ const VendorListPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {filteredVendors.map((vendor) => (
+            {sortedVendors.map((v) => (
               <div
-                key={vendor._id}
-                onClick={() => handleVendorClick(vendor._id)}
+                key={v._id}
+                onClick={() => handleVendorClick(v._id)}
                 className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden"
               >
+                {/* ---------- IMAGE + FAVORITE ---------- */}
                 <div className="relative">
                   <img
-                    src={vendor.profilePicture || vendor.galleryImages?.[0]?.url || '/default-vendor-image.jpg'}
-                    alt={vendor.businessName}
+                    src={
+                      v.profilePicture ||
+                      v.galleryImages?.[0]?.url ||
+                      '/default-vendor-image.jpg'
+                    }
+                    alt={v.businessName}
                     className="w-full h-36 sm:h-40 md:h-48 object-cover"
                   />
                   <button
-                    onClick={(e) => toggleFavorite(e, vendor._id)}
+                    onClick={(e) => toggleFavorite(e, v._id)}
                     className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md"
                   >
-                    {savedVendorIds.includes(vendor._id) ? (
+                    {savedVendorIds.includes(v._id) ? (
                       <FaHeart className="text-red-500" />
                     ) : (
                       <FaRegHeart />
@@ -246,108 +292,82 @@ const VendorListPage = () => {
                   </button>
                 </div>
 
+                {/* ---------- CARD BODY ---------- */}
                 <div className="p-3 sm:p-4 font-serif">
+                  <p className="text-xs text-gray-400 mb-1 uppercase">
+                    {v.vendorType || 'Vendor'}
+                  </p>
 
-                  <div>
+                  <div className="flex justify-between items-center gap-2 mb-2">
+                    <h5 className="text-md font-semibold truncate max-w-[65%]">
+                      {v.businessName || v.name || 'Vendor Name'}
+                    </h5>
 
-
-                    <p className="text-xs text-gray-400 mb-1 uppercase">{vendor.vendorType || "Vendor"}</p>
-                    <div className="flex justify-between items-center gap-2 mb-2">
-                      <h5 className="text-md font-semibold truncate max-w-[65%]">
-                        {vendor.businessName || vendor.name || "Vendor Name"}
-                      </h5>
-
-                      <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
-                        <FaStar size={18} className="text-yellow-500" />
-                        <span>{vendor.rating || "5.0"}</span>
-                      </div>
-
-
-                    </div>
-
-
-                    {/* Location */}
-                    <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
-                      <MapPin size={14} />
-                      <span className="truncate">{vendor.serviceAreas?.join(", ") || "Location not specified"}</span>
-
-                    </div>
-
-                    {/* Tags */}
-                    <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1">
-
+                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
+                      <FaStar size={18} className="text-yellow-500" />
+                      <span>{v.rating || '5.0'}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  {/* location */}
+                  <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
+                    <MapPin size={14} />
+                    <span className="truncate">
+                      {(v.serviceAreas ?? []).join(', ') ||
+                        'Location not specified'}
+                    </span>
+                  </div>
 
-                    <div className="border-t  border-gray-400 mt-3 pt-3 text-sm text-gray-800 w-full">
-
-            {/* Pricing */}
-                      <div className="flex items-center gap-5 text-sm text-gray-600 mb-3 border-amber-300">
-                        {vendor?.pricing?.filter(item => item?.type && item?.price)?.length > 0 ? (
-                          vendor.pricing
-                            .filter(item => item?.type && item?.price)
-                            .slice(0, 2)
-                            .map((item, index) => (
-                              <div key={item._id || index}>
-                                <div className="text-sm text-gray-500">{item.type}</div>
-                                <div className="flex items-center text-md font-bold text-gray-800">
-                                  ₹ {item.price.toLocaleString('en-IN')}
-                                  <span className="text-xs font-normal text-gray-500 ml-1">
-                                    {item.unit || 'per person'}
-                                  </span>
-                                </div>
+                  {/* pricing */}
+                  <div className="border-t border-gray-400 mt-3 pt-3 text-sm text-gray-800">
+                    <div className="flex items-center gap-5 text-sm text-gray-600 mb-3">
+                      {v?.pricing?.filter((p) => p?.type && p?.price).length >
+                        0 ? (
+                        v.pricing
+                          .filter((p) => p?.type && p?.price)
+                          .slice(0, 2)
+                          .map((p, idx) => (
+                            <div key={idx}>
+                              <div className="text-sm text-gray-500">
+                                {p.type}
                               </div>
-                            ))
-                        ) : (
-                          <div className="text-sm text-gray-500">No Pricing Available</div>
-                        )}
-                      </div>
-
-
-
-                      {/* Capacity, Rooms, and More */}
-                      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
-                        {/* <span >{vendor.capacity || "650–2500 pax"}</span> */}
-                        <span
-                          className="text-gray-600 hover:underline  p-1 rounded"
-                          onClick={() => handleVendorClick(vendor._id)}
-                        >
-                          {(() => {
-                            let raw = vendor.services || [];
-                            let vendorServices = Array.isArray(raw)
-                              ? raw.length === 1 && typeof raw[0] === "string"
-                                ? raw[0].split(',').map(s => s.trim())
-                                : raw
-                              : [];
-
-                            return vendorServices.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
-                                {vendorServices.slice(0, 2).map((service, index) => (
-                                  <span
-                                    key={index}
-                                    className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md"
-                                  >
-                                    {service}
-                                  </span>
-                                ))}
-                                {vendorServices.length > 2 && (
-                                  <span className="text-sm text-gray-600">
-                                    +{vendorServices.length - 2} more
-                                  </span>
-                                )}
+                              <div className="flex items-center text-md font-bold text-gray-800">
+                                ₹ {p.price.toLocaleString('en-IN')}
+                                <span className="text-xs font-normal text-gray-500 ml-1">
+                                  {p.unit || 'per person'}
+                                </span>
                               </div>
-                            ) : (
-                              <span className="text-sm text-gray-400">No services available</span>
-                            );
-                          })()}
+                            </div>
+                          ))
+                      ) : (
+                        <div className="text-sm text-gray-500">
+                          No Pricing Available
+                        </div>
+                      )}
+                    </div>
 
+                    {/* services tags */}
+                    <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                      {(Array.isArray(v.services)
+                        ? v.services
+                        : typeof v.services === 'string'
+                          ? v.services.split(',').map((s) => s.trim())
+                          : []
+                      )
+                        .slice(0, 2)
+                        .map((s, i) => (
+                          <span
+                            key={i}
+                            className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      {Array.isArray(v.services) && v.services.length > 2 && (
+                        <span className="text-sm text-gray-600">
+                          +{v.services.length - 2} more
                         </span>
-
-
-                        {/* <span>• +7 more</span> */}
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
