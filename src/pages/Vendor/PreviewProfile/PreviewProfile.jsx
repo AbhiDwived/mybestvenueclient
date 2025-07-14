@@ -81,6 +81,7 @@ const PreviewProfile = () => {
     if (!bookingForm.email) errors.email = 'Email is required';
     if (!bookingForm.phone) errors.phone = 'Phone is required';
     if (!bookingForm.plannedAmount) errors.plannedAmount = 'Planned amount is required';
+    if (!bookingForm.guestCount) errors.guestCount = 'Number of guests is required';
     
     // Validate date is not in the past
     if (bookingForm.eventDate) {
@@ -714,7 +715,7 @@ const PreviewProfile = () => {
           </label>
 
           <label className="sm:col-span-2">
-            <span className="block mb-1">User Name *</span>
+            <span className="block mb-1">User Name <span className="text-red-500">*</span></span>
             <input 
               type="text" 
               value={bookingForm.name}
@@ -726,7 +727,7 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Email *</span>
+            <span className="block mb-1">Email <span className="text-red-500">*</span></span>
             <input 
               type="email" 
               value={bookingForm.email}
@@ -738,7 +739,7 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Phone Number *</span>
+            <span className="block mb-1">Phone Number <span className="text-red-500">*</span></span>
             <input 
               type="tel" 
               value={bookingForm.phone}
@@ -750,7 +751,7 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Event Type *</span>
+            <span className="block mb-1">Event Type <span className="text-red-500">*</span></span>
             <select 
               value={bookingForm.eventType}
               onChange={(e) => handleBookingInputChange('eventType', e.target.value)}
@@ -768,7 +769,7 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Package Name *</span>
+            <span className="block mb-1">Package Name <span className="text-red-500">*</span></span>
             <select 
               value={bookingForm.packageName}
               onChange={(e) => {
@@ -798,7 +799,7 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Event Date *</span>
+            <span className="block mb-1">Event Date <span className="text-red-500">*</span></span>
             <input 
               type="date" 
               value={bookingForm.eventDate}
@@ -820,15 +821,16 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Number of Guests</span>
+            <span className="block mb-1">Number of Guests <span className="text-red-500">*</span></span>
             <input 
               type="number" 
               value={bookingForm.guestCount}
               onChange={(e) => handleBookingInputChange('guestCount', e.target.value)}
               placeholder="e.g. 150" 
-              className="w-full border rounded px-3 py-2"
+              className={`w-full border rounded px-3 py-2 ${formErrors.guestCount ? 'border-red-500' : ''}`}
               min="0"
             />
+            {formErrors.guestCount && <span className="text-red-500 text-xs mt-1">{formErrors.guestCount}</span>}
           </label>
 
           <label>
@@ -843,7 +845,7 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Planned Amount (₹) *</span>
+            <span className="block mb-1">Planned Amount (₹) <span className="text-red-500">*</span></span>
             <input 
               type="number" 
               value={bookingForm.plannedAmount}
@@ -916,15 +918,15 @@ const PreviewProfile = () => {
             <h3 className="font-semibold text-lg mb-3">Send Inquiry</h3>
             <form className="space-y-3 text-sm" onSubmit={handleInquirySubmit}>
               <div>
-                <label className="block mb-1">Your Name</label>
+                <label className="block mb-1">Your Name <span className="text-red-500">*</span></label>
                 <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
-                <label className="block mb-1">Your Email</label>
+                <label className="block mb-1">Your Email <span className="text-red-500">*</span></label>
                 <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
-                <label className="block mb-1">Phone Number</label>
+                <label className="block mb-1">Phone Number <span className="text-red-500">*</span></label>
                 <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
@@ -933,7 +935,7 @@ const PreviewProfile = () => {
               </div>
               <input type="hidden" name="vendorId" value={vendorData._id} />
               <div>
-                <label className="block mb-1">Event Date</label>
+                <label className="block mb-1">Event Date <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   name="eventDateRaw"
@@ -949,7 +951,7 @@ const PreviewProfile = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1">Message</label>
+                <label className="block mb-1">Message <span className="text-red-500">*</span></label>
                 <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <button type="submit"
