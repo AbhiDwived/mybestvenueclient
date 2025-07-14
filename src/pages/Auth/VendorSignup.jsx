@@ -526,42 +526,45 @@ const VendorSignup = () => {
 
             {/* Password */}
             <div className="relative">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={handlePasswordChange}
-                placeholder="••••••••"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            {/* Password Strength Indicator */}
-            <div className="flex justify-between items-center mt-2">
-              <div className="w-1/2">
-                {renderPasswordStrengthScale()}
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="password" className="block text-gray-700">Password <span className="text-red-500">*</span></label>
+                {formData.password && (
+                  <span className={`text-xs font-semibold ${passwordStrength.strengthColor}`}>{passwordStrength.strength}</span>
+                )}
               </div>
-              <div className="w-1/2 text-right">
-                <div className="inline-block text-right">
-                  <span className={`text-sm font-semibold ${passwordStrength.strengthColor}`}>
-                    Password Strength: {passwordStrength.strength}
-                  </span>
-                  <ul className="text-xs text-gray-500 mt-1">
-                    {passwordStrength.failedCriteria.map((criteria, index) => (
-                      <li key={index} className="text-right">{criteria}</li>
-                    ))}
-                  </ul>
-                </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handlePasswordChange}
+                  placeholder="••••••••"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  style={{ top: 0, bottom: 0 }}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+                {formData.password && (
+                  <div className="absolute inset-y-0 flex items-center right-10 w-16">
+                    {renderPasswordStrengthScale()}
+                  </div>
+                )}
               </div>
+              {formData.password && passwordStrength.failedCriteria.length > 0 && (
+                <ul className="text-xs text-gray-500 mt-1">
+                  {passwordStrength.failedCriteria.map((criteria, index) => (
+                    <li key={index}>{criteria}</li>
+                  ))}
+                </ul>
+              )}
             </div>
             {/* Confirm Password */}
             <div className="relative">
