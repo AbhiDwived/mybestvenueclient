@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload } from 'react-icons/fi';
 import { RiCheckboxCircleLine } from "react-icons/ri";
 import { FaExclamationCircle } from "react-icons/fa";
-import coverimage from '../../assets/Images/Navneegt.jpeg';
+import coverimage from '../../assets/Images/user.png';
 import { useSelector, useDispatch } from 'react-redux';
 import { useUpdateProfileMutation, useGetVendorByIdQuery, useDeleteVendorPricingItemMutation } from "../../features/vendors/vendorAPI";
 import { setVendorCredentials } from '../../features/vendors/vendorSlice';
