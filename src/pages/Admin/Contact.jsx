@@ -3,6 +3,7 @@ import { useGetAllMessageQuery } from '../../features/admin/adminAPI';
 import Loader from '../../components/{Shared}/Loader';
 
 export default function Contact() {
+    // All hooks at the top!
     const {
         data,
         isLoading,
@@ -16,6 +17,7 @@ export default function Contact() {
     const [endDate, setEndDate] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [pendingSearchTerm, setPendingSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
     }, [data, error]);
@@ -27,6 +29,16 @@ export default function Contact() {
     }
 
     const contacts = data?.message || [];
+    const pageSize = 10;
+    const totalPages = Math.ceil(contacts.length / pageSize);
+    const paginatedContacts = contacts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    function getPaginationPages(current, total) {
+      if (total <= 1) return [1];
+      if (current === 1) return [1, '...', total];
+      if (current === total) return [1, '...', total];
+      if (current !== 1 && current !== total) return [1, '...', current, '...', total];
+    }
+    const paginationPages = getPaginationPages(currentPage, totalPages);
 
     // Helper functions
     const isToday = (date) => {
@@ -165,7 +177,7 @@ export default function Contact() {
                     </thead>
                     <tbody>
                         {filteredContacts.length > 0 ? (
-                            filteredContacts.map((contact, index) => (
+                            paginatedContacts.map((contact, index) => (
                                 <tr key={contact._id} className="hover:bg-gray-50">
                                     <td className="p-2 border">{index + 1}</td>
 
@@ -204,6 +216,39 @@ export default function Contact() {
                     </tbody>
                 </table>
             </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-1 mt-6 bg-gray-50 px-3 py-2 rounded-lg shadow border">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded border transition ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                  aria-label="Previous page"
+                >
+                  Prev
+                </button>
+                {paginationPages.map((page, idx) =>
+                  page === '...'
+                    ? <span key={idx} className="px-2 text-gray-400">...</span>
+                    : <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 rounded border transition ${currentPage === page ? 'bg-blue-100 border-blue-400 text-blue-700 font-bold' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                        aria-current={currentPage === page ? 'page' : undefined}
+                      >
+                        {page}
+                      </button>
+                )}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded border transition ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                  aria-label="Next page"
+                >
+                  Next
+                </button>
+              </div>
+            )}
         </div>
     );
 }

@@ -19,6 +19,17 @@ export default function ContentManagement() {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [localBlogs, setLocalBlogs] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const totalPages = Math.ceil(localBlogs.length / pageSize);
+  const paginatedBlogs = localBlogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  function getPaginationPages(current, total) {
+    if (total <= 1) return [1];
+    if (current === 1) return [1, '...', total];
+    if (current === total) return [1, '...', total];
+    if (current !== 1 && current !== total) return [1, '...', current, '...', total];
+  }
+  const paginationPages = getPaginationPages(currentPage, totalPages);
 
   // Format blogs and build correct image URLs
   const blogs = Array.isArray(data) ? data : data?.blogs || [];
@@ -123,8 +134,7 @@ export default function ContentManagement() {
       {/* Blog Cards */}
       <div className="py-12 bg-white mx-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {localBlogs.length > 0 ? (
-            localBlogs.map((post) => (
+          {paginatedBlogs.map((post) => (
               <div
                 key={post.id}
                 className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm"
@@ -187,13 +197,41 @@ export default function ContentManagement() {
                   </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-10">
-              <p className="text-gray-500">No blog posts found.</p>
-            </div>
-          )}
+            ))}
         </div>
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-1 mt-6 bg-gray-50 px-3 py-2 rounded-lg shadow border">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded border transition ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              aria-label="Previous page"
+            >
+              Prev
+            </button>
+            {paginationPages.map((page, idx) =>
+              page === '...'
+                ? <span key={idx} className="px-2 text-gray-400">...</span>
+                : <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded border transition ${currentPage === page ? 'bg-blue-100 border-blue-400 text-blue-700 font-bold' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                    aria-current={currentPage === page ? 'page' : undefined}
+                  >
+                    {page}
+                  </button>
+            )}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded border transition ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              aria-label="Next page"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Edit Blog Modal */}

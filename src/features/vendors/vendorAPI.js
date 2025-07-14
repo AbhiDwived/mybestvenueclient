@@ -393,7 +393,7 @@ export const vendorApi = createApi({
     // Resend Vendor OTP
     resendVendorOtp: builder.mutation({
       query: ({ vendorId }) => ({
-        url: '/vendor/resend-vendor-otp',
+        url: '/vendor/resendvendor-otp',
         method: 'POST',
         body: { vendorId },
       }),

@@ -77,7 +77,7 @@ const VendorVerifyOTP = () => {
     try {
       console.log('Attempting to resend OTP for vendorId:', vendorId);
       // Ensure vendorId is passed as a string
-      const response = await resendOtp(vendorId).unwrap();
+      const response = await resendOtp({ vendorId }).unwrap();
       console.log('Resend OTP response:', response);
       toast.success("New OTP sent successfully!");
       startResendCooldown();

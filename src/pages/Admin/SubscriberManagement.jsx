@@ -71,6 +71,17 @@ const SubscriberManagement = () => {
   const filteredSubscribers = subscribersData?.subscribers.filter((sub) =>
     sub.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const totalPages = Math.ceil((filteredSubscribers?.length || 0) / pageSize);
+  const paginatedSubscribers = (filteredSubscribers || []).slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  function getPaginationPages(current, total) {
+    if (total <= 1) return [1];
+    if (current === 1) return [1, '...', total];
+    if (current === total) return [1, '...', total];
+    if (current !== 1 && current !== total) return [1, '...', current, '...', total];
+  }
+  const paginationPages = getPaginationPages(currentPage, totalPages);
 
   if (isLoading) return <div className="text-center p-4">Loading subscribers...</div>;
   if (isError) return <div className="text-center text-red-500 p-4">Error loading data</div>;
@@ -100,7 +111,7 @@ const SubscriberManagement = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {filteredSubscribers?.map((subscriber) => (
+            {paginatedSubscribers.map((subscriber) => (
               <tr key={subscriber._id}>
                 <td className="px-6 py-4">{subscriber.email}</td>
                 <td className="px-6 py-4">{format(new Date(subscriber.createdAt), 'MMM dd, yyyy')}</td>
@@ -131,6 +142,40 @@ const SubscriberManagement = () => {
         {/* No Results */}
         {filteredSubscribers?.length === 0 && (
           <div className="text-center text-gray-500 py-4">No subscribers found.</div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-1 mt-6 bg-gray-50 px-3 py-2 rounded-lg shadow border">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded border transition ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              aria-label="Previous page"
+            >
+              Prev
+            </button>
+            {paginationPages.map((page, idx) =>
+              page === '...'
+                ? <span key={idx} className="px-2 text-gray-400">...</span>
+                : <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded border transition ${currentPage === page ? 'bg-blue-100 border-blue-400 text-blue-700 font-bold' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                    aria-current={currentPage === page ? 'page' : undefined}
+                  >
+                    {page}
+                  </button>
+            )}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded border transition ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              aria-label="Next page"
+            >
+              Next
+            </button>
+          </div>
         )}
       </div>
 

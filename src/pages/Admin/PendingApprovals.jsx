@@ -43,12 +43,25 @@ const PendingVendorApprovals = () => {
   const [deleteVendor, { isLoading: isDeleting }] = useDeleteVendorByAdminMutation();
 
   const [vendorToReject, setVendorToReject] = useState(null); // For modal
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const vendors = Array.isArray(data)
     ? data
     : Array.isArray(data?.vendors)
       ? data.vendors
       : [];
+
+  // Pagination logic
+  const totalPages = Math.ceil(vendors.length / pageSize);
+  const paginatedVendors = vendors.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  function getPaginationPages(current, total) {
+    if (total <= 1) return [1];
+    if (current === 1) return [1, '...', total];
+    if (current === total) return [1, '...', total];
+    if (current !== 1 && current !== total) return [1, '...', current, '...', total];
+  }
+  const paginationPages = getPaginationPages(currentPage, totalPages);
 
   // Assign distinct colors for category and vendorType
   const categoryColorMap = useMemo(() => {
@@ -89,7 +102,7 @@ const PendingVendorApprovals = () => {
         {vendors.length === 0 ? (
           <p className="text-center text-gray-500">No pending vendors.</p>
         ) : (
-          vendors.map((vendor) => (
+          paginatedVendors.map((vendor) => (
             <div
               key={vendor._id}
               className="border rounded-lg p-4 shadow-sm hover:shadow-md transition mb-4"
@@ -169,6 +182,39 @@ const PendingVendorApprovals = () => {
               </div>
             </div>
           ))
+        )}
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-1 mt-6 bg-gray-50 px-3 py-2 rounded-lg shadow border">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded border transition ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              aria-label="Previous page"
+            >
+              Prev
+            </button>
+            {paginationPages.map((page, idx) =>
+              page === '...'
+                ? <span key={idx} className="px-2 text-gray-400">...</span>
+                : <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded border transition ${currentPage === page ? 'bg-blue-100 border-blue-400 text-blue-700 font-bold' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                    aria-current={currentPage === page ? 'page' : undefined}
+                  >
+                    {page}
+                  </button>
+            )}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded border transition ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              aria-label="Next page"
+            >
+              Next
+            </button>
+          </div>
         )}
       </div>
 
