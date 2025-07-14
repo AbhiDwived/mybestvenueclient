@@ -407,6 +407,18 @@ export const vendorApi = createApi({
       }),
       // providesTags: ['PortfolioImages'],
     }),
+
+        // delete vendorpricing list 
+        deleteVendorPricingItem: builder.mutation({
+          query: ({ vendorId, pricingId }) => ({
+            url: `/vendor/${vendorId}/pricing/${pricingId}`,
+            method: 'DELETE',
+          }),
+          // Optional: Invalidate vendor data to auto-refetch
+          invalidatesTags: ['Vendor'],
+        }),
+
+
   })
 });
 
@@ -448,5 +460,6 @@ export const {
   useDeletePortfolioVideoMutation,
   useResendPasswordResetOtpMutation,
   useResendVendorOtpMutation,
-  useGetlatestVendorTypeDataQuery
+  useGetlatestVendorTypeDataQuery,
+  useDeleteVendorPricingItemMutation
 } = vendorApi;

@@ -4,7 +4,7 @@ import { RiCheckboxCircleLine } from "react-icons/ri";
 import { FaExclamationCircle } from "react-icons/fa";
 import coverimage from '../../assets/Images/Navneegt.jpeg';
 import { useSelector, useDispatch } from 'react-redux';
-import { useUpdateProfileMutation, useGetVendorByIdQuery } from "../../features/vendors/vendorAPI";
+import { useUpdateProfileMutation, useGetVendorByIdQuery, useDeleteVendorPricingItemMutation } from "../../features/vendors/vendorAPI";
 import { setVendorCredentials } from '../../features/vendors/vendorSlice';
 import { MdOutlineAddCircle } from "react-icons/md";
 import { FaTrash } from "react-icons/fa";
@@ -71,8 +71,10 @@ const EditProfile = () => {
   // Extract vendor ID with better validation
   const vendorId = vendor?._id || vendor?.id;
 
-  const { data, error, isLoading: isLoadingVendor } = useGetVendorByIdQuery(vendorId);
+  const { data, error, isLoading: isLoadingVendor ,refetch } = useGetVendorByIdQuery(vendorId);
   // console.log("data ff", data);
+
+  const [deleteVendorPricingItem, { isLoading: isDeleting }] = useDeleteVendorPricingItemMutation();
 
 
   // Ensure we have the vendor ID and redirect if not authenticated
@@ -223,8 +225,8 @@ const EditProfile = () => {
       navigate('/vendor/login');
       return;
     }
-    if (type === 'info') setIsSavingInfo(true);
-    if (type === 'contact') setIsSavingContact(true);
+    // if (type === 'info') setIsSavingInfo(true);
+    // if (type === 'contact') setIsSavingContact(true);
 
     try {
       // console.log('Attempting to update vendor with ID:', vendorId);
@@ -234,6 +236,7 @@ const EditProfile = () => {
         vendorId,
         profileData: formData,
       }).unwrap();
+      await refetch();
 
       const updatedVendor = res.vendor || res;
 
@@ -257,10 +260,10 @@ const EditProfile = () => {
       }
     }
     finally {
-    // Reset both loaders
-    setIsSavingInfo(false);
-    setIsSavingContact(false);
-  }
+      // Reset both loaders
+      setIsSavingInfo(false);
+      setIsSavingContact(false);
+    }
   };
 
   const handleImageChange = async (file) => {
@@ -285,13 +288,19 @@ const EditProfile = () => {
       formData.append("vendorType", category);
       formData.append("description", businessDescription);
       formData.append("serviceAreas", Array.isArray(serviceAreas) ? serviceAreas.join(",") : serviceAreas);
-      formData.append("pricing", priceRange);
+      // formData.append("pricing", priceRange);
       formData.append("email", contactEmail);
       formData.append("phone", contactPhone);
       formData.append("website", website);
       formData.append("contactName", contactName);
       formData.append("address", address);
       formData.append("services", services);
+      priceRange.forEach((item, index) => {
+      formData.append(`pricing[${index}][type]`, item.type);
+      formData.append(`pricing[${index}][price]`, item.price);
+      formData.append(`pricing[${index}][currency]`, item.currency || 'INR');
+      formData.append(`pricing[${index}][unit]`, item.unit || 'per plate');
+    });
 
       const res = await updateProfile({
         vendorId,
@@ -362,9 +371,30 @@ const EditProfile = () => {
     ]);
   };
 
-  const handleRemovePricing = (index) => {
-    if (priceRange.length <= 1) return; // prevent deletion of the only row
-    setPriceRange(priceRange.filter((_, i) => i !== index));
+  // const handleRemovePricing = (index) => {
+  //   if (priceRange.length <= 1) return; // prevent deletion of the only row
+  //   setPriceRange(priceRange.filter((_, i) => i !== index));
+  // };
+
+  const handleRemovePricing = async (index) => {
+    const item = priceRange[index];
+
+
+    if (item._id) {
+      try {
+        await deleteVendorPricingItem({ vendorId, pricingId: item._id }).unwrap();
+        toast.success("Price range deleted Succesfully");
+      } catch (err) {
+        // console.error("Failed to delete from DB:", err);
+        toast.error("Failed to delete pricing data");
+        return;
+      }
+    }
+
+
+    if (priceRange.length > 1) {
+      setPriceRange(priceRange.filter((_, i) => i !== index));
+    }
   };
 
 
