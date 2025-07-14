@@ -7,6 +7,9 @@ import { toast } from 'react-toastify';
 const BookingManagement = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
 
   const { data: response, isLoading, error } = useGetAllBookingsQuery();
   const [updateBooking] = useUpdateBookingMutation();
@@ -30,6 +33,11 @@ const BookingManagement = () => {
       toast.warning("User ID is missing. Cannot view user profile.");
     }
   };
+
+  // Reset to first page when filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter]);
 
   if (isLoading) return <Loader />;
   if (error) return <div className="text-center text-red-500">Error: {error.message}</div>;
@@ -111,6 +119,11 @@ const BookingManagement = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  // Pagination logic
+  const bookingsList = bookingsData[activeFilter] || [];
+  const totalPages = Math.ceil(bookingsList.length / pageSize);
+  const paginatedBookings = bookingsList.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="py-3">
       {/* Header and Export */}
@@ -148,7 +161,7 @@ const BookingManagement = () => {
           ))}
         </div>
 
-        {/* Bookings Table */}
+        {/* Bookings Table (now Card-based) */}
         <div className="border border-gray-100 rounded-lg px-3 py-3 lg:mx-3 shadow-md hover:shadow-md transition-shadow duration-300">
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm font-bold">
@@ -159,65 +172,89 @@ const BookingManagement = () => {
             </p>
           </div>
 
-          {/* Tailwind Styled Table */}
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200 text-sm text-left">
-              <thead className="bg-gray-50 sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-2 font-semibold text-gray-600">Vendor Name</th>
-                  <th className="px-4 py-2 font-semibold text-gray-600">Customer</th>
-                  <th className="px-4 py-2 font-semibold text-gray-600">Phone</th>
-                  <th className="px-4 py-2 font-semibold text-gray-600">Venue</th>
-                  <th className="px-4 py-2 font-semibold text-gray-600">Date</th>
-                  <th className="px-4 py-2 font-semibold text-gray-600">Status</th>
-                  <th className="px-4 py-2 font-semibold text-gray-600">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {bookingsData[activeFilter]?.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-6 text-gray-500">
-                      No bookings found for the selected filter.
-                    </td>
-                  </tr>
-                ) : (
-                  bookingsData[activeFilter].map((booking) => (
-                    <tr key={booking._id} className="hover:bg-gray-50 transition duration-150">
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <button onClick={() => handleViewVendor(booking)} className="text-black hover:underline">
-                          {booking.vendorName || 'N/A'}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {booking.user ? (
-                          <button onClick={() => handleViewUser(booking)} className="text-black hover:underline">
-                            {booking.user.name || 'N/A'}
-                          </button>
-                        ) : 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {booking.user?.phone || 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {booking.venue || 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {new Date(booking.eventDate).toLocaleDateString()}
-                      </td>
-                      <td className="p-2 whitespace-nowrap">
-                        <span className={`inline-block text-md font-medium px-2 py-1 rounded-md ${getStatusBadge(booking.status)}`}>
-                          {booking.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        ₹{Number(booking.plannedAmount || 0).toLocaleString('en-IN')}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          {/* Card-based Bookings List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {paginatedBookings.length === 0 ? (
+              <div className="col-span-full text-center py-6 text-gray-500 bg-white rounded-lg border">No bookings found for the selected filter.</div>
+            ) : (
+              paginatedBookings.map((booking) => (
+                <div
+                  key={booking._id}
+                  className="relative border border-gray-200 rounded-lg px-4 py-4 bg-white shadow-sm flex flex-col gap-2"
+                >
+                  {/* Top Row: Vendor/User and Status */}
+                  <div className="flex justify-between items-start flex-wrap mb-2">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-md font-semibold text-gray-800">
+                        {booking.vendorName || 'N/A'}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        Customer: {booking.user?.name || 'N/A'}
+                      </span>
+                    </div>
+                    <div className={`flex items-center gap-2 px-2 py-1 rounded text-xs font-medium ${getStatusBadge(booking.status)}`}> 
+                      {booking.status === 'confirmed' && <span>✔️</span>}
+                      {booking.status === 'pending' && <span>⏳</span>}
+                      {booking.status === 'cancelled' && <span>❌</span>}
+                      <span>{booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span>
+                    </div>
+                  </div>
+
+                  {/* Info Section */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm text-gray-500 flex items-center gap-1">📅 Date: <span className="font-medium text-gray-700 text-md">{new Date(booking.eventDate).toLocaleDateString()}</span></span>
+                      <span className="text-sm text-gray-500 flex items-center gap-1">📍 Venue: <span className="font-medium text-gray-700 text-md">{booking.venue || 'N/A'}</span></span>
+                      <span className="text-sm text-gray-500 flex items-center gap-1">👥 Guests: <span className="font-medium text-gray-700 text-md">{booking.guestCount || 0}</span></span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm text-gray-500 flex items-center gap-1">📞 Phone: <span className="font-medium text-gray-700 text-md">{booking.user?.phone || 'N/A'}</span></span>
+                      <span className="text-sm text-gray-500 flex items-center gap-1">💰 Amount: <span className="font-semibold text-green-700 text-md">₹{Number(booking.plannedAmount || 0).toLocaleString('en-IN')}</span></span>
+                      <span className="text-sm text-gray-500 flex items-center gap-1">🎉 Event: <span className="font-medium text-gray-700 text-md">{booking.eventType || 'N/A'}</span></span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => handleViewVendor(booking)} className="hover:bg-blue-100 text-blue-700 rounded p-1 border border-blue-200" title="View Vendor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    </button>
+                    <button onClick={() => handleViewUser(booking)} className="hover:bg-green-100 text-green-700 rounded p-1 border border-green-200" title="View User">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10a3 3 0 11-6 0 3 3 0 016 0zM5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804" /></svg>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-6">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 rounded border ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              >
+                Prev
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 rounded border ${currentPage === page ? 'bg-blue-100 border-blue-400 text-blue-700 font-bold' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1 rounded border ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
