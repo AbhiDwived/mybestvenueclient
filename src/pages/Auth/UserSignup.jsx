@@ -298,7 +298,7 @@ const UserSignup = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Full Name */}
             <div>
-              <label htmlFor="name" className="block text-gray-700 mb-1">Full Name</label>
+              <label htmlFor="name" className="block text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
               <input
                 id="name"
                 name="name"
@@ -313,7 +313,7 @@ const UserSignup = () => {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-gray-700 mb-1">Email</label>
+              <label htmlFor="email" className="block text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
               <input
                 id="email"
                 name="email"
@@ -327,7 +327,7 @@ const UserSignup = () => {
 
             {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-gray-700 mb-1">Phone Number</label>
+              <label htmlFor="phone" className="block text-gray-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
               <input
                 id="phone"
                 name="phone"
@@ -345,7 +345,7 @@ const UserSignup = () => {
 
             {/* Password */}
             <div className="relative">
-              <label htmlFor="password" className="block text-gray-700 mb-1">Create Password</label>
+              <label htmlFor="password" className="block text-gray-700 mb-1">Create Password <span className="text-red-500">*</span></label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
@@ -386,7 +386,7 @@ const UserSignup = () => {
 
             {/* Confirm Password */}
             <div className="relative">
-              <label htmlFor="confirmPassword" className="block text-gray-700 mb-1">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="block text-gray-700 mb-1">Confirm Password <span className="text-red-500">*</span></label>
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 id="confirmPassword"
@@ -453,6 +453,7 @@ const UserSignup = () => {
                 <Link to="/terms" style={{ textDecoration: 'none' }} className="text-[#0F4C81] hover:underline">Terms of Service</Link>{' '}
                 and{' '}
                 <Link to="/privacy" style={{ textDecoration: 'none' }} className="text-[#0F4C81] hover:underline">Privacy Policy</Link>
+                <span className="text-red-500">*</span>
               </label>
             </div>
 

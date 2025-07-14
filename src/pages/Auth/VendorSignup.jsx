@@ -394,7 +394,7 @@ const VendorSignup = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="contactName" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <label htmlFor="contactName" className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
               <input
                 id="contactName"
                 name="contactName"
@@ -408,7 +408,7 @@ const VendorSignup = () => {
             </div>
 
             <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">Business Name <span className="text-red-500">*</span></label>
               <input
                 id="businessName"
                 name="businessName"
@@ -422,7 +422,7 @@ const VendorSignup = () => {
             </div>
 
             <div>
-              <label htmlFor="vendorType" className="block text-sm font-medium text-gray-700 mb-1">Vendor Type</label>
+              <label htmlFor="vendorType" className="block text-sm font-medium text-gray-700 mb-1">Vendor Type <span className="text-red-500">*</span></label>
               <select
                 id="vendorType"
                 name="vendorType"
@@ -442,7 +442,7 @@ const VendorSignup = () => {
 
             {formData.vendorType === 'Other' && (
               <div>
-                <label htmlFor="otherVendorType" className="block text-sm font-medium text-gray-700 mb-1">Other Vendor Type</label>
+                <label htmlFor="otherVendorType" className="block text-sm font-medium text-gray-700 mb-1">Other Vendor Type <span className="text-red-500">*</span></label>
                 <input
                   id="otherVendorType"
                   name="otherVendorType"
@@ -458,7 +458,7 @@ const VendorSignup = () => {
 
             {/* Location dropdown */}
             <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location <span className="text-red-500">*</span></label>
               <select
                 id="location"
                 name="location"
@@ -478,7 +478,7 @@ const VendorSignup = () => {
 
             {formData.location === 'Other' && (
               <div>
-                <label htmlFor="otherLocation" className="block text-sm font-medium text-gray-700 mb-1">Other Location</label>
+                <label htmlFor="otherLocation" className="block text-sm font-medium text-gray-700 mb-1">Other Location <span className="text-red-500">*</span></label>
                 <input
                   id="otherLocation"
                   name="otherLocation"
@@ -493,7 +493,7 @@ const VendorSignup = () => {
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
               <input
                 id="email"
                 name="email"
@@ -510,7 +510,7 @@ const VendorSignup = () => {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
               <input
                 id="phone"
                 name="phone"
@@ -526,7 +526,7 @@ const VendorSignup = () => {
 
             {/* Password */}
             <div className="relative">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
               <input
                 id="password"
                 name="password"
@@ -565,7 +565,7 @@ const VendorSignup = () => {
             </div>
             {/* Confirm Password */}
             <div className="relative">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span className="text-red-500">*</span></label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -636,6 +636,7 @@ const VendorSignup = () => {
                 <a href="/privacy" className="text-[#0F4C81] hover:text-[#0D3F6A] hover:underline">
                   Privacy Policy
                 </a>
+                <span className="text-red-500">*</span>
               </label>
             </div>
 
