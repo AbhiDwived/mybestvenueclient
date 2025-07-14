@@ -23,6 +23,9 @@ export default function BookingManagement() {
   const [shouldSearch, setShouldSearch] = useState(false);
   const [cardStatusFilter, setCardStatusFilter] = useState('');
 
+  // Add state for form errors
+  const [formErrors, setFormErrors] = useState({});
+
   const cardRef = useRef(null);
 
 
@@ -138,33 +141,38 @@ export default function BookingManagement() {
       plannedAmount: 0,
       venue: ''
     });
+    setFormErrors({}); // Clear errors on modal close
   };
 
-  const handleCreateBooking = async () => {
-    try {
-      const bookingData = {
-        userId: userIdSearch,
-        vendorId: vendorId,
-        vendorName: vendor?.businessName || vendor?.name || "",
-        eventType: formData.eventType,
-        eventDate: formData.eventDate,
-        eventTime: formData.eventTime,
-        venue: formData.venue,
-        guestCount: Number(formData.guestCount),
-        plannedAmount: Number(formData.plannedAmount),
-        notes: "",
-      };
-
-      const response = await createBooking(bookingData).unwrap();
-      toast.success("Booking created successfully!");
-      refetch();
-      handleModalClose();
-    } catch (error) {
-      toast.error(`Failed to create booking: ${error.message || 'Unknown error'}`);
+  // Validation function
+  const validateBookingForm = () => {
+    const errors = {};
+    if (!formData.name) errors.name = 'Client name is required';
+    if (!formData.email) errors.email = 'Client email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) errors.email = 'Invalid email address';
+    if (!formData.phone) errors.phone = 'Client phone is required';
+    else if (!/^[6-9]\d{9}$/.test(formData.phone)) errors.phone = 'Invalid Indian phone number';
+    if (!formData.eventType) errors.eventType = 'Event type is required';
+    if (!formData.eventDate) errors.eventDate = 'Event date is required';
+    else {
+      const selectedDate = new Date(formData.eventDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) errors.eventDate = 'Event date cannot be in the past';
     }
+    if (!formData.eventTime) errors.eventTime = 'Event time is required';
+    if (!formData.guestCount || parseInt(formData.guestCount) <= 0) errors.guestCount = 'Guest count must be greater than 0';
+    if (!formData.plannedAmount || parseInt(formData.plannedAmount) <= 0) errors.plannedAmount = 'Budget must be greater than 0';
+    if (!formData.venue) errors.venue = 'Venue is required';
+    // Add to formErrors state if not in edit mode
+    if (!isEditMode && !userIdSearch) errors.userIdSearch = 'Client ID is required';
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
+  // Update handleSave to use validation
   const handleSave = async () => {
+    if (!validateBookingForm()) return;
     if (isEditMode && selectedBooking) {
       try {
         await updateVendorBooking({
@@ -186,6 +194,31 @@ export default function BookingManagement() {
       }
     } else {
       await handleCreateBooking();
+    }
+  };
+
+  // Update handleCreateBooking to use validation
+  const handleCreateBooking = async () => {
+    if (!validateBookingForm()) return;
+    try {
+      const bookingData = {
+        userId: userIdSearch,
+        vendorId: vendorId,
+        vendorName: vendor?.businessName || vendor?.name || "",
+        eventType: formData.eventType,
+        eventDate: formData.eventDate,
+        eventTime: formData.eventTime,
+        venue: formData.venue,
+        guestCount: Number(formData.guestCount),
+        plannedAmount: Number(formData.plannedAmount),
+        notes: "",
+      };
+      const response = await createBooking(bookingData).unwrap();
+      toast.success("Booking created successfully!");
+      refetch();
+      handleModalClose();
+    } catch (error) {
+      toast.error(`Failed to create booking: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -321,6 +354,7 @@ export default function BookingManagement() {
               plannedAmount: 0,
               venue: ''
             });
+            setFormErrors({}); // Clear errors on new booking
             setShowModal(true);
           }}
           className="bg-[#19599A] text-white px-3 py-1 rounded hover:bg-[#19599A] whitespace-nowrap sm:w-auto sm:ml-0 ml-4 text-sm sm:text-base"
@@ -379,6 +413,7 @@ export default function BookingManagement() {
                     email: booking?.user?.email || '',
                     phone: booking?.user?.phone || '',
                   });
+                  setFormErrors({}); // Clear errors on edit
                 }}
               >
                 <FaRegEdit className="w-[12px] sm:w-[15px]" />
@@ -533,14 +568,14 @@ export default function BookingManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {!isEditMode && (
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium">Search Client by ID</label>
+                  <label className="text-sm font-medium">Search Client by ID <span className="text-red-500">*</span></label>
                   <div className="flex gap-2 mt-1">
                     <input
                       type="text"
                       value={userIdSearch}
                       onChange={(e) => setUserIdSearch(e.target.value)}
                       placeholder="Enter Client ID"
-                      className="w-full border rounded p-2"
+                      className={`w-full border rounded p-2 ${formErrors.userIdSearch ? 'border-red-500' : ''}`}
                     />
                     <button
                       onClick={() => {
@@ -551,89 +586,99 @@ export default function BookingManagement() {
                       Search
                     </button>
                   </div>
+                  {formErrors.userIdSearch && <span className="text-red-500 text-xs mt-1">{formErrors.userIdSearch}</span>}
                 </div>
               )}
 
               <div>
-                <label className="text-sm font-medium">Client Name</label>
+                <label className="text-sm font-medium">Client Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.name ? 'border-red-500' : ''}`}
                 />
+                {formErrors.name && <span className="text-red-500 text-xs mt-1">{formErrors.name}</span>}
               </div>
               <div>
-                <label className="text-sm font-medium">Client Email</label>
+                <label className="text-sm font-medium">Client Email <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.email ? 'border-red-500' : ''}`}
                 />
+                {formErrors.email && <span className="text-red-500 text-xs mt-1">{formErrors.email}</span>}
               </div>
               <div>
-                <label className="text-sm font-medium">Client Phone</label>
+                <label className="text-sm font-medium">Client Phone <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.phone ? 'border-red-500' : ''}`}
                 />
+                {formErrors.phone && <span className="text-red-500 text-xs mt-1">{formErrors.phone}</span>}
               </div>
               <div>
-                <label className="text-sm font-medium">Event Type</label>
+                <label className="text-sm font-medium">Event Type <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.eventType}
                   onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.eventType ? 'border-red-500' : ''}`}
                 />
+                {formErrors.eventType && <span className="text-red-500 text-xs mt-1">{formErrors.eventType}</span>}
               </div>
               <div>
-                <label className="text-sm font-medium">Event Date</label>
+                <label className="text-sm font-medium">Event Date <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   value={formData.eventDate}
                   onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.eventDate ? 'border-red-500' : ''}`}
                 />
+                {formErrors.eventDate && <span className="text-red-500 text-xs mt-1">{formErrors.eventDate}</span>}
               </div>
               <div>
-                <label className="text-sm font-medium">Event Time</label>
+                <label className="text-sm font-medium">Event Time <span className="text-red-500">*</span></label>
                 <input
                   type="time"
                   value={formData.eventTime}
                   onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.eventTime ? 'border-red-500' : ''}`}
                 />
+                {formErrors.eventTime && <span className="text-red-500 text-xs mt-1">{formErrors.eventTime}</span>}
               </div>
               <div>
-                <label className="text-sm font-medium">Guest Count</label>
+                <label className="text-sm font-medium">Guest Count <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   value={formData.guestCount}
                   onChange={(e) => setFormData({ ...formData, guestCount: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.guestCount ? 'border-red-500' : ''}`}
                 />
+                {formErrors.guestCount && <span className="text-red-500 text-xs mt-1">{formErrors.guestCount}</span>}
               </div>
               <div>
-                <label className="text-sm font-medium">Budget</label>
+                <label className="text-sm font-medium">Budget <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   value={formData.plannedAmount}
                   onChange={(e) => setFormData({ ...formData, plannedAmount: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.plannedAmount ? 'border-red-500' : ''}`}
                 />
+                {formErrors.plannedAmount && <span className="text-red-500 text-xs mt-1">{formErrors.plannedAmount}</span>}
               </div>
               <div className="md:col-span-2">
-                <label className="text-sm font-medium">Venue</label>
+                <label className="text-sm font-medium">Venue <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.venue}
                   onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                  className="w-full border rounded p-2"
+                  className={`w-full border rounded p-2 ${formErrors.venue ? 'border-red-500' : ''}`}
                 />
+                {formErrors.venue && <span className="text-red-500 text-xs mt-1">{formErrors.venue}</span>}
               </div>
             </div>
 

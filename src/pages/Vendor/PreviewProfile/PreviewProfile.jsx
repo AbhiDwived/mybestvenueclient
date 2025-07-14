@@ -60,6 +60,18 @@ const PreviewProfile = () => {
   // Form validation state
   const [formErrors, setFormErrors] = useState({});
 
+  // Inquiry form state with validation
+  const [inquiryForm, setInquiryForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    eventDate: '',
+    message: ''
+  });
+
+  // Inquiry errors state
+  const [inquiryErrors, setInquiryErrors] = useState({});
+
   // Update form when user data changes
   useEffect(() => {
     if (user) {
@@ -72,6 +84,7 @@ const PreviewProfile = () => {
     }
   }, [user]);
 
+  // Update validateForm for booking
   const validateForm = () => {
     const errors = {};
     if (!bookingForm.eventType) errors.eventType = 'Event type is required';
@@ -79,10 +92,12 @@ const PreviewProfile = () => {
     if (!bookingForm.eventDate) errors.eventDate = 'Event date is required';
     if (!bookingForm.name) errors.name = 'Name is required';
     if (!bookingForm.email) errors.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(bookingForm.email)) errors.email = 'Invalid email address';
     if (!bookingForm.phone) errors.phone = 'Phone is required';
+    else if (!/^[6-9]\d{9}$/.test(bookingForm.phone)) errors.phone = 'Invalid Indian phone number';
     if (!bookingForm.plannedAmount) errors.plannedAmount = 'Planned amount is required';
     if (!bookingForm.guestCount) errors.guestCount = 'Number of guests is required';
-    
+    else if (parseInt(bookingForm.guestCount) <= 0) errors.guestCount = 'Number of guests must be greater than 0';
     // Validate date is not in the past
     if (bookingForm.eventDate) {
       const selectedDate = new Date(bookingForm.eventDate);
@@ -92,8 +107,21 @@ const PreviewProfile = () => {
         errors.eventDate = 'Event date cannot be in the past';
       }
     }
-
     setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Inquiry validation
+  const validateInquiry = () => {
+    const errors = {};
+    if (!inquiryForm.name) errors.name = 'Name is required';
+    if (!inquiryForm.email) errors.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(inquiryForm.email)) errors.email = 'Invalid email address';
+    if (!inquiryForm.phone) errors.phone = 'Phone is required';
+    else if (!/^[6-9]\d{9}$/.test(inquiryForm.phone)) errors.phone = 'Invalid Indian phone number';
+    if (!inquiryForm.eventDate) errors.eventDate = 'Event date is required';
+    if (!inquiryForm.message) errors.message = 'Message is required';
+    setInquiryErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
@@ -217,14 +245,6 @@ const PreviewProfile = () => {
 
   const [isSaved, setIsSaved] = useState(false);
 
-  const [inquiryForm, setInquiryForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    eventDate: '',
-    message: ''
-  });
-
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
   const [createAnonymousInquiry] = useCreateAnonymousInquiryMutation();
@@ -240,37 +260,31 @@ const PreviewProfile = () => {
     }));
   };
 
+  // Update handleInquirySubmit to use validateInquiry
   const handleInquirySubmit = async (e) => {
     e.preventDefault();
-
-    // Remove login restriction: allow all users to submit
     if (userRecord?.user?.role === 'vendor') {
       toast.error('Vendors cannot send inquiries');
       return;
     }
-
-    // Validate required fields
-    if (!inquiryForm.name || !inquiryForm.email || !inquiryForm.phone || !inquiryForm.message) {
-      toast.error('Please fill in all required fields');
+    if (!validateInquiry()) {
+      toast.error('Please fill in all required fields correctly');
       return;
     }
-
     setInquiryLoading(true);
     try {
       if (userId) {
-        // Logged-in user: use regular inquiry
         await addUserInquiryMessage({
           userId,
           vendorId: vendorData._id,
           name: inquiryForm.name,
           email: inquiryForm.email,
           phone: inquiryForm.phone,
-          weddingDate: inquiryForm.eventDate, // Fix: send as weddingDate
-          message: inquiryForm.message // Fix: send as message
+          weddingDate: inquiryForm.eventDate,
+          message: inquiryForm.message
         }).unwrap();
         toast.success('Inquiry sent successfully!');
       } else {
-        // Anonymous user: use anonymous inquiry
         await createAnonymousInquiry({
           vendorId: vendorData._id,
           name: inquiryForm.name,
@@ -288,6 +302,7 @@ const PreviewProfile = () => {
         eventDate: '',
         message: ''
       });
+      setInquiryErrors({});
     } catch (err) {
       toast.error(err.data?.message || 'Failed to send inquiry. Please try again.');
     } finally {
@@ -919,15 +934,18 @@ const PreviewProfile = () => {
             <form className="space-y-3 text-sm" onSubmit={handleInquirySubmit}>
               <div>
                 <label className="block mb-1">Your Name <span className="text-red-500">*</span></label>
-                <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
+                <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.name ? 'border-red-500' : ''}`} />
+                {inquiryErrors.name && <span className="text-red-500 text-xs mt-1">{inquiryErrors.name}</span>}
               </div>
               <div>
                 <label className="block mb-1">Your Email <span className="text-red-500">*</span></label>
-                <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
+                <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.email ? 'border-red-500' : ''}`} />
+                {inquiryErrors.email && <span className="text-red-500 text-xs mt-1">{inquiryErrors.email}</span>}
               </div>
               <div>
                 <label className="block mb-1">Phone Number <span className="text-red-500">*</span></label>
-                <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
+                <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.phone ? 'border-red-500' : ''}`} />
+                {inquiryErrors.phone && <span className="text-red-500 text-xs mt-1">{inquiryErrors.phone}</span>}
               </div>
               <div>
                 {/* <label className="block mb-1">useId</label> */}
@@ -947,12 +965,14 @@ const PreviewProfile = () => {
                       eventDate: formatted
                     }));
                   }}
-                  className="w-full border rounded px-3 py-2"
+                  className={`w-full border rounded px-3 py-2 ${inquiryErrors.eventDate ? 'border-red-500' : ''}`}
                 />
+                {inquiryErrors.eventDate && <span className="text-red-500 text-xs mt-1">{inquiryErrors.eventDate}</span>}
               </div>
               <div>
                 <label className="block mb-1">Message <span className="text-red-500">*</span></label>
-                <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
+                <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.message ? 'border-red-500' : ''}`} />
+                {inquiryErrors.message && <span className="text-red-500 text-xs mt-1">{inquiryErrors.message}</span>}
               </div>
               <button type="submit"
                 disabled={inquiryLoading || userRecord?.user?.role === 'vendor'}

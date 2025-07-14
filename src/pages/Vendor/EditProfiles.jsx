@@ -115,8 +115,8 @@ const EditProfile = () => {
   const [services, setServices] = useState(['']);
   const [isSavingInfo, setIsSavingInfo] = useState(false);
   const [isSavingContact, setIsSavingContact] = useState(false);
-
-
+  // Add state for contact errors
+  const [contactErrors, setContactErrors] = useState({});
 
 
   const fileInputRef = useRef(null);
@@ -126,11 +126,11 @@ const EditProfile = () => {
     if (vendor) {
       setBusinessName(vendor.businessName || 'Dream Wedding Photography');
       setCategory(vendor.vendorType || 'Photography');
-      setBusinessDescription(vendor.description || 'This is a sample description.');
+      setBusinessDescription(data?.vendor?.description || vendor.description || 'This is a sample description.');
       setServiceAreas(vendor.serviceAreas || 'New Delhi, India');
       // setPriceRange(vendor.pricing || '10000 - 50000');
       setContactEmail(vendor.email || 'mybestvenuehelp@gmail.com');
-      setContactPhone(vendor.phone || '+91 9999999999');
+      setContactPhone(vendor.phone || '‪+91 9999999999‬');
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
       setCoverImage(vendor.profilePicture || null);
@@ -219,12 +219,26 @@ const EditProfile = () => {
     return formData;
   };
 
+  // Validation function for contact info
+  const validateContactInfo = () => {
+    const errors = {};
+    let phone = contactPhone.replace(/\D/g, '');
+    if (phone.startsWith('91') && phone.length > 10) phone = phone.slice(-10);
+    if (!phone) errors.contactPhone = 'Contact phone is required';
+    else if (phone.length !== 10) errors.contactPhone = 'Phone number must be exactly 10 digits';
+    else if (!/^[6-9]\d{9}$/.test(phone)) errors.contactPhone = 'Invalid Indian phone number';
+    setContactErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Update handleSave for contact
   const handleSave = async (type = "info") => {
     if (!vendorId) {
       toast.error("Error: Vendor ID is missing. Please try logging in again.");
       navigate('/vendor/login');
       return;
     }
+    if (type === 'contact' && !validateContactInfo()) return;
     // if (type === 'info') setIsSavingInfo(true);
     // if (type === 'contact') setIsSavingContact(true);
 
@@ -660,11 +674,23 @@ const EditProfile = () => {
             <form>
               <div className="mb-3">
                 <label className="form-label">Contact Email</label>
-                <input type="email" className="form-control" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+                <input type="email" className="form-control" value={contactEmail} readOnly disabled />
               </div>
               <div className="mb-3">
                 <label className="form-label">Contact Phone</label>
-                <input type="tel" className="form-control" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+                <input
+                  type="tel"
+                  className={`form-control ${contactErrors.contactPhone ? 'border-red-500' : ''}`}
+                  value={contactPhone}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/\D/g, '');
+                    if (val.startsWith('91') && val.length > 10) val = val.slice(-10);
+                    if (val.length > 10) val = val.slice(0, 10);
+                    setContactPhone(val);
+                  }}
+                  maxLength={10}
+                />
+                {contactErrors.contactPhone && <span className="text-red-500 text-xs mt-1">{contactErrors.contactPhone}</span>}
               </div>
               <div className="mb-3">
                 <label className="form-label">Website (optional)</label>

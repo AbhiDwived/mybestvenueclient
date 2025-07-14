@@ -39,6 +39,18 @@ export default function Budget() {
     }
   }, [isError, error]);
 
+  // Add local state for actual values
+  const [actualInputs, setActualInputs] = useState({});
+
+  // Sync local state with budget data
+  useEffect(() => {
+    const initialActuals = {};
+    budget.forEach(item => {
+      initialActuals[item._id] = item.actual || '';
+    });
+    setActualInputs(initialActuals);
+  }, [budget]);
+
   /* ──────────────── Handlers ──────────────── */
   const updateActualBudget = async (id, actual) => {
     try {
@@ -114,10 +126,13 @@ export default function Budget() {
                         <td className="py-3 px-4 ">
                           <input
                             type="number"
-                            value={item.actual || ""}
-                            onChange={(e) =>
-                              updateActualBudget(item._id, Number(e.target.value))
-                            }
+                            value={actualInputs[item._id] ?? ''}
+                            onChange={(e) => {
+                              setActualInputs({ ...actualInputs, [item._id]: e.target.value });
+                            }}
+                            onBlur={(e) => {
+                              updateActualBudget(item._id, Number(e.target.value));
+                            }}
                             className="w-24  border rounded px-2 py-1"
                             min={0}
                           />
