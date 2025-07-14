@@ -427,10 +427,15 @@ const Dashboard = () => {
                 <div className="flex justify-between items-center mb-4">
                   <p className="text-sm sm:text-base font-medium">Monthly Profile Views</p>
                   <button
-                    onClick={() => setShowDatePicker(!showDatePicker)}
-                    className="text-[#0f4c81] flex items-center gap-1 text-sm sm:text-base font-medium hover:bg-blue-50 px-3 py-1.5 rounded-md transition-colors"
+                    /* Removed onClick handler */
+                    className="relative text-[#0f4c81] flex items-center gap-1 text-sm sm:text-base font-medium hover:bg-blue-50 px-3 py-1.5 rounded-md transition-colors group"
+                    /* Tooltip on hover */
+                    type="button"
                   >
                     <MdOutlineCalendarMonth size={20} className="sm:w-5 sm:h-5" /> Add Event
+                    <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                      Choose the date of event
+                    </span>
                   </button>
                 </div>
 
