@@ -23,6 +23,7 @@ import { useAddUserInquiryMessageMutation } from '../../../features/auth/authAPI
 import { useCreateAnonymousInquiryMutation } from '../../../features/inquiries/inquiryAPI';
 import { ImCross } from 'react-icons/im';
 import { useGetPortfolioImagesQuery, useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
+import { useGetVendorReviewsQuery } from '../../../features/reviews/reviewAPI';
 
 const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
@@ -416,6 +417,11 @@ const PreviewProfile = () => {
     }
   }, [portfolioVideosData]);
 
+  const { data: reviewData } = useGetVendorReviewsQuery(vendorId, { skip: !vendorId });
+  const reviews = reviewData?.reviews || [];
+  const avgRating = reviews.length ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1) : 0;
+  const reviewCount = reviews.length;
+
   if (isVendorLoading) {
     return <Loader />;
   }
@@ -506,8 +512,8 @@ const PreviewProfile = () => {
           <div className="flex flex-wrap items-center gap-2 text-md text-gray-600 mt-1">
             <span className="flex items-center font-medium">
               <FaStar className="mr-1" color={"#FACC15"} size={22} />
-              {vendor?.rating || '4.8'}
-              <span className="ml-1 text-gray-400">({vendor?.reviews?.length || '10'} reviews)</span>
+              {avgRating}
+              <span className="ml-1 text-gray-400">({reviewCount} review{reviewCount !== 1 ? 's' : ''})</span>
             </span>
             <span>·</span>
 
@@ -911,7 +917,7 @@ const PreviewProfile = () => {
             className={`px-3 py-1 font-medium ${activeTab === tab ? 'bg-white rounded m-1' : 'text-gray-500 hover:text-black'
               }`}
           >
-            {tab === 'Reviews' ? 'Reviews (3)' : tab}
+            {tab === 'Reviews' ? 'Reviews' : tab}
           </button>
         ))}
       </div>

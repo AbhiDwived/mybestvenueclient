@@ -14,6 +14,7 @@ import {
   useUnsaveVendorMutation
 } from "../../features/savedVendors/savedVendorAPI";
 import { toast } from 'react-toastify';
+import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
 
 const VendorListPage = () => {
   const navigate = useNavigate();
@@ -59,34 +60,7 @@ const VendorListPage = () => {
     refetch
   } = useGetAllVendorsQuery();
 
-  /* ------------------------- helpers ------------------------- */
-
-  const toggleFavorite = async (e, id) => {
-    e.stopPropagation();
-    if (!isAuthenticated) {
-      toast.error('Please log in to save vendors.');
-      return;
-    }
-    try {
-      if (savedVendorIds.includes(id)) {
-        await unsaveVendor(id).unwrap();
-        toast.success('Vendor removed from favorites!');
-      } else {
-        await saveVendor(id).unwrap();
-        toast.success('Vendor saved to favorites!');
-      }
-    } catch (err) {
-      toast.error(
-        err?.data?.message ||
-        `Failed to ${savedVendorIds.includes(id) ? 'unsave' : 'save'} vendor`
-      );
-    }
-  };
-
-  const handleVendorClick = (id) => navigate(`/preview-profile/${id}`);
-
-  /* ------------------------- filtering ----------------------- */
-
+  // Filtering
   const filteredVendors =
     vendorsData?.vendors?.filter((v) => {
       const lowerSearch = searchTerm.toLowerCase().trim();
@@ -123,18 +97,55 @@ const VendorListPage = () => {
       return matchesCategory && matchesLocation && matchesSearch;
     }) ?? [];
 
+  // Sorting
+  const sortedVendors = React.useMemo(() => {
+    return [...filteredVendors].sort((a, b) => {
+      if (activeTab === 'popular') {
+        // higher rating first; fallback 0
+        return (b.rating || 0) - (a.rating || 0);
+      }
+      if (activeTab === 'newest') {
+        // newest createdAt first; ensure Date objects
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      return 0;
+    });
+  }, [filteredVendors, activeTab]);
+
+  // Dynamic review stats hook (must be after sortedVendors is defined)
+  const vendorIds = React.useMemo(() => sortedVendors.map(v => v._id), [sortedVendors]);
+  const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(vendorIds, { skip: !vendorIds.length });
+  const stats = statsData?.stats || {};
+
+  /* ------------------------- helpers ------------------------- */
+
+  const toggleFavorite = async (e, id) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.error('Please log in to save vendors.');
+      return;
+    }
+    try {
+      if (savedVendorIds.includes(id)) {
+        await unsaveVendor(id).unwrap();
+        toast.success('Vendor removed from favorites!');
+      } else {
+        await saveVendor(id).unwrap();
+        toast.success('Vendor saved to favorites!');
+      }
+    } catch (err) {
+      toast.error(
+        err?.data?.message ||
+        `Failed to ${savedVendorIds.includes(id) ? 'unsave' : 'save'} vendor`
+      );
+    }
+  };
+
+  const handleVendorClick = (id) => navigate(`/preview-profile/${id}`);
+
+  /* ------------------------- filtering ----------------------- */
+
   /* ------------------------- sorting ------------------------- */
-  const sortedVendors = [...filteredVendors].sort((a, b) => {
-    if (activeTab === 'popular') {
-      // higher rating first; fallback 0
-      return (b.rating || 0) - (a.rating || 0);
-    }
-    if (activeTab === 'newest') {
-      // newest createdAt first; ensure Date objects
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    }
-    return 0;
-  });
 
   /* ------------------------- early states -------------------- */
 
@@ -267,22 +278,17 @@ const VendorListPage = () => {
               <div
                 key={v._id}
                 onClick={() => handleVendorClick(v._id)}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden"
+                className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
               >
-                {/* ---------- IMAGE + FAVORITE ---------- */}
-                <div className="relative">
+                <div className="relative group">
                   <img
-                    src={
-                      v.profilePicture ||
-                      v.galleryImages?.[0]?.url ||
-                      '/default-vendor-image.jpg'
-                    }
+                    src={v.profilePicture || v.galleryImages?.[0]?.url || '/default-vendor-image.jpg'}
                     alt={v.businessName}
-                    className="w-full h-36 sm:h-40 md:h-48 object-cover"
+                    className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
                   />
                   <button
                     onClick={(e) => toggleFavorite(e, v._id)}
-                    className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md"
+                    className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-gray-800"
                   >
                     {savedVendorIds.includes(v._id) ? (
                       <FaHeart className="text-red-500" />
@@ -291,38 +297,31 @@ const VendorListPage = () => {
                     )}
                   </button>
                 </div>
-
-                {/* ---------- CARD BODY ---------- */}
-                <div className="p-3 sm:p-4 font-serif">
-                  <p className="text-xs text-gray-400 mb-1 uppercase">
-                    {v.vendorType || 'Vendor'}
-                  </p>
-
-                  <div className="flex justify-between items-center gap-2 mb-2">
-                    <h5 className="text-md font-semibold truncate max-w-[65%]">
-                      {v.businessName || v.name || 'Vendor Name'}
-                    </h5>
-
-                    <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
-                      <FaStar size={18} className="text-yellow-500" />
-                      <span>{v.rating || '5.0'}</span>
+                {/* Details */}
+                <div className="flex flex-col justify-between flex-grow p-2 font-serif">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 uppercase">{v.vendorType || "Vendor"}</p>
+                    <div className="flex justify-between items-center gap-2 mb-2">
+                      <h5 className="text-md font-semibold truncate max-w-[65%] font-serif">
+                        {v.businessName}
+                      </h5>
+                      <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
+                        <FaStar size={18} className="text-yellow-500" />
+                        <span>{isLoadingStats ? '--' : (stats[v._id]?.avgRating ?? 0)}</span>
+                      </div>
                     </div>
+                    <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
+                      <MapPin size={14} />
+                      <span className="truncate">
+                        {(v.serviceAreas ?? []).join(', ') ||
+                          'Location not specified'}
+                      </span>
+                    </div>
+                    <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1"></div>
                   </div>
-
-                  {/* location */}
-                  <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
-                    <MapPin size={14} />
-                    <span className="truncate">
-                      {(v.serviceAreas ?? []).join(', ') ||
-                        'Location not specified'}
-                    </span>
-                  </div>
-
-                  {/* pricing */}
-                  <div className="border-t border-gray-400 mt-3 pt-3 text-sm text-gray-800">
-                    <div className="flex items-center gap-5 text-sm text-gray-600 mb-3">
-                      {v?.pricing?.filter((p) => p?.type && p?.price).length >
-                        0 ? (
+                  <div className="border-t mt-3 pt-3 text-sm text-gray-800">
+                    <div className="flex items-center gap-5 text-sm text-gray-600 mb-3 border-amber-300">
+                      {v?.pricing?.filter((p) => p?.type && p?.price).length > 0 ? (
                         v.pricing
                           .filter((p) => p?.type && p?.price)
                           .slice(0, 2)
@@ -345,29 +344,38 @@ const VendorListPage = () => {
                         </div>
                       )}
                     </div>
-
-                    {/* services tags */}
-                    <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                      {(Array.isArray(v.services)
-                        ? v.services
-                        : typeof v.services === 'string'
-                          ? v.services.split(',').map((s) => s.trim())
-                          : []
-                      )
-                        .slice(0, 2)
-                        .map((s, i) => (
-                          <span
-                            key={i}
-                            className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      {Array.isArray(v.services) && v.services.length > 2 && (
-                        <span className="text-sm text-gray-600">
-                          +{v.services.length - 2} more
-                        </span>
-                      )}
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                      <span className="text-gray-600   p-1 rounded"
+                        onClick={() => handleVendorClick(v._id)}
+                      >
+                        {(() => {
+                          let raw = v.services || [];
+                          let vendorServices = Array.isArray(raw)
+                            ? raw.length === 1 && typeof raw[0] === "string"
+                              ? raw[0].split(',').map(s => s.trim())
+                              : raw
+                            : [];
+                          return vendorServices.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 ">
+                              {vendorServices.slice(0, 2).map((service, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-sky-100 text-gray-800 text-sm px-2 py-1 rounded-md  "
+                                >
+                                  {service}
+                                </span>
+                              ))}
+                              {vendorServices.length > 2 && (
+                                <span className="text-sm text-gray-600 hover:underline">
+                                  +{vendorServices.length - 2} more
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">No services available</span>
+                          );
+                        })()}
+                      </span>
                     </div>
                   </div>
                 </div>

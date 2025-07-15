@@ -25,7 +25,10 @@ export const reviewAPI = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
+    getVendorsReviewStats: builder.query({
+      query: (vendorIds) => `/reviews/stats?vendorIds=${vendorIds.join(',')}`,
+    }),
   }),
 });
 
-export const { useGetVendorReviewsQuery, useCreateReviewMutation, useUpdateReviewMutation, useDeleteReviewMutation } = reviewAPI;
+export const { useGetVendorReviewsQuery, useCreateReviewMutation, useUpdateReviewMutation, useDeleteReviewMutation, useGetVendorsReviewStatsQuery } = reviewAPI;

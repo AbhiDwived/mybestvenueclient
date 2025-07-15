@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Camera, Video, Music, Utensils, Gift, Activity, Smile, Cake, Sparkles, Tent
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
 import { BiSolidFlorist, BiSolidParty } from "react-icons/bi";
 import { SiPioneerdj } from "react-icons/si";
 import { BsCake2 } from "react-icons/bs";
 import { MdInsertInvitation, MdEmojiTransportation, MdAddAPhoto } from "react-icons/md";
-
+import { FaStar } from "react-icons/fa";
 
 
 // Components
@@ -99,6 +100,18 @@ export default function WeddingVendor() {
     : activeTab === 'primary'
       ? vendorCategories
       : additionalServices;
+
+  const filteredVendors = useMemo(() => {
+    if (!data) return [];
+    return data.vendors.filter(v =>
+      filteredCategories.some(cat => cat.title === v.vendorType)
+    );
+  }, [data, filteredCategories]);
+
+  const vendorIds = useMemo(() => filteredVendors.map(v => v._id), [filteredVendors]);
+  const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(vendorIds, { skip: !vendorIds.length });
+  const stats = statsData?.stats || {};
+
 
   useEffect(() => {
     if (initialCategory) {

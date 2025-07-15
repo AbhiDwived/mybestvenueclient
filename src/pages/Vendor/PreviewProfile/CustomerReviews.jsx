@@ -209,44 +209,44 @@ const CustomerReviews = () => {
           )}
 
           {/* Reviews List */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             {isLoadingReviews ? (
               <div>Loading reviews...</div>
             ) : reviews.length === 0 ? (
               <div className="text-gray-500">No reviews yet.</div>
             ) : (
               reviews.map((review, idx) => (
-                <div key={review._id || idx} className="border rounded-lg shadow overflow-hidden bg-white">
-                  <div className="flex items-center justify-between px-4 pt-3">
-                    <div className="flex items-center">
-                      <img
-                        src={review.user?.profilePhoto || defaultAvatar}
-                        alt={review.user?.name || 'User'}
-                        className="w-10 h-10 rounded-full object-cover mr-3"
-                      />
-                      <h3 className="font-semibold text-sm mr-2">{review.user?.name || 'User'}</h3>
-                    </div>
-                    <div className="flex items-center text-yellow-500 text-lg">
+                <div key={review._id || idx} className="border rounded-lg overflow-hidden shadow bg-white">
+                  {/* Review Content Header */}
+                  <div className="flex items-center px-4 pt-3">
+                    <img
+                      src={review.user?.profilePhoto || defaultAvatar}
+                      alt={review.user?.name || 'User'}
+                      className="w-10 h-10 rounded-full object-cover mr-3"
+                    />
+                    <h3 className="font-semibold mr-2 text-base">{review.user?.name || 'User'}</h3>
+                    <div className="flex justify-end text-yellow-400 ml-auto mr-4">
                       <StarRating rating={review.rating} size={24} />
                     </div>
                   </div>
-                  <div className="px-4 pb-3">
+                  {/* Date and Content */}
+                  <div className="px-4 pb-2">
                     <div className="text-xs text-gray-500 mb-1">{new Date(review.createdAt).toLocaleDateString()}</div>
-                    <div className="bg-gray-50 p-3 rounded text-gray-800 text-sm">
+                    <div className="text-gray-800 text-sm p-2">
                       {review.comment}
                     </div>
-                    {/* If this is the user's own review and not in edit mode, show action buttons at the bottom right */}
-                    {userReview && review._id === userReview._id && !editMode && (
-                      <div className="flex gap-2 justify-end mt-2">
-                        <button className="p-2 bg-blue-100 text-blue-800 rounded flex items-center hover:text-gray-800 text-sm" onClick={() => setEditMode(true)}>
-                          <FaEdit className="mr-1" size={16} /> Edit
-                        </button>
-                        <button className="p-2 bg-red-100 text-red-800 rounded flex items-center hover:text-gray-800 text-sm" onClick={handleDelete} disabled={isDeleting}>
-                          <FaTrash className="mr-1" size={16} /> Delete
-                        </button>
-                      </div>
-                    )}
                   </div>
+                  {/* Action Buttons for own review */}
+                  {userReview && review._id === userReview._id && !editMode && (
+                    <div className="p-2 flex justify-end gap-2">
+                      <button className="p-2 bg-blue-100 text-blue-800 rounded flex items-center hover:text-gray-800 text-sm" onClick={() => setEditMode(true)}>
+                        <FaEdit className="mr-1" size={16} /> Edit
+                      </button>
+                      <button className="p-2 bg-red-100 text-red-800 rounded flex items-center hover:text-gray-800 text-sm" onClick={handleDelete} disabled={isDeleting}>
+                        <FaTrash className="mr-1" size={16} /> Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))
             )}

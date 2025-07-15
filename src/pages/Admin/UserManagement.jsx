@@ -77,7 +77,7 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 10;
+  const usersPerPage = 5;
 
   const [deleteUserByAdmin] = useDeleteUserByAdminMutation();
   const [deleteVendorByAdmin] = useDeleteVendorByAdminMutation();
@@ -178,19 +178,9 @@ const UserManagement = () => {
     return shouldInclude && matchesSearch;
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const startIdx = (currentPage - 1) * usersPerPage;
   const paginatedUsers = filteredUsers.slice(startIdx, startIdx + usersPerPage);
-
-  // Helper for smart pagination display
-  function getPaginationPages(current, total) {
-    if (total <= 1) return [1];
-    if (current === 1) return [1, '...', total];
-    if (current === total) return [1, '...', total];
-    if (current !== 1 && current !== total) return [1, '...', current, '...', total];
-  }
-  const paginationPages = getPaginationPages(currentPage, totalPages);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -366,54 +356,54 @@ const UserManagement = () => {
         </select>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-y-2">
+      <div className="overflow-auto">
+        <table className="w-full table-auto border-collapse">
           <thead>
-            <tr className="bg-gray-100 text-left text-gray-600">
-              <th className="p-3 rounded-l-lg">Name/Business</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Role</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Date Joined</th>
-              <th className="p-3">Vendor Type</th>
-              <th className="p-3 rounded-r-lg">Actions</th>
+            <tr className="bg-gray-100 text-left text-gray-600 rounded-full">
+              <th className="p-2">Name/Business</th>
+              <th className="p-2">Email</th>
+              <th className="p-2">Role</th>
+              <th className="p-2">Status</th>
+              <th className="p-2">Date Joined</th>
+              <th className="p-2">Vendor Type</th>
+              <th className="p-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginatedUsers.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center p-4 text-gray-500 bg-white rounded-lg shadow">No users or vendors found.</td>
+                <td colSpan={7} className="text-center p-4 text-gray-500">No users or vendors found.</td>
               </tr>
             ) : (
               paginatedUsers.map((user, idx) => (
-                <tr key={user.id || user._id || idx} className="bg-white shadow rounded-lg transition hover:shadow-lg">
-                  <td className="p-3 rounded-l-lg">
+                <tr key={user.id || user._id || idx} className="border-b hover:bg-gray-50">
+                  <td className="p-2">
                     <div>
-                      <span className="font-semibold text-md">{user.displayName}</span>
+                      <span className="font-medium">{user.displayName}</span>
                       {user.role === 'vendor' && user.name && user.name !== user.businessName && (
                         <span className="text-xs text-gray-500 block">Owner: {user.name}</span>
                       )}
                     </div>
                   </td>
-                  <td className="p-3 text-sm text-gray-700">{user.email || "-"}</td>
-                  <td className="p-3">
-                    <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs capitalize font-semibold">
+                  <td className="p-2 text-sm text-gray-700">{user.email || "-"}</td>
+                  <td className="p-2">
+                    <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs capitalize">
                       {user.role}
                     </span>
                   </td>
-                  <td className="p-3 text-sm">
+                  <td className="p-2 text-sm">
                     {user.role === 'vendor' ? (
                       user.isApproved ? (
-                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                           Active
                         </span>
                       ) : (
-                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
                           Pending
                         </span>
                       )
                     ) : (
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         user.status === 'Inactive'
                           ? 'bg-gray-200 text-gray-600'
                           : 'bg-green-100 text-green-700'
@@ -422,18 +412,18 @@ const UserManagement = () => {
                       </span>
                     )}
                   </td>
-                  <td className="p-3 text-sm">
+                  <td className="p-2 text-sm">
                     {formatDate(user.role === 'vendor' ? user.appliedDate || user.createdAt : user.createdAt)}
                   </td>
-                  <td className="p-3 text-sm">{user.role === 'vendor' ? user.vendorType : "-"}</td>
-                  <td className="p-3 rounded-r-lg text-gray-600 flex gap-2">
-                    <button onClick={() => handleView(user)} className="p-2 hover:bg-blue-50 rounded transition" title="View">
+                  <td className="p-2 text-sm">{user.role === 'vendor' ? user.vendorType : "-"}</td>
+                  <td className="text-gray-600">
+                    <button onClick={() => handleView(user)} className="p-1 hover:bg-gray-100 rounded" title="View">
                       <FaEye className="inline w-4 h-4" />
                     </button>
-                    <button onClick={() => handleEdit(user)} className="p-2 hover:bg-yellow-50 rounded transition" title="Edit">
+                    <button onClick={() => handleEdit(user)} className="p-1 hover:bg-gray-100 rounded mx-2" title="Edit">
                       <FaPen className="inline w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDeleteClick(user)} className="p-2 hover:bg-red-50 rounded transition" title="Delete">
+                    <button onClick={() => handleDeleteClick(user)} className="p-1 hover:bg-gray-100 rounded" title="Delete">
                       <FaTrash className="inline w-4 h-4 text-red-500" />
                     </button>
                   </td>
@@ -444,41 +434,26 @@ const UserManagement = () => {
         </table>
       </div>
 
-      {/* Improved Pagination Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600 mt-4 gap-2">
+      <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
         <span>
           Showing {startIdx + 1}-{Math.min(startIdx + usersPerPage, filteredUsers.length)} of {filteredUsers.length} entries
         </span>
-        <nav className="flex items-center gap-1 bg-gray-50 px-3 py-2 rounded-lg shadow border">
+        <div className="space-x-2">
           <button
             onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
             disabled={currentPage === 1}
-            className={`px-3 py-1 rounded border transition ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-            aria-label="Previous page"
+            className="px-3 py-1 border rounded disabled:opacity-50"
           >
-            Prev
+            Previous
           </button>
-          {paginationPages.map((page, idx) =>
-            page === '...'
-              ? <span key={idx} className="px-2 text-gray-400">...</span>
-              : <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 rounded border transition ${currentPage === page ? 'bg-blue-100 border-blue-400 text-blue-700 font-bold' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-                  aria-current={currentPage === page ? 'page' : undefined}
-                >
-                  {page}
-                </button>
-          )}
           <button
             onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded border transition ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-            aria-label="Next page"
+            className="px-3 py-1 border rounded disabled:opacity-50"
           >
             Next
           </button>
-        </nav>
+        </div>
       </div>
 
       {/* View Profile Modal */}

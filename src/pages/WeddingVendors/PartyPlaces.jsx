@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from '../../features/savedVendors/savedVendorAPI';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-
+import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
 
 
 export default function PartyPlaces() {
@@ -29,6 +29,10 @@ export default function PartyPlaces() {
   const partyPlaces = useMemo(() => {
     return data?.vendors?.filter(v => v.vendorType === "Party Places") || [];
   }, [data]);
+
+  const vendorIds = useMemo(() => filteredVendors.map(v => v._id), [filteredVendors]);
+  const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(vendorIds, { skip: !vendorIds.length });
+  const stats = statsData?.stats || {};
 
   useEffect(() => {
     if (!partyPlaces) return;
@@ -129,7 +133,7 @@ export default function PartyPlaces() {
 
                     <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
                       <FaStar size={18} className="text-yellow-500" />
-                      <span>{vendor.rating || "5.0"}</span>
+                      <span>{isLoadingStats ? '--' : (stats[vendor._id]?.avgRating ?? 0)}</span>
                     </div>
 
                   </div>

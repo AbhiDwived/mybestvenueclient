@@ -14,6 +14,7 @@ import {
   useGetSavedVendorsQuery
 } from "../../features/savedVendors/savedVendorAPI";
 import { toast } from "react-toastify";
+import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
 
 const SearchResults = () => {
   const navigate = useNavigate();
@@ -79,6 +80,11 @@ const SearchResults = () => {
     });
   }, [vendorData, searchTerm, category, selectedCity]);
 
+  // Fetch review stats for all filtered vendors
+  const vendorIds = React.useMemo(() => filteredVendors.map(v => v._id), [filteredVendors]);
+  const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(vendorIds, { skip: !vendorIds.length });
+  const stats = statsData?.stats || {};
+
   if (isLoading) {
     return <Loader fullScreen />;
   }
@@ -135,6 +141,7 @@ const SearchResults = () => {
                 onVendorClick={handleVendorClick}
                 onUnsaveVendor={handleUnsaveVendor}
                 isAuthenticated={isAuthenticated}
+                rating={isLoadingStats ? '--' : (stats[vendor._id]?.avgRating ?? 0)}
               />
             ))}
           </div>
@@ -151,7 +158,8 @@ const VendorCard = ({
   toggleFavorite,
   onVendorClick, 
   onUnsaveVendor, 
-  isAuthenticated
+  isAuthenticated,
+  rating
 }) => {
   const [isSaved, setIsSaved] = useState(false);
   
@@ -209,7 +217,7 @@ const VendorCard = ({
             </h5>
             <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
               <FaStar size={18} className="text-yellow-500" />
-              <span>4.5</span>
+              <span>{rating}</span>
             </div>
           </div>
 

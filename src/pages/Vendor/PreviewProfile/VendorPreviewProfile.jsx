@@ -160,8 +160,7 @@ const VendorPreviewProfile = ({ show, onClose }) => {
                     {/* Description at the bottom from full start */}
                     <p className="text-md text-gray-700 text-left font-serif">
                         {vendorData?.vendor.description || "DSY Hospitality Private limited is a leading provider of"}
-                        Premium hospitality services for weddings and corporate events. We specialize in creating
-                        memorable experiences with our professional team and state-of-the-art facilities.
+
                     </p>
                 </div>
 
