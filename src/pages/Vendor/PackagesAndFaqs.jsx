@@ -6,9 +6,13 @@ import {
   useVendorservicesPackageListMutation,
   useDeleteServicePackagesMutation,
   useAddFaqMutation,
-  useGetVendorsFaqsMutation
+  useGetVendorsFaqsMutation,
+  useDeleteFaqsMutation
 
 } from "../../features/vendors/vendorAPI.js";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function PackagesAndFaqs() {
 
@@ -36,8 +40,10 @@ export default function PackagesAndFaqs() {
   // const vendorId = vendor?._id || vendor?.id;
   const vendorId = vendor?.id;
   console.log("vendorId", vendorId);
+  const [deleteFaqs, { isLoading: faqDelete, isSuccess: faqDeleteSuccess, isError: faqDeleteError, error: deleteFaqError }] = useDeleteFaqsMutation();
 
-  const [addservicesPackage, { isLoading, isError, isSuccess, error }] = useAddservicesPackageMutation();
+  const [addservicesPackage, { isLoading, isError, isSuccess, error: addPackageError }] = useAddservicesPackageMutation();
+
   const [updateservicesPackage] = useUpdateservicesPackageMutation();
   const [vendorservicesPackageList] = useVendorservicesPackageListMutation();
   const [deleteServicePackages] = useDeleteServicePackagesMutation();
@@ -63,7 +69,7 @@ export default function PackagesAndFaqs() {
     const pkg = packages[index];
     setEditingIndex(index);
     setEditingPackage({
-      packageId: pkg._id, 
+      packageId: pkg._id,
       packageName: pkg.packageName,
       services: pkg.services,
       description: pkg.description,
@@ -166,10 +172,13 @@ export default function PackagesAndFaqs() {
         answer: newFaq.answer
       }).unwrap();
 
-      alert("FAQ added successfully!");
+      // alert("FAQ added successfully!");
+      toast.success("FAQ added successfully!");
+      const faqRes = await getVendorsFaqs({ vendorId }).unwrap();
+    setFaqs(faqRes.faqs || []);
 
       // Optionally update local state (if FAQs are stored)
-      setFaqs([...faqs, newFaq]);
+      // setFaqs([...faqs, newFaq]);
 
       // Reset input
       setNewFaq({ question: "", answer: "" });
@@ -178,6 +187,22 @@ export default function PackagesAndFaqs() {
       alert("Failed to add FAQ");
     }
   };
+
+  const handleDelete = async (vendorId, faqId) => {
+    console.log("vendorId", vendorId, "faqId", faqId)
+    try {
+      await deleteFaqs({ vendorId, faqId }).unwrap();
+      console.log('FAQ deleted successfully');
+      alert('FAQ deleted successfully');
+
+      // Refetch FAQ list from backend
+      const faqRes = await getVendorsFaqs({ vendorId }).unwrap();
+      setFaqs(faqRes.faqs || []);
+    } catch (err) {
+      console.error('Failed to delete FAQ:', err);
+    }
+  };
+
 
   useEffect(() => {
     const fetchVendorData = async () => {
@@ -206,7 +231,11 @@ export default function PackagesAndFaqs() {
   }
 
   return (
+
+    
     <div className="p-2 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      
       <div className="border rounded-lg p-4 shadow-sm">
         <h2 className="text-[14px] font-semibold mb-1 font-serif">Service Packages</h2>
         <p className="text-[14px] text-gray-500 mb-4">Define your service offerings and pricing</p>
@@ -248,6 +277,14 @@ export default function PackagesAndFaqs() {
           <details key={index} className="mb-3">
             <summary className="cursor-pointer font-medium text-[#0f4c81]">{faq.question}</summary>
             <p className="text-sm mt-1 text-gray-700">{faq.answer}</p>
+            <button
+              onClick={() => handleDelete(vendorId, faq._id)}
+              className="bg-red-500 text-white px-3 py-1 rounded mt-2"
+              disabled={faqDelete}
+            >
+              {faqDelete ? 'Deleting...' : 'Delete'}
+            </button>
+
           </details>
         ))}
 
@@ -317,6 +354,10 @@ export default function PackagesAndFaqs() {
           </div>
         </div>
       )}
+
+
+      {/* ✅ Add ToastContainer here to enable toasts */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover draggable />
 
     </div>
   );

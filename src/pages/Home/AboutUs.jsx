@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import { IoLocationOutline } from "react-icons/io5";
 import { Link } from 'react-router-dom';
@@ -9,7 +9,12 @@ import { FiCheckCircle } from "react-icons/fi";
 import { BiBuildings } from "react-icons/bi";
 import { FiMapPin } from 'react-icons/fi';
 
+
+
 const AboutUs = () => {
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCity, setSelectedCity] = useState("All India");
   const features = [
     {
       title: "Verified Vendors",
@@ -271,17 +276,25 @@ const AboutUs = () => {
           {popularCities.map((city) => (
             <div
               key={city.title}
+              onClick={() => setSelectedCity(city.title)}
               className="bg-[#366A9B] text-white rounded-lg hover:shadow-lg text-center transition duration-300"
             >
               <h3 className="text-sm sm:text-base font-semibold text-white inline-flex items-center mt-1 p-3">
                 {city.icon}
-                <span className="ml-2 text-sm sm:text-base font-serif">{city.title}</span>
+                {/* <span className="ml-2 text-sm sm:text-base font-serif">
+                  {city.title}
+                  </span> */}
+                <span className="ml-2 text-sm sm:text-base font-serif">
+                  <Link  className='text-white' style={{ textDecoration: 'none' }} to={`/locations/${city.title}`}>{city.title}</Link>
+                </span>
+
               </h3>
             </div>
           ))}
         </div>
       </div>
 
+      
       {/* Find Perfect Venue */}
       <div className='mt-5 bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] py-16 px-4 sm:px-8 md:px-16 text-white text-center font-serif'>
         <p className='text-2xl sm:text-3xl md:text-4xl font-serif mb-4'>Ready to Find Your Perfect Venue</p>

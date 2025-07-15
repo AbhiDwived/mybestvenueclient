@@ -28,7 +28,55 @@ export const reviewAPI = api.injectEndpoints({
     getVendorsReviewStats: builder.query({
       query: (vendorIds) => `/reviews/stats?vendorIds=${vendorIds.join(',')}`,
     }),
+    getReportedReviews: builder.query({
+      query: () => '/reviews/reported',
+    }),
+    reportReview: builder.mutation({
+      query: ({ reviewId, reason }) => ({
+        url: `/reviews/${reviewId}/report`,
+        method: 'PATCH',
+        body: { reason },
+      }),
+    }),
+    approveReview: builder.mutation({
+      query: (reviewId) => ({
+        url: `/reviews/${reviewId}/approve`,
+        method: 'PATCH',
+      }),
+      transformResponse: (response, meta, arg) => {
+        if (response?.message) return response;
+        return response;
+      },
+      transformErrorResponse: (response) => {
+        if (response?.data?.message) return { error: response.data.message };
+        return { error: 'Failed to approve review.' };
+      },
+    }),
+    adminDeleteReview: builder.mutation({
+      query: (reviewId) => ({
+        url: `/reviews/admin/${reviewId}`,
+        method: 'DELETE',
+      }),
+    }),
+    getAllReviews: builder.query({
+      query: () => '/reviews/all',
+    }),
+    holdReview: builder.mutation({
+      query: ({ reviewId, reason }) => ({
+        url: `/reviews/${reviewId}/hold`,
+        method: 'PATCH',
+        body: { reason },
+      }),
+      transformResponse: (response, meta, arg) => {
+        if (response?.message) return response;
+        return response;
+      },
+      transformErrorResponse: (response) => {
+        if (response?.data?.message) return { error: response.data.message };
+        return { error: 'Failed to put review on hold.' };
+      },
+    }),
   }),
 });
 
-export const { useGetVendorReviewsQuery, useCreateReviewMutation, useUpdateReviewMutation, useDeleteReviewMutation, useGetVendorsReviewStatsQuery } = reviewAPI;
+export const { useGetVendorReviewsQuery, useCreateReviewMutation, useUpdateReviewMutation, useDeleteReviewMutation, useGetVendorsReviewStatsQuery, useGetReportedReviewsQuery, useReportReviewMutation, useApproveReviewMutation, useAdminDeleteReviewMutation, useGetAllReviewsQuery, useHoldReviewMutation } = reviewAPI;
