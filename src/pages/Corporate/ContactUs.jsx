@@ -32,6 +32,11 @@ export default function ContactUs() {
             toast.error('Please fill in all fields.');
             return;
         }
+        // Phone validation: must be exactly 10 digits, no country code, no spaces
+        if (!/^[0-9]{10}$/.test(phone)) {
+            toast.error('Phone number must be exactly 10 digits.');
+            return;
+        }
 
         try {
             await submitContact({ name, email, phone, message }).unwrap();
@@ -167,7 +172,14 @@ export default function ContactUs() {
                     </div>
                 </div>
             </div>
-            <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />
+            <ToastContainer 
+                position="top-right"
+                autoClose={3000}
+                pauseOnHover
+                closeOnClick={true}
+                draggable
+                closeButton={true}
+            />
         </div>
 
     );

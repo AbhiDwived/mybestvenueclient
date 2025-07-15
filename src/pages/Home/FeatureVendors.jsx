@@ -136,7 +136,13 @@ const FeaturedVendors = ({ showAll = false }) => {
                     </h5>
                     <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
                       <FaStar size={18} className="text-yellow-500" />
-                      <span>{isLoadingStats ? '--' : stat.avgRating}</span>
+                      <span>
+                        {isLoadingStats
+                          ? '--'
+                          : typeof stat.avgRating === 'number' && !isNaN(stat.avgRating)
+                            ? stat.avgRating.toFixed(1)
+                            : '--'}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
