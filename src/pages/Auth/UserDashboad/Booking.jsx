@@ -299,10 +299,11 @@ const BookingBudget = () => {
   };
 
   const handleDeleteBooking = async (bookingId) => {
+    // Show confirmation alert before deleting
+    const confirmed = window.confirm('Are you sure you want to delete this booking? This action cannot be undone.');
+    if (!confirmed) return;
     try {
       await deleteBooking(bookingId).unwrap();
-      
-      // Success toast for deletion
       toast.success('Booking deleted successfully', {
         position: "top-right",
         autoClose: 3000,
@@ -312,7 +313,6 @@ const BookingBudget = () => {
         draggable: true,
       });
     } catch (err) {
-      // Error toast for deletion failure
       toast.error(`Error deleting booking: ${err.data?.message || 'Unknown error'}`, {
         position: "top-right",
         autoClose: 5000,
