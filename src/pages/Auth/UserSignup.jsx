@@ -243,19 +243,11 @@ const UserSignup = () => {
     try {
       const res = await registerUser(payload).unwrap();
       console.log("Registration response:", res);
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
-      showToast.success("✅ Registration successful!");
-      if (res?.userId || res.user?.id) {
-        console.log("Attempting navigation to /verify-otp?userId=", res.userId || res.user.id);
-        // Try immediate navigation for debug
-          navigate(`/verify-otp?userId=${res.userId || res.user.id}`);
-        // If you want to keep the timeout, comment out the above and uncomment below:
-        // timeoutRef.current = setTimeout(() => {
-        //   if (isMounted.current) {
-        //     navigate(`/verify-otp?userId=${res.userId || res.user.id}`);
-        //   }
-        // }, 2000);
+      // Do not store token/user yet, wait for OTP verification
+      showToast.success("✅ OTP sent to your email! Please verify.");
+      if (res?.email) {
+        localStorage.setItem('pendingEmail', res.email);
+        navigate('/verify-otp', { state: { email: res.email } });
       }
     } catch (err) {
       console.error('Registration failed:', err);

@@ -48,19 +48,19 @@ export const authApi = createApi({
 
     // Verify OTP after registration
     verifyOtp: builder.mutation({
-      query: ({ userId, otp }) => ({
+      query: ({ email, otp }) => ({
         url: "/user/verify-otp",
         method: "POST",
-        body: { userId, otp },
+        body: { email, otp },
       }),
     }),
 
     // Resend OTP for registration
     resendOtp: builder.mutation({
-      query: ({ userId }) => ({
+      query: ({ email }) => ({
         url: "/user/resend-otp",
         method: "POST",
-        body: { userId },
+        body: { email },
       }),
     }),
 

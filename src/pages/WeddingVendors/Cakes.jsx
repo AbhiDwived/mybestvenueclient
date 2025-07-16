@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin } from 'lucide-react';
-import { FaStar, FaHeart, FaRegHeart } from 'react-icons/fa';
-import WeVendorr2 from '../../assets/newPics/WeVendor2avif.avif';
-import WeVendorr4 from '../../assets/newPics/WeVendor4.avif';
-import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
-import { useNavigate } from 'react-router-dom';
-import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from '../../features/savedVendors/savedVendorAPI';
+import { useEffect, useMemo, useState } from 'react';
+import { FaHeart, FaRegHeart, FaStar } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
+import { useGetSavedVendorsQuery, useSaveVendorMutation, useUnsaveVendorMutation } from '../../features/savedVendors/savedVendorAPI';
 
 export default function Cakes() {
   const navigate = useNavigate();

@@ -7,13 +7,24 @@ import "react-toastify/dist/ReactToastify.css";
 const VerifyOTP = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const userId = new URLSearchParams(location.search).get('userId');
+  // Get email from navigation state or localStorage
+  const [email, setEmail] = useState(location.state?.email || localStorage.getItem('pendingEmail') || '');
 
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const [verifyOtp, { isLoading, error }] = useVerifyOtpMutation();
   const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
+
+  // If no email, redirect to signup
+  useEffect(() => {
+    if (!email) {
+      toast.error('No registration session found. Please register again.');
+      navigate('/user/signup');
+    } else {
+      localStorage.setItem('pendingEmail', email);
+    }
+  }, [email, navigate]);
 
   useEffect(() => {
     let interval;
@@ -34,7 +45,7 @@ const VerifyOTP = () => {
 
   const handleResendOTP = async () => {
     try {
-      await resendOtp({ userId }).unwrap();
+      await resendOtp({ email }).unwrap();
       toast.success("OTP resent successfully!");
       setTimer(30);
       setCanResend(false);
@@ -54,15 +65,23 @@ const VerifyOTP = () => {
     }
 
     try {
-      await verifyOtp({ userId, otp }).unwrap();
+      await verifyOtp({ email, otp }).unwrap();
       toast.success("OTP Verified successfully!");
-
+      localStorage.removeItem('pendingEmail');
       setTimeout(() => {
         navigate('/user/login');
       }, 2000); // Delay to let toast show before redirect
     } catch (err) {
       console.error('OTP Verification Failed:', err);
-      toast.error(err?.data?.message || "OTP Verification failed. Please try again.");
+      if (err?.data?.message === 'No pending registration found. Please register again.') {
+        toast.error('Your registration session expired. Please register again.');
+        localStorage.removeItem('pendingEmail');
+        setTimeout(() => {
+          navigate('/user/signup');
+        }, 2000);
+      } else {
+        toast.error(err?.data?.message || "OTP Verification failed. Please try again.");
+      }
     }
   };
 
