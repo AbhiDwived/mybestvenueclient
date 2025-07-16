@@ -23,15 +23,19 @@ import { useAddUserInquiryMessageMutation } from '../../../features/auth/authAPI
 import { useCreateAnonymousInquiryMutation } from '../../../features/inquiries/inquiryAPI';
 import { ImCross } from 'react-icons/im';
 import { useGetPortfolioImagesQuery, useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
-import { useGetVendorReviewsQuery } from '../../../features/reviews/reviewAPI';
 
 const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
   const [activeGalleryTab, setActiveGalleryTab] = useState('images');
+
   const navigate = useNavigate();
   const { vendorId } = useParams();
-  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
-    skip: !vendorId || vendorId === 'undefined'
+  // const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
+  //   skip: !vendorId || vendorId === 'undefined',
+  //    refetchOnMountOrArgChange: true,
+  // });
+  const { data: vendor, isLoading: isVendorLoading, error: vendorError, refetch: refetchVendor } = useGetVendorByIdQuery(vendorId, {
+    skip: !vendorId || vendorId === 'undefined',
   });
   const [createBooking, { isLoading: isBookingLoading }] = useCreateBookingMutation();
   const { refetch: refetchBookings } = useGetUserBookingsQuery();
@@ -61,19 +65,16 @@ const PreviewProfile = () => {
   // Form validation state
   const [formErrors, setFormErrors] = useState({});
 
-  // Inquiry form state with validation
-  const [inquiryForm, setInquiryForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    eventDate: '',
-    message: ''
-  });
 
-  // Inquiry errors state
-  const [inquiryErrors, setInquiryErrors] = useState({});
+
 
   // Update form when user data changes
+
+  useEffect(() => {
+    if (vendorId && vendorId !== 'undefined') {
+      refetchVendor(); // Force refetch when vendorId changes
+    }
+  }, [vendorId, refetchVendor]);
   useEffect(() => {
     if (user) {
       setBookingForm(prev => ({
@@ -85,7 +86,10 @@ const PreviewProfile = () => {
     }
   }, [user]);
 
-  // Update validateForm for booking
+
+
+
+
   const validateForm = () => {
     const errors = {};
     if (!bookingForm.eventType) errors.eventType = 'Event type is required';
@@ -93,12 +97,9 @@ const PreviewProfile = () => {
     if (!bookingForm.eventDate) errors.eventDate = 'Event date is required';
     if (!bookingForm.name) errors.name = 'Name is required';
     if (!bookingForm.email) errors.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(bookingForm.email)) errors.email = 'Invalid email address';
     if (!bookingForm.phone) errors.phone = 'Phone is required';
-    else if (!/^[6-9]\d{9}$/.test(bookingForm.phone)) errors.phone = 'Invalid Indian phone number';
     if (!bookingForm.plannedAmount) errors.plannedAmount = 'Planned amount is required';
-    if (!bookingForm.guestCount) errors.guestCount = 'Number of guests is required';
-    else if (parseInt(bookingForm.guestCount) <= 0) errors.guestCount = 'Number of guests must be greater than 0';
+
     // Validate date is not in the past
     if (bookingForm.eventDate) {
       const selectedDate = new Date(bookingForm.eventDate);
@@ -108,21 +109,8 @@ const PreviewProfile = () => {
         errors.eventDate = 'Event date cannot be in the past';
       }
     }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
-  // Inquiry validation
-  const validateInquiry = () => {
-    const errors = {};
-    if (!inquiryForm.name) errors.name = 'Name is required';
-    if (!inquiryForm.email) errors.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(inquiryForm.email)) errors.email = 'Invalid email address';
-    if (!inquiryForm.phone) errors.phone = 'Phone is required';
-    else if (!/^[6-9]\d{9}$/.test(inquiryForm.phone)) errors.phone = 'Invalid Indian phone number';
-    if (!inquiryForm.eventDate) errors.eventDate = 'Event date is required';
-    if (!inquiryForm.message) errors.message = 'Message is required';
-    setInquiryErrors(errors);
+    setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
@@ -151,7 +139,7 @@ const PreviewProfile = () => {
 
       try {
         const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
-        
+
         if (response?.packages && Array.isArray(response.packages)) {
           setPackages(response.packages);
         } else {
@@ -170,7 +158,7 @@ const PreviewProfile = () => {
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!isAuthenticated) {
       toast.error('Please login to book a service');
       navigate('/login');
@@ -185,13 +173,13 @@ const PreviewProfile = () => {
     try {
       // Find selected package details
       const selectedPackageDetails = packages.find(pkg => pkg._id === bookingForm.packageName);
-      
+
       // Use offer price if available and less than regular price
-      const finalPrice = selectedPackageDetails?.offerPrice && 
-                        selectedPackageDetails.offerPrice < selectedPackageDetails.price
-                        ? selectedPackageDetails.offerPrice 
-                        : selectedPackageDetails?.price || 0;
-      
+      const finalPrice = selectedPackageDetails?.offerPrice &&
+        selectedPackageDetails.offerPrice < selectedPackageDetails.price
+        ? selectedPackageDetails.offerPrice
+        : selectedPackageDetails?.price || 0;
+
       const response = await createBooking({
         vendorId: vendorId,
         vendorName: vendor?.vendor?.businessName || '',
@@ -215,7 +203,7 @@ const PreviewProfile = () => {
       if (response.success) {
         toast.success('Booking request sent successfully');
         refetchBookings();
-        
+
         // Reset form
         setBookingForm({
           eventType: '',
@@ -241,10 +229,18 @@ const PreviewProfile = () => {
   };
 
   const vendorData = vendor?.vendor;
-  
+
 
 
   const [isSaved, setIsSaved] = useState(false);
+
+  const [inquiryForm, setInquiryForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    eventDate: '',
+    message: ''
+  });
 
   const [inquiryLoading, setInquiryLoading] = useState(false);
   const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
@@ -261,31 +257,37 @@ const PreviewProfile = () => {
     }));
   };
 
-  // Update handleInquirySubmit to use validateInquiry
   const handleInquirySubmit = async (e) => {
     e.preventDefault();
+
+    // Remove login restriction: allow all users to submit
     if (userRecord?.user?.role === 'vendor') {
       toast.error('Vendors cannot send inquiries');
       return;
     }
-    if (!validateInquiry()) {
-      toast.error('Please fill in all required fields correctly');
+
+    // Validate required fields
+    if (!inquiryForm.name || !inquiryForm.email || !inquiryForm.phone || !inquiryForm.message) {
+      toast.error('Please fill in all required fields');
       return;
     }
+
     setInquiryLoading(true);
     try {
       if (userId) {
+        // Logged-in user: use regular inquiry
         await addUserInquiryMessage({
           userId,
           vendorId: vendorData._id,
           name: inquiryForm.name,
           email: inquiryForm.email,
           phone: inquiryForm.phone,
-          weddingDate: inquiryForm.eventDate,
-          message: inquiryForm.message
+          weddingDate: inquiryForm.eventDate, // Fix: send as weddingDate
+          message: inquiryForm.message // Fix: send as message
         }).unwrap();
         toast.success('Inquiry sent successfully!');
       } else {
+        // Anonymous user: use anonymous inquiry
         await createAnonymousInquiry({
           vendorId: vendorData._id,
           name: inquiryForm.name,
@@ -303,7 +305,6 @@ const PreviewProfile = () => {
         eventDate: '',
         message: ''
       });
-      setInquiryErrors({});
     } catch (err) {
       toast.error(err.data?.message || 'Failed to send inquiry. Please try again.');
     } finally {
@@ -330,20 +331,20 @@ const PreviewProfile = () => {
   };
 
   const ImageViewModal = ({ imageUrl, onClose }) => (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
       onClick={onClose}
     >
-      <div 
+      <div
         className="max-w-[90%] max-h-[90%] relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <img 
-          src={imageUrl} 
-          alt="Full Size" 
-          className="max-w-full max-h-full object-contain" 
+        <img
+          src={imageUrl}
+          alt="Full Size"
+          className="max-w-full max-h-full object-contain"
         />
-        <button 
+        <button
           className="absolute top-2 right-2 bg-white rounded-full p-2 hover:bg-gray-200"
           onClick={onClose}
         >
@@ -354,11 +355,11 @@ const PreviewProfile = () => {
   );
 
   const VideoViewModal = ({ videoUrl, onClose }) => (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
       onClick={onClose}
     >
-      <div 
+      <div
         className="max-w-[90%] max-h-[90%] relative"
         onClick={(e) => e.stopPropagation()}
       >
@@ -368,7 +369,7 @@ const PreviewProfile = () => {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
-        <button 
+        <button
           className="absolute top-2 right-2 bg-white rounded-full p-2 hover:bg-gray-200"
           onClick={onClose}
         >
@@ -379,28 +380,33 @@ const PreviewProfile = () => {
   );
 
   // Portfolio Gallery Queries
+  // const [vendorPortfolio, setVendorPortfolio] = useState({
+  //   images: vendor?.portfolio?.images || [],
+  //   videos: vendor?.portfolio?.videos || []
+  // });
   const [vendorPortfolio, setVendorPortfolio] = useState({
-    images: vendor?.portfolio?.images || [],
-    videos: vendor?.portfolio?.videos || []
+    images: [],
+    videos: []
   });
 
-  const { data: portfolioImagesData } = useGetPortfolioImagesQuery(vendorId, {
+  const { data: portfolioImagesData, refetch: refetchPortfolioImages } = useGetPortfolioImagesQuery(vendorId, {
     skip: !vendorId,
-    selectFromResult: ({ data }) => ({
-      data: data?.images || []
-    })
+    refetchOnMountOrArgChange: true,
+    selectFromResult: ({ data }) => ({ data: data?.images || [] }),
   });
 
-  const { data: portfolioVideosData } = useGetPortfolioVideosQuery(vendorId, {
+  const { data: portfolioVideosData, refetch: refetchPortfolioVideos } = useGetPortfolioVideosQuery(vendorId, {
     skip: !vendorId,
     selectFromResult: ({ data }) => ({
       data: data?.videos || []
     })
   });
+  // State for portfolio
 
-  // Update vendor portfolio data
+
+  // Load images from query result
   useEffect(() => {
-    if (portfolioImagesData && portfolioImagesData.length > 0) {
+    if (portfolioImagesData) {
       setVendorPortfolio(prev => ({
         ...prev,
         images: portfolioImagesData
@@ -408,8 +414,9 @@ const PreviewProfile = () => {
     }
   }, [portfolioImagesData]);
 
+  // Load videos from query result
   useEffect(() => {
-    if (portfolioVideosData && portfolioVideosData.length > 0) {
+    if (portfolioVideosData) {
       setVendorPortfolio(prev => ({
         ...prev,
         videos: portfolioVideosData
@@ -417,10 +424,15 @@ const PreviewProfile = () => {
     }
   }, [portfolioVideosData]);
 
-  const { data: reviewData } = useGetVendorReviewsQuery(vendorId, { skip: !vendorId });
-  const reviews = reviewData?.reviews || [];
-  const avgRating = reviews.length ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1) : 0;
-  const reviewCount = reviews.length;
+  // Optional: Set initial portfolio from vendor data
+  useEffect(() => {
+    if (vendor?.portfolio) {
+      setVendorPortfolio({
+        images: vendor.portfolio.images || [],
+        videos: vendor.portfolio.videos || []
+      });
+    }
+  }, [vendor]);
 
   if (isVendorLoading) {
     return <Loader />;
@@ -434,6 +446,8 @@ const PreviewProfile = () => {
     setIsSaved(!isSaved);
     // TODO: Implement save vendor functionality
   };
+
+
 
   return (
     <div className="mx-auto px-2 py-3 font-serif">
@@ -459,10 +473,10 @@ const PreviewProfile = () => {
           <h2 className="text-xl font-bold text-gray-800">{vendor?.vendor?.businessName}</h2>
           <p className="text-sm text-gray-500">{vendor?.vendor?.vendorType}</p>
 
-          
 
 
-          
+
+
           {/* Services */}
           <div className="flex flex-wrap gap-2 mt-2">
             {(() => {
@@ -500,7 +514,7 @@ const PreviewProfile = () => {
                     key={item._id || index}
                     className="inline-block min-w-[200px] border-blue-400 rounded-xl p-2  text-sm font-bold text-gray-800"
                   >
-                   <span className="text-gray-500">{item.type}:</span>  ₹{item.price.toLocaleString('en-IN')}  <span className='text-gray-500'>{item.unit || 'per person'}</span>
+                    <span className="text-gray-500">{item.type}:</span>  ₹{item.price.toLocaleString('en-IN')}  <span className='text-gray-500'>{item.unit || 'per person'}</span>
                   </div>
                 ))
             ) : (
@@ -512,8 +526,8 @@ const PreviewProfile = () => {
           <div className="flex flex-wrap items-center gap-2 text-md text-gray-600 mt-1">
             <span className="flex items-center font-medium">
               <FaStar className="mr-1" color={"#FACC15"} size={22} />
-              {avgRating}
-              <span className="ml-1 text-gray-400">({reviewCount} review{reviewCount !== 1 ? 's' : ''})</span>
+              {vendor?.rating || '4.8'}
+              <span className="ml-1 text-gray-400">({vendor?.reviews?.length || '10'} reviews)</span>
             </span>
             <span>·</span>
 
@@ -545,7 +559,7 @@ const PreviewProfile = () => {
                 }
               })()}
             </span>
-            
+
 
           </div>
 
@@ -595,13 +609,13 @@ const PreviewProfile = () => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Portfolio Gallery</h3>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => setActiveGalleryTab('images')}
                 className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'images' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
               >
                 Images ({vendorPortfolio.images.length})
               </button>
-              <button 
+              <button
                 onClick={() => setActiveGalleryTab('videos')}
                 className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'videos' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
               >
@@ -609,16 +623,20 @@ const PreviewProfile = () => {
               </button>
             </div>
           </div>
-          
+
           {activeGalleryTab === 'images' && (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {vendorPortfolio.images.length > 0 ? (
+                {/* {vendorPortfolio.images.length > 0 ? (
+                  vendorPortfolio.images
+                    .slice((currentPage - 1) * imagesPerPage, currentPage * imagesPerPage)
+                    .map((image, i) => ( */}
+                {Array.isArray(vendorPortfolio.images) && vendorPortfolio.images.length > 0 ? (
                   vendorPortfolio.images
                     .slice((currentPage - 1) * imagesPerPage, currentPage * imagesPerPage)
                     .map((image, i) => (
-                      <div 
-                        key={image._id || i} 
+                      <div
+                        key={image._id || i}
                         className="relative group cursor-pointer"
                         onClick={() => handleImageView(image.url)}
                       >
@@ -645,11 +663,10 @@ const PreviewProfile = () => {
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
-                    }`}
+                    className={`px-3 py-1 rounded ${currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
+                      }`}
                   >
                     Previous
                   </button>
@@ -662,26 +679,24 @@ const PreviewProfile = () => {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`w-8 h-8 rounded-full ${
-                        currentPage === pageNum
-                          ? 'bg-[#0f4c81] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                      className={`w-8 h-8 rounded-full ${currentPage === pageNum
+                        ? 'bg-[#0f4c81] text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
                     >
                       {pageNum}
                     </button>
                   ))}
 
                   <button
-                    onClick={() => setCurrentPage(prev => 
+                    onClick={() => setCurrentPage(prev =>
                       Math.min(prev + 1, Math.ceil(vendorPortfolio.images.length / imagesPerPage))
                     )}
                     disabled={currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
-                    }`}
+                    className={`px-3 py-1 rounded ${currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
+                      }`}
                   >
                     Next
                   </button>
@@ -694,14 +709,14 @@ const PreviewProfile = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {vendorPortfolio.videos.length > 0 ? (
                 vendorPortfolio.videos.map((video, i) => (
-                  <div 
-                    key={video._id || i} 
+                  <div
+                    key={video._id || i}
                     className="relative group cursor-pointer"
                     onClick={() => handleVideoView(video.url)}
                   >
                     <iframe
-                      src={video.url.includes('youtube.com') 
-                        ? video.url.replace('watch?v=', 'embed/') 
+                      src={video.url.includes('youtube.com')
+                        ? video.url.replace('watch?v=', 'embed/')
                         : video.url}
                       title={video.title || `Portfolio Video ${i + 1}`}
                       className="rounded w-full h-60 object-cover"
@@ -717,7 +732,7 @@ const PreviewProfile = () => {
                   No portfolio videos available
                 </div>
               )}
-          </div>
+            </div>
           )}
         </div>
 
@@ -736,9 +751,9 @@ const PreviewProfile = () => {
           </label>
 
           <label className="sm:col-span-2">
-            <span className="block mb-1">User Name <span className="text-red-500">*</span></span>
-            <input 
-              type="text" 
+            <span className="block mb-1">User Name *</span>
+            <input
+              type="text"
               value={bookingForm.name}
               onChange={(e) => handleBookingInputChange('name', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.name ? 'border-red-500' : ''}`}
@@ -748,9 +763,9 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Email <span className="text-red-500">*</span></span>
-            <input 
-              type="email" 
+            <span className="block mb-1">Email *</span>
+            <input
+              type="email"
               value={bookingForm.email}
               onChange={(e) => handleBookingInputChange('email', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.email ? 'border-red-500' : ''}`}
@@ -760,9 +775,9 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Phone Number <span className="text-red-500">*</span></span>
-            <input 
-              type="tel" 
+            <span className="block mb-1">Phone Number *</span>
+            <input
+              type="tel"
               value={bookingForm.phone}
               onChange={(e) => handleBookingInputChange('phone', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.phone ? 'border-red-500' : ''}`}
@@ -772,8 +787,8 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Event Type <span className="text-red-500">*</span></span>
-            <select 
+            <span className="block mb-1">Event Type *</span>
+            <select
               value={bookingForm.eventType}
               onChange={(e) => handleBookingInputChange('eventType', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.eventType ? 'border-red-500' : ''}`}
@@ -790,8 +805,8 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Package Name <span className="text-red-500">*</span></span>
-            <select 
+            <span className="block mb-1">Package Name *</span>
+            <select
               value={bookingForm.packageName}
               onChange={(e) => {
                 console.log('Selected package ID:', e.target.value);
@@ -808,7 +823,7 @@ const PreviewProfile = () => {
               {Array.isArray(packages) && packages.length > 0 ? (
                 packages.map((pkg) => (
                   <option key={pkg._id} value={pkg._id}>
-                    {pkg.packageName} - ₹{pkg.price?.toLocaleString('en-IN')} 
+                    {pkg.packageName} - ₹{pkg.price?.toLocaleString('en-IN')}
                     {pkg.offerPrice ? ` (Offer: ₹${pkg.offerPrice?.toLocaleString('en-IN')})` : ''}
                   </option>
                 ))
@@ -820,9 +835,9 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Event Date <span className="text-red-500">*</span></span>
-            <input 
-              type="date" 
+            <span className="block mb-1">Event Date *</span>
+            <input
+              type="date"
               value={bookingForm.eventDate}
               onChange={(e) => handleBookingInputChange('eventDate', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.eventDate ? 'border-red-500' : ''}`}
@@ -833,8 +848,8 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Booking Time</span>
-            <input 
-              type="time" 
+            <input
+              type="time"
               value={bookingForm.eventTime}
               onChange={(e) => handleBookingInputChange('eventTime', e.target.value)}
               className="w-full border rounded px-3 py-2"
@@ -842,33 +857,32 @@ const PreviewProfile = () => {
           </label>
 
           <label>
-            <span className="block mb-1">Number of Guests <span className="text-red-500">*</span></span>
-            <input 
-              type="number" 
+            <span className="block mb-1">Number of Guests</span>
+            <input
+              type="number"
               value={bookingForm.guestCount}
               onChange={(e) => handleBookingInputChange('guestCount', e.target.value)}
-              placeholder="e.g. 150" 
-              className={`w-full border rounded px-3 py-2 ${formErrors.guestCount ? 'border-red-500' : ''}`}
+              placeholder="e.g. 150"
+              className="w-full border rounded px-3 py-2"
               min="0"
             />
-            {formErrors.guestCount && <span className="text-red-500 text-xs mt-1">{formErrors.guestCount}</span>}
           </label>
 
           <label>
             <span className="block mb-1">Preferred Venue</span>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={bookingForm.venue}
               onChange={(e) => handleBookingInputChange('venue', e.target.value)}
-              placeholder="Venue or City" 
+              placeholder="Venue or City"
               className="w-full border rounded px-3 py-2"
             />
           </label>
 
           <label>
-            <span className="block mb-1">Planned Amount (₹) <span className="text-red-500">*</span></span>
-            <input 
-              type="number" 
+            <span className="block mb-1">Planned Amount (₹) *</span>
+            <input
+              type="number"
               value={bookingForm.plannedAmount}
               className={`w-full border rounded px-3 py-2 bg-gray-50 ${formErrors.plannedAmount ? 'border-red-500' : ''}`}
               readOnly
@@ -889,17 +903,17 @@ const PreviewProfile = () => {
 
           <label className="sm:col-span-2">
             <span className="block mb-1">Additional Notes</span>
-            <textarea 
-              rows="3" 
+            <textarea
+              rows="3"
               value={bookingForm.notes}
               onChange={(e) => handleBookingInputChange('notes', e.target.value)}
-              placeholder="Tell us more about your event..." 
+              placeholder="Tell us more about your event..."
               className="w-full border rounded px-3 py-2"
             />
           </label>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="sm:col-span-2 w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={isBookingLoading}
           >
@@ -917,7 +931,7 @@ const PreviewProfile = () => {
             className={`px-3 py-1 font-medium ${activeTab === tab ? 'bg-white rounded m-1' : 'text-gray-500 hover:text-black'
               }`}
           >
-            {tab === 'Reviews' ? 'Reviews' : tab}
+            {tab === 'Reviews' ? 'Reviews (3)' : tab}
           </button>
         ))}
       </div>
@@ -939,19 +953,16 @@ const PreviewProfile = () => {
             <h3 className="font-semibold text-lg mb-3">Send Inquiry</h3>
             <form className="space-y-3 text-sm" onSubmit={handleInquirySubmit}>
               <div>
-                <label className="block mb-1">Your Name <span className="text-red-500">*</span></label>
-                <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.name ? 'border-red-500' : ''}`} />
-                {inquiryErrors.name && <span className="text-red-500 text-xs mt-1">{inquiryErrors.name}</span>}
+                <label className="block mb-1">Your Name</label>
+                <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
-                <label className="block mb-1">Your Email <span className="text-red-500">*</span></label>
-                <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.email ? 'border-red-500' : ''}`} />
-                {inquiryErrors.email && <span className="text-red-500 text-xs mt-1">{inquiryErrors.email}</span>}
+                <label className="block mb-1">Your Email</label>
+                <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
-                <label className="block mb-1">Phone Number <span className="text-red-500">*</span></label>
-                <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.phone ? 'border-red-500' : ''}`} />
-                {inquiryErrors.phone && <span className="text-red-500 text-xs mt-1">{inquiryErrors.phone}</span>}
+                <label className="block mb-1">Phone Number</label>
+                <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <div>
                 {/* <label className="block mb-1">useId</label> */}
@@ -959,7 +970,7 @@ const PreviewProfile = () => {
               </div>
               <input type="hidden" name="vendorId" value={vendorData._id} />
               <div>
-                <label className="block mb-1">Event Date <span className="text-red-500">*</span></label>
+                <label className="block mb-1">Event Date</label>
                 <input
                   type="date"
                   name="eventDateRaw"
@@ -971,14 +982,12 @@ const PreviewProfile = () => {
                       eventDate: formatted
                     }));
                   }}
-                  className={`w-full border rounded px-3 py-2 ${inquiryErrors.eventDate ? 'border-red-500' : ''}`}
+                  className="w-full border rounded px-3 py-2"
                 />
-                {inquiryErrors.eventDate && <span className="text-red-500 text-xs mt-1">{inquiryErrors.eventDate}</span>}
               </div>
               <div>
-                <label className="block mb-1">Message <span className="text-red-500">*</span></label>
-                <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.message ? 'border-red-500' : ''}`} />
-                {inquiryErrors.message && <span className="text-red-500 text-xs mt-1">{inquiryErrors.message}</span>}
+                <label className="block mb-1">Message</label>
+                <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className="w-full border rounded px-3 py-2" />
               </div>
               <button type="submit"
                 disabled={inquiryLoading || userRecord?.user?.role === 'vendor'}

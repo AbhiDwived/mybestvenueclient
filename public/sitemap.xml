@@ -61,12 +61,12 @@
 
     <!-- Wedding Venues -->
     <url>
-        <loc>https://mybestvenue.com/Wedding_Venues</loc>
+        <loc>https://mybestvenue.com/wedding-venues </loc>
         <priority>0.9</priority>
         <changefreq>weekly</changefreq>
     </url>
     <url>
-        <loc>https://mybestvenue.com/Wedding_Venues_city</loc>
+        <loc>https://mybestvenue.com/wedding-venues _city</loc>
         <priority>0.8</priority>
         <changefreq>weekly</changefreq>
     </url>
@@ -90,7 +90,7 @@
 
     <!-- Blogs and Ideas -->
     <url>
-        <loc>https://mybestvenue.com/IdeaBlog</loc>
+        <loc>https://mybestvenue.com/Blog</loc>
         <priority>0.7</priority>
         <changefreq>weekly</changefreq>
     </url>

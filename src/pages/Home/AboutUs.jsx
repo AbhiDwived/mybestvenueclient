@@ -101,7 +101,7 @@ const AboutUs = () => {
 
         <div className="flex flex-wrap justify-center gap-4 mt-8 px-4 font-serif">
           <Link
-            to="/Wedding_Venues_city"
+            to="/wedding-venues _city"
             className="flex items-center bg-white text-gray-700 px-4 py-2 rounded-md hover:bg-[#0f4c81e7] transition sm:px-3 sm:py-2 text-sm sm:text-base"
             style={{ textDecoration: 'none', color: '#364153' }}
           >
@@ -236,23 +236,28 @@ const AboutUs = () => {
         </div>
       </div>
 
+
       {/* Venue Types */}
       <div className='m-5'>
         <p className='text-3xl sm:text-4xl mb-8 text-center font-serif text-gray-600'>Venue Types We Cover</p>
+
         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:mx-16 m-5'>
           {venueTypes.map((venueType) => (
-            <div
+            <Link
               key={venueType.title}
-              className="bg-white rounded-lg hover:shadow-sm text-center border-2 border-[#0f4c81] transition duration-300"
+              to={`/vendor-list/all-india/${venueType.title}`}
+              style={{ textDecoration: 'none' }}
+              className="block bg-white rounded-lg hover:shadow-sm text-center border-2 border-[#0f4c81] transition duration-300"
             >
-              <h3 className="text-sm sm:text-base font-semibold text-gray-600 inline-flex items-center m-2">
+              <p className="text-sm sm:text-base  text-gray-600 inline-flex items-center justify-center m-2">
                 {venueType.icon}
                 <span className="ml-2 text-sm sm:text-base font-serif">{venueType.title}</span>
-              </h3>
-            </div>
+              </p>
+            </Link>
           ))}
         </div>
       </div>
+
 
       {/* Commitment to Excellence */}
       <div className='mt-5 bg-gray-100 py-16 px-4 sm:px-8 md:px-16 text-center font-serif'>
@@ -272,29 +277,26 @@ const AboutUs = () => {
           Popular Cities
         </p>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:mx-16 m-2 px-2 py-2'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:mx-16 m-2 px-1 py-2'>
           {popularCities.map((city) => (
-            <div
+            <Link
               key={city.title}
+              to={`/locations/${city.title}`}
+              style={{ textDecoration: 'none' }}
               onClick={() => setSelectedCity(city.title)}
-              className="bg-[#366A9B] text-white rounded-lg hover:shadow-lg text-center transition duration-300"
+              className="bg-[#366A9B] text-white rounded-lg hover:shadow-lg text-center transition duration-300 block"
             >
-              <h3 className="text-sm sm:text-base font-semibold text-white inline-flex items-center mt-1 p-3">
+              <h3 className="text-sm sm:text-base font-semibold inline-flex items-center justify-center mt-1 p-3">
                 {city.icon}
-                {/* <span className="ml-2 text-sm sm:text-base font-serif">
-                  {city.title}
-                  </span> */}
-                <span className="ml-2 text-sm sm:text-base font-serif">
-                  <Link  className='text-white' style={{ textDecoration: 'none' }} to={`/locations/${city.title}`}>{city.title}</Link>
-                </span>
-
+                <span className="ml-2 text-sm sm:text-base font-serif">{city.title}</span>
               </h3>
-            </div>
+            </Link>
           ))}
         </div>
+
       </div>
 
-      
+
       {/* Find Perfect Venue */}
       <div className='mt-5 bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] py-16 px-4 sm:px-8 md:px-16 text-white text-center font-serif'>
         <p className='text-2xl sm:text-3xl md:text-4xl font-serif mb-4'>Ready to Find Your Perfect Venue</p>
@@ -302,7 +304,7 @@ const AboutUs = () => {
 
         <div>
           <Link
-            to="/Wedding_Venues_city"
+            to="/wedding-venues _city"
             style={{ textDecoration: 'none', color: '#4A5565' }}
             className="inline-block bg-white px-4 py-2 rounded-md hover:bg-[#0f4c81e7] transition text-md sm:text-base"
           >

@@ -168,7 +168,7 @@ const index = () => {
                    
 
                     {/* Idea Blog */}
-                    <Route path="/IdeaBlog" element={<IdeaBlog />} />
+                    <Route path="/Blog" element={<IdeaBlog />} />
                     <Route path="/blog/:id" element={<PublicBlogDetails />} />
 
                     {/* Corporate */}
@@ -221,8 +221,8 @@ const index = () => {
                     <Route path='/VendorByCategory' element={<VendorByCategory />} />
 
                     {/* Wedding Venues */}
-                    <Route path="Wedding_Venues" element={<WeddingVenues />} />
-                    <Route path="Wedding_Venues_city" element={<WeddingVenuesCity />} />
+                    <Route path="wedding-venues " element={<WeddingVenues />} />
+                    <Route path="wedding-venues _city" element={<WeddingVenuesCity />} />
                     <Route path="blue-dimond-venue" element={<BlueDimondVenue />} />
                     <Route path="Hotel-Prince-Inn-By" element={<HotelPrinceInn />} />
                     <Route path="Hotel-Prience-Stay" element={<HotelPrienceStay />} />
