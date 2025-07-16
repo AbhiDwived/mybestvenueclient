@@ -204,7 +204,7 @@ const Navbar = () => {
     <header className="bg-white px-2 py-2 shadow-sm w-100">
       <div className="container-fluid d-flex justify-content-between align-items-center">
         <Link to="/" className="d-flex align-items-center">
-          <img src={MyBestVenues} alt="logo" className="h-14" />
+          <img src={MyBestVenues} alt="logo" className="h-14" loading="lazy" />
         </Link>
 
         <div className="d-flex d-lg-none">
@@ -265,7 +265,7 @@ const Navbar = () => {
       >
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>
-            <img src={MyBestVenues} alt="logo" className="h-10" />
+            <img src={MyBestVenues} alt="logo" className="h-10" loading="lazy" />
           </Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>{renderMobileLinks()}</Offcanvas.Body>

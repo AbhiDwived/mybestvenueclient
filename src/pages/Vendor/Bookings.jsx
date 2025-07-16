@@ -485,6 +485,7 @@ export default function BookingManagement() {
                       src={userProfileData.user.profilePhoto} 
                       alt={`${userProfileData.user.name}'s profile`}
                       className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">

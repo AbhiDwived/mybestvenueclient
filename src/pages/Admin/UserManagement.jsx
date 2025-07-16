@@ -486,6 +486,7 @@ const UserManagement = () => {
                       src={userProfileData.user.profilePhoto} 
                       alt={`${userProfileData.user.name}'s profile`}
                       className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
@@ -531,6 +532,7 @@ const UserManagement = () => {
                       src={vendorProfileData?.vendor?.profilePhoto || vendorProfileData?.vendor?.profilePicture || selectedUser?.profilePhoto || selectedUser?.profilePicture} 
                       alt={`${vendorProfileData?.vendor?.businessName || selectedUser?.businessName || 'Vendor'}'s profile`}
                       className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
