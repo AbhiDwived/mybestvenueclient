@@ -165,6 +165,7 @@ export default function ContactUs() {
                                 disabled={isLoading}
                                 style={{ borderRadius: '5px' }}
                                 className={`w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#0F4C81] hover:bg-[#0f4c81ee] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                aria-label="Send Message"
                             >
                                 {isLoading ? 'Sending...' : 'Send Message'}
                             </button>

@@ -121,6 +121,7 @@ export default function Photographers() {
                 <button
                   onClick={(e) => toggleFavorite(e, vendor._id)}
                   className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md"
+                  aria-label={savedVendorIds.includes(vendor._id) ? "Remove from favorites" : "Add to favorites"}
                 >
                   {savedVendorIds.includes(vendor._id) ? (
                     <FaHeart className="text-red-500" />

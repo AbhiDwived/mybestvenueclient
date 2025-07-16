@@ -118,6 +118,7 @@ const FeaturedVendors = ({ showAll = false }) => {
                 <button
                   onClick={(e) => toggleFavorite(e, vendor.id)}
                   className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-gray-800"
+                  aria-label={savedVendorIds.includes(vendor.id) ? "Remove from favorites" : "Add to favorites"}
                 >
                   {savedVendorIds.includes(vendor.id) ? (
                     <FaHeart className="text-red-500" />

@@ -166,6 +166,7 @@ const TestimonialSection = () => {
                 setActiveTab(tab);
                 setCurrentSlide(0);
               }}
+              aria-label={tab === 'all' ? 'All Events' : `${tab.charAt(0).toUpperCase() + tab.slice(1)} testimonials`}
             >
               {tab === 'all' ? 'All Events' : tab}
             </button>
@@ -180,6 +181,7 @@ const TestimonialSection = () => {
             onClick={prevSlide}
             style={{ borderRadius: '25px' }}
             className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white shadow hover:bg-gray-100"
+            aria-label="Previous testimonials"
           >
             <FaChevronLeft size={15} />
           </button>
@@ -224,6 +226,7 @@ const TestimonialSection = () => {
             onClick={nextSlide}
             style={{ borderRadius: '25px' }}
             className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white shadow hover:bg-gray-100"
+            aria-label="Next testimonials"
           >
             <FaChevronRight size={15} />
           </button>

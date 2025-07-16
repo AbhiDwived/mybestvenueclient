@@ -145,6 +145,7 @@ export default function Corporate() {
             <button
               style={{ borderRadius: '5px' }}
               className="bg-[#10497a] hover:bg-[#062b4b] text-white px-3 py-2"
+              aria-label="Search Venue"
             >
               Search Venue
             </button>
@@ -174,6 +175,7 @@ export default function Corporate() {
                 ${selectedTab === tab.key
                   ? "bg-white text-blue-900 font-semibold"
                   : "text-gray-700 hover:bg-gray-100 "}`}
+              aria-label={tab.label}
             >
               <tab.icon size={16} className="mx-2" />
               <span className="text-sm">{tab.label}</span>
@@ -197,6 +199,7 @@ export default function Corporate() {
                   <button
                     onClick={() => item.navigate && navigate(item.navigate)}
                     className="bg-[#0F4C81] text-white px-4 mb-3 py-2 rounded w-full hover:bg-blue-900"
+                    aria-label="View Options"
                   >
                     View Options
                   </button>
