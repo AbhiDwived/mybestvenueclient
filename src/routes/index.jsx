@@ -221,7 +221,7 @@ const index = () => {
                     <Route path='/VendorByCategory' element={<VendorByCategory />} />
 
                     {/* Wedding Venues */}
-                    <Route path="wedding-venues " element={<WeddingVenues />} />
+                    <Route path="wedding-venues" element={<WeddingVenues />} />
                     <Route path="wedding-venues _city" element={<WeddingVenuesCity />} />
                     <Route path="blue-dimond-venue" element={<BlueDimondVenue />} />
                     <Route path="Hotel-Prince-Inn-By" element={<HotelPrinceInn />} />
