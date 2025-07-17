@@ -4,6 +4,8 @@ import { useRegisterVendorMutation } from '../../features/vendors/vendorAPI';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, EyeOff } from 'react-feather';
 import { showToast } from '../../utils/toast';  // Import showToast from the correct path
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 const VENDOR_TYPES = [
   // Venues
@@ -138,12 +140,6 @@ const VendorSignup = () => {
   };
 
 
-  //Define validation function
-  const isValidIndianMobile = (number) => {
-    const invalidNumbers = ['0000000000', '1234567890', '9999999999'];
-    const mobileRegex = /^[6-9]\d{9}$/;
-    return mobileRegex.test(number) && !invalidNumbers.includes(number);
-  };
 
   // Password strength validation logic (copied from UserSignup)
   const isStrongPassword = (password) => {
@@ -239,8 +235,8 @@ const VendorSignup = () => {
 
     // 🔹 Phone validation
     const phone = formData.phone.trim();
-    if (!/^[6-9]\d{9}$/.test(phone) || ['1234567890', '0000000000', '9999999999'].includes(phone)) {
-      errors.push("Please enter a valid Indian mobile number.");
+    if (!isValidPhoneNumber(phone)) {
+      errors.push("Please enter a valid phone number.");
     }
 
     // 🔹 Password strength validation
@@ -511,15 +507,14 @@ const VendorSignup = () => {
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
-              <input
+              <PhoneInput
                 id="phone"
                 name="phone"
-                type="tel"
-                maxLength={10}
+                placeholder="Enter phone number"
                 value={formData.phone}
-                onChange={handleChange}
-                placeholder="+91 9876543210"
+                onChange={(value) => setFormData((prev) => ({ ...prev, phone: value }))}
                 required
+                defaultCountry="IN"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

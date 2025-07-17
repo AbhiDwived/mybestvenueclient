@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useRegisterUserMutation } from '../../features/auth/authAPI';
 import { showToast } from '../../utils/toast';
 import { Eye, EyeOff } from 'react-feather';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 const UserSignup = () => {
   const [formData, setFormData] = useState({
@@ -51,12 +53,6 @@ const UserSignup = () => {
     }
   };
 
-  //Define validation function
-  const isValidIndianMobile = (number) => {
-  const invalidNumbers = ['0000000000', '1234567890', '9999999999'];
-  const mobileRegex = /^[6-9]\d{9}$/;
-  return mobileRegex.test(number) && !invalidNumbers.includes(number);
-};
 
   // Enhanced email validation
   const isValidEmail = (email) => {
@@ -211,8 +207,8 @@ const UserSignup = () => {
     }
 
     // Validate Phone
-    if (!isValidIndianMobile(phone)) {
-      showToast.error("Please enter a valid Indian mobile number.");
+    if (!isValidPhoneNumber(phone)) {
+      showToast.error("Please enter a valid phone number.");
       return;
     }
 
@@ -320,15 +316,14 @@ const UserSignup = () => {
             {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-gray-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
-              <input
+              <PhoneInput
                 id="phone"
                 name="phone"
-                type="tel"
-                maxLength={10}
-                placeholder="+91 9876543210"
+                placeholder="Enter phone number"
                 value={formData.phone}
-                onChange={handleChange}
+                onChange={(value) => setFormData((prev) => ({ ...prev, phone: value }))}
                 required
+                defaultCountry="IN"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

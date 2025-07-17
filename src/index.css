@@ -296,3 +296,13 @@
 }
 
 
+
+/* Custom styles for react-phone-number-input */
+.PhoneInputInput {
+  border: none !important;
+}
+
+.PhoneInputInput:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
