@@ -52,19 +52,19 @@ export const vendorApi = createApi({
 
     // Verify OTP after registration
     verifyOtp: builder.mutation({
-      query: ({ vendorId, otp }) => ({
+      query: ({ email, otp }) => ({
         url: "/vendor/vendorverify-otp",
         method: "POST",
-        body: { vendorId, otp },
+        body: { email, otp },
       }),
     }),
 
     // Resend OTP
     resendOtp: builder.mutation({
-      query: ({ vendorId }) => ({
+      query: ({ email }) => ({
         url: "/vendor/resend-otp",
         method: "POST",
-        body: { vendorId },
+        body: { email },
       }),
     }),
 
@@ -412,10 +412,10 @@ export const vendorApi = createApi({
 
     // Resend Vendor OTP
     resendVendorOtp: builder.mutation({
-      query: ({ vendorId }) => ({
+      query: ({ email }) => ({
         url: "/vendor/resendvendor-otp",
         method: "POST",
-        body: { vendorId },
+        body: { email },
       }),
     }),
 
