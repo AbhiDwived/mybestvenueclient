@@ -12,6 +12,55 @@ import 'react-toastify/dist/ReactToastify.css';
 import { MdDelete } from 'react-icons/md';
 import Loader from '../../../components/{Shared}/Loader';
 
+const BudgetItemRow = ({ item, onUpdate, onDelete, isDeleting }) => {
+  const [actual, setActual] = useState(item.actual ?? '');
+
+  const diff = actual ? item.planned - actual : null;
+
+  const handleActualChange = (e) => {
+    setActual(e.target.value);
+  };
+
+  const handleBlur = () => {
+    if (actual !== (item.actual ?? '')) {
+      onUpdate(item._id, actual);
+    }
+  };
+
+  return (
+    <tr className="border-b last:border-none">
+      <td className="py-3 px-4">{item.category}</td>
+      <td className="py-3 px-4">{item.planned.toLocaleString()}</td>
+      <td className="py-3 px-4">
+        <input
+          type="number"
+          value={actual}
+          min={0}
+          onChange={handleActualChange}
+          onBlur={handleBlur}
+          className="w-24 border rounded px-2 py-1"
+        />
+      </td>
+      <td
+        className={`py-3 px-4 font-medium ${
+          diff !== null && diff < 0 ? 'text-red-500' : 'text-green-600'
+        }`}
+      >
+        {diff !== null ? diff.toLocaleString() : '-'}
+      </td>
+      <td className="py-3 px-4">
+        <button
+          onClick={() => onDelete(item._id)}
+          disabled={isDeleting}
+          className="text-red-600 hover:text-red-800"
+        >
+          <MdDelete size={22} />
+        </button>
+      </td>
+    </tr>
+  );
+};
+
 export default function Budget() {
   /* ───────────── local state ───────────── */
   const [newItem, setNewItem] = useState({ category: '', planned: 0 });
@@ -58,7 +107,7 @@ export default function Budget() {
   const onUpdateActual = async (id, actual) => {
     try {
       await updateItem({ itemId: id, itemData: { actual: Number(actual) } }).unwrap();
-      toast.success(' Actual updated');
+      toast.success('Actual updated');
     } catch (err) {
       toast.error(`${err.data?.message || 'Update failed'}`);
     }
@@ -98,10 +147,10 @@ export default function Budget() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-3 px-4">Category</th>
-                    <th className="text-right py-3 px-4">Planned (₹)</th>
-                    <th className="text-right py-3 px-4">Actual (₹)</th>
-                    <th className="text-right py-3 px-4">Difference</th>
-                    <th className="text-right py-3 px-4">Actions</th>
+                    <th className=" py-3 px-4">Planned (₹)</th>
+                    <th className=" py-3 px-4">Actual (₹)</th>
+                    <th className=" py-3 px-4">Difference</th>
+                    <th className=" py-3 px-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -113,48 +162,24 @@ export default function Budget() {
                     </tr>
                   )}
 
-                  {items.map((it) => {
-                    const diff = it.actual ? it.planned - it.actual : null;
-                    return (
-                      <tr key={it._id} className="border-b last:border-none">
-                        <td className="py-3 px-4">{it.category}</td>
-                        <td className="py-3 px-4 text-right">{it.planned.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right">
-                          <input
-                            type="number"
-                            value={it.actual ?? ''}
-                            min={0}
-                            onChange={(e) => onUpdateActual(it._id, e.target.value)}
-                            className="w-24 border rounded px-2 py-1 text-right"
-                          />
-                        </td>
-                        <td
-                          className={`py-3 px-4 text-right font-medium ${diff !== null && diff < 0 ? 'text-red-500' : 'text-green-600'
-                            }`}
-                        >
-                          {diff !== null ? diff.toLocaleString() : '-'}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => onDeleteItem(it._id)}
-                            disabled={deleting}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <MdDelete size={22} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {items.map((item) => (
+                    <BudgetItemRow
+                      key={item._id}
+                      item={item}
+                      onUpdate={onUpdateActual}
+                      onDelete={onDeleteItem}
+                      isDeleting={deleting}
+                    />
+                  ))}
                 </tbody>
 
                 <tfoot>
                   <tr className="border-t font-bold">
                     <td className="py-3 px-4">Total</td>
-                    <td className="py-3 px-4 text-right">{totalPlanned.toLocaleString()}</td>
-                    <td className="py-3 px-4 text-right">{totalActual.toLocaleString()}</td>
+                    <td className="py-3 px-4 ">{totalPlanned.toLocaleString()}</td>
+                    <td className="py-3 px-4 ">{totalActual.toLocaleString()}</td>
                     <td
-                      className={`py-3 px-4 text-right ${remaining < 0 ? 'text-red-500' : 'text-green-600'
+                      className={`py-3 px-4  ${remaining < 0 ? 'text-red-500' : 'text-green-600'
                         }`}
                     >
                       {remaining.toLocaleString()}

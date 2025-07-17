@@ -9,8 +9,7 @@ import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../
 import { useCreateBookingMutation, useGetUserBookingsQuery } from '../../../features/bookings/bookingAPI';
 import { toast } from 'react-toastify';
 import mainProfile from "../../../assets/mainProfile.png";
-import vendorManagementPic from "../../../assets/vendorManagementPic.png";
-import secondProfile from "../../../assets/secondProfile.png";
+
 import { FiFacebook, FiTwitter, FiShield } from "react-icons/fi";
 import PreviewProfileScreen from './PreviewProfileScreen';
 import CustomerReviews from './CustomerReviews';
@@ -151,7 +150,7 @@ const PreviewProfile = () => {
 
       try {
         const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
-        
+
         if (response?.packages && Array.isArray(response.packages)) {
           setPackages(response.packages);
         } else {
@@ -170,7 +169,7 @@ const PreviewProfile = () => {
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!isAuthenticated) {
       toast.error('Please login to book a service');
       navigate('/login');
@@ -185,13 +184,13 @@ const PreviewProfile = () => {
     try {
       // Find selected package details
       const selectedPackageDetails = packages.find(pkg => pkg._id === bookingForm.packageName);
-      
+
       // Use offer price if available and less than regular price
-      const finalPrice = selectedPackageDetails?.offerPrice && 
-                        selectedPackageDetails.offerPrice < selectedPackageDetails.price
-                        ? selectedPackageDetails.offerPrice 
-                        : selectedPackageDetails?.price || 0;
-      
+      const finalPrice = selectedPackageDetails?.offerPrice &&
+        selectedPackageDetails.offerPrice < selectedPackageDetails.price
+        ? selectedPackageDetails.offerPrice
+        : selectedPackageDetails?.price || 0;
+
       const response = await createBooking({
         vendorId: vendorId,
         vendorName: vendor?.vendor?.businessName || '',
@@ -215,7 +214,7 @@ const PreviewProfile = () => {
       if (response.success) {
         toast.success('Booking request sent successfully');
         refetchBookings();
-        
+
         // Reset form
         setBookingForm({
           eventType: '',
@@ -241,7 +240,7 @@ const PreviewProfile = () => {
   };
 
   const vendorData = vendor?.vendor;
-  
+
 
 
   const [isSaved, setIsSaved] = useState(false);
@@ -330,20 +329,20 @@ const PreviewProfile = () => {
   };
 
   const ImageViewModal = ({ imageUrl, onClose }) => (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
       onClick={onClose}
     >
-      <div 
+      <div
         className="max-w-[90%] max-h-[90%] relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <img 
-          src={imageUrl} 
-          alt="Full Size" 
-          className="max-w-full max-h-full object-contain" 
+        <img
+          src={imageUrl}
+          alt="Full Size"
+          className="max-w-full max-h-full object-contain"
         />
-        <button 
+        <button
           className="absolute top-2 right-2 bg-white rounded-full p-2 hover:bg-gray-200"
           onClick={onClose}
         >
@@ -354,11 +353,11 @@ const PreviewProfile = () => {
   );
 
   const VideoViewModal = ({ videoUrl, onClose }) => (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
       onClick={onClose}
     >
-      <div 
+      <div
         className="max-w-[90%] max-h-[90%] relative"
         onClick={(e) => e.stopPropagation()}
       >
@@ -368,7 +367,7 @@ const PreviewProfile = () => {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
-        <button 
+        <button
           className="absolute top-2 right-2 bg-white rounded-full p-2 hover:bg-gray-200"
           onClick={onClose}
         >
@@ -380,27 +379,26 @@ const PreviewProfile = () => {
 
   // Portfolio Gallery Queries
   const [vendorPortfolio, setVendorPortfolio] = useState({
-    images: vendor?.portfolio?.images || [],
-    videos: vendor?.portfolio?.videos || []
+    images: [],
+    videos: []
   });
 
-  const { data: portfolioImagesData } = useGetPortfolioImagesQuery(vendorId, {
+  const { data: portfolioImagesData, refetch: refetchPortfolioImages } = useGetPortfolioImagesQuery(vendorId, {
     skip: !vendorId,
-    selectFromResult: ({ data }) => ({
-      data: data?.images || []
-    })
+    refetchOnMountOrArgChange: true,
+    selectFromResult: ({ data }) => ({ data: data?.images || [] }),
   });
 
-  const { data: portfolioVideosData } = useGetPortfolioVideosQuery(vendorId, {
+  const { data: portfolioVideosData, refetch: refetchPortfolioVideos } = useGetPortfolioVideosQuery(vendorId, {
     skip: !vendorId,
     selectFromResult: ({ data }) => ({
       data: data?.videos || []
     })
   });
 
-  // Update vendor portfolio data
+  // Load images from query result
   useEffect(() => {
-    if (portfolioImagesData && portfolioImagesData.length > 0) {
+    if (portfolioImagesData) {
       setVendorPortfolio(prev => ({
         ...prev,
         images: portfolioImagesData
@@ -408,8 +406,9 @@ const PreviewProfile = () => {
     }
   }, [portfolioImagesData]);
 
+  // Load videos from query result
   useEffect(() => {
-    if (portfolioVideosData && portfolioVideosData.length > 0) {
+    if (portfolioVideosData) {
       setVendorPortfolio(prev => ({
         ...prev,
         videos: portfolioVideosData
@@ -459,10 +458,10 @@ const PreviewProfile = () => {
           <h2 className="text-xl font-bold text-gray-800">{vendor?.vendor?.businessName}</h2>
           <p className="text-sm text-gray-500">{vendor?.vendor?.vendorType}</p>
 
-          
 
 
-          
+
+
           {/* Services */}
           <div className="flex flex-wrap gap-2 mt-2">
             {(() => {
@@ -500,7 +499,7 @@ const PreviewProfile = () => {
                     key={item._id || index}
                     className="inline-block min-w-[200px] border-blue-400 rounded-xl p-2  text-sm font-bold text-gray-800"
                   >
-                   <span className="text-gray-500">{item.type}:</span>  ₹{item.price.toLocaleString('en-IN')}  <span className='text-gray-500'>{item.unit || 'per person'}</span>
+                    <span className="text-gray-500">{item.type}:</span>  ₹{item.price.toLocaleString('en-IN')}  <span className='text-gray-500'>{item.unit || 'per person'}</span>
                   </div>
                 ))
             ) : (
@@ -545,7 +544,7 @@ const PreviewProfile = () => {
                 }
               })()}
             </span>
-            
+
 
           </div>
 
@@ -595,13 +594,13 @@ const PreviewProfile = () => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Portfolio Gallery</h3>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={() => setActiveGalleryTab('images')}
                 className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'images' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
               >
                 Images ({vendorPortfolio.images.length})
               </button>
-              <button 
+              <button
                 onClick={() => setActiveGalleryTab('videos')}
                 className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'videos' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
               >
@@ -609,7 +608,7 @@ const PreviewProfile = () => {
               </button>
             </div>
           </div>
-          
+
           {activeGalleryTab === 'images' && (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -617,8 +616,8 @@ const PreviewProfile = () => {
                   vendorPortfolio.images
                     .slice((currentPage - 1) * imagesPerPage, currentPage * imagesPerPage)
                     .map((image, i) => (
-                      <div 
-                        key={image._id || i} 
+                      <div
+                        key={image._id || i}
                         className="relative group cursor-pointer"
                         onClick={() => handleImageView(image.url)}
                       >
@@ -645,11 +644,10 @@ const PreviewProfile = () => {
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === 1
+                    className={`px-3 py-1 rounded ${currentPage === 1
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
-                    }`}
+                      }`}
                   >
                     Previous
                   </button>
@@ -662,26 +660,24 @@ const PreviewProfile = () => {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`w-8 h-8 rounded-full ${
-                        currentPage === pageNum
+                      className={`w-8 h-8 rounded-full ${currentPage === pageNum
                           ? 'bg-[#0f4c81] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>
                   ))}
 
                   <button
-                    onClick={() => setCurrentPage(prev => 
+                    onClick={() => setCurrentPage(prev =>
                       Math.min(prev + 1, Math.ceil(vendorPortfolio.images.length / imagesPerPage))
                     )}
                     disabled={currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)
+                    className={`px-3 py-1 rounded ${currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
-                    }`}
+                      }`}
                   >
                     Next
                   </button>
@@ -694,14 +690,14 @@ const PreviewProfile = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {vendorPortfolio.videos.length > 0 ? (
                 vendorPortfolio.videos.map((video, i) => (
-                  <div 
-                    key={video._id || i} 
+                  <div
+                    key={video._id || i}
                     className="relative group cursor-pointer"
                     onClick={() => handleVideoView(video.url)}
                   >
                     <iframe
-                      src={video.url.includes('youtube.com') 
-                        ? video.url.replace('watch?v=', 'embed/') 
+                      src={video.url.includes('youtube.com')
+                        ? video.url.replace('watch?v=', 'embed/')
                         : video.url}
                       title={video.title || `Portfolio Video ${i + 1}`}
                       className="rounded w-full h-60 object-cover"
@@ -717,7 +713,7 @@ const PreviewProfile = () => {
                   No portfolio videos available
                 </div>
               )}
-          </div>
+            </div>
           )}
         </div>
 
@@ -737,8 +733,8 @@ const PreviewProfile = () => {
 
           <label className="sm:col-span-2">
             <span className="block mb-1">User Name <span className="text-red-500">*</span></span>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={bookingForm.name}
               onChange={(e) => handleBookingInputChange('name', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.name ? 'border-red-500' : ''}`}
@@ -749,8 +745,8 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Email <span className="text-red-500">*</span></span>
-            <input 
-              type="email" 
+            <input
+              type="email"
               value={bookingForm.email}
               onChange={(e) => handleBookingInputChange('email', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.email ? 'border-red-500' : ''}`}
@@ -761,8 +757,8 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Phone Number <span className="text-red-500">*</span></span>
-            <input 
-              type="tel" 
+            <input
+              type="tel"
               value={bookingForm.phone}
               onChange={(e) => handleBookingInputChange('phone', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.phone ? 'border-red-500' : ''}`}
@@ -773,7 +769,7 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Event Type <span className="text-red-500">*</span></span>
-            <select 
+            <select
               value={bookingForm.eventType}
               onChange={(e) => handleBookingInputChange('eventType', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.eventType ? 'border-red-500' : ''}`}
@@ -791,7 +787,7 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Package Name <span className="text-red-500">*</span></span>
-            <select 
+            <select
               value={bookingForm.packageName}
               onChange={(e) => {
                 console.log('Selected package ID:', e.target.value);
@@ -808,7 +804,7 @@ const PreviewProfile = () => {
               {Array.isArray(packages) && packages.length > 0 ? (
                 packages.map((pkg) => (
                   <option key={pkg._id} value={pkg._id}>
-                    {pkg.packageName} - ₹{pkg.price?.toLocaleString('en-IN')} 
+                    {pkg.packageName} - ₹{pkg.price?.toLocaleString('en-IN')}
                     {pkg.offerPrice ? ` (Offer: ₹${pkg.offerPrice?.toLocaleString('en-IN')})` : ''}
                   </option>
                 ))
@@ -821,8 +817,8 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Event Date <span className="text-red-500">*</span></span>
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={bookingForm.eventDate}
               onChange={(e) => handleBookingInputChange('eventDate', e.target.value)}
               className={`w-full border rounded px-3 py-2 ${formErrors.eventDate ? 'border-red-500' : ''}`}
@@ -833,8 +829,8 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Booking Time</span>
-            <input 
-              type="time" 
+            <input
+              type="time"
               value={bookingForm.eventTime}
               onChange={(e) => handleBookingInputChange('eventTime', e.target.value)}
               className="w-full border rounded px-3 py-2"
@@ -843,11 +839,11 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Number of Guests <span className="text-red-500">*</span></span>
-            <input 
-              type="number" 
+            <input
+              type="number"
               value={bookingForm.guestCount}
               onChange={(e) => handleBookingInputChange('guestCount', e.target.value)}
-              placeholder="e.g. 150" 
+              placeholder="e.g. 150"
               className={`w-full border rounded px-3 py-2 ${formErrors.guestCount ? 'border-red-500' : ''}`}
               min="0"
             />
@@ -856,19 +852,19 @@ const PreviewProfile = () => {
 
           <label>
             <span className="block mb-1">Preferred Venue</span>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={bookingForm.venue}
               onChange={(e) => handleBookingInputChange('venue', e.target.value)}
-              placeholder="Venue or City" 
+              placeholder="Venue or City"
               className="w-full border rounded px-3 py-2"
             />
           </label>
 
           <label>
             <span className="block mb-1">Planned Amount (₹) <span className="text-red-500">*</span></span>
-            <input 
-              type="number" 
+            <input
+              type="number"
               value={bookingForm.plannedAmount}
               className={`w-full border rounded px-3 py-2 bg-gray-50 ${formErrors.plannedAmount ? 'border-red-500' : ''}`}
               readOnly
@@ -889,17 +885,17 @@ const PreviewProfile = () => {
 
           <label className="sm:col-span-2">
             <span className="block mb-1">Additional Notes</span>
-            <textarea 
-              rows="3" 
+            <textarea
+              rows="3"
               value={bookingForm.notes}
               onChange={(e) => handleBookingInputChange('notes', e.target.value)}
-              placeholder="Tell us more about your event..." 
+              placeholder="Tell us more about your event..."
               className="w-full border rounded px-3 py-2"
             />
           </label>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="sm:col-span-2 w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={isBookingLoading}
           >

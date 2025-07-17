@@ -22,32 +22,32 @@ const PreviewProfileScreen = () => {
 
   //Fetch Packages 
   useEffect(() => {
-      const fetchPackages = async () => {
-        const actualVendorId = vendor?.vendor?._id;
-  
-        if (!actualVendorId) {
-          return;
-        }
-  
-        try {
-          const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
-          
-          if (response?.packages && Array.isArray(response.packages)) {
-            setPackages(response.packages);
-          } else {
-            setPackages([]);
-          }
-        } catch (error) {
-          toast.error('Failed to load vendor packages');
+    const fetchPackages = async () => {
+      const actualVendorId = vendor?.vendor?._id;
+
+      if (!actualVendorId) {
+        return;
+      }
+
+      try {
+        const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
+
+        if (response?.packages && Array.isArray(response.packages)) {
+          setPackages(response.packages);
+        } else {
           setPackages([]);
         }
-      };
-  
-      if (!isVendorLoading && vendor?.vendor?._id) {
-        fetchPackages();
+      } catch (error) {
+        toast.error('Failed to load vendor packages');
+        setPackages([]);
       }
-    }, [vendor, isVendorLoading, getVendorPackages]);
-  
+    };
+
+    if (!isVendorLoading && vendor?.vendor?._id) {
+      fetchPackages();
+    }
+  }, [vendor, isVendorLoading, getVendorPackages]);
+
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 ">
@@ -67,7 +67,7 @@ const PreviewProfileScreen = () => {
             <h2 className="text-xl font-semibold mb-2">Services</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-gray-700 text-sm">
               {vendor?.vendor?.services?.length > 0 &&
-              typeof vendor.vendor.services[0] === "string" ? (
+                typeof vendor.vendor.services[0] === "string" ? (
                 vendor.vendor.services[0]
                   .split(",")
                   .map(service => service.trim())
@@ -110,11 +110,19 @@ const PreviewProfileScreen = () => {
                       )}
                     </ul>
 
-                    {pkg.offerPrice > 0 && (
+                    {/* {pkg.offerPrice > 0 && (
                       <div className="text-green-600 mt-2 text-sm">
                         Offer Price: ₹{pkg.offerPrice.toLocaleString()} ({pkg.offerPercentage}% OFF)
                       </div>
+                    )} */}
+                    {pkg.offerPrice > 0 && pkg.price > 0 && (
+                      <div className="text-green-600 mt-2 text-sm">
+                        Offer Price: ₹{pkg.offerPrice.toLocaleString()} (
+                        {Math.round(((pkg.price - pkg.offerPrice) / pkg.price) * 100)}% OFF)
+                      </div>
                     )}
+
+
                   </div>
                 ))
               ) : (

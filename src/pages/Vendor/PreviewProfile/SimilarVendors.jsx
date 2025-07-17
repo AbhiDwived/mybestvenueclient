@@ -44,7 +44,9 @@ const SimilarVendors = () => {
 
   const handleVendorClick = (vendor) => {
     navigate(`/preview-profile/${vendor.id}`);
+     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
 
   if (isLoading) return <p className="text-center">Loading similar vendors...</p>;
   if (isError) return <p className="text-center text-red-500">Failed to load similar vendors.</p>;
