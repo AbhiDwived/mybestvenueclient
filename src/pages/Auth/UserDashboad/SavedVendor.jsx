@@ -26,19 +26,17 @@ export default function SavedVendor() {
     const [saveVendor] = useSaveVendorMutation();
 
     // Extract data from API response
-    const savedVendors = savedVendorsData?.data || [];
-    const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
+    const [savedVendors, setSavedVendors] = React.useState([]);
+    const [savedVendorIds, setSavedVendorIds] = React.useState([]);
+
+    React.useEffect(() => {
+        if (savedVendorsData?.data) {
+            setSavedVendors(savedVendorsData.data);
+            setSavedVendorIds(savedVendorsData.data.map(v => v._id || v.id));
+        }
+    }, [savedVendorsData]);
 
     // Handle unsave vendor
-    const handleRemoveSavedVendor = async (e, vendorId) => {
-        e.stopPropagation();
-        try {
-            await unsaveVendor(vendorId).unwrap();
-            showToast.success("Vendor removed from favorites");
-        } catch (err) {
-            handleApiError(err, 'Error removing vendor');
-        }
-    };
 
     const handleVendorClick = (vendorId) => {
         if (vendorId) {
@@ -59,8 +57,8 @@ export default function SavedVendor() {
             try {
                 await unsaveVendor(id).unwrap();
                 showToast.success('Vendor removed from favorites!');
-                // Optionally, manually update the list
-                await refetch();
+                setSavedVendors(savedVendors.filter(v => v.id !== id));
+                setSavedVendorIds(savedVendorIds.filter(vId => vId !== id));
             } catch (err) {
                 handleApiError(err, 'Failed to unsave vendor');
             }
@@ -69,7 +67,7 @@ export default function SavedVendor() {
                 await saveVendor(id).unwrap();
                 showToast.success('Vendor saved to favorites!');
                 // Optionally, manually update the list
-                await refetch();
+                // No need to refetch, as we are manually updating the state
             } catch (err) {
                 handleApiError(err, 'Failed to save vendor');
             }
