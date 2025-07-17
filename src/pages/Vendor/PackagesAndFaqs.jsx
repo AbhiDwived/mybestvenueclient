@@ -31,6 +31,7 @@ export default function PackagesAndFaqs() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [faqs, setFaqs] = useState([]);
+const [deletingFaqId, setDeletingFaqId] = useState(null);
 
 
 
@@ -188,20 +189,37 @@ export default function PackagesAndFaqs() {
     }
   };
 
-  const handleDelete = async (vendorId, faqId) => {
-    console.log("vendorId", vendorId, "faqId", faqId)
-    try {
-      await deleteFaqs({ vendorId, faqId }).unwrap();
-      console.log('FAQ deleted successfully');
-      alert('FAQ deleted successfully');
+  // const handleDelete = async (vendorId, faqId) => {
+  //   console.log("vendorId", vendorId, "faqId", faqId)
+  //   try {
+  //     await deleteFaqs({ vendorId, faqId }).unwrap();
+  //     console.log('FAQ deleted successfully');
+  //     alert('FAQ deleted successfully');
 
-      // Refetch FAQ list from backend
-      const faqRes = await getVendorsFaqs({ vendorId }).unwrap();
-      setFaqs(faqRes.faqs || []);
-    } catch (err) {
-      console.error('Failed to delete FAQ:', err);
-    }
-  };
+  //     // Refetch FAQ list from backend
+  //     const faqRes = await getVendorsFaqs({ vendorId }).unwrap();
+  //     setFaqs(faqRes.faqs || []);
+  //   } catch (err) {
+  //     console.error('Failed to delete FAQ:', err);
+  //   }
+  // };
+
+
+  const handleDelete = async (vendorId, faqId) => {
+  setDeletingFaqId(faqId);
+  try {
+    await deleteFaqs({ vendorId, faqId }).unwrap();
+    toast.success("FAQ deleted successfully");
+
+    const faqRes = await getVendorsFaqs({ vendorId }).unwrap();
+    setFaqs(faqRes.faqs || []);
+  } catch (err) {
+    console.error('Failed to delete FAQ:', err);
+    toast.error("Failed to delete FAQ");
+  } finally {
+    setDeletingFaqId(null);
+  }
+};
 
 
   useEffect(() => {
@@ -280,9 +298,11 @@ export default function PackagesAndFaqs() {
             <button
               onClick={() => handleDelete(vendorId, faq._id)}
               className="bg-red-500 text-white px-3 py-1 rounded mt-2"
-              disabled={faqDelete}
+              // disabled={faqDelete}
+               disabled={deletingFaqId === faq._id}
             >
-              {faqDelete ? 'Deleting...' : 'Delete'}
+              {/* {faqDelete ? 'Deleting...' : 'Delete'} */}
+               {deletingFaqId === faq._id ? 'Deleting...' : 'Delete'}
             </button>
 
           </details>
