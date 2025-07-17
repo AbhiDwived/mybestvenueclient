@@ -83,7 +83,7 @@ const Footer = () => {
           <ul className="text-[#D1D5DB]">
             <li><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
             <li className='mt-2'><Link to="/corporate" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Corporate Events</Link></li>
-            <li className='mt-2'><Link to="/Blog" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Event Blog</Link></li>
+            <li className='mt-2'><Link to="/blog" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Event Blog</Link></li>
           </ul>
         </AccordionSection>
 

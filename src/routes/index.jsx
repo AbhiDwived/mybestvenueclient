@@ -168,7 +168,7 @@ const index = () => {
                    
 
                     {/* Idea Blog */}
-                    <Route path="/Blog" element={<IdeaBlog />} />
+                    <Route path="/blog" element={<IdeaBlog />} />
                     <Route path="/blog/:id" element={<PublicBlogDetails />} />
 
                     {/* Corporate */}

@@ -90,7 +90,7 @@
 
     <!-- Blogs and Ideas -->
     <url>
-        <loc>https://mybestvenue.com/Blog</loc>
+        <loc>https://mybestvenue.com/blog</loc>
         <priority>0.7</priority>
         <changefreq>weekly</changefreq>
     </url>
