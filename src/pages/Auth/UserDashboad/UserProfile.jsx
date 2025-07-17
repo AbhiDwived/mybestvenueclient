@@ -11,7 +11,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
-const UserProfile = () => {
+const UserProfile = ({ onUpdate }) => {
   const dispatch = useDispatch();
   const authState = useSelector((state) => state.auth);
   const user = authState.user ? { ...authState.user, _id: authState.user.id } : null;
@@ -257,7 +257,10 @@ const UserProfile = () => {
         calculateWeddingCountdown();
       }
 
+      if (onUpdate) {
+      onUpdate();
       toast.success("Profile updated successfully!");
+      }
     } catch (error) {
       console.error("Update failed:", error);
       toast.error(`Failed to update profile: ${error?.data?.message || "Unknown error"}`);

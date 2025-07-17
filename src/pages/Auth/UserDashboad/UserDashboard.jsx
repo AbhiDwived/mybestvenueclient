@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useGetUserProfileQuery } from "../../../features/auth/authAPI";
+import { useSelector } from "react-redux";
 import Loader from "../../../components/{Shared}/Loader";
 
 // Tab components
@@ -24,20 +24,12 @@ const tabs = [
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem("activeTab") || "check-list");
 
-  const {
-    data: profile,
-    isLoading,
-    isError,
-    refetch,
-  } = useGetUserProfileQuery();
+  const { user: profile, isLoading, isError } = useSelector((state) => state.auth);
 
   useEffect(() => {
     localStorage.setItem("activeTab", activeTab);
   }, [activeTab]);
 
-  useEffect(() => {
-    refetch(); // ensures fresh data on mount
-  }, []);
 
   if (isLoading) return <Loader fullScreen />;
   if (isError || !profile) return <p className="p-4 text-red-500">Error fetching profile</p>;
@@ -54,7 +46,7 @@ const UserDashboard = () => {
     : "No wedding date set";
 
   const displayName = profile?.name?.split("&")[0] || "User";
-  const location = profile?.location || "Location not set";
+  const location = profile?.city || "Location not set";
 
   const ActiveComponent = tabs.find((tab) => tab.value === activeTab)?.component;
 
@@ -95,7 +87,14 @@ const UserDashboard = () => {
 
       {/* Tab Content */}
       <div className="p-2 sm:p-4">
-        {ActiveComponent && <ActiveComponent profile={profile} />}
+        {ActiveComponent && (
+        <ActiveComponent
+        profile={profile}
+        onUpdate={() => {
+        // No explicit refetch needed due to Redux subscription
+        }}
+        />
+        )}
       </div>
     </div>
   );
