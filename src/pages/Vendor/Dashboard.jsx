@@ -39,7 +39,7 @@ const Dashboard = () => {
     const savedTab = localStorage.getItem('activeTab') || 'Overview';
     return savedTab;
   });
-   const vendorId = vendor.id;
+   const vendorId = vendor?._id || vendor?.id;
 
   const { data: vendorData, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
     skip: !vendorId || vendorId === 'undefined'
@@ -75,14 +75,14 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    // Remove console.log statements
-  }, [activeTab, vendor, isAuthenticated]);
+    // Tab change handler
+  }, [activeTab, vendor, isAuthenticated, vendorId]);
 
   if (!isAuthenticated) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
   }
 
-  const tabs = ['Overview', 'Bookings', 'Edit Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews'];
+  const tabs = ['Overview', 'Bookings', 'Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews'];
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -547,10 +547,19 @@ const Dashboard = () => {
           </>
         )}
 
-        {/* Edit Profile Tab */}
-        {activeTab === 'Edit Profile' && (
+        {/* Profile Tab */}
+        {activeTab === 'Profile' && (
           <div className="lg:col-span-3 w-full">
-            <EditProfiles />
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Profile Settings</h2>
+              {!vendorId ? (
+                <div className="p-4 text-center">
+                  <p className="text-red-600">Error: Vendor ID not found. Please try logging in again.</p>
+                </div>
+              ) : (
+                <EditProfiles />
+              )}
+            </div>
           </div>
         )}
 

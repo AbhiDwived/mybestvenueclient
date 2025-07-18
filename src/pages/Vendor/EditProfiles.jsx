@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { FiUpload } from 'react-icons/fi';
 import { RiCheckboxCircleLine } from "react-icons/ri";
 import { FaExclamationCircle } from "react-icons/fa";
 import coverimage from '../../assets/Images/user.png';
 import { useSelector, useDispatch } from 'react-redux';
-import { useUpdateProfileMutation, useGetVendorByIdQuery, useDeleteVendorPricingItemMutation } from "../../features/vendors/vendorAPI";
+import { useUpdateProfileMutation, useGetVendorByIdQuery, useDeleteVendorPricingItemMutation, useGetPortfolioImagesQuery, useGetVendorsFaqsMutation } from "../../features/vendors/vendorAPI";
 import { setVendorCredentials } from '../../features/vendors/vendorSlice';
 import { MdOutlineAddCircle } from "react-icons/md";
 import { FaTrash } from "react-icons/fa";
@@ -75,7 +75,34 @@ const EditProfile = () => {
   // console.log("data ff", data);
 
   const [deleteVendorPricingItem, { isLoading: isDeleting }] = useDeleteVendorPricingItemMutation();
+  
+  // Get portfolio and FAQ data for completion tracking
+  const { data: portfolioData } = useGetPortfolioImagesQuery(vendorId, { skip: !vendorId });
+  const [getVendorsFaqs, { data: faqData }] = useGetVendorsFaqsMutation();
+  
+  // State to store FAQ data
+  const [faqs, setFaqs] = useState([]);
+  const [isLoadingFaqs, setIsLoadingFaqs] = useState(false);
 
+  // Function to refresh FAQ data
+  const refreshFaqData = async () => {
+    if (vendorId) {
+      try {
+        setIsLoadingFaqs(true);
+        const result = await getVendorsFaqs({ vendorId }).unwrap();
+        if (result?.faqs) {
+          setFaqs(result.faqs);
+        } else {
+          setFaqs([]);
+        }
+      } catch (error) {
+        console.error('Error refreshing FAQs:', error);
+        setFaqs([]);
+      } finally {
+        setIsLoadingFaqs(false);
+      }
+    }
+  };
 
   // Ensure we have the vendor ID and redirect if not authenticated
 
@@ -91,8 +118,27 @@ const EditProfile = () => {
       // console.error('Vendor ID is missing:', vendor);
       toast.error('Error: Vendor ID is missing. Please try logging in again.');
       navigate('/vendor/login');
+    } else {
+      // Fetch FAQ data when vendor ID is available
+      setIsLoadingFaqs(true);
+      getVendorsFaqs({ vendorId })
+        .unwrap()
+        .then((result) => {
+          if (result?.faqs) {
+            setFaqs(result.faqs);
+          } else {
+            setFaqs([]);
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching FAQs:', error);
+          setFaqs([]); // Set empty array on error
+        })
+        .finally(() => {
+          setIsLoadingFaqs(false);
+        });
     }
-  }, [vendorId, isAuthenticated, navigate]);
+  }, [vendorId, isAuthenticated, navigate, getVendorsFaqs]);
 
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
 
@@ -121,6 +167,79 @@ const EditProfile = () => {
 
   const fileInputRef = useRef(null);
   const serverURL = "http://localhost:5000"
+
+  // Calculate profile completion dynamically with useMemo
+  const profileCompletion = useMemo(() => {
+    const completionItems = {
+      basicInfo: {
+        name: 'Basic information',
+        completed: !!(
+          businessName?.trim() && 
+          category?.trim() && 
+          businessDescription?.trim() && 
+          (Array.isArray(serviceAreas) ? serviceAreas.length > 0 && serviceAreas.some(area => area?.trim()) : serviceAreas?.trim())
+        ),
+        weight: 20
+      },
+      contactDetails: {
+        name: 'Contact details',
+        completed: !!(contactEmail?.trim() && contactPhone?.trim() && contactName?.trim() && address?.trim()),
+        weight: 20
+      },
+      profilePhoto: {
+        name: 'Profile photo',
+        completed: !!(coverImage || vendor?.profilePicture),
+        weight: 15
+      },
+      portfolio: {
+        name: 'Portfolio',
+        completed: (portfolioData?.images?.length || 0) > 0,
+        count: portfolioData?.images?.length || 0,
+        total: 8,
+        weight: 25
+      },
+      faqs: {
+        name: 'FAQs',
+        completed: faqs?.length >= 2,
+        count: faqs?.length || 0,
+        recommended: 5,
+        weight: 20
+      }
+    };
+
+    let totalWeight = 0;
+    let completedWeight = 0;
+
+    Object.values(completionItems).forEach(item => {
+      totalWeight += item.weight;
+      if (item.completed) {
+        completedWeight += item.weight;
+      }
+    });
+
+    const percentage = Math.round((completedWeight / totalWeight) * 100);
+    
+    // Debug log for development
+    console.log('Profile Completion Debug:', {
+      businessName: !!businessName?.trim(),
+      category: !!category?.trim(),
+      businessDescription: !!businessDescription?.trim(),
+      serviceAreas: Array.isArray(serviceAreas) ? serviceAreas.length > 0 : !!serviceAreas?.trim(),
+      contactEmail: !!contactEmail?.trim(),
+      contactPhone: !!contactPhone?.trim(),
+      contactName: !!contactName?.trim(),
+      address: !!address?.trim(),
+      profilePhoto: !!(coverImage || vendor?.profilePicture),
+      portfolioCount: portfolioData?.images?.length || 0,
+      faqCount: faqs?.length || 0,
+      percentage
+    });
+    
+    return {
+      percentage,
+      items: completionItems
+    };
+  }, [businessName, category, businessDescription, serviceAreas, contactEmail, contactPhone, contactName, address, coverImage, vendor?.profilePicture, portfolioData?.images, faqs]);
 
   useEffect(() => {
     if (vendor) {
@@ -640,29 +759,42 @@ const EditProfile = () => {
           <div className="border rounded p-3">
             <h3>Profile Completion</h3>
             <p className="text-muted small">Complete your profile to attract more clients</p>
+            {isLoadingFaqs && (
+              <div className="text-center mb-2">
+                <small className="text-muted">Loading completion data...</small>
+              </div>
+            )}
             <div className="mb-2 d-flex justify-content-between small">
               <span>Overall completion</span>
-              <span className="text-success">85%</span>
+              <span className={`${(profileCompletion?.percentage || 0) >= 80 ? 'text-success' : (profileCompletion?.percentage || 0) >= 50 ? 'text-warning' : 'text-danger'}`}>
+                {profileCompletion?.percentage || 0}%
+              </span>
             </div>
             <div className="progress mb-3">
-              <div className="progress-bar" role="progressbar" style={{ width: '85%', backgroundColor: '#0f4c81' }}></div>
+              <div 
+                className="progress-bar" 
+                role="progressbar" 
+                style={{ 
+                  width: `${profileCompletion?.percentage || 0}%`, 
+                  backgroundColor: '#0f4c81' 
+                }}
+              ></div>
             </div>
             <ul className="list-unstyled">
-              <li className="d-flex align-items-center mb-2">
-                <RiCheckboxCircleLine color='green' size={20} /><span className='ms-2'>Basic information</span>
-              </li>
-              <li className="d-flex align-items-center mb-2">
-                <RiCheckboxCircleLine color='green' size={20} /><span className='ms-2'>Contact details</span>
-              </li>
-              <li className="d-flex align-items-center mb-2">
-                <RiCheckboxCircleLine color='green' size={20} /><span className='ms-2'>Profile photo</span>
-              </li>
-              <li className="d-flex align-items-center mb-2">
-                <RiCheckboxCircleLine color='green' size={20} /><span className='ms-2'>Portfolio (6/8)</span>
-              </li>
-              <li className="d-flex align-items-center mb-2">
-                <RiCheckboxCircleLine color='green' size={20} /><span className='ms-2'>FAQs (2/5 recommended)</span>
-              </li>
+              {profileCompletion?.items && Object.entries(profileCompletion.items).map(([key, item]) => (
+                <li key={key} className="d-flex align-items-center mb-2">
+                  {item.completed ? (
+                    <RiCheckboxCircleLine color='green' size={20} />
+                  ) : (
+                    <FaExclamationCircle color='orange' size={18} />
+                  )}
+                  <span className='ms-2'>
+                    {item.name}
+                    {key === 'portfolio' && ` (${item.count || 0}/${item.total || 8})`}
+                    {key === 'faqs' && ` (${item.count || 0}/${item.recommended || 5} recommended)`}
+                  </span>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
