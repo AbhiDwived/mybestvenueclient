@@ -34,16 +34,20 @@ const UserDashboard = () => {
   if (isLoading) return <Loader fullScreen />;
   if (isError || !profile) return <p className="p-4 text-red-500">Error fetching profile</p>;
 
-  const weddingDate = profile?.weddingDate ? new Date(profile.weddingDate) : null;
+  // First check localStorage for event date, then fall back to profile data
+  const storedEventDate = localStorage.getItem('userEventDate');
+  const eventDate = storedEventDate 
+    ? new Date(storedEventDate) 
+    : (profile?.weddingDate ? new Date(profile.weddingDate) : null);
 
-  const formattedWeddingDate = weddingDate
-    ? weddingDate.toLocaleDateString("en-US", {
+  const formattedEventDate = eventDate
+    ? eventDate.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     })
-    : "No wedding date set";
+    : "No event date set";
 
   const displayName = profile?.name?.split("&")[0] || "User";
   const location = profile?.city || "Location not set";
@@ -60,7 +64,7 @@ const UserDashboard = () => {
               Hello, {displayName}
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 font-serif">
-              {formattedWeddingDate} • {location}
+              {formattedEventDate} • {location}
             </p>
           </div>
         </div>

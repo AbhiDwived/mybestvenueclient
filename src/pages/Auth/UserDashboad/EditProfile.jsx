@@ -23,6 +23,7 @@ const EditProfile = () => {
     state: "",
     country: "",
     profilePhoto: "",
+    weddingDate: "",
   });
 
   useEffect(() => {
@@ -36,6 +37,7 @@ const EditProfile = () => {
         state: user.state || "",
         country: user.country || "",
         profilePhoto: user.profilePhoto || "",
+        weddingDate: user.weddingDate ? user.weddingDate.split("T")[0] : "",
       });
     }
   }, [user]);
@@ -66,6 +68,11 @@ const EditProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Save wedding date to localStorage before API call
+      if (formData.weddingDate) {
+        localStorage.setItem('userEventDate', formData.weddingDate);
+      }
+
       const res = await updateProfile({
         userId,
         profileData: formData,
@@ -125,17 +132,17 @@ const EditProfile = () => {
                     htmlFor={key}
                     className="block text-sm font-medium text-gray-700 capitalize mb-1"
                   >
-                    {key}
+                    {key === "weddingDate" ? "Event Date" : key}
                   </label>
                   <input
                     id={key}
                     name={key}
-                    type={key === "email" ? "email" : "text"}
+                    type={key === "email" ? "email" : key === "weddingDate" ? "date" : "text"}
                     value={value}
                     onChange={handleChange}
                     className="w-full border bg-gray-100 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder={`Enter ${key}`}
-                  autoComplete="off"
+                    autoComplete="off"
                   />
                 </div>
               )

@@ -22,6 +22,7 @@ const EditProfile = () => {
     state: "",
     country: "",
     profilePhoto: "",
+    weddingDate: "",
   });
 
   useEffect(() => {
@@ -35,6 +36,7 @@ const EditProfile = () => {
         state: user.state || "",
         country: user.country || "",
         profilePhoto: user.profilePhoto || "",
+        weddingDate: user.weddingDate ? new Date(user.weddingDate).toISOString().split('T')[0] : "",
       });
     }
   }, [user]);
@@ -121,16 +123,16 @@ const EditProfile = () => {
                 htmlFor={key}
                 className="block text-sm font-medium text-gray-700 capitalize mb-1"
               >
-                {key}
+                {key === "weddingDate" ? "Event Date" : key}
               </label>
               <input
                 id={key}
                 name={key}
-                type={key === "email" ? "email" : "text"}
+                type={key === "email" ? "email" : key === "weddingDate" ? "date" : "text"}
                 value={value}
                 onChange={handleChange}
                 className="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder={`Enter ${key}`}
+                placeholder={`Enter ${key === "weddingDate" ? "Event Date" : key}`}
                 autoComplete="off"
               />
             </div>
