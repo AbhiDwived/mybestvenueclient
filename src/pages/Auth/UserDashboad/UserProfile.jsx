@@ -527,7 +527,7 @@ const UserProfile = ({ onUpdate }) => {
               className={`bg-[#0F4C81] hover:bg-[#0f4c81ea] text-white px-6 py-2 rounded-md w-full sm:w-auto ${isLoading ? "opacity-70 cursor-not-allowed" : ""
                 }`}
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? "Saving..." : "Save Information"}
             </button>
           </div>
 
