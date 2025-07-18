@@ -104,6 +104,7 @@ const Dashboard = () => {
 
   const handleCalendarClick = (date) => {
     setSelectedDateForEvent(date);
+    setSelectedEvent(null); // Ensure no previous event is selected
     setShowEventModal(true);
   };
 
@@ -129,7 +130,8 @@ const Dashboard = () => {
       const event = eventsData.events.find(e => 
         new Date(e.eventDate).toDateString() === date.toDateString()
       );
-      return event ? 'bg-red-500 text-white rounded-full relative group cursor-pointer' : 'cursor-pointer';
+      // Show light green background for any date that has an event created
+      return event ? 'bg-green-100 relative group cursor-pointer' : 'cursor-pointer';
     }
     return 'cursor-pointer';
   };
@@ -142,7 +144,7 @@ const Dashboard = () => {
       return event ? (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="group relative">
-            <span className="text-white text-xs font-bold">●</span>
+            <span className="text-red-600 text-xs font-bold">●</span>
             <div className="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 mb-1">
               {event.eventName}
             </div>
@@ -699,8 +701,7 @@ const Dashboard = () => {
                           <span className="mr-1">📝</span> Description
                         </h4>
                         <p className="text-sm text-gray-700 leading-relaxed">
-                          {event.description.length > 120 ? 
-                            `${event.description.substring(0, 120)}...` : event.description}
+                          {event.description}
                         </p>
                       </div>
                     )}
@@ -710,8 +711,7 @@ const Dashboard = () => {
                           <span className="mr-1">📋</span> Notes
                         </h4>
                         <p className="text-sm text-gray-600 leading-relaxed">
-                          {event.notes.length > 120 ? 
-                            `${event.notes.substring(0, 120)}...` : event.notes}
+                          {event.notes}
                         </p>
                       </div>
                     )}

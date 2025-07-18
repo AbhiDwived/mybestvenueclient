@@ -32,7 +32,11 @@ const EventModal = ({
     if (event) {
       setFormData({
         eventName: event.eventName || '',
-        eventDate: event.eventDate ? new Date(event.eventDate).toISOString().split('T')[0] : '',
+        eventDate: event.eventDate ? (() => {
+          const date = new Date(event.eventDate);
+          const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+          return localDate.toISOString().split('T')[0];
+        })() : '',
         eventType: event.eventType || 'Other',
         description: event.description || '',
         status: event.status || 'Scheduled',
@@ -45,9 +49,11 @@ const EventModal = ({
         notes: event.notes || ''
       });
     } else if (selectedDate) {
+      // Fix: Set date using local date string to avoid timezone offset
+      const localDate = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000);
       setFormData(prev => ({
         ...prev,
-        eventDate: selectedDate.toISOString().split('T')[0]
+        eventDate: localDate.toISOString().split('T')[0]
       }));
     } else {
       setFormData({
@@ -159,7 +165,12 @@ const EventModal = ({
                 name="eventDate"
                 value={formData.eventDate}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  formData.status === 'Completed' ? 'bg-green-100' :
+                  formData.status === 'In Progress' ? 'bg-yellow-100' :
+                  formData.status === 'Cancelled' ? 'bg-red-100' :
+                  'bg-white'
+                }`}
                 required
               />
             </div>
@@ -354,4 +365,4 @@ const EventModal = ({
   );
 };
 
-export default EventModal; 
+export default EventModal;
