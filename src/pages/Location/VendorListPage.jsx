@@ -60,13 +60,30 @@ const VendorListPage = () => {
     refetch
   } = useGetAllVendorsQuery();
 
+  // Mapping between frontend category titles and database vendor types
+  const categoryMapping = {
+    'Banquet Halls': ['Banquet Halls', 'TentHouse'],
+    'Hotels': ['Hotels'],
+    'Marriage Garden': ['Marriage Garden'],
+    'Kalyana Mandapams': ['Kalyana Mandapams'],
+    'Wedding Resorts': ['Wedding Resorts'],
+    'Wedding Lawns & Farmhouses': ['Wedding Lawns & Farmhouses'],
+    'Wedding Photographers': ['Wedding Photographers', 'Photographers', 'Videography', 'Photobooth'],
+    'Party Places': ['Party Places', 'DJ', 'Musics'],
+    'Caterers': ['Caterers', 'Cakes'],
+    'Wedding Decorators': ['Wedding Decorators', 'Decorator', 'Florist'],
+    'Wedding Makeup': ['Wedding Makeup'],
+    'Wedding Planners': ['Wedding Planners', 'Choreographers', 'Gifts', 'Invitation', 'Transportation', 'Other']
+  };
+
   // Filtering
   const filteredVendors =
     vendorsData?.vendors?.filter((v) => {
       const lowerSearch = searchTerm.toLowerCase().trim();
 
       /** category match */
-      const matchesCategory = v.vendorType === formattedCategory;
+      const mappedCategories = categoryMapping[formattedCategory] || [formattedCategory];
+      const matchesCategory = mappedCategories.includes(v.vendorType);
 
       /** city / service‑area match */
       let matchesLocation = city === 'all-india';
