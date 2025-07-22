@@ -2,17 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Mail } from "lucide-react";
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useGetUserInquiriesMutation, useSendUserReplyMutation } from "../../../features/auth/authAPI";
+import { FiMessageSquare } from "react-icons/fi";
+import { IoEyeOutline } from "react-icons/io5";
+import { useGetUserInquiriesMutation, useSendUserReplyMutation, useAddUserInquiryMessageMutation, } from "../../../features/auth/authAPI";
 import moment from 'moment';
+import { toast } from 'react-toastify';
 
 export default function Inquiry() {
+    const [openInquiryId, setOpenInquiryId] = useState(null);
+
     const user = useSelector((state) => state.auth.user);
     const userId = user?.id;
 
     const [getInquiries, { data, isLoading, isError }] = useGetUserInquiriesMutation();
+    console.log("getInquiries", data);
     const [sendUserReply] = useSendUserReplyMutation();
     const inquiries = data?.modifiedList || [];
-    // console.log("inquiries", inquiries)
+    console.log("inquiries", inquiries)
+    const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
 
     const [activeReplyId, setActiveReplyId] = useState(null);
     const [messages, setMessages] = useState({});
@@ -23,26 +30,34 @@ export default function Inquiry() {
         }
     }, [userId, getInquiries]);
 
+
     const handleSend = async (inquiry) => {
         const message = messages[inquiry._id];
+        if (!message?.trim()) return;
+
         const payload = {
-            message,
             userId,
             vendorId: inquiry.vendorId,
-        }
-        console.log("payload", payload)
-        // if (!message?.trim()) return;
+            message,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            weddingDate: user.weddingDate || "2025-08-15", // adjust accordingly
+        };
 
         try {
-            const res = await sendUserReply(payload).unwrap();
-
+            const res = await addUserInquiryMessage(payload).unwrap(); // ✅ not sendUserReply
             setMessages((prev) => ({ ...prev, [inquiry._id]: '' }));
             setActiveReplyId(null);
-            alert("Reply sent successfully");
+            // alert("Message sent successfully");
+            toast.success("Message sent successfully");
         } catch (error) {
             console.error("Error sending message:", error);
+            toast.error("Failed to send message");
+            alert("Failed to send message.");
         }
     };
+
 
     return (
         <main className="flex min-h-screen">
@@ -50,143 +65,160 @@ export default function Inquiry() {
                 <h2 className="text-xl font-bold mb-6">My Inquiries</h2>
 
                 {inquiries.length > 0 ? (
-                    <div className="space-y-6">
+                    <div className="space-y-6 ">
                         {inquiries.map((inquiry) => {
-                            // console.log(inquiry, 'inq22')
                             const inquiryId = inquiry._id;
+                            const isOpen = openInquiryId === inquiryId;
+
                             return (
-                                <div key={inquiryId} className=" rounded-lg overflow-hidden">
-                                    <div className="bg-gray-50 p-4 flex justify-between ">
+                                <div key={inquiryId} className="rounded-lg overflow-hidden border border-gray-200">
+                                    {/* ✅ Always Visible Header */}
+                                    <div
+                                        onClick={() => setOpenInquiryId(isOpen ? null : inquiryId)}
+                                        className="bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] p-4 flex justify-between items-center cursor-pointer"
+                                    >
                                         <div>
-                                            <h3 className="font-semibold">{inquiry.business || 'Dream Wedding photographer'}</h3>
-                                            <p className="text-sm text-gray-500">Sent on {inquiry.weddingDate}</p>
+                                            <h3 className="font-semibold text-white">{inquiry.business || 'Dream Wedding Photographer'}</h3>
+                                            <p className="text-sm text-white">Sent on {moment(inquiry.createdAt).format("DD MMM YYYY")}</p>
                                         </div>
-                                        <div>
-                                            <span className={`px-2 py-1 text-xs rounded-full  ${inquiry.status === "replied" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
-                                                {inquiry.replyStatus}
-                                            </span>
-                                        </div>
+                                        <span
+                                            className={`px-2 py-1 text-xs rounded-full ${inquiry.replyStatus === "Replied" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                                                }`}
+                                        >
+                                            {inquiry.replyStatus === "Replied" ? "Replied" : "Pending"}
+                                        </span>
                                     </div>
 
-                                    <div className="m-2 space-y-2 ">
-                                        {/* <p className="text-sm text-gray-500">User Message: {inquiry.message}</p> */}
-                                        <div className="flex justify-start w-100  ">
-                                            <div className="p-2 border-1 rounded border-gray-600 bg-gray-200 w-100">
-                                                {inquiry && inquiry?.userMessage?.map((msg, i) => {
-                                                    return <div key={i}>
-                                                        <div className='m-2 rounded p-2 bg-white'>
-                                                            <p className='text-gray-400 font-bold'> Your Message:</p>
-                                                            <div className=' my-2 flex justify-between items-end'>
-
-                                                                <p className="text-gray-800">{msg?.message || "No message found."}</p>
-                                                                <span className="text-[12px] text-gray-500 text-end"> {moment(msg?.date).format("DD/MM/YYYY hh:mm")}</span>
-
-                                                            </div>
-                                                            {msg?.vendorReply?.message && <div className='bg-gray-100 rounded p-2 w-[95%] mx-auto'>
-                                                                <p className='text-gray-400 font-bold'>
-                                                                    <strong>Reply from {inquiry?.business ?? 'Dream Wedding photographer'}:</strong>
-                                                                </p>
-                                                                <div className='flex justify-between items-end '>
-                                                                    <p className="text-gray-800 ">{msg?.vendorReply?.message}</p>
-                                                                    <span className="text-[12px] text-gray-500 text-end"> {moment(msg?.vendorReply?.createdAt).format("DD/MM/YYYY hh:mm")}</span>
+                                    {/* ✅ Collapsible Content */}
+                                    {isOpen && (
+                                        <>
+                                            <div className="m-2 space-y-2">
+                                                <div className="flex justify-start w-full">
+                                                    <div className="p-2 border rounded border-gray-600 bg-gray-200 w-full">
+                                                        {inquiry?.userMessage?.map((msg, i) => (
+                                                            <div key={i}>
+                                                                {/* User Message */}
+                                                                <div className="m-2 rounded p-2 bg-white max-w-[50%]">
+                                                                    <p className="text-gray-400 font-bold">Your Message:</p>
+                                                                    <div className="my-2 flex justify-between items-end">
+                                                                        <p className="text-gray-800">{msg?.message || "No message found."}</p>
+                                                                        <span className="text-[12px] text-gray-500 text-end">
+                                                                            {moment(msg?.createdAt).format("DD/MM/YYYY hh:mm")}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
+
+                                                                {/* Vendor Reply */}
+                                                                {/* Vendor Reply - Multiple Messages */}
+                                                                {Array.isArray(msg?.vendorReply) && msg.vendorReply.length > 0 && (
+                                                                    <div className="space-y-2 my-2">
+                                                                        {msg.vendorReply.map((reply, index) => (
+                                                                            <div key={index} className="flex justify-end">
+                                                                                <div className="bg-sky-200 rounded p-3 w-[75%] max-w-[500px]">
+                                                                                    <p className="text-gray-700 font-bold">
+                                                                                        Reply from {inquiry?.business ?? 'Dream Wedding Photographer'}
+                                                                                    </p>
+                                                                                    <div className="flex justify-between items-end">
+                                                                                        <p className="text-gray-800">{reply.message}</p>
+                                                                                        <span className="text-[12px] text-gray-500 text-end">
+                                                                                            {moment(reply.createdAt).format("DD/MM/YYYY hh:mm")}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+
                                                             </div>
-                                                            }
-                                                        </div>
-                                                        <div>
-                                                        </div>
-                                                    </div>
-                                                })}
-
-                                            </div>
-                                        </div>
-
-
-                                    </div>
-
-                                    <div className="p-4 space-y-4 ">
-
-                                        {inquiry.status === "replied" && (
-                                            <div className="bg-gray-50 p-3 rounded">
-                                                <p><strong>Reply from {inquiry.business || 'Dream Wedding photographer'}:</strong> {inquiry.vendorMessage?.message || "no message"}</p>
-                                                {/* <p className="text-xs text-gray-500">Replied on {new Date(inquiry.replyDate).toLocaleDateString()}</p>  */}
-                                                {inquiry.vendorMessage?.length > 0 ? (
-                                                    <div>
-                                                        {inquiry.vendorMessage.map((message, index) => (
-                                                            <p key={index} className='text-sm  p-2'>
-                                                                {inquiry.business || 'Dream Wedding photographer'}<br />
-                                                                {message.message}
-                                                            </p>
                                                         ))}
                                                     </div>
-                                                ) : "no message"}
+                                                </div>
                                             </div>
-                                        )}
 
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() =>
-                                                    setActiveReplyId(activeReplyId === inquiryId ? null : inquiryId)
-                                                }
-                                                className="border px-3 py-1 rounded text-sm"
-                                            >
-                                                Reply
-                                            </button>
-
-                                            <Link
-                                                to={`/vendors/${inquiry.vendorId}`}
-                                                className="bg-wedding-blush text-sm px-3 py-1 rounded"
-                                            >
-                                                View Vendor
-                                            </Link>
-                                        </div>
-
-                                        {activeReplyId === inquiryId && (
-                                            <div className="border p-3 rounded bg-gray-50">
-                                                <div className="max-h-60 overflow-y-auto mb-4 space-y-2">
-                                                    {inquiry.chatHistory?.map((chat, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className={`flex ${chat.sender === "user" ? "justify-end" : "justify-start"}`}
-                                                        >
-                                                            <div
-                                                                className={`max-w-xs p-2 rounded-lg text-sm ${chat.sender === "user"
-                                                                    ? "bg-blue-100 text-right"
-                                                                    : "bg-gray-200 text-left"
-                                                                    }`}
-                                                            >
-                                                                <p>{chat.message}</p>
-                                                                <p className="text-xs text-gray-500 mt-1">
-                                                                    {new Date(chat.timestamp).toLocaleString()}
+                                            <div className="p-4 space-y-4">
+                                                {inquiry.status === "replied" && (
+                                                    <div className="bg-gray-50 p-3 rounded">
+                                                        <p><strong>Reply from {inquiry.business || 'Dream Wedding Photographer'}:</strong></p>
+                                                        {inquiry.vendorMessage?.length > 0 ? (
+                                                            inquiry.vendorMessage.map((message, index) => (
+                                                                <p key={index} className="text-sm p-2">
+                                                                    {message.message}
                                                                 </p>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                            ))
+                                                        ) : (
+                                                            <p className="text-sm text-gray-500">No messages found.</p>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() =>
+                                                            setActiveReplyId(activeReplyId === inquiryId ? null : inquiryId)
+                                                        }
+                                                        className="border px-3 py-1 rounded text-sm flex items-center space-x-1"
+                                                    >
+                                                        <FiMessageSquare className="text-lg" /> <span>Reply</span>
+                                                    </button>
+
+                                                    <Link
+                                                        to={`/preview-profile/${inquiry.vendorId}`}
+                                                        className="flex items-center space-x-1 bg-wedding-blush border border-gray-300 text-sm px-3 py-1 rounded"
+                                                    >
+                                                        <IoEyeOutline size={20} className="text-lg text-gray-800 hover:underline" /> <span>View Vendor</span>
+                                                    </Link>
                                                 </div>
 
-                                                <textarea
-                                                    className="w-full p-2 border rounded"
-                                                    rows="3"
-                                                    placeholder="Write your reply..."
-                                                    value={messages[inquiryId] || ''}
-                                                    onChange={(e) =>
-                                                        setMessages((prev) => ({ ...prev, [inquiryId]: e.target.value }))
-                                                    }
-                                                />
-                                                <div className="flex justify-end gap-2 mt-2">
-                                                    <button onClick={() => setActiveReplyId(null)} className="border px-3 py-1 rounded">
-                                                        Cancel
-                                                    </button>
-                                                    <button onClick={() => handleSend(inquiry)} className="bg-blue-600 text-white px-3 py-1 rounded">
-                                                        Send
-                                                    </button>
-                                                </div>
+                                                {activeReplyId === inquiryId && (
+                                                    <div className="border p-3 rounded bg-gray-50">
+                                                        <div className="max-h-60 overflow-y-auto mb-4 space-y-2">
+                                                            {inquiry.chatHistory?.map((chat, index) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className={`flex ${chat.sender === "user" ? "justify-end" : "justify-start"}`}
+                                                                >
+                                                                    <div
+                                                                        className={`max-w-xs p-2 rounded-lg text-sm ${chat.sender === "user"
+                                                                            ? "bg-blue-100 text-right"
+                                                                            : "bg-gray-200 text-left"
+                                                                            }`}
+                                                                    >
+                                                                        <p>{chat.message}</p>
+                                                                        <p className="text-xs text-gray-500 mt-1">
+                                                                            {new Date(chat.timestamp).toLocaleString()}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <textarea
+                                                            className="w-full p-2 border rounded"
+                                                            rows="3"
+                                                            placeholder="Write your reply..."
+                                                            value={messages[inquiryId] || ''}
+                                                            onChange={(e) =>
+                                                                setMessages((prev) => ({ ...prev, [inquiryId]: e.target.value }))
+                                                            }
+                                                        />
+                                                        <div className="flex justify-end gap-2 mt-2">
+                                                            <button onClick={() => setActiveReplyId(null)} className="border px-3 py-1 rounded">
+                                                                Cancel
+                                                            </button>
+                                                            <button onClick={() => handleSend(inquiry)} className="bg-blue-600 text-white px-3 py-1 rounded">
+                                                                Send
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
+                                        </>
+                                    )}
                                 </div>
                             );
                         })}
+
                     </div>
                 ) : (
                     <div className="text-center py-8">
@@ -196,7 +228,7 @@ export default function Inquiry() {
                             You haven't sent any inquiries to vendors. Browse vendors and contact them to start planning your wedding.
                         </p>
                         <button>
-                            <Link to="/vendors">Browse Vendors</Link>
+                            <Link to="/wedding-vendor">Browse Vendors</Link>
                         </button>
                     </div>
                 )}
@@ -204,3 +236,4 @@ export default function Inquiry() {
         </main>
     );
 }
+

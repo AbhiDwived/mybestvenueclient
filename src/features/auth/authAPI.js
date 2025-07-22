@@ -142,7 +142,7 @@ export const authApi = createApi({
         method: "POST",
       }),
     }),
-    // User Inquiries
+     // User Inquiries
     getUserInquiries: builder.mutation({
       query: (userId) => ({
         url: "/user/getuser_inquiryList",
@@ -154,7 +154,7 @@ export const authApi = createApi({
     //add user Inquiry
     addUserInquiryMessage: builder.mutation({
       query: ({userId,vendorId,message,name,phone,email,weddingDate}) => ({
-     url: `/user/userInquiryMessage`,
+     url: `/user/userInquiryMessage/${userId}`,
      method: "POST",
      body: {userId, vendorId,message,name,phone,email,weddingDate },
    }),

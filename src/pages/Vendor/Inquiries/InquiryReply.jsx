@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import moment from "moment";
 import { useReplyToInquiryMutation } from "../../../features/inquiries/inquiryAPI";
+import { useUserInquiryReplyMutation, useUserInquiryListQuery } from "../../../features/vendors/vendorAPI";
+
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { FaUser, FaUserSecret } from 'react-icons/fa';
@@ -8,9 +10,23 @@ import { FaUser, FaUserSecret } from 'react-icons/fa';
 const InquiryReply = ({ inquiry, onBack }) => {
   const [replyToInquiry, { isLoading }] = useReplyToInquiryMutation();
   const vendor = useSelector((state) => state.vendor.vendor);
+  const vendorId = vendor.id;
   const [replyText, setReplyText] = useState("");
   const [activeMessageId, setActiveMessageId] = useState(null);
+  const [replyTouserInquiry, { isLoading: replyinquiryLoading }] = useUserInquiryReplyMutation();
+  const [localInquiry, setLocalInquiry] = useState(inquiry);
 
+  const {
+    data: inquiries,
+    isLoading: inquiryLoading,
+    isError,
+    error,
+  } = useUserInquiryListQuery(vendorId, {
+    skip: !vendorId,
+  });
+
+
+  console.log("vendor", vendor.id);
   // Determine if inquiry is anonymous (no userId)
   const isAnonymous = !inquiry.userId;
 
@@ -20,31 +36,54 @@ const InquiryReply = ({ inquiry, onBack }) => {
   };
 
   // For threaded reply (logged-in user)
-  const handleSendReply = async (messageData) => {
+
+  const handleSendReply = async (msg) => {
     if (!replyText.trim()) {
       toast.error("Please type a reply before sending.");
       return;
     }
+
+    const userId = inquiry?.userId?._id || inquiry?.userId;
+    const vendorId = vendor?.id || vendor?._id;
+    const inquiryId = inquiry?._id;
+
     const payload = {
-      inquiryId: inquiry._id,
-      inquiryType: isAnonymous ? 'anonymous' : 'logged-in',
-      message: replyText,
-      // For logged-in user, reply to a specific message
-      ...(messageData && !isAnonymous ? {
-        userId: inquiry.userId?._id || inquiry.userId,
-        messageId: messageData?._id
-      } : {})
+      inquiryId,
+      userId,
+      vendorId,
+      replyMessage: replyText,
     };
+
     try {
-      await replyToInquiry(payload).unwrap();
+      const response = await replyTouserInquiry(payload).unwrap();
+
+      // ✅ Update the UI with the new reply
+      const updatedUserMessage = inquiry.userMessage.map((m) =>
+        m._id === msg._id
+          ? {
+            ...m,
+            vendorReply: {
+              message: replyText,
+              createdAt: new Date().toISOString(),
+            },
+          }
+          : m
+      );
+
+      inquiry.userMessage = updatedUserMessage;
+
       toast.success("Reply sent successfully!");
       setReplyText("");
       setActiveMessageId(null);
-      onBack(); // Go back to list to refresh
     } catch (error) {
-      toast.error(error.data?.message || "Failed to send reply");
+      console.error("Reply Error:", error);
+      toast.error(error?.data?.message || "Failed to send reply");
     }
   };
+
+
+
+
 
   const handleUseTemplate = () => {
     const template = `Thank you for your interest in our services! We would love to be a part of your special day.\n\nFor the date you mentioned, we are available and offer several packages:\n\n- Basic: ₹10,000 (4 hours coverage)\n- Standard: ₹25,000 (Full day)\n- Premium: ₹50,000 (Full day + Pre-wedding)\n\nPlease let me know if you'd like to schedule a call to discuss further details or have any questions.\n\nBest regards,\n${vendor?.businessName || 'Your Business Name'}`;
@@ -93,11 +132,10 @@ const InquiryReply = ({ inquiry, onBack }) => {
             <h2 className="text-xl font-semibold">
               {isAnonymous ? 'Inquiry Details' : 'Reply to Inquiry'}
             </h2>
-            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-              isAnonymous
-                ? 'bg-orange-100 text-orange-700'
-                : 'bg-blue-100 text-blue-700'
-            }`}>
+            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${isAnonymous
+              ? 'bg-orange-100 text-orange-700'
+              : 'bg-blue-100 text-blue-700'
+              }`}>
               {isAnonymous ? 'Anonymous User' : 'Logged-in User'}
             </span>
           </div>
@@ -132,12 +170,11 @@ const InquiryReply = ({ inquiry, onBack }) => {
             </div>
           )}
           <div className="md:col-span-2">
-            <span className="font-medium">Status:</span> 
-            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${
-              details.status === 'Replied' 
-                ? 'bg-green-100 text-green-700' 
-                : 'bg-yellow-100 text-yellow-700'
-            }`}>
+            <span className="font-medium">Status:</span>
+            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${details.status === 'Replied'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-yellow-100 text-yellow-700'
+              }`}>
               {details.status}
             </span>
           </div>
@@ -146,77 +183,83 @@ const InquiryReply = ({ inquiry, onBack }) => {
 
       {/* Message Thread for logged-in user inquiries */}
       {!isAnonymous ? (
+
         <div className="space-y-2">
           {inquiry?.userMessage?.map((msg, i) => (
-            <div key={i} className="border-b pb-2 last:border-b-0">
-              <div className="bg-gray-100 p-2 rounded-lg max-w-[80%]">
+            <div key={i} className=" pb-2 last:border-b-0">
+
+              {/* Clickable message to toggle reply */}
+              <div
+                className="bg-gray-100 p-2 rounded-lg max-w-[50%] cursor-pointer"
+                onClick={() =>
+                  setActiveMessageId((prev) => (prev === msg._id ? null : msg._id))
+                }
+              >
                 <p className="text-gray-800">{msg?.message}</p>
-                <span className="text-xs text-gray-500 block mt-1">
+                <span className="text-xs text-gray-500 block mt-1 text-right">
                   {formatDate(msg?.createdAt)}
                 </span>
               </div>
 
-              {msg?.vendorReply?.message && (
-                <div className="flex justify-end mt-1">
-                  <div className="bg-sky-100 p-2 rounded-lg max-w-[80%]">
-                    <p className="text-gray-800">{msg?.vendorReply?.message}</p>
-                    <span className="text-xs text-gray-500 block mt-1">
-                      {formatDate(msg?.vendorReply?.createdAt)}
-                    </span>
-                  </div>
+              {/* Show vendor replies if available */}
+              {Array.isArray(msg?.vendorReply) && msg.vendorReply.length > 0 && (
+                <div className="space-y-2 mt-1">
+                  {msg.vendorReply.map((reply, index) => (
+                    <div key={index} className="flex justify-end">
+                      <div className="bg-sky-100 p-3 rounded-lg w-full max-w-[50%] text-sm shadow">
+                        <p className="text-gray-800">{reply.message}</p>
+                        <span className="text-xs text-gray-500 block mt-1 text-right">
+                          {formatDate(reply.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {!msg?.vendorReply?.message && (
+              {/* Reply Box - shown only when clicked */}
+              {!msg?.vendorReply?.message && activeMessageId === msg._id && (
                 <div className="mt-2">
-                  {activeMessageId === msg._id ? (
-                    <>
-                      <textarea
-                        className="w-full border rounded p-2 text-sm min-h-[80px] focus:outline-none focus:ring focus:border-blue-300"
-                        placeholder="Type your response here..."
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                      />
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <button
-                          className={`text-white px-3 py-1 rounded bg-[#0f4c81] text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          onClick={() => handleSendReply(msg)}
-                          disabled={isLoading}
-                        >
-                          {isLoading ? 'Sending...' : 'Send Reply'}
-                        </button>
-                        <button
-                          className="border px-3 py-1 rounded text-sm hover:bg-[#DEBF78]"
-                          onClick={handleUseTemplate}
-                          disabled={isLoading}
-                        >
-                          Use Template
-                        </button>
-                        <button
-                          className="border px-3 py-1 rounded text-sm hover:bg-gray-100"
-                          onClick={() => {
-                            setActiveMessageId(null);
-                            setReplyText("");
-                          }}
-                          disabled={isLoading}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </>
-                  ) : (
+                  <textarea
+                    className="w-full border rounded p-2 text-sm min-h-[80px] focus:outline-none focus:ring focus:border-blue-300"
+                    placeholder="Type your response here..."
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                  />
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <button
-                      className="text-[#0f4c81] text-sm hover:underline"
-                      onClick={() => setActiveMessageId(msg._id)}
+                      className={`text-white px-3 py-1 rounded bg-[#0f4c81] text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => handleSendReply(msg)}
+                      disabled={isLoading}
                     >
-                      Reply to this message
+                      {isLoading ? 'Sending...' : 'Send Reply'}
                     </button>
-                  )}
+                    <button
+                      className="border px-3 py-1 rounded text-sm hover:bg-[#DEBF78]"
+                      onClick={handleUseTemplate}
+                      disabled={isLoading}
+                    >
+                      Use Template
+                    </button>
+                    <button
+                      className="border px-3 py-1 rounded text-sm hover:bg-gray-100"
+                      onClick={() => {
+                        setActiveMessageId(null);
+                        setReplyText("");
+                      }}
+                      disabled={isLoading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
+
+
+
       ) : (
         // Anonymous inquiry: show only details and original message
         <div className="space-y-2">

@@ -152,10 +152,10 @@ export const vendorApi = createApi({
       },
     }),
 
-    // Get vendor inquiry list
+   // Get vendor inquiry list
     userInquiryList: builder.query({
       query: (vendorId) => ({
-        url: `/vendor/replied-inquiries`,
+        url: `/vendor/replied-inquiries/${vendorId}`,
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -166,10 +166,11 @@ export const vendorApi = createApi({
 
     // Handle user inquiry reply
     userInquiryReply: builder.mutation({
-      query: ({ userId, messageId, vendorId, message }) => ({
+      query: ({ userId,  vendorId, replyMessage }) => ({
         url: `/vendor/inquiry-reply/${vendorId}`,
+      
         method: "POST",
-        body: { message, userId, messageId },
+        body: { replyMessage, userId },
       }),
       invalidatesTags: ["Inquiries"],
     }),
