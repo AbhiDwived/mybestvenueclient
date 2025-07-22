@@ -63,6 +63,15 @@ export const authApi = createApi({
         body: { email },
       }),
     }),
+    
+    // Resend OTP for password reset
+    resendPasswordResetOtp: builder.mutation({
+      query: ({ userId }) => ({
+        url: "/user/resend-password-reset-otp",
+        method: "POST",
+        body: { userId },
+      }),
+    }),
 
     // Login User
     loginUser: builder.mutation({
@@ -176,6 +185,7 @@ export const {
   useRegisterUserMutation,
   useVerifyOtpMutation,
   useResendOtpMutation,
+  useResendPasswordResetOtpMutation,
   useLoginUserMutation,
   useForgotPasswordMutation,
   useVerifyPasswordResetMutation,

@@ -51,7 +51,17 @@ const VerifyOTP = () => {
       setCanResend(false);
     } catch (err) {
       console.error('OTP Resend Failed:', err);
-      toast.error(err?.data?.message || "Failed to resend OTP. Please try again.");
+      
+      // Check for specific error message about no pending registration
+      if (err?.data?.message === 'No pending registration found for this email. Please register first.') {
+        toast.error('Your registration session has expired. Please register again.');
+        localStorage.removeItem('pendingEmail');
+        setTimeout(() => {
+          navigate('/user/signup');
+        }, 2000);
+      } else {
+        toast.error(err?.data?.message || "Failed to resend OTP. Please try again.");
+      }
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useVerifyPasswordResetMutation, useResendOtpMutation } from '../../features/auth/authAPI';
+import { useVerifyPasswordResetMutation, useResendPasswordResetOtpMutation } from '../../features/auth/authAPI';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from "react-toastify";
@@ -14,7 +14,7 @@ const VerifyPasswordReset = () => {
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const [verifyPasswordReset, { isLoading, error }] = useVerifyPasswordResetMutation();
-  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
+  const [resendPasswordResetOtp, { isLoading: isResending }] = useResendPasswordResetOtpMutation();
 
   useEffect(() => {
     let interval;
@@ -35,7 +35,7 @@ const VerifyPasswordReset = () => {
 
   const handleResendOTP = async () => {
     try {
-      await resendOtp({ userId }).unwrap();
+      await resendPasswordResetOtp({ userId }).unwrap();
       toast.success("OTP resent successfully!");
       setTimer(30);
       setCanResend(false);
