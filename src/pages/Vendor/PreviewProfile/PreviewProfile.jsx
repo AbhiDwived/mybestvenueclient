@@ -23,6 +23,7 @@ import { useCreateAnonymousInquiryMutation } from '../../../features/inquiries/i
 import { ImCross } from 'react-icons/im';
 import { useGetPortfolioImagesQuery, useGetPortfolioVideosQuery } from '../../../features/vendors/vendorAPI';
 import { useGetVendorReviewsQuery } from '../../../features/reviews/reviewAPI';
+import { useGetSavedVendorsQuery, useUnsaveVendorMutation, useSaveVendorMutation } from "../../../features/savedVendors/savedVendorAPI";
 
 const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
@@ -39,7 +40,13 @@ const PreviewProfile = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const imagesPerPage = 9;
 
+  
+
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+  // const userId = user?._id;
+
+
+  
 
   // Booking form state with validation
   const [bookingForm, setBookingForm] = useState({
@@ -118,7 +125,7 @@ const PreviewProfile = () => {
     if (!inquiryForm.email) errors.email = 'Email is required';
     else if (!/^\S+@\S+\.\S+$/.test(inquiryForm.email)) errors.email = 'Invalid email address';
     if (!inquiryForm.phone) errors.phone = 'Phone is required';
-    else if (!/^[6-9]\d{9}$/.test(inquiryForm.phone)) errors.phone = 'Invalid Indian phone number';
+    else if (!/^[6-9]\d{9}$/.test(inquiryForm.phone)) errors.phone = 'Invalid mobile number';
     if (!inquiryForm.eventDate) errors.eventDate = 'Event date is required';
     if (!inquiryForm.message) errors.message = 'Message is required';
     setInquiryErrors(errors);
@@ -251,6 +258,8 @@ const PreviewProfile = () => {
 
   const userRecord = useSelector((state) => state.auth);
   const userId = userRecord?.user?.id;
+
+  
 
   const handleInquiryChange = (e) => {
     const { name, value } = e.target;
@@ -645,8 +654,8 @@ const PreviewProfile = () => {
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                     className={`px-3 py-1 rounded ${currentPage === 1
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
                       }`}
                   >
                     Previous
@@ -661,8 +670,8 @@ const PreviewProfile = () => {
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       className={`w-8 h-8 rounded-full ${currentPage === pageNum
-                          ? 'bg-[#0f4c81] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[#0f4c81] text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                     >
                       {pageNum}
@@ -675,8 +684,8 @@ const PreviewProfile = () => {
                     )}
                     disabled={currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)}
                     className={`px-3 py-1 rounded ${currentPage === Math.ceil(vendorPortfolio.images.length / imagesPerPage)
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#0f4c81] text-white hover:bg-[#0d3d6a]'
                       }`}
                   >
                     Next
@@ -931,7 +940,7 @@ const PreviewProfile = () => {
         {/* Right side: Inquiry */}
         <div className="space-y-6  ">
           {/* Inquiry Form */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white">
+          <div className="border rounded-lg p-4 shadow-sm bg-white sticky top-5">
             <h3 className="font-semibold text-lg mb-3">Send Inquiry</h3>
             <form className="space-y-3 text-sm" onSubmit={handleInquirySubmit}>
               <div>
@@ -956,10 +965,22 @@ const PreviewProfile = () => {
               <input type="hidden" name="vendorId" value={vendorData._id} />
               <div>
                 <label className="block mb-1">Event Date <span className="text-red-500">*</span></label>
+                
                 <input
                   type="date"
                   name="eventDateRaw"
+                  min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => {
+                    const selectedDate = new Date(e.target.value);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); 
+
+                    if (selectedDate <= today) {
+                      // alert("Please select Valid date.");
+                      toast.error("Please select Valid date.");
+                      return;
+                    }
+
                     const [year, month, day] = e.target.value.split("-");
                     const formatted = `${day}/${month}/${year}`;
                     setInquiryForm(prev => ({
@@ -969,6 +990,7 @@ const PreviewProfile = () => {
                   }}
                   className={`w-full border rounded px-3 py-2 ${inquiryErrors.eventDate ? 'border-red-500' : ''}`}
                 />
+
                 {inquiryErrors.eventDate && <span className="text-red-500 text-xs mt-1">{inquiryErrors.eventDate}</span>}
               </div>
               <div>

@@ -12,6 +12,7 @@ const InquiriesSection = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [inquiryType, setInquiryType] = useState('all'); // 'all', 'logged-in', 'anonymous'
+  
   const [page, setPage] = useState(1);
   const pageSize = 5;
 

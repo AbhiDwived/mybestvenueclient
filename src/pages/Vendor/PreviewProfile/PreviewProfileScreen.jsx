@@ -55,10 +55,9 @@ const PreviewProfileScreen = () => {
         <div className="lg:col-span-4 space-y-6">
           {/* About */}
           <div>
-            <h2 className="text-xl font-semibold mb-2">About Dream Wedding Photography</h2>
+            <h2 className="text-xl font-semibold mb-2">{vendor?.vendor?.businessName}</h2>
             <p className="text-gray-700 text-sm md:text-base">
-              Capturing your special moments with creativity and passion. Our team of experienced photographers specializes in candid wedding photography,
-              traditional portraits, and creative pre-wedding shoots. We use state-of-the-art equipment to ensure your memories are preserved in the highest quality.
+             {vendor?.vendor?.description}
             </p>
           </div>
 

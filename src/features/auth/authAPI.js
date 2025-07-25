@@ -63,7 +63,7 @@ export const authApi = createApi({
         body: { email },
       }),
     }),
-    
+
     // Resend OTP for password reset
     resendPasswordResetOtp: builder.mutation({
       query: ({ userId }) => ({
@@ -142,7 +142,7 @@ export const authApi = createApi({
         method: "POST",
       }),
     }),
-     // User Inquiries
+    // User Inquiries
     getUserInquiries: builder.mutation({
       query: (userId) => ({
         url: "/user/getuser_inquiryList",
@@ -152,13 +152,27 @@ export const authApi = createApi({
     }),
 
     //add user Inquiry
+
+
     addUserInquiryMessage: builder.mutation({
-      query: ({userId,vendorId,message,name,phone,email,weddingDate}) => ({
-     url: `/user/userInquiryMessage/${userId}`,
-     method: "POST",
-     body: {userId, vendorId,message,name,phone,email,weddingDate },
-   }),
-   }),
+      query: ({ userId, vendorId, message, name, phone, email, weddingDate }) => ({
+        url: `/user/userInquiryMessage/${userId}`,
+        method: "POST",
+        body: {
+          vendorId,
+          message,
+          name,
+          phone,
+          email,
+          weddingDate,
+        },
+      }),
+
+    }),
+
+
+
+
 
     //UserContact---POST
     submitContactForm: builder.mutation({
@@ -169,14 +183,7 @@ export const authApi = createApi({
       }),
     }),
 
-    // Send User Reply
-    sendUserReply: builder.mutation({
-      query: ({ userId, vendorId, message }) => ({
-        url: `/user/userInquiryMessage`,
-        method: "POST",
-        body: { userId, vendorId, message },
-      }),
-    }),
+    
   }),
 });
 
@@ -195,7 +202,7 @@ export const {
   useDeleteUserMutation,
   useLogoutUserMutation,
   useGetUserInquiriesMutation,
-  useSendUserReplyMutation,
+  // useSendUserReplyMutation,
   useSubmitContactFormMutation,
   useGetUserProfileQuery,
   useGetUserProfileByIdQuery,

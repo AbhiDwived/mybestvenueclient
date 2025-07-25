@@ -93,7 +93,7 @@ const Footer = () => {
           <ul className="text-md p-0 text-[#D1D5DB]">
             <li className='sm:text-[#D1D5DB] text-sm '><Link to="https://www.google.com/maps/dir/?api=1&destination=A-223%2C+Sector+151%2C+Noida%2C+Uttar+Pradesh+201310" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaLocationDot className="inline mr-2 " style={{ textDecoration: 'none', color: '#D1D5DB' }} />A-223, Sector-151, Near-148 metro station, Greater Noida, India, Uttar Pradesh code - 201310</Link></li>
             <li className="mt-3"><Link to="tel:9990555740" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" /> +91 9990555740</Link></li>
-            <li className="mt-3"><Link to="mailto:mybestvenue@gmail.com" style={{ textDecoration: 'none', color: '#D1D5DB' }}><BiSolidContact className="inline mr-2" />mybestvenue@gmail.com</Link></li>
+            <li className="mt-3"><Link to="mailto:info@mybestvenue.com" style={{ textDecoration: 'none', color: '#D1D5DB' }}><BiSolidContact className="inline mr-2" />info@mybestvenue.com</Link></li>
           </ul>
         </div>
         <AccordionSection Link to='/contactUs' title="Contact Us">
@@ -105,7 +105,7 @@ const Footer = () => {
               A-230, Sector-151, Near-148 metro station, Greater Noida, India, <br /> Uttar Pradesh code - 201310
             </Link></li>
             <li className="mt-2"><Link to="tel:9990555740" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" /> +91 9990555740</Link></li>
-            <li className="mt-2"><Link to="mailto:mybestvenue@gmail.com" style={{ textDecoration: 'none', color: '#D1D5DB' }}><BiSolidContact className="inline mr-2" />mybestvenue@gmail.com</Link></li>
+            <li className="mt-2"><Link to="mailto:info@mybestvenue.com" style={{ textDecoration: 'none', color: '#D1D5DB' }}><BiSolidContact className="inline mr-2" />info@mybestvenue.com</Link></li>
           </ul>
         </AccordionSection>
 

@@ -80,8 +80,8 @@ export default function ContactUs() {
                             </div>
                             <div className="flex items-center">
                                 <FaEnvelope className="text-blue-600 mr-4" size={20} />
-                                <Link to="mailto:mybestvenue@gmail.com" style={{ textDecoration: 'none', color: 'black' }} className="text-gray-700">
-                                    mybestvenue@gmail.com
+                                <Link to="mailto:info@mybestvenue.com" style={{ textDecoration: 'none', color: 'black' }} className="text-gray-700">
+                                    info@mybestvenue.com
                                 </Link>
                             </div>
                         </div>

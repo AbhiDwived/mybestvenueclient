@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { FiMessageSquare } from "react-icons/fi";
 import { IoEyeOutline } from "react-icons/io5";
-import { useGetUserInquiriesMutation, useSendUserReplyMutation, useAddUserInquiryMessageMutation, } from "../../../features/auth/authAPI";
+import { useGetUserInquiriesMutation, useAddUserInquiryMessageMutation, } from "../../../features/auth/authAPI";
 import moment from 'moment';
 import { toast } from 'react-toastify';
 
@@ -12,13 +12,15 @@ export default function Inquiry() {
     const [openInquiryId, setOpenInquiryId] = useState(null);
 
     const user = useSelector((state) => state.auth.user);
+    console.log("user", user);
     const userId = user?.id;
+    console.log("userId", userId);
 
     const [getInquiries, { data, isLoading, isError }] = useGetUserInquiriesMutation();
-    console.log("getInquiries", data);
-    const [sendUserReply] = useSendUserReplyMutation();
+    // console.log("getInquiries", data);
+    // const [sendUserReply] = useSendUserReplyMutation();
     const inquiries = data?.modifiedList || [];
-    console.log("inquiries", inquiries)
+    // console.log("inquiries", inquiries)
     const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
 
     const [activeReplyId, setActiveReplyId] = useState(null);
@@ -31,32 +33,38 @@ export default function Inquiry() {
     }, [userId, getInquiries]);
 
 
+
+
     const handleSend = async (inquiry) => {
+        console.log("message", inquiry);
         const message = messages[inquiry._id];
-        if (!message?.trim()) return;
+        if (!message?.trim()) {
+            toast.warning("Message cannot be empty");
+            return;
+        }
 
         const payload = {
-            userId,
-            vendorId: inquiry.vendorId,
-            message,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            weddingDate: user.weddingDate || "2025-08-15", // adjust accordingly
+            userId: userId,
+            vendorId: inquiry?.vendorId,
+            message: messages[inquiry._id],
+            name: user?.name,
+            email: user?.email,
+            phone: user?.phone,
+            weddingDate: user?.weddingDate,
         };
 
         try {
-            const res = await addUserInquiryMessage(payload).unwrap(); // ✅ not sendUserReply
+            const res = await addUserInquiryMessage(payload).unwrap();
             setMessages((prev) => ({ ...prev, [inquiry._id]: '' }));
             setActiveReplyId(null);
-            // alert("Message sent successfully");
             toast.success("Message sent successfully");
+            getInquiries(userId); // ✅ Refresh the inquiry list after sending
         } catch (error) {
             console.error("Error sending message:", error);
-            toast.error("Failed to send message");
-            alert("Failed to send message.");
+            toast.error(error?.data?.message || "Failed to send message");
         }
     };
+
 
 
     return (

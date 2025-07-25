@@ -26,7 +26,7 @@ const InquiryReply = ({ inquiry, onBack }) => {
   });
 
 
-  console.log("vendor", vendor.id);
+  // console.log("vendor", vendor.id);
   // Determine if inquiry is anonymous (no userId)
   const isAnonymous = !inquiry.userId;
 
@@ -80,10 +80,6 @@ const InquiryReply = ({ inquiry, onBack }) => {
       toast.error(error?.data?.message || "Failed to send reply");
     }
   };
-
-
-
-
 
   const handleUseTemplate = () => {
     const template = `Thank you for your interest in our services! We would love to be a part of your special day.\n\nFor the date you mentioned, we are available and offer several packages:\n\n- Basic: ₹10,000 (4 hours coverage)\n- Standard: ₹25,000 (Full day)\n- Premium: ₹50,000 (Full day + Pre-wedding)\n\nPlease let me know if you'd like to schedule a call to discuss further details or have any questions.\n\nBest regards,\n${vendor?.businessName || 'Your Business Name'}`;
@@ -285,6 +281,46 @@ const InquiryReply = ({ inquiry, onBack }) => {
           )}
         </div>
       )}
+
+      {/* Global Reply Box for latest user message */}
+      {inquiry?.userMessage?.length > 0 && (
+        <div className="mt-6  pt-4">
+          {/* <h3 className="font-semibold text-md mb-2 text-gray-700">Reply to Latest Message</h3> */}
+          <textarea
+            className="w-full border rounded p-2 text-sm min-h-[80px] focus:outline-none focus:ring focus:border-blue-300"
+            placeholder="Type your response here..."
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+          />
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              className={`text-white px-3 py-1 rounded bg-[#0f4c81] text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => handleSendReply(inquiry.userMessage[inquiry.userMessage.length - 1])}  // send to latest msg
+              disabled={isLoading}
+            >
+              {isLoading ? 'Sending...' : 'Send Reply'}
+            </button>
+            <button
+              className="border px-3 py-1 rounded text-sm hover:bg-[#DEBF78]"
+              onClick={handleUseTemplate}
+              disabled={isLoading}
+            >
+              Use Template
+            </button>
+            <button
+              className="border px-3 py-1 rounded text-sm hover:bg-gray-100"
+              onClick={() => setReplyText("")}
+              disabled={isLoading}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+
+
+
     </div>
   );
 };

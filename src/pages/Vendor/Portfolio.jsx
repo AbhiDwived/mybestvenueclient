@@ -653,7 +653,7 @@ const PortfolioTab = () => {
             >
               <LuImagePlus size={32} className="text-muted mb-2" />
               <div className="fw-medium">Add New Images</div>
-              <div className="text-muted small mt-1">Upload multiple JPG or PNG</div>
+              <div className="text-muted small mt-1">Upload Max 10MB multiple JPG or PNG</div>
               <div className="text-muted small">Hold Ctrl/Cmd to select multiple</div>
             </div>
           </div>
