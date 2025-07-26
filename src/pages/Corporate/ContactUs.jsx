@@ -69,7 +69,7 @@ export default function ContactUs() {
                                     rel="noopener noreferrer"
                                     style={{textDecoration:'none'}}
                                     className="inline-block transition text-black duration-300">
-                                    A-230, Sector-151, Near-148 metro station, Greater Noida, India, <br /> Uttar Pradesh code - 201310
+                                    A-223, Sector-151, Near-148 metro station, Greater Noida, India, <br /> Uttar Pradesh code - 201310
                                 </Link>
                             </div>
                             <div className="flex items-center">

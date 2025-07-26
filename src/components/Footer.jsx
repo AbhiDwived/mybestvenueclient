@@ -102,7 +102,7 @@ const Footer = () => {
               rel="noopener noreferrer"
               style={{ textDecoration: 'none' }}
               className="inline-block transition text-white duration-300">
-              A-230, Sector-151, Near-148 metro station, Greater Noida, India, <br /> Uttar Pradesh code - 201310
+              A-223, Sector-151, Near-148 metro station, Greater Noida, India, <br /> Uttar Pradesh code - 201310
             </Link></li>
             <li className="mt-2"><Link to="tel:9990555740" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" /> +91 9990555740</Link></li>
             <li className="mt-2"><Link to="mailto:info@mybestvenue.com" style={{ textDecoration: 'none', color: '#D1D5DB' }}><BiSolidContact className="inline mr-2" />info@mybestvenue.com</Link></li>
