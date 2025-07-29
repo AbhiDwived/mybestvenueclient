@@ -246,7 +246,7 @@ const RichTextEditor = ({ value, onChange, onImageUpload }) => {
         }}
         dangerouslySetInnerHTML={{ __html: value }}
         className="min-h-[400px] p-4 focus:outline-none"
-        style={{ lineHeight: '1.6', fontSize: '16px' }}
+        style={{ lineHeight: '1.6', fontSize: '16px', direction: 'ltr', textAlign: 'left' }}
       />
     </div>
   );
