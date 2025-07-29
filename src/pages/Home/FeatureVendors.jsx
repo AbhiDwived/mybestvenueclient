@@ -22,6 +22,9 @@ const FeaturedVendors = ({ showAll = false }) => {
   const { data: savedVendorsData, isLoading: isLoadingSaved } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
   const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
+
+  
+
   // Format vendors data according to our display needs
   const formattedVendors = useMemo(() => vendorsData?.data?.map(vendor => ({
     id: vendor._id,
@@ -139,10 +142,12 @@ const FeaturedVendors = ({ showAll = false }) => {
                       <FaStar size={18} className="text-yellow-500" />
                       <span>
                         {isLoadingStats
-                          ? '--'
-                          : typeof stat.avgRating === 'number' && !isNaN(stat.avgRating)
-                            ? stat.avgRating.toFixed(1)
-                            : '--'}
+                          ? '0'
+                          : typeof stat.avgRating === 'number' && !isNaN(stat.avgRating) && stat.avgRating !== 0
+                            ? stat.avgRating === 5
+                              ? '5'
+                              : stat.avgRating.toFixed(1)
+                            : '0'}
                       </span>
                     </div>
                   </div>

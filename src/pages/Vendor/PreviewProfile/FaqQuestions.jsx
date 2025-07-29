@@ -32,10 +32,10 @@ const FaqQuestions = () => {
             className=""
             >
               <span className="inline-flex items-center text-xl text-gray-800">
-  <BsFillPatchQuestionFill className="mr-2 text-[#0f4c81]" />
+  {/* <BsFillPatchQuestionFill className="mr-2 text-[#0f4c81]" /> */}
   <span>{faq.question}?</span>
 </span>
-              <p className="text-gray-600 ml-5">{faq.answer}</p>
+              <p className="text-gray-600 ">{faq.answer}</p>
             </div>
           ))
         ) : (

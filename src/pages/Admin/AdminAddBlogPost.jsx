@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateBlogMutation } from "../../features/blogs/adminblogsAPI";
 import { Calendar, Image as ImageIcon, Loader, X } from 'lucide-react';
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import RichTextEditor from '../../components/RichTextEditor/RichTextEditor';
 
 export default function AdminAddBlogPost() {
   const navigate = useNavigate();
@@ -30,6 +29,31 @@ export default function AdminAddBlogPost() {
     if (file) {
       setImage(file);
       setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleEditorImageUpload = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('/api/v1/admin/blog/upload-editor-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        return data.url;
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      alert('Failed to upload image: ' + error.message);
+      throw error;
     }
   };
 
@@ -129,41 +153,19 @@ export default function AdminAddBlogPost() {
                 />
               </div>
 
-              {/* Content Input with CKEditor */}
+              {/* Content Input with Rich Text Editor */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Content *
                 </label>
-                <div className="border rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
-                  <CKEditor
-                    editor={ClassicEditor}
-                    data={content}
-                    onChange={(event, editor) => {
-                      const data = editor.getData();
-                      setContent(data);
-                    }}
-                    config={{
-                      toolbar: [
-                        'heading',
-                        '|',
-                        'bold',
-                        'italic',
-                        'link',
-                        'bulletedList',
-                        'numberedList',
-                        '|',
-                        'indent',
-                        'outdent',
-                        '|',
-                        'blockQuote',
-                        'insertTable',
-                        'mediaEmbed',
-                        'undo',
-                        'redo'
-                      ]
-                    }}
-                  />
-                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  💡 Use the <strong>📄 Table of Contents</strong> button in the toolbar to insert a TOC that auto-updates with your headings.
+                </p>
+                <RichTextEditor
+                  value={content}
+                  onChange={setContent}
+                  onImageUpload={handleEditorImageUpload}
+                />
               </div>
 
               {/* Image Upload */}

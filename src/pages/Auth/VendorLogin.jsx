@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLoginVendorMutation } from '../../features/vendors/vendorAPI';
 import { useDispatch } from 'react-redux';
 import { setVendorCredentials } from '../../features/vendors/vendorSlice';
@@ -14,6 +14,7 @@ const VendorLogin = () => {
   const [loginVendor, { isLoading }] = useLoginVendorMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const emailInputRef = useRef(null);
 
   useEffect(() => {
     // Check if there are saved credentials
@@ -22,6 +23,9 @@ const VendorLogin = () => {
       setFormData(prev => ({ ...prev, email: savedEmail }));
       setRememberMe(true);
     }
+      if (emailInputRef.current) {
+    emailInputRef.current.focus();
+  }
   }, []);
 
   const handleChange = (e) => {
@@ -111,6 +115,7 @@ const VendorLogin = () => {
                   placeholder="example@email.com"
                   value={formData.email}
                   onChange={handleChange}
+                  ref={emailInputRef}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0F4C81]"
                 />
