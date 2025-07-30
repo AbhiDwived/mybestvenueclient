@@ -19,32 +19,63 @@ import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 // Helper function to get icon by category title
 const getCategoryIcon = (title) => {
   switch (title) {
+    case 'Art Gallery':
+      return <FaPaintBrush size={24} />;
+    case 'Amusement Park':
+      return <FaMagic size={24} />;
+    case 'Auditorium':
+      return <FaLandmark size={24} />;
     case 'Banquet Halls':
       return <FaRegBuilding size={24} />;
+    case 'Bars':
+    case 'Clubs':
+    case 'Pubs':
+      return <FaGlassCheers size={24} />;
+    case 'Pool Side':
+      return <FaUmbrellaBeach size={24} />;
+    case 'Conference Rooms':
+    case 'Meeting Rooms':
+    case 'Training Rooms':
+      return <FaClipboardList size={24} />;
+    case 'Farm Houses':
+      return <FaHome size={24} />;
     case 'Hotels':
+    case '5 Star Hotel':
+    case 'Wedding Hotels':
       return <FaHotel size={24} />;
+    case 'Party Lawn':
+    case 'Marriage Lawn':
+      return <FaTree size={24} />;
+    case 'Resort':
+    case 'Wedding Resort':
+      return <FaUmbrellaBeach size={24} />;
+    case 'Restaurants':
+    case 'Cafes':
+      return <FaBirthdayCake size={24} />;
+    case 'Seminar Halls':
+      return <FaRegBuilding size={24} />;
+    case 'Theater':
+      return <FaLandmark size={24} />;
+    case 'Unique Venues':
+      return <FaMagic size={24} />;
+    case 'Roof Top':
+      return <FaRegBuilding size={24} />;
+    case 'Gaming Zone':
+    case 'Kids Play Area':
+      return <FaMagic size={24} />;
+    case 'Villas':
+    case 'Vacation Homes':
+    case 'Guest Houses':
+      return <FaHome size={24} />;
+    case 'Boat / Yatch':
+      return <FaUmbrellaBeach size={24} />;
+    case 'Co-working Spaces':
+    case 'Business Centres':
+      return <FaRegBuilding size={24} />;
     case 'Marriage Garden':
       return <FaTree size={24} />;
-    case 'Kalyana Mandapams':
-      return <FaLandmark size={24} />;
-    case 'Wedding Resorts':
-      return <FaUmbrellaBeach size={24} />;
-    case 'Wedding Lawns & Farmhouses':
-      return <FaHome size={24} />;
-    case 'Wedding Photographers':
-      return <FaCamera size={24} />;
-    case 'Party Places':
-      return <FaGlassCheers size={24} />;
-    case 'Caterers':
-      return <FaBirthdayCake size={24} />;
-    case 'Wedding Decorators':
-      return <FaMagic size={24} />;
-    case 'Wedding Makeup':
-      return <FaPaintBrush size={24} />;
-    case 'Wedding Planners':
-      return <FaClipboardList size={24} />;
     default:
-      return null;
+      return <FaRegBuilding size={24} />;
   }
 };
 
@@ -56,18 +87,40 @@ const VendorByCategory = ({ location = "All India" }) => {
 
   // Define all categories
   const categoryTitles = [
+    "Art Gallery",
+    "Amusement Park",
+    "Auditorium",
     "Banquet Halls",
+    "Bars",
+    "Clubs",
+    "Pool Side",
+    "Conference Rooms",
+    "Farm Houses",
     "Hotels",
+    "Party Lawn",
+    "Resort",
+    "Restaurants",
+    "Seminar Halls",
+    "Theater",
+    "Unique Venues",
+    "Roof Top",
+    "Gaming Zone",
+    "Villas",
+    "Pubs",
+    "Meeting Rooms",
+    "Boat / Yatch",
+    "Vacation Homes",
+    "Cafes",
+    "Co-working Spaces",
+    "Business Centres",
+    "Guest Houses",
+    "5 Star Hotel",
     "Marriage Garden",
-    "Kalyana Mandapams",
-    "Wedding Resorts",
-    "Wedding Lawns & Farmhouses",
-    "Wedding Photographers",
-    "Party Places",
-    "Caterers",
-    "Wedding Decorators",
-    "Wedding Makeup",
-    "Wedding Planners"
+    "Wedding Hotels",
+    "Marriage Lawn",
+    "Wedding Resort",
+    "Training Rooms",
+    "Kids Play Area"
   ];
 
   // Calculate counts for each category

@@ -10,16 +10,20 @@ import { toast } from 'react-toastify';
 
 export default function Inquiry() {
     const [openInquiryId, setOpenInquiryId] = useState(null);
+    const [localInquiries, setLocalInquiries] = useState([]);
+
 
     const user = useSelector((state) => state.auth.user);
-    console.log("user", user);
+    // console.log("user", user);
     const userId = user?.id;
-    console.log("userId", userId);
+    // console.log("userId", userId);
 
     const [getInquiries, { data, isLoading, isError }] = useGetUserInquiriesMutation();
     // console.log("getInquiries", data);
     // const [sendUserReply] = useSendUserReplyMutation();
-    const inquiries = data?.modifiedList || [];
+    // const inquiries = data?.modifiedList || [];
+    const inquiries = localInquiries;
+
     // console.log("inquiries", inquiries)
     const [addUserInquiryMessage] = useAddUserInquiryMessageMutation();
 
@@ -28,15 +32,36 @@ export default function Inquiry() {
 
     useEffect(() => {
         if (userId) {
-            getInquiries(userId);
+            const fetchInquiries = async () => {
+                try {
+                    const res = await getInquiries(userId).unwrap();
+                    if (res?.modifiedList) {
+                        setLocalInquiries(res.modifiedList);
+                    }
+                } catch (err) {
+                    console.error("Polling error:", err);
+                }
+            };
+
+            fetchInquiries(); // initial load
+            const interval = setInterval(fetchInquiries, 5000);
+            return () => clearInterval(interval);
         }
     }, [userId, getInquiries]);
 
 
 
+    useEffect(() => {
+        if (data?.modifiedList) {
+            setLocalInquiries(data.modifiedList);
+        }
+    }, [data]);
+
+
+
+
 
     const handleSend = async (inquiry) => {
-        console.log("message", inquiry);
         const message = messages[inquiry._id];
         if (!message?.trim()) {
             toast.warning("Message cannot be empty");
@@ -44,9 +69,9 @@ export default function Inquiry() {
         }
 
         const payload = {
-            userId: userId,
+            userId,
             vendorId: inquiry?.vendorId,
-            message: messages[inquiry._id],
+            message,
             name: user?.name,
             email: user?.email,
             phone: user?.phone,
@@ -55,12 +80,31 @@ export default function Inquiry() {
 
         try {
             const res = await addUserInquiryMessage(payload).unwrap();
-            setMessages((prev) => ({ ...prev, [inquiry._id]: '' }));
+
+            // ✅ Update localInquiries with new message
+            setLocalInquiries((prev) =>
+                prev.map((inq) =>
+                    inq._id === inquiry._id
+                        ? {
+                            ...inq,
+                            userMessage: [
+                                ...inq.userMessage,
+                                {
+                                    message,
+                                    createdAt: new Date().toISOString(),
+                                    sender: "user",
+                                },
+                            ],
+                        }
+                        : inq
+                )
+            );
+
+            setMessages((prev) => ({ ...prev, [inquiry._id]: "" }));
             setActiveReplyId(null);
             toast.success("Message sent successfully");
-            getInquiries(userId); // ✅ Refresh the inquiry list after sending
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Send error:", error);
             toast.error(error?.data?.message || "Failed to send message");
         }
     };

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { FaStar, FaPen, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import {
   useGetAllVendorsQuery,
   useDeleteVendorByAdminMutation,
 } from "../../features/admin/adminAPI";
+import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
 import Loader from "../../components/{Shared}/Loader";
 
 const categories = [
@@ -60,6 +61,11 @@ const VendorManagement = () => {
   const startIdx = (currentPage - 1) * vendorsPerPage;
   const paginatedVendors = filteredVendors.slice(startIdx, startIdx + vendorsPerPage);
   const totalPages = Math.ceil(filteredVendors.length / vendorsPerPage);
+
+  // Fetch review stats for displayed vendors
+  const vendorIds = useMemo(() => paginatedVendors.map(v => v._id || v.id), [paginatedVendors]);
+  const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(vendorIds, { skip: !vendorIds.length });
+  const stats = statsData?.stats || {};
 
   // Helper for smart pagination display (first, current, last, ellipsis)
   function getPaginationPages(current, total) {
@@ -148,8 +154,9 @@ const VendorManagement = () => {
         ) : (
           paginatedVendors.map((vendor, idx) => {
             // Format vendor data to match FeatureVendors card props
+            const vendorId = vendor._id || vendor.id;
             const cardVendor = {
-              id: vendor._id || vendor.id,
+              id: vendorId,
               image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
               category: vendor.vendorType || vendor.category,
               name: vendor.businessName || vendor.name,
@@ -158,8 +165,8 @@ const VendorManagement = () => {
                 : vendor.address?.city && vendor.address?.state
                   ? `${vendor.address.city}, ${vendor.address.state}`
                   : vendor.address?.city || vendor.address?.state || vendor.location || 'Location not specified',
-              rating: vendor.rating ?? 4.5,
-              reviews: vendor.reviews ?? 0,
+              rating: stats[vendorId]?.avgRating || 0,
+              reviews: stats[vendorId]?.reviewCount || 0,
               services: vendor.services,
               price: vendor.pricingRange && vendor.pricingRange.min && vendor.pricingRange.max
                 ? `₹${vendor.pricingRange.min.toLocaleString()} - ₹${vendor.pricingRange.max.toLocaleString()}`
@@ -189,7 +196,15 @@ const VendorManagement = () => {
                       </h5>
                       <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
                         <FaStar size={18} className="text-yellow-500" />
-                        <span>{cardVendor.rating || "5.0"}</span>
+                        <span>
+                          {isLoadingStats
+                            ? '0'
+                            : typeof cardVendor.rating === 'number' && !isNaN(cardVendor.rating) && cardVendor.rating !== 0
+                              ? cardVendor.rating === 5
+                                ? '5'
+                                : cardVendor.rating.toFixed(1)
+                              : '0'}
+                        </span>
                       </div>
                     </div>
                     {/* Location */}

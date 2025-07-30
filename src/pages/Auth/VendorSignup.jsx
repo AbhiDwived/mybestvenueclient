@@ -7,6 +7,8 @@ import { showToast } from '../../utils/toast';  // Import showToast from the cor
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
+
+
 const VENDOR_TYPES = [
   // Venues
   'Banquet Halls',
@@ -86,8 +88,10 @@ const VendorSignup = () => {
   const [registerVendor] = useRegisterVendorMutation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const isMounted = useRef(true);
-  const timeoutRef = useRef(null);
+
+  const nameInputRef = useRef(null);
+    const isMounted = useRef(true);
+    const timeoutRef = useRef();
   const [passwordStrength, setPasswordStrength] = useState({
     strength: 'Weak',
     strengthColor: 'text-red-500',
@@ -95,13 +99,23 @@ const VendorSignup = () => {
     failedCriteria: []
   });
 
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
+  // useEffect(() => {
+  //   isMounted.current = true;
+  //   return () => {
+  //     isMounted.current = false;
+  //     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  //   };
+  // }, []);
+    useEffect(() => {
+      isMounted.current = true;
+      if (nameInputRef.current) {
+        nameInputRef.current.focus();
+      }
+      return () => {
+        isMounted.current = false;
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      };
+    }, []);
 
   const handleUserTypeSwitch = (type) => {
     if (type === 'couple') {
@@ -398,6 +412,7 @@ const VendorSignup = () => {
                 value={formData.contactName}
                 onChange={handleChange}
                 placeholder="John Doe"
+                ref={nameInputRef}
                 required
                 maxLength="25"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

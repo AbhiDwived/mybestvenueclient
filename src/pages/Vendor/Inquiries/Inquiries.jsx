@@ -12,21 +12,25 @@ const InquiriesSection = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [inquiryType, setInquiryType] = useState('all'); // 'all', 'logged-in', 'anonymous'
-  
+
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
   const vendor = useSelector((state) => state.vendor.vendor);
   const vendorId = vendor?._id || vendor?.id;
-  
+
+
+
   const { data, isLoading, isError, error, refetch } = useGetVendorInquiriesQuery(vendorId, {
     skip: !vendorId,
-    refetchOnMountOrArgChange: true
+    refetchOnMountOrArgChange: true,
+    pollingInterval: 5000, // <-- refetch every 5 seconds (adjust as needed)
   });
-  
+
+
   const userInquiries = data?.data?.userInquiries || [];
   const anonymousInquiries = data?.data?.anonymousInquiries || [];
-  
+
   // Combine all inquiries for filtering
   const allInquiries = [
     ...userInquiries.map(inquiry => ({ ...inquiry, type: 'logged-in' })),
@@ -72,7 +76,7 @@ const InquiriesSection = () => {
     return (
       <div className="p-4 text-center">
         <p className="text-red-500 mb-4">{errorMessage}</p>
-        <button 
+        <button
           onClick={() => refetch()}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
@@ -155,10 +159,11 @@ const InquiriesSection = () => {
       {/* Inquiry List */}
       <div className="col-span-1 lg:col-span-2">
         {selectedInquiry ? (
-          <InquiryReply 
-            inquiry={selectedInquiry} 
+          <InquiryReply
+            inquiry={selectedInquiry}
             inquiryType={inquiryType}
-            onBack={() => setSelectedInquiry(null)} 
+            onBack={() => setSelectedInquiry(null)}
+            refetch={refetch}
           />
         ) : (
           <div className="bg-white p-4 rounded shadow">
@@ -229,11 +234,10 @@ const InquiriesSection = () => {
                           <FaUserSecret className="text-orange-500" />
                         )}
                         <h3 className="font-medium text-md">{inquiry.name || inquiry.userId?.name}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                          inquiry.type === 'logged-in' 
-                            ? 'bg-blue-100 text-blue-700' 
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${inquiry.type === 'logged-in'
+                            ? 'bg-blue-100 text-blue-700'
                             : 'bg-orange-100 text-orange-700'
-                        }`}>
+                          }`}>
                           {inquiry.type === 'logged-in' ? 'Logged-in' : 'Anonymous'}
                         </span>
                       </div>
@@ -319,7 +323,7 @@ const InquiriesSection = () => {
         )}
       </div>
 
-     
+
     </div>
   );
 };

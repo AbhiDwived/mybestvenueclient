@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import moment from "moment";
 import { useReplyToInquiryMutation } from "../../../features/inquiries/inquiryAPI";
 import { useUserInquiryReplyMutation, useUserInquiryListQuery } from "../../../features/vendors/vendorAPI";
@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { FaUser, FaUserSecret } from 'react-icons/fa';
 
-const InquiryReply = ({ inquiry, onBack }) => {
+const InquiryReply = ({ inquiry, onBack, refetch }) => {
   const [replyToInquiry, { isLoading }] = useReplyToInquiryMutation();
   const vendor = useSelector((state) => state.vendor.vendor);
   const vendorId = vendor.id;
@@ -17,13 +17,30 @@ const InquiryReply = ({ inquiry, onBack }) => {
   const [localInquiry, setLocalInquiry] = useState(inquiry);
 
   const {
-    data: inquiries,
+    data: inquiryResponse,
     isLoading: inquiryLoading,
     isError,
     error,
+    refetch: refetchInquiries, // get refetch function
+
   } = useUserInquiryListQuery(vendorId, {
     skip: !vendorId,
   });
+
+  const inquiries = inquiryResponse?.data || [];
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchInquiries(); // pull new data
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [refetchInquiries]);
+
+  useEffect(() => {
+    const latest = inquiries.find((i) => i._id === inquiry._id);
+    if (latest) {
+      setLocalInquiry(latest);
+    }
+  }, [inquiries, inquiry._id]);
 
 
   // console.log("vendor", vendor.id);
@@ -36,7 +53,6 @@ const InquiryReply = ({ inquiry, onBack }) => {
   };
 
   // For threaded reply (logged-in user)
-
   const handleSendReply = async (msg) => {
     if (!replyText.trim()) {
       toast.error("Please type a reply before sending.");
@@ -57,29 +73,39 @@ const InquiryReply = ({ inquiry, onBack }) => {
     try {
       const response = await replyTouserInquiry(payload).unwrap();
 
-      // ✅ Update the UI with the new reply
-      const updatedUserMessage = inquiry.userMessage.map((m) =>
+      const updatedUserMessage = localInquiry.userMessage.map((m) =>
         m._id === msg._id
           ? {
             ...m,
-            vendorReply: {
-              message: replyText,
-              createdAt: new Date().toISOString(),
-            },
+            vendorReply: [
+              ...(m.vendorReply || []),
+              {
+                message: replyText,
+                createdAt: new Date().toISOString(),
+              },
+            ],
           }
           : m
       );
 
-      inquiry.userMessage = updatedUserMessage;
+      setLocalInquiry((prev) => ({
+        ...prev,
+        userMessage: updatedUserMessage,
+        replyStatus: 'Replied',
+      }));
 
       toast.success("Reply sent successfully!");
       setReplyText("");
       setActiveMessageId(null);
+      refetchInquiries(); // ensure background list also updates
+      refetch();          // optional parent refresh
     } catch (error) {
       console.error("Reply Error:", error);
       toast.error(error?.data?.message || "Failed to send reply");
     }
   };
+
+
 
   const handleUseTemplate = () => {
     const template = `Thank you for your interest in our services! We would love to be a part of your special day.\n\nFor the date you mentioned, we are available and offer several packages:\n\n- Basic: ₹10,000 (4 hours coverage)\n- Standard: ₹25,000 (Full day)\n- Premium: ₹50,000 (Full day + Pre-wedding)\n\nPlease let me know if you'd like to schedule a call to discuss further details or have any questions.\n\nBest regards,\n${vendor?.businessName || 'Your Business Name'}`;
@@ -87,31 +113,34 @@ const InquiryReply = ({ inquiry, onBack }) => {
   };
 
   // Get inquiry details based on type
+
+
   const getInquiryDetails = () => {
     if (isAnonymous) {
       return {
-        name: inquiry.name,
-        email: inquiry.email,
-        phone: inquiry.phone,
-        weddingDate: inquiry.weddingDate,
-        message: inquiry.message,
-        status: inquiry.status,
-        vendorReply: inquiry.vendorReply,
-        createdAt: inquiry.createdAt
+        name: localInquiry.name,
+        email: localInquiry.email,
+        phone: localInquiry.phone,
+        weddingDate: localInquiry.weddingDate,
+        message: localInquiry.message,
+        status: localInquiry.status,
+        vendorReply: localInquiry.vendorReply,
+        createdAt: localInquiry.createdAt
       };
     } else {
       return {
-        name: inquiry.userId?.name,
-        email: inquiry.userId?.email,
-        phone: inquiry.userId?.phone,
-        weddingDate: inquiry.weddingDate,
-        message: inquiry.userMessage?.[inquiry.userMessage.length - 1]?.message,
-        status: inquiry.replyStatus,
-        vendorReply: inquiry.userMessage?.[inquiry.userMessage.length - 1]?.vendorReply,
-        createdAt: inquiry.createdAt
+        name: localInquiry.userId?.name,
+        email: localInquiry.userId?.email,
+        phone: localInquiry.userId?.phone,
+        weddingDate: localInquiry.weddingDate,
+        message: localInquiry.userMessage?.[localInquiry.userMessage.length - 1]?.message,
+        status: localInquiry.replyStatus,
+        vendorReply: localInquiry.userMessage?.[localInquiry.userMessage.length - 1]?.vendorReply,
+        createdAt: localInquiry.createdAt
       };
     }
   };
+
 
   const details = getInquiryDetails();
 
@@ -181,7 +210,7 @@ const InquiryReply = ({ inquiry, onBack }) => {
       {!isAnonymous ? (
 
         <div className="space-y-2">
-          {inquiry?.userMessage?.map((msg, i) => (
+          {localInquiry?.userMessage?.map((msg, i) => (
             <div key={i} className=" pb-2 last:border-b-0">
 
               {/* Clickable message to toggle reply */}
@@ -283,7 +312,7 @@ const InquiryReply = ({ inquiry, onBack }) => {
       )}
 
       {/* Global Reply Box for latest user message */}
-      {inquiry?.userMessage?.length > 0 && (
+      {localInquiry?.userMessage?.length > 0 && (
         <div className="mt-6  pt-4">
           {/* <h3 className="font-semibold text-md mb-2 text-gray-700">Reply to Latest Message</h3> */}
           <textarea
@@ -295,7 +324,9 @@ const InquiryReply = ({ inquiry, onBack }) => {
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               className={`text-white px-3 py-1 rounded bg-[#0f4c81] text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={() => handleSendReply(inquiry.userMessage[inquiry.userMessage.length - 1])}  // send to latest msg
+              // onClick={() => handleSendReply(inquiry.userMessage[inquiry.userMessage.length - 1])} 
+              onClick={() => handleSendReply(localInquiry.userMessage[localInquiry.userMessage.length - 1])}
+
               disabled={isLoading}
             >
               {isLoading ? 'Sending...' : 'Send Reply'}

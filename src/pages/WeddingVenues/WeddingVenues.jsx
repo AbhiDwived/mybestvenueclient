@@ -13,7 +13,7 @@ export default function WeddingVenues() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 font-playfair text-[#1A2A3A]">
-              Find Your Perfect Venue
+              Find Your Perfect Venues
             </h1>
             <p className="mb-8 text-sm sm:text-base md:text-lg text-white">
               Discover beautiful venues for weddings, corporate events, and special

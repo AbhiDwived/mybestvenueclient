@@ -8,37 +8,42 @@ const slugify = (text) =>
     text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
 const baseCategories = {
-    "Banquet Halls": [
-        'banquet hall in CITY', 'best banquet hall CITY', 'banquet hall near CITY Metro',
+    "Wedding Venues & Halls": [
+        'best hotels near me', 'wedding halls near me', 'wedding reception venues near me', 'wedding places near me',
+       ],
+    "Hotels & Resorts": [
+        'hotels and resorts', 'hotels near me', 'rooms near me', 'hotel rooms near me', 'resorts near me',
+    
     ],
-    "Hotels": [
-        'best hotel in CITY', 'budget hotel CITY', 'business hotel CITY', 'hotel near CITY metro', 'luxury hotel CITY',
+    "Banquet Halls & Reception Venues": [
+        'banquet banquet hall', 'banquet hall banquet hall', 'banquet halls near me', 'marriage hall near me',
+        
     ],
-    "Farmhouses": [
-        'farmhouse in CITY for events', 'wedding farmhouse CITY', 'poolside farmhouse CITY',
-    ],
-    "Wedding Planners": [
-        'wedding planner CITY', 'best wedding planner CITY', 'affordable wedding planner CITY',
-    ],
-    "Photographers": [
-        'wedding photographer in CITY', 'candid wedding photographer CITY', 'affordable wedding photographer CITY',
-    ],
-    "Makeup Artists": [
-        'makeup artist in CITY', 'bridal makeup CITY', 'affordable makeup artist CITY', 'MUA CITY engagement',
+    "Wedding Planning & Event Management": [
+        'event planners near me', 'wedding planner', 'wedding event management', 'personalized wedding planner',
+        ],
+    "Wedding Photography & Videography": [
+        'wedding studio photoshoot', 'wedding photo shoot', 'bridal photography near me', 'wedding photoshoot near me',
+        ],
+    "Bridal Makeup & Beauty Services": [
+        'makeup artist', 'makeup artist near me', 'wedding makeup', 'affordable makeup artist near me',
+        ],
+    "Wedding Decorations & Event Decor": [
+        'wedding decor', 'bridal shower decorations', 'wedding decorators near me', 'simple wedding decorations',
+       ],
+    "Wedding Services & Catering": [
+        'wedding bouquets', 'wedding catering', 'beach wedding'
     ]
 };
 
-const states = ['Noida', 'Delhi', 'Gurgaon', 'Ghaziabad', 'Greater Noida'];
+const categories = Object.entries(baseCategories).map(([category, items]) => ({
+    category,
+    items: items
+}));
 
-const locationData = states.map((state) => {
-    const categories = Object.entries(baseCategories).map(([category, items]) => ({
-        category,
-        items: items.map(item => item.replaceAll('CITY', state))
-    }));
-    return { state, categories };
-});
 
-const WeddingVendorsByLocation = () => {
+
+const WeddingServices = () => {
     const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
 
     useEffect(() => {
@@ -50,89 +55,62 @@ const WeddingVendorsByLocation = () => {
     return (
         <div className="px-4 md:px-10 lg:mx-10 py-8">
             <h2 className="lg:text-3xl md:text-3xl text-2xl mb-6 lg:mx-7 md:mx-7 text-gray-800">
-                Wedding vendors by location
+                Wedding Services
             </h2>
 
             {isSmallScreen ? (
                 // Small Screens - Accordion Layout
                 <div className="mt-5">
-                    {locationData.map((region, regionIdx) => (
-                        <div key={regionIdx} className="mb-4">
-                            <h6 className="font-semibold text-lg text-gray-800 mb-2">{region.state}</h6>
-                            <Accordion defaultActiveKey="0" alwaysOpen>
-                                {region.categories.map((cat, catIdx) => {
-                                    const categorySlug = slugify(cat.category);
-                                    const citySlug = slugify(region.state);
-                                    return (
-                                        <Accordion.Item eventKey={String(catIdx)} key={catIdx}>
-                                            <Accordion.Header>{cat.category}</Accordion.Header>
-                                            <Accordion.Body>
-                                                <ul className="space-y-1 text-sm">
-                                                    {cat.items.map((item, itemIdx) => (
-                                                        <li
-                                                            key={itemIdx}
-                                                            style={{ marginLeft: '-30px' }}
-                                                            className="cursor-pointer flex items-start"
-                                                        >
-                                                            <VscCircleFilled className="mt-1 mr-1 text-gray-700" />
-                                                            <a
-                                                                href={`/vendor-list/${citySlug}/${categorySlug}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-black hover:text-blue-700"
-                                                                style={{ textDecoration: 'none' }}
-                                                            >
-                                                                {item}
-                                                            </a>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </Accordion.Body>
-                                        </Accordion.Item>
-                                    );
-                                })}
-                            </Accordion>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                // Desktop View - Grid
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:mt-4">
-                    {locationData.map((region, index) => (
-                        <div key={index} className="lg:mt-5">
-                            <h6 className="font-semibold text-lg text-gray-800 mb-2 lg:mx-8 md:mx-8">{region.state}</h6>
-                            {region.categories.map((cat, catIdx) => {
-                                const categorySlug = slugify(cat.category);
-                                const citySlug = slugify(region.state);
-                                return (
-                                    <div key={catIdx} className="mb-4">
-                                        <p className="font-semibold text-gray-700 mb-1 text-sm lg:mx-8 md:mx-8 mt-3">
-                                            {cat.category}
-                                        </p>
-                                        <ul className="space-y-1 text-sm max-h-32 overflow-y-auto custom-scroll">
+                    <Accordion defaultActiveKey="0" alwaysOpen>
+                        {categories.map((cat, catIdx) => {
+                            const categorySlug = slugify(cat.category);
+                            return (
+                                <Accordion.Item eventKey={String(catIdx)} key={catIdx}>
+                                    <Accordion.Header>{cat.category}</Accordion.Header>
+                                    <Accordion.Body>
+                                        <ul className="space-y-1 text-sm">
                                             {cat.items.map((item, itemIdx) => (
-                                                <li key={itemIdx} className="cursor-pointer">
-                                                    <a
-                                                        href={`/vendor-list/${citySlug}/${categorySlug}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-black hover:text-blue-700"
-                                                        style={{ textDecoration: 'none' }}
-                                                    >
-                                                        {item}
-                                                    </a>
+                                                <li
+                                                    key={itemIdx}
+                                                    style={{ marginLeft: '-30px' }}
+                                                    className="cursor-pointer flex items-start"
+                                                >
+                                                    <VscCircleFilled className="mt-1 mr-1 text-gray-700" />
+                                                    <span className="text-black">{item}</span>
                                                 </li>
                                             ))}
                                         </ul>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ))}
+                                    </Accordion.Body>
+                                </Accordion.Item>
+                            );
+                        })}
+                    </Accordion>
+                </div>
+            ) : (
+                // Desktop View - Grid
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:mt-4">
+                    {categories.map((cat, catIdx) => {
+                        return (
+                            <div key={catIdx} className="mb-4 lg:mt-5">
+                                <p className="font-semibold text-gray-700 mb-1 text-sm lg:mx-8 md:mx-8 mt-3">
+                                    {cat.category}
+                                </p>
+                                <ul className="space-y-1 text-sm">
+                                    {cat.items.map((item, itemIdx) => (
+                                        <li key={itemIdx} className="cursor-pointer">
+                                            <span className="text-black hover:text-blue-700">
+                                                {item}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
     );
 };
 
-export default WeddingVendorsByLocation;
+export default WeddingServices;

@@ -114,7 +114,7 @@ const DiscoverCategories = () => {
   return (
     <div className="w-full">
       <div
-        className="w-full h-[700px] bg-cover bg-center flex items-center"
+        className="w-full h-[525px] bg-cover bg-center flex items-center"
         style={{
           backgroundImage: `linear-gradient(rgba(15, 76, 129, 0.7), rgba(26, 42, 58, 0.8)), url(${DiscoverImage})`,
         }}
