@@ -38,6 +38,31 @@ export default function BlogDetails() {
   
   console.log('Matching blog found:', matchingBlog);
   
+  // Add smooth scrolling for TOC links
+  React.useEffect(() => {
+    const handleTOCClick = (e) => {
+      if (e.target.tagName === 'A' && e.target.getAttribute('href')?.startsWith('#')) {
+        e.preventDefault();
+        const targetId = e.target.getAttribute('href').substring(1);
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+          targetElement.style.backgroundColor = '#fff3cd';
+          targetElement.style.transition = 'background-color 0.3s ease';
+          setTimeout(() => {
+            targetElement.style.backgroundColor = 'transparent';
+          }, 2000);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleTOCClick);
+    return () => document.removeEventListener('click', handleTOCClick);
+  }, [matchingBlog, data]);
+  
   // If we found a matching blog and slug API is still loading, use the blog data directly
   if (matchingBlog && isLoading) {
     const blogData = {
@@ -47,6 +72,22 @@ export default function BlogDetails() {
     
     return (
       <div className="min-h-screen bg-gray-50 py-12">
+        <style>{`
+          .blog-content h1, .blog-content h2, .blog-content h3, 
+          .blog-content h4, .blog-content h5, .blog-content h6 {
+            scroll-margin-top: 100px;
+            padding-top: 10px;
+            margin-top: 20px;
+          }
+          .blog-content a[href^="#"] {
+            cursor: pointer;
+          }
+          .blog-content a[href^="#"]:hover {
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            padding: 2px 4px;
+          }
+        `}</style>
         <div className="max-w-4xl mx-auto px-4">
           <button
             onClick={() => navigate(-1)}
@@ -149,6 +190,22 @@ export default function BlogDetails() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
+      <style>{`
+        .blog-content h1, .blog-content h2, .blog-content h3, 
+        .blog-content h4, .blog-content h5, .blog-content h6 {
+          scroll-margin-top: 100px;
+          padding-top: 10px;
+          margin-top: 20px;
+        }
+        .blog-content a[href^="#"] {
+          cursor: pointer;
+        }
+        .blog-content a[href^="#"]:hover {
+          background-color: #e3f2fd;
+          border-radius: 4px;
+          padding: 2px 4px;
+        }
+      `}</style>
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}
         <button
@@ -221,7 +278,7 @@ export default function BlogDetails() {
             {/* Blog Content */}
             <div className="prose prose-lg max-w-none">
               <div 
-                className="text-gray-800 leading-relaxed blog-content [&_a]:text-blue-600 [&_a]:underline hover:[&_a]:text-blue-800"
+                className="text-gray-800 leading-relaxed blog-content"
                 dangerouslySetInnerHTML={createMarkup(blog.content)}
               />
             </div>

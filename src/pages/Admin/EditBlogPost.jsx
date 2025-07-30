@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUpdateBlogMutation } from "../../features/blogs/adminblogsAPI";
 import { Image as ImageIcon, Loader, X } from 'lucide-react';
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { Editor } from '@tinymce/tinymce-react';
 
 export default function EditBlogPost({ blog, onClose, onSuccess }) {
   const navigate = useNavigate();
@@ -132,32 +131,60 @@ export default function EditBlogPost({ blog, onClose, onSuccess }) {
                   Content *
                 </label>
                 <div className="border rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
-                  <CKEditor
-                    editor={ClassicEditor}
-                    data={content}
-                    onChange={(event, editor) => {
-                      const data = editor.getData();
-                      setContent(data);
-                    }}
-                    config={{
-                      toolbar: [
-                        'heading',
-                        '|',
-                        'bold',
-                        'italic',
-                        'link',
-                        'bulletedList',
-                        'numberedList',
-                        '|',
-                        'indent',
-                        'outdent',
-                        '|',
-                        'blockQuote',
-                        'insertTable',
-                        'mediaEmbed',
-                        'undo',
-                        'redo'
-                      ]
+                  <Editor
+                    apiKey="c93zx5i653sjbqxuuusf6hl7rqbbt8sg2c8l6o70p2x3ldjn"
+                    value={content}
+                    onEditorChange={setContent}
+                    init={{
+                      height: 400,
+                      menubar: 'file edit view insert format tools table help',
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                      ],
+                      toolbar: 'undo redo | blocks fontsize | bold italic underline strikethrough | ' +
+                        'alignleft aligncenter alignright alignjustify | ' +
+                        'bullist numlist outdent indent | ' +
+                        'removeformat | link image media table | toc | ' +
+                        'code fullscreen preview help',
+                      content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                      placeholder: 'Write your blog content here...',
+                      setup: (editor) => {
+                        editor.ui.registry.addButton('toc', {
+                          text: 'TOC',
+                          tooltip: 'Insert Table of Contents',
+                          onAction: () => {
+                            const content = editor.getContent();
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(content, 'text/html');
+                            const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                            
+                            if (headings.length === 0) {
+                              alert('No headings found. Please add some headings (H1-H6) first.');
+                              return;
+                            }
+                            
+                            let tocHTML = '<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; margin: 16px 0;"><h3 style="margin: 0 0 12px 0; color: #495057;">📋 Table of Contents</h3><ul style="margin: 0; padding-left: 20px;">';
+                            
+                            headings.forEach((heading, index) => {
+                              const level = parseInt(heading.tagName.charAt(1));
+                              const text = heading.textContent.trim();
+                              const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${index}`;
+                              
+                              heading.id = id;
+                              
+                              const indent = (level - 1) * 16;
+                              tocHTML += `<li style="margin: 4px 0; padding-left: ${indent}px;"><a href="#${id}" style="color: #007bff; text-decoration: none;">${text}</a></li>`;
+                            });
+                            
+                            tocHTML += '</ul></div>';
+                            
+                            const updatedContent = doc.body.innerHTML;
+                            editor.setContent(tocHTML + updatedContent);
+                          }
+                        });
+                      }
                     }}
                   />
                 </div>

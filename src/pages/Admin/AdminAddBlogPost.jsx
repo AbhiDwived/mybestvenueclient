@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateBlogMutation } from "../../features/blogs/adminblogsAPI";
 import { Calendar, Image as ImageIcon, Loader, X } from 'lucide-react';
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { Editor } from '@tinymce/tinymce-react';
 
 export default function AdminAddBlogPost() {
   const navigate = useNavigate();
@@ -15,7 +14,7 @@ export default function AdminAddBlogPost() {
   const [category, setCategory] = useState("General");
   const [image, setImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
-  const [editorInstance, setEditorInstance] = useState(null);
+
   const [errors, setErrors] = useState({});
 
   const blogCategories = [
@@ -193,83 +192,68 @@ export default function AdminAddBlogPost() {
                 <div className={`border rounded-md ${
                   errors.content ? 'border-red-500' : 'border-gray-300'
                 }`}>
-                  <CKEditor
-                    editor={ClassicEditor}
-                    data={content}
-                    onChange={(event, editor) => {
-                      const data = editor.getData();
-                      setContent(data);
+                  <Editor
+                    apiKey="c93zx5i653sjbqxuuusf6hl7rqbbt8sg2c8l6o70p2x3ldjn"
+                    value={content}
+                    onEditorChange={(newContent) => {
+                      setContent(newContent);
                       if (errors.content) {
                         setErrors(prev => ({ ...prev, content: '' }));
                       }
                     }}
-                    config={{
+                    init={{
+                      height: 400,
+                      menubar: 'file edit view insert format tools table help',
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                      ],
+                      toolbar: 'undo redo | blocks fontsize | bold italic underline strikethrough | ' +
+                        'alignleft aligncenter alignright alignjustify | ' +
+                        'bullist numlist outdent indent | ' +
+                        'removeformat | link image media table | toc | ' +
+                        'code fullscreen preview help',
+                      content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
                       placeholder: 'Write your blog content here...',
-                      toolbar: [
-                        'heading',
-                        '|',
-                        'bold',
-                        'italic',
-                        'link',
-                        'bulletedList',
-                        'numberedList',
-                        '|',
-                        'outdent',
-                        'indent',
-                        '|',
-                        'blockQuote',
-                        'insertTable',
-                        'mediaEmbed',
-                        '|',
-                        'undo',
-                        'redo'
-                      ]
+                      setup: (editor) => {
+                        editor.ui.registry.addButton('toc', {
+                          text: 'TOC',
+                          tooltip: 'Insert Table of Contents',
+                          onAction: () => {
+                            const content = editor.getContent();
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(content, 'text/html');
+                            const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                            
+                            if (headings.length === 0) {
+                              alert('No headings found. Please add some headings (H1-H6) first.');
+                              return;
+                            }
+                            
+                            let tocHTML = '<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; margin: 16px 0;"><h3 style="margin: 0 0 12px 0; color: #495057;">📋 Table of Contents</h3><ul style="margin: 0; padding-left: 20px;">';
+                            
+                            headings.forEach((heading, index) => {
+                              const level = parseInt(heading.tagName.charAt(1));
+                              const text = heading.textContent.trim();
+                              const id = `heading-${text.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${index}`;
+                              
+                              heading.id = id;
+                              
+                              const indent = (level - 1) * 16;
+                              tocHTML += `<li style="margin: 4px 0; padding-left: ${indent}px;"><a href="#${id}" style="color: #007bff; text-decoration: none;">${text}</a></li>`;
+                            });
+                            
+                            tocHTML += '</ul></div>';
+                            
+                            const updatedContent = doc.body.innerHTML;
+                            editor.setContent(tocHTML + updatedContent);
+                          }
+                        });
+                      }
                     }}
                   />
                 </div>
-                
-                {/* Table of Contents Button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(content, 'text/html');
-                    const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
-                    
-                    if (headings.length === 0) {
-                      alert('No headings found. Please add some headings (H1-H6) to generate a table of contents.');
-                      return;
-                    }
-                    
-                    let tocHTML = '<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; margin: 16px 0; font-family: Arial, sans-serif;"><h3 style="margin: 0 0 12px 0; font-size: 18px; color: #495057; display: flex; align-items: center;"><span style="margin-right: 8px;">📋</span>Table of Contents</h3><ul style="margin: 0; padding-left: 20px; list-style: none;">';
-                    
-                    headings.forEach((heading, index) => {
-                      const level = parseInt(heading.tagName.charAt(1));
-                      const text = heading.textContent.trim();
-                      const id = `heading-${index}`;
-                      
-                      // Add ID to heading if it doesn't exist
-                      if (!heading.id) {
-                        heading.id = id;
-                      }
-                      
-                      const indent = (level - 1) * 16;
-                      const fontSize = Math.max(14 - level, 11);
-                      tocHTML += `<li style="margin: 4px 0; padding-left: ${indent}px;"><a href="#${heading.id}" style="color: #007bff; text-decoration: none; font-size: ${fontSize}px; display: block; padding: 2px 0;">${text}</a></li>`;
-                    });
-                    
-                    tocHTML += '</ul></div>';
-                    
-                    // Insert TOC at the beginning of content
-                    const updatedContent = tocHTML + content;
-                    setContent(updatedContent);
-                  }}
-                  className="mt-2 px-4 py-2 text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 text-sm"
-                  style={{ backgroundColor: '#0f4c81' }}
-                >
-                  <span className="text-lg">📋</span>
-                  Insert TOC
-                </button>
                 
                 {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
               </div>
