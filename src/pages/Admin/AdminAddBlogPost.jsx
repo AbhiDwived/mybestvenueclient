@@ -4,7 +4,6 @@ import { useCreateBlogMutation } from "../../features/blogs/adminblogsAPI";
 import { Calendar, Image as ImageIcon, Loader, X } from 'lucide-react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { addTOCPlugin } from '../../utils/ckEditorTOC';
 
 export default function AdminAddBlogPost() {
   const navigate = useNavigate();
@@ -17,6 +16,7 @@ export default function AdminAddBlogPost() {
   const [image, setImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
   const [editorInstance, setEditorInstance] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const blogCategories = [
     'General',
@@ -30,16 +30,59 @@ export default function AdminAddBlogPost() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, image: 'Image size must be less than 10MB' }));
+        return;
+      }
+      
+      // Validate file type
+      if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        setErrors(prev => ({ ...prev, image: 'Only JPEG and PNG images are allowed' }));
+        return;
+      }
+      
+      setErrors(prev => ({ ...prev, image: '' }));
       setImage(file);
       setPreviewImage(URL.createObjectURL(file));
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Title validation
+    if (!title.trim()) {
+      newErrors.title = 'Title is required';
+    } else if (title.length > 100) {
+      newErrors.title = 'Title must be 100 characters or less';
+    }
+    
+    // Excerpt validation
+    if (!excerpt.trim()) {
+      newErrors.excerpt = 'Excerpt is required';
+    } else if (excerpt.length < 50) {
+      newErrors.excerpt = 'Excerpt must be at least 50 characters';
+    } else if (excerpt.length > 250) {
+      newErrors.excerpt = 'Excerpt must be 250 characters or less';
+    }
+    
+    // Content validation (text-only, minimum 100 characters)
+    const textContent = content.replace(/<[^>]*>/g, '').trim();
+    if (!textContent) {
+      newErrors.content = 'Content is required';
+    } else if (textContent.length < 100) {
+      newErrors.content = 'Content must be at least 100 characters (text only)';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || !excerpt.trim() || !content.trim()) {
-      alert('Please fill in all required fields');
+    if (!validateForm()) {
       return;
     }
 
@@ -88,15 +131,20 @@ export default function AdminAddBlogPost() {
               {/* Title Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title *
+                  Title * (max 100 characters)
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter blog title (max 100 characters)"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                    errors.title ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                  }`}
+                  maxLength={100}
                   required
                 />
+                {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
               </div>
 
               {/* Category Select */}
@@ -120,83 +168,120 @@ export default function AdminAddBlogPost() {
               {/* Excerpt Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Excerpt *
+                  Excerpt * (50-250 characters)
                 </label>
                 <textarea
                   value={excerpt}
                   onChange={(e) => setExcerpt(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter blog excerpt (50-250 characters)"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                    errors.excerpt ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                  }`}
                   rows="3"
+                  maxLength={250}
                   required
                 />
+                {errors.excerpt && <p className="text-red-500 text-sm mt-1">{errors.excerpt}</p>}
               </div>
 
               {/* Content Input with CKEditor */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Content *
+                  Content * (min 100 characters text-only)
                 </label>
                 
-
-                
-                <div className="border rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+                <div className={`border rounded-md ${
+                  errors.content ? 'border-red-500' : 'border-gray-300'
+                }`}>
                   <CKEditor
                     editor={ClassicEditor}
                     data={content}
-                    onReady={editor => {
-                      setEditorInstance(editor);
-                      addTOCPlugin(editor);
-                    }}
                     onChange={(event, editor) => {
                       const data = editor.getData();
                       setContent(data);
+                      if (errors.content) {
+                        setErrors(prev => ({ ...prev, content: '' }));
+                      }
                     }}
                     config={{
-                      toolbar: {
-                        items: [
-                          'heading',
-                          '|',
-                          'bold',
-                          'italic',
-                          'link',
-                          'bulletedList',
-                          'numberedList',
-                          '|',
-                          'indent',
-                          'outdent',
-                          '|',
-                          'blockQuote',
-                          'insertTable',
-                          'insertTOC',
-                          'mediaEmbed',
-                          '|',
-                          'undo',
-                          'redo'
-                        ],
-                        shouldNotGroupWhenFull: true
-                      },
-                      heading: {
-                        options: [
-                          { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-                          { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-                          { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-                          { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
-                          { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
-                          { model: 'heading5', view: 'h5', title: 'Heading 5', class: 'ck-heading_heading5' },
-                          { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading6' }
-                        ]
-                      }
+                      placeholder: 'Write your blog content here...',
+                      toolbar: [
+                        'heading',
+                        '|',
+                        'bold',
+                        'italic',
+                        'link',
+                        'bulletedList',
+                        'numberedList',
+                        '|',
+                        'outdent',
+                        'indent',
+                        '|',
+                        'blockQuote',
+                        'insertTable',
+                        'mediaEmbed',
+                        '|',
+                        'undo',
+                        'redo'
+                      ]
                     }}
                   />
                 </div>
+                
+                {/* Table of Contents Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(content, 'text/html');
+                    const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                    
+                    if (headings.length === 0) {
+                      alert('No headings found. Please add some headings (H1-H6) to generate a table of contents.');
+                      return;
+                    }
+                    
+                    let tocHTML = '<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; margin: 16px 0; font-family: Arial, sans-serif;"><h3 style="margin: 0 0 12px 0; font-size: 18px; color: #495057; display: flex; align-items: center;"><span style="margin-right: 8px;">📋</span>Table of Contents</h3><ul style="margin: 0; padding-left: 20px; list-style: none;">';
+                    
+                    headings.forEach((heading, index) => {
+                      const level = parseInt(heading.tagName.charAt(1));
+                      const text = heading.textContent.trim();
+                      const id = `heading-${index}`;
+                      
+                      // Add ID to heading if it doesn't exist
+                      if (!heading.id) {
+                        heading.id = id;
+                      }
+                      
+                      const indent = (level - 1) * 16;
+                      const fontSize = Math.max(14 - level, 11);
+                      tocHTML += `<li style="margin: 4px 0; padding-left: ${indent}px;"><a href="#${heading.id}" style="color: #007bff; text-decoration: none; font-size: ${fontSize}px; display: block; padding: 2px 0;">${text}</a></li>`;
+                    });
+                    
+                    tocHTML += '</ul></div>';
+                    
+                    // Insert TOC at the beginning of content
+                    const updatedContent = tocHTML + content;
+                    setContent(updatedContent);
+                  }}
+                  className="mt-2 px-4 py-2 text-white rounded-md hover:opacity-90 transition-colors flex items-center gap-2 text-sm"
+                  style={{ backgroundColor: '#0f4c81' }}
+                >
+                  <span className="text-lg">📋</span>
+                  Insert TOC
+                </button>
+                
+                {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
               </div>
 
               {/* Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Featured Image
+                  Featured Image (JPEG/PNG, max 10MB)
                 </label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md ${
+                  errors.image ? 'border-red-300' : 'border-gray-300'
+                }`}>
                   <div className="space-y-1 text-center">
                     {previewImage ? (
                       <div className="relative">
@@ -229,7 +314,7 @@ export default function AdminAddBlogPost() {
                               id="file-upload"
                               name="file-upload"
                               type="file"
-                              accept="image/*"
+                              accept="image/jpeg,image/png"
                               className="sr-only"
                               onChange={handleImageChange}
                             />
@@ -237,12 +322,13 @@ export default function AdminAddBlogPost() {
                           <p className="pl-1">or drag and drop</p>
                         </div>
                         <p className="text-xs text-gray-500">
-                          PNG, JPG, GIF up to 10MB
+                          JPEG, PNG up to 10MB
                         </p>
                       </>
                     )}
                   </div>
                 </div>
+                {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
               </div>
 
               {/* Submit Button */}
@@ -257,7 +343,8 @@ export default function AdminAddBlogPost() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  style={{ backgroundColor: '#0f4c81' }}
                 >
                   {isLoading ? (
                     <>
@@ -265,7 +352,7 @@ export default function AdminAddBlogPost() {
                       Publishing...
                     </>
                   ) : (
-                    'Publish Blog'
+                    'Publish'
                   )}
                 </button>
               </div>

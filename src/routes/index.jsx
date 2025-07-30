@@ -169,7 +169,7 @@ const index = () => {
 
                     {/* Idea Blog */}
                     <Route path="/blog" element={<IdeaBlog />} />
-                    <Route path="/blog/:id" element={<PublicBlogDetails />} />
+                    <Route path="/blog/:slug" element={<PublicBlogDetails />} />
 
                     {/* Corporate */}
                     <Route path="/corporate" element={<Corporate />} />
@@ -324,7 +324,7 @@ const index = () => {
                     <Route path="review_moderation" element={<ReviewModeration />} />
                     <Route path="category_management" element={<CategoryManagement />} />
                     <Route path="add-blog-post" element={<AdminAddBlogPost />} />
-                    <Route path="blogs/:id" element={<BlogDetails />} />
+                    <Route path="blogs/:slug" element={<BlogDetails />} />
                     <Route path="contact" element={<Contact />} />
                 </Route>
             </Routes>

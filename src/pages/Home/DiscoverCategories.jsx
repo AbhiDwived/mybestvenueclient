@@ -81,8 +81,9 @@ const DiscoverCategories = () => {
             }
           },
           (error) => {
-            console.error("Geolocation error:", error);
+            // Silently handle geolocation errors - user may have denied permission
             setIsLoadingLocation(false);
+            // Keep default "All India" selection
           }
         );
       }

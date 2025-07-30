@@ -31,8 +31,15 @@ export default function IdeaBlog() {
         imageUrl = IdeaBlogHeader;
       }
 
+      const slug = blog.slug || blog.title.toLowerCase()
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim('-');
+        
       return {
         id: blog._id,
+        slug: slug,
         title: blog.title,
         description: blog.excerpt || (blog.content ? blog.content.slice(0, 150) + '...' : ''),
         category: blog.category || 'General',
@@ -48,8 +55,8 @@ export default function IdeaBlog() {
     });
   }, [blogs]);
 
-  const handleReadBlog = (blogId) => {
-    navigate(`/blog/${blogId}`);
+  const handleReadBlog = (blogSlug) => {
+    navigate(`/blog/${blogSlug}`);
   };
 
   const categories = useMemo(() => {
@@ -136,7 +143,7 @@ export default function IdeaBlog() {
         <div className="py-12 bg-white px-4 sm:px-6 lg:px-12">
           <div
             className="grid md:grid-cols-2 gap-8 items-center mb-12 cursor-pointer group"
-            onClick={() => handleReadBlog(featuredArticle.id)}
+            onClick={() => handleReadBlog(featuredArticle.slug)}
           >
             <img
               src={featuredArticle.image}
@@ -193,7 +200,7 @@ export default function IdeaBlog() {
                 <div
                   key={post.id}
                   className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm hover:shadow-lg transition-shadow duration-300 cursor-pointer group"
-                  onClick={() => handleReadBlog(post.id)}
+                  onClick={() => handleReadBlog(post.slug)}
                 >
                   <div className="relative overflow-hidden">
                     <img

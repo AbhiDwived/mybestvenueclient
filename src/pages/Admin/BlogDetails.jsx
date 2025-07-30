@@ -1,17 +1,94 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetBlogByIdQuery } from '../../features/blogs/adminblogsAPI';
+import { useGetBlogBySlugQuery, useGetBlogByIdQuery, useGetAllBlogsQuery } from '../../features/blogs/adminblogsAPI';
 import { Calendar, ArrowLeft, Clock, Tag, User } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import Loader from "../../components/{Shared}/Loader";
 
 export default function BlogDetails() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
-  const { data, isLoading, isError, error } = useGetBlogByIdQuery(id);
+  
+  // Get all blogs to debug
+  const { data: allBlogsData } = useGetAllBlogsQuery();
+  
+  const { data: slugData, isLoading: slugLoading, isError: slugError, error: slugErrorData } = useGetBlogBySlugQuery(slug, {
+    skip: !slug
+  });
+  
+  const data = slugData;
+  const isLoading = slugLoading;
+  const isError = slugError;
+  const error = slugErrorData;
+  
+  // Find blog by matching title if slug API fails
+  const matchingBlog = React.useMemo(() => {
+    if (allBlogsData?.blogs && slug) {
+      return allBlogsData.blogs.find(blog => {
+        const generatedSlug = blog.title.toLowerCase()
+          .replace(/[^a-z0-9 -]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim('-');
+        return generatedSlug === slug;
+      });
+    }
+    return null;
+  }, [allBlogsData, slug]);
+  
+  console.log('Matching blog found:', matchingBlog);
+  
+  // If we found a matching blog and slug API is still loading, use the blog data directly
+  if (matchingBlog && isLoading) {
+    const blogData = {
+      success: true,
+      blog: matchingBlog
+    };
+    
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="group flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mb-8"
+          >
+            <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+            <span className="font-medium">Back to Blogs</span>
+          </button>
+          
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
+            <div className="p-8">
+              <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+                {matchingBlog.title}
+              </h1>
+              <div className="prose prose-lg max-w-none">
+                <div 
+                  className="text-gray-800 leading-relaxed blog-content"
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(matchingBlog.content) }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
-    return <Loader fullScreen />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader />
+          <p className="mt-4 text-gray-600">Loading blog: {slug}</p>
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (isError) {

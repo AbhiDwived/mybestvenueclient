@@ -44,6 +44,11 @@ export const blogsApi = createApi({
       providesTags: (result, error, id) => [{ type: 'Blog', id }],
     }),
 
+    getBlogBySlug: builder.query({
+      query: (slug) => `/getblog-slug/${slug}`,
+      providesTags: (result, error, slug) => [{ type: 'Blog', id: slug }],
+    }),
+
     updateBlog: builder.mutation({
       query: ({ id, updatedData }) => ({
         url: `/updateblog/${id}`,
@@ -103,6 +108,7 @@ export const {
   useSearchBlogsQuery,
   useCreateBlogMutation,
   useGetBlogByIdQuery,
+  useGetBlogBySlugQuery,
   useUpdateBlogMutation,
   useDeleteBlogMutation,
   useGetBlogsByCategoryQuery,

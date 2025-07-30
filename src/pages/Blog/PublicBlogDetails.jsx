@@ -1,16 +1,41 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetBlogByIdQuery } from '../../features/blogs/adminblogsAPI';
+import { useGetBlogBySlugQuery, useGetAllBlogsQuery } from '../../features/blogs/adminblogsAPI';
 import { Calendar, ArrowLeft, Clock, Tag, User } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import Loader from "../../components/{Shared}/Loader";
 
 export default function PublicBlogDetails() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
-  const { data, isLoading, isError, error } = useGetBlogByIdQuery(id);
+  
+  // Get all blogs for fallback
+  const { data: allBlogsData } = useGetAllBlogsQuery();
+  
+  const { data, isLoading, isError, error } = useGetBlogBySlugQuery(slug);
+  
+  // Find blog by matching title if slug API fails
+  const matchingBlog = React.useMemo(() => {
+    if (allBlogsData?.blogs && slug) {
+      return allBlogsData.blogs.find(blog => {
+        const generatedSlug = blog.title.toLowerCase()
+          .replace(/[^a-z0-9 -]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim('-');
+        return generatedSlug === slug;
+      });
+    }
+    return null;
+  }, [allBlogsData, slug]);
+  
+  // Use matching blog if API is slow
+  const blog = data?.blog || matchingBlog;
 
-  if (isLoading) {
+  // If we found a matching blog and API is still loading, show the blog immediately
+  if (matchingBlog && isLoading) {
+    // Use the matching blog data directly to avoid loading delay
+  } else if (isLoading) {
     return <Loader fullScreen />;
   }
 
@@ -24,7 +49,7 @@ export default function PublicBlogDetails() {
     );
   }
 
-  if (!data || !data.blog) {
+  if (!blog) {
     return (
       <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50">
         <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-md">
@@ -33,8 +58,6 @@ export default function PublicBlogDetails() {
       </div>
     );
   }
-
-  const blog = data.blog;
 
   // Format the date
   const formattedDate = new Date(blog.createdAt).toLocaleDateString('en-US', {

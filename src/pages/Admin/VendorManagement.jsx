@@ -10,33 +10,31 @@ import Loader from "../../components/{Shared}/Loader";
 
 const categories = [
   "All Categories",
-  "Photographer",
-  "Venue",
-  "Makeup Artist",
-  "Wedding Photographers",
-  "Wedding Videography",
-  "Wedding Music",
+  "Photographers & Wedding Photographers",
+  "Makeup Artists",
+  "Mehndi Artists",
+  "Bands & DJs (Music & Dance)",
+  "Cakes",
   "Caterers",
-  "Wedding Transportation",
-  "Wedding Invitations",
-  "Wedding Gifts",
   "Florists",
-  "Wedding Planners",
-  "Wedding Choreographers",
-  "Photobooth",
-  "Wedding Cakes",
-  "Wedding Decorators",
-  "Party Places",
-  "Honeymoon",
-  "Wedding Entertainment",
-  "Tent House",
-  "Promotions",
+  "Decorators",
+  "Bridal Wear",
+  "Groom Wear",
+  "Choreographers",
+  "Event Planners / Wedding Planners",
+  "Magicians",
+  "Gifts",
+  "Tent Houses",
+  "Entertainers",
+  "Bus on Rent",
+  "Jewellers / Jewellery & Accessories",
+  "Astrologers",
 ];
 
 const VendorManagement = () => {
   const navigate = useNavigate();
   const { data: vendorsData, isLoading, isError } = useGetAllVendorsQuery();
-  const [deleteVendor] = useDeleteVendorByAdminMutation();
+  const [deleteVendorByAdmin] = useDeleteVendorByAdminMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
@@ -45,18 +43,24 @@ const VendorManagement = () => {
 
   const allVendors = (vendorsData?.vendors || []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const filteredVendors = allVendors.filter((vendor) => {
-    const matchesSearch = vendor.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         vendor.businessName?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredVendors = useMemo(() => {
+    const filtered = allVendors.filter((vendor) => {
+      const matchesSearch = !searchTerm || 
+        vendor.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        vendor.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vendor.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const normalizedCategory = vendor.category?.toLowerCase().replace(/\s/g, "") || 
-                             vendor.vendorType?.toLowerCase().replace(/\s/g, "");
-    const selectedCatNormalized = selectedCategory.toLowerCase().replace(/\s/g, "");
-    const matchesCategory =
-      selectedCategory === "All Categories" || normalizedCategory === selectedCatNormalized;
+      const normalizedCategory = vendor.category?.toLowerCase().replace(/\s/g, "") || 
+                               vendor.vendorType?.toLowerCase().replace(/\s/g, "");
+      const selectedCatNormalized = selectedCategory.toLowerCase().replace(/\s/g, "");
+      const matchesCategory =
+        selectedCategory === "All Categories" || normalizedCategory === selectedCatNormalized;
 
-    return matchesSearch && matchesCategory;
-  });
+      return matchesSearch && matchesCategory;
+    });
+    
+    return filtered;
+  }, [allVendors, searchTerm, selectedCategory]);
 
   const startIdx = (currentPage - 1) * vendorsPerPage;
   const paginatedVendors = filteredVendors.slice(startIdx, startIdx + vendorsPerPage);
@@ -77,7 +81,7 @@ const VendorManagement = () => {
   const paginationPages = getPaginationPages(currentPage, totalPages);
 
   const handleView = (vendor) => {
-    const vendorId = vendor._id || vendor.id;
+    const vendorId = vendor._id; // MongoDB uses _id
     if (vendorId) {
       navigate(`/preview-profile/${vendorId}`);
     } else {
@@ -86,31 +90,29 @@ const VendorManagement = () => {
     }
   };
   const handleEdit = (vendor) => {
-    const vendorId = vendor._id || vendor.id;
+    const vendorId = vendor._id;
     if (vendorId) {
-      // For now, we'll navigate to the UserManagement page where vendor approval can be managed
-      // This could be updated to a dedicated vendor edit page if available
-      navigate('/admin/user-management');
-      
-      // Alternatively, you could implement an edit modal directly in this component
-      // similar to how it's done in UserManagement.jsx
+      navigate(`/preview-profile/${vendorId}`);
     } else {
-      console.error("Cannot edit: Vendor ID is undefined");
       alert("Unable to edit vendor: ID not found");
     }
   };
 
   const handleDelete = async (vendor) => {
-    if (window.confirm(`Delete ${vendor.businessName || vendor.name}?`)) {
+    const vendorId = vendor._id;
+    const vendorName = vendor.businessName || vendor.name;
+    
+    if (!vendorId) {
+      alert('Cannot delete vendor: ID not found');
+      return;
+    }
+    
+    if (window.confirm(`Are you sure you want to delete ${vendorName}?`)) {
       try {
-        await deleteVendor({ vendorId: vendor._id }).unwrap();
-        alert(`Deleted vendor: ${vendor.businessName || vendor.name}`);
-
-        // Refresh page or ideally trigger refetch
-        setCurrentPage(1); // Optional: reset to first page
+        await deleteVendorByAdmin({ vendorId }).unwrap();
+        alert(`Successfully deleted vendor: ${vendorName}`);
       } catch (err) {
-        console.error("Failed to delete vendor:", err);
-        alert("Failed to delete vendor. Please try again.");
+        alert(`Failed to delete vendor: ${err?.data?.message || err?.error || 'Please try again'}`);
       }
     }
   };
@@ -129,14 +131,20 @@ const VendorManagement = () => {
         <div className="flex flex-wrap gap-4 px-3">
           <input
             type="text"
-            placeholder="Search vendors..."
+            placeholder="Search by name, business name, or email..."
             className="border px-3 py-2 rounded-md text-sm w-64"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
           />
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setCurrentPage(1); // Reset to first page when filtering
+            }}
             className="border px-3 py-2 rounded-md text-sm w-64"
           >
             {categories.map((cat, i) => (
@@ -154,7 +162,7 @@ const VendorManagement = () => {
         ) : (
           paginatedVendors.map((vendor, idx) => {
             // Format vendor data to match FeatureVendors card props
-            const vendorId = vendor._id || vendor.id;
+            const vendorId = vendor._id; // MongoDB uses _id
             const cardVendor = {
               id: vendorId,
               image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
@@ -173,11 +181,13 @@ const VendorManagement = () => {
                 : 'Price on request',
               pricing: vendor.pricing || [],
             };
+            const originalVendor = paginatedVendors[idx];
+            
             return (
               <div
-                key={cardVendor.id}
+                key={`vendor-${vendorId || idx}`}
                 className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
-                onClick={() => handleView(vendor)}
+                onClick={() => handleView(originalVendor)}
               >
                 <div className="relative group">
                   <img
@@ -272,15 +282,15 @@ const VendorManagement = () => {
                   <div className="flex justify-between items-center mt-2">
                   <button
                     className="px-3 py-1 border rounded text-sm"
-                      onClick={e => { e.stopPropagation(); handleView(vendor); }}
+                      onClick={e => { e.stopPropagation(); handleView(originalVendor); }}
                   >
                     View Profile
                   </button>
                   <div className="space-x-2">
-                      <button className="p-1" onClick={e => { e.stopPropagation(); handleEdit(vendor); }}>
+                      <button className="p-1" onClick={e => { e.stopPropagation(); handleEdit(originalVendor); }}>
                       <FaPen className="text-yellow-500" />
                     </button>
-                      <button className="p-1" onClick={e => { e.stopPropagation(); handleDelete(vendor); }}>
+                      <button className="p-1" onClick={e => { e.stopPropagation(); handleDelete(originalVendor); }}>
                       <FaTrash className="text-red-500" />
                     </button>
                   </div>
@@ -308,9 +318,9 @@ const VendorManagement = () => {
           </button>
           {paginationPages.map((page, idx) =>
             page === '...'
-              ? <span key={idx} className="px-2 text-gray-400">...</span>
+              ? <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">...</span>
               : <button
-                  key={page}
+                  key={`page-${page}-${idx}`}
                   onClick={() => setCurrentPage(page)}
                   className={`px-3 py-1 rounded border transition ${currentPage === page ? 'bg-blue-100 border-blue-400 text-blue-700 font-bold' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
                   aria-current={currentPage === page ? 'page' : undefined}

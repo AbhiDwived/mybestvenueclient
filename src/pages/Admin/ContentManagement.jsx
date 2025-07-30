@@ -62,6 +62,7 @@ export default function ContentManagement() {
 
         return {
           id: blog._id,
+          slug: blog.slug,
           title: blog.title,
           excerpt: blog.excerpt || '',
           description,
@@ -140,7 +141,7 @@ export default function ContentManagement() {
                 className="bg-white border rounded-xl overflow-hidden flex flex-col h-full shadow-sm"
               >
                 <div className="relative">
-                  <Link to={`/admin/blogs/${post.id}`}>
+                  <Link to={`/admin/blogs/${post.slug}`}>
                     <img
                       src={post.image}
                       alt={post.title}
@@ -159,7 +160,7 @@ export default function ContentManagement() {
                 <div className="flex flex-col justify-between flex-grow px-4 pt-4 pb-3">
                   <div className="mb-4">
                     <Link
-                      to={`/admin/blogs/${post.id}`}
+                      to={`/admin/blogs/${post.slug}`}
                       style={{ textDecoration: "none" }}
                       className="text-black transition-colors"
                     >
@@ -171,7 +172,7 @@ export default function ContentManagement() {
                     <button
                       style={{ borderRadius: '5px' }}
                       className="py-2 px-3 bg-blue-100 text-blue-800  flex items-center gap-1"
-                      onClick={() => navigate(`/admin/blogs/${post.id}`)}
+                      onClick={() => navigate(`/admin/blogs/${post.slug}`)}
                     >
                       <Eye size={16} /> View
                     </button>
