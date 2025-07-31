@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
 
-// Helper function to get icon by category title
+// Helper function to get icon by venue category title
 const getCategoryIcon = (title) => {
   switch (title) {
     case 'Art Gallery':
@@ -85,7 +85,7 @@ const VendorByCategory = ({ location = "All India" }) => {
   // Fetch all vendors from Redux
   const { data: vendorsData, isLoading } = useGetAllVendorsQuery();
 
-  // Define all categories
+  // Define all venue categories
   const categoryTitles = [
     "Art Gallery",
     "Amusement Park",
@@ -167,10 +167,10 @@ const VendorByCategory = ({ location = "All India" }) => {
         {/* Heading */}
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 font-serif mb-3">
-            Find Vendors in {location}
+            Find Venues in {location}
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-            Discover the best wedding and corporate event vendors in {location}.
+            Discover the best wedding and corporate event venues in {location}.
           </p>
         </div>
 
@@ -191,7 +191,7 @@ const VendorByCategory = ({ location = "All India" }) => {
                 {title}
               </h6>
               <p className="text-xs sm:text-sm text-gray-500">
-                {isLoading ? "Loading..." : `${count} Vendors`}
+                {isLoading ? "Loading..." : `${count} Venues`}
               </p>
             </button>
           ))}

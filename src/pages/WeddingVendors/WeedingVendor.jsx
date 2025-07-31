@@ -11,9 +11,10 @@ import { BsCake2 } from "react-icons/bs";
 import { MdInsertInvitation, MdEmojiTransportation, MdAddAPhoto } from "react-icons/md";
 import { FaStar } from "react-icons/fa";
 
-
-// Components
+// Vendor Components
 import WeddingPhotographers from '../WeddingVendors/Photographers';
+import MakeupArtists from '../WeddingVendors/MakeupArtists';
+import MehndiArtists from '../WeddingVendors/MehndiArtists';
 import Caterers from '../WeddingVendors/Caterers';
 import WeddingDecorators from '../WeddingVendors/Decorators';
 import WeddingMakeUp from '../WeddingVendors/WeddingMakeUp';
@@ -31,75 +32,82 @@ import Gifts from './Gifts';
 import Invitation from './Invitations';
 import Musics from './Music';
 
-
-// Data
+// Primary Vendors
 const vendorCategories = [
-
-  { title: 'Choreographers', icon: Activity },
-  { title: 'Photobooth', icon: MdAddAPhoto },
-  { title: 'DJ', icon: SiPioneerdj },
-  { title: 'Cakes', icon: BsCake2 },
-  { title: 'Musics', icon: Music },
-  { title: 'TentHouse', icon: Tent },
-  { title: 'Transportation', icon: MdEmojiTransportation },
-  { title: 'Videography', icon: Video },
-];
-
-const additionalServices = [
   { title: 'Photographers', icon: Camera },
+  { title: 'Makeup Artists', icon: Sparkles },
+  { title: 'Mehndi Artists', icon: Activity },
+  { title: 'Bands', icon: Music },
+  { title: 'Cake Vendors', icon: BsCake2 },
   { title: 'Caterers', icon: Utensils },
-  { title: 'Wedding Decorators', icon: Gift },
-  { title: 'Wedding MakeUp', icon: Gift },
-  { title: 'Wedding Planners', icon: Utensils },
-  { title: 'Party Places', icon: BiSolidParty },
-  { title: 'Gifts', icon: Gift },
-  { title: 'Florist', icon: BiSolidFlorist },
-  { title: 'Invitation', icon: MdInsertInvitation },
+  { title: 'Florists', icon: BiSolidFlorist },
+  { title: 'Decorators', icon: Gift },
+  { title: 'Bridal Wear', icon: Sparkles },
+  { title: 'Jewellers', icon: Sparkles },
+  { title: 'Groom Wear', icon: Activity },
 ];
 
+// Additional Services (filtered to exclude primary)
+const rawAdditionalServices = [
+  { title: 'Choreographers', icon: Activity },
+  { title: 'Event Planners', icon: Utensils },
+  { title: 'DJs', icon: SiPioneerdj },
+  { title: 'Magicians', icon: Smile },
+  { title: 'Gift Providers', icon: Gift },
+  { title: 'Tent House Services', icon: Tent },
+  { title: 'Entertainers', icon: Smile },
+  { title: 'Wedding Planners', icon: Utensils },
+  { title: 'Wedding Photographers', icon: Camera },
+  { title: 'Astrologers', icon: Sparkles },
+];
+
+// Remove any categories already in Primary Vendors
+const additionalServices = rawAdditionalServices.filter(
+  add => !vendorCategories.some(primary => primary.title === add.title)
+);
+
+// Category to Component mapping
 const categoryComponents = {
-  'Caterers': <Caterers />,
   'Photographers': <WeddingPhotographers />,
-  'Wedding Decorators': <WeddingDecorators />,
-  'Wedding MakeUp': <WeddingMakeUp />,
-  'Wedding Planners': <WeddingPlanners />,
-  'Party Places': <PartyPlaces />,
+  'Makeup Artists': <MakeupArtists />,
+  'Mehndi Artists': <MehndiArtists />,
+  'Bands': <Musics />,
+  'Cake Vendors': <Cakes />,
+  'Caterers': <Caterers />,
+  'Florists': <Florist />,
+  'Decorators': <WeddingDecorators />,
+  'Bridal Wear': <Gifts />,
+  'Jewellers': <Gifts />,
+  'Groom Wear': <Gifts />,
   'Choreographers': <Choreographers />,
-  'Photobooth': <Photobooth />,
-  'Cakes': <Cakes />,
-  'Musics': <Musics />,
-  'DJ': <DJ />,
-  'TentHouse': <TentHouse />,
-  'Transportation': <Transportation />,
-  'Videography': <Videography />,
-  'Florist': <Florist />,
-  'Gifts': <Gifts />,
-  'Invitation': <Invitation />,
+  'Event Planners': <WeddingPlanners />,
+  'DJs': <DJ />,
+  'Magicians': <PartyPlaces />,
+  'Gift Providers': <Gifts />,
+  'Tent House Services': <TentHouse />,
+  'Entertainers': <PartyPlaces />,
+  'Wedding Planners': <WeddingPlanners />,
+  'Wedding Photographers': <WeddingPhotographers />,
+  'Astrologers': <PartyPlaces />,
 };
 
 export default function WeddingVendor() {
   const [activeTab, setActiveTab] = useState('primary');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
   const location = useLocation();
+
   const initialCategory = location.state?.category || null;
-  const combinedCategories = [...vendorCategories, ...additionalServices];
-  window.scrollTo({ top: 0, category: "top" })
-  // Filtered categories based on active tab and search term
+
   const { data, isLoading, isError, error } = useGetAllVendorsQuery();
-
-
-  //  const caterers = data?.vendors?.filter(v => v.vendorType === "Caterers");
-  //  const Hospitality = data?.vendors?.filter(v => v.vendorType ==="Hospitality");
-
-  const filteredCategories = searchTerm
-    ? combinedCategories.filter(({ title }) =>
-      title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    : activeTab === 'primary'
-      ? vendorCategories
-      : additionalServices;
+  const filteredCategories = useMemo(() => {
+    const categories = activeTab === 'primary' ? vendorCategories : additionalServices;
+    return searchTerm
+      ? categories.filter(({ title }) =>
+          title.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : categories;
+  }, [searchTerm, activeTab]);
 
   const filteredVendors = useMemo(() => {
     if (!data) return [];
@@ -110,19 +118,14 @@ export default function WeddingVendor() {
 
   const vendorIds = useMemo(() => filteredVendors.map(v => v._id), [filteredVendors]);
   const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(vendorIds, { skip: !vendorIds.length });
-  const stats = statsData?.stats || {};
-
 
   useEffect(() => {
+    window.scrollTo({ top: 0 });
     if (initialCategory) {
       setSelectedCategory(initialCategory);
-
-      const isPrimary = vendorCategories.some(cat => cat.title === initialCategory);
-      const isAdditional = additionalServices.some(cat => cat.title === initialCategory);
-
-      if (isPrimary) {
+      if (vendorCategories.some(cat => cat.title === initialCategory)) {
         setActiveTab('primary');
-      } else if (isAdditional) {
+      } else if (additionalServices.some(cat => cat.title === initialCategory)) {
         setActiveTab('additional');
       }
     }
@@ -143,15 +146,16 @@ export default function WeddingVendor() {
       </div>
     );
   }
+
   return (
     <div className="relative font-serif">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#0F4C81] to-[#6B9AC4] py-16 text-white">
         <div className="container mx-auto px-4 text-center max-w-3xl">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-[#1A2A3A] font-playfair">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-[#1A2A3A] font-playfair">
             Find the Perfect Vendors
           </h1>
-          <p className="mb-8 text-sm sm:text-base md:text-lg">
+          <p className="mb-8 text-base md:text-lg">
             Connect with trusted professionals for your special event
           </p>
           <div className="flex justify-center mt-6">
@@ -171,7 +175,6 @@ export default function WeddingVendor() {
               </button>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -192,8 +195,8 @@ export default function WeddingVendor() {
                   setSearchTerm('');
                 }}
                 className={`px-3 py-2 text-sm font-medium transition ${activeTab === 'primary'
-                  ? 'bg-corporate-primary text-black'
-                  : 'bg-white text-gray-700 border border-gray-300'
+                  ? 'bg-white text-gray-700 border border-gray-300'
+                  : 'bg-corporate-primary text-black'
                   }`}
               >
                 Primary Vendors
@@ -205,8 +208,8 @@ export default function WeddingVendor() {
                   setSearchTerm('');
                 }}
                 className={`px-3 py-2 text-sm font-medium transition ${activeTab === 'additional'
-                  ? 'bg-corporate-primary text-black'
-                  : 'bg-white text-gray-700 border border-gray-300'
+                  ? 'bg-white text-gray-700 border border-gray-300'
+                  : 'bg-corporate-primary text-black'
                   }`}
               >
                 Additional Services
@@ -238,20 +241,14 @@ export default function WeddingVendor() {
               </div>
             )}
           </div>
-
         </div>
       </div>
 
-      {/* Render Category Component if selected */}
+      {/* Category Component View */}
       {selectedCategory && (
         <div className="p-2 lg:mx-20 lg:mt-15">
-
-
-
           <div className="grid grid-cols-[1fr_auto] items-start mb-6 gap-4">
-            <h3 className="text-xl font-bold break-words">
-              {selectedCategory}
-            </h3>
+            <h3 className="text-xl font-bold break-words">{selectedCategory}</h3>
             <button
               onClick={() => setSelectedCategory(null)}
               className="border text-sm text-gray-700 px-3 py-2 rounded hover:bg-[#DEBF78] transition whitespace-nowrap"
@@ -260,15 +257,7 @@ export default function WeddingVendor() {
             </button>
           </div>
 
-          {activeTab === 'primary' &&
-            vendorCategories.some((cat) => cat.title === selectedCategory) &&
-            (categoryComponents[selectedCategory] || <p>No component available.</p>)
-          }
-
-          {activeTab === 'additional' &&
-            additionalServices.some((cat) => cat.title === selectedCategory) &&
-            (categoryComponents[selectedCategory] || <p>No component available.</p>)
-          }
+          {categoryComponents[selectedCategory] || <p>No component available.</p>}
         </div>
       )}
     </div>

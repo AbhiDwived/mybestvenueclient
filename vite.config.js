@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { splitVendorChunkPlugin } from 'vite'
 import { compression } from 'vite-plugin-compression2'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,6 +11,30 @@ export default defineConfig({
     tailwindcss(),
     react(),
     splitVendorChunkPlugin(),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'node_modules/tinymce/skins',
+          dest: 'tinymce'
+        },
+        {
+          src: 'node_modules/tinymce/themes',
+          dest: 'tinymce'
+        },
+        {
+          src: 'node_modules/tinymce/plugins',
+          dest: 'tinymce'
+        },
+        {
+          src: 'node_modules/tinymce/models',
+          dest: 'tinymce'
+        },
+        {
+          src: 'node_modules/tinymce/icons',
+          dest: 'tinymce'
+        }
+      ]
+    }),
     compression({
       algorithm: 'gzip',
       exclude: [/\.(br)$/, /\.(gz)$/],

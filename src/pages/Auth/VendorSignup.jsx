@@ -10,38 +10,27 @@ import 'react-phone-number-input/style.css';
 
 
 const VENDOR_TYPES = [
-  // Venues
-  'Banquet Halls',
-  'Hotels',
-  'Marriage Garden',
-  'Kalyana Mandapams',
-  'Wedding Resorts',
-  'Wedding Lawns & Farmhouses',
-
-  // Photographers
-  'Wedding Photographers',
-  'Party Places',
   'Photographers',
-
-  // Catering & Decorations
+  'Makeup Artists',
+  'Mehndi Artists',
+  'Bands',
+  'Cake Vendors',
   'Caterers',
-  'Wedding Decorators',
-  'Wedding Makeup',
-  'Wedding Planners',
-
-  // Additional Services
-  'Gifts',
-  'Florist',
-  'Invitation',
+  'Florists',
+  'Decorators',
+  'Bridal Wear',
+  'Jewellers',
+  'Groom Wear',
   'Choreographers',
-  'Photobooth',
-  'DJ',
-  'Cakes',
-  'Musics',
-  'TentHouse',
-  'Transportation',
-  'Videography',
-  'Other'
+  'Event Planners',
+  'DJs',
+  'Magicians',
+  'Gift Providers',
+  'Tent House Services',
+  'Entertainers',
+  'Wedding Planners',
+  'Wedding Photographers',
+  'Astrologers'
 ];
 
 // Delhi-NCR locations
