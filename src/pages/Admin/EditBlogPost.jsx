@@ -3,6 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { useUpdateBlogMutation } from "../../features/blogs/adminblogsAPI";
 import { Image as ImageIcon, Loader, X } from 'lucide-react';
 import { Editor } from '@tinymce/tinymce-react';
+import 'tinymce/tinymce';
+import 'tinymce/themes/silver';
+import 'tinymce/icons/default';
+import 'tinymce/plugins/advlist';
+import 'tinymce/plugins/autolink';
+import 'tinymce/plugins/lists';
+import 'tinymce/plugins/link';
+import 'tinymce/plugins/image';
+import 'tinymce/plugins/charmap';
+import 'tinymce/plugins/preview';
+import 'tinymce/plugins/anchor';
+import 'tinymce/plugins/searchreplace';
+import 'tinymce/plugins/visualblocks';
+import 'tinymce/plugins/code';
+import 'tinymce/plugins/fullscreen';
+import 'tinymce/plugins/insertdatetime';
+import 'tinymce/plugins/media';
+import 'tinymce/plugins/table';
+import 'tinymce/plugins/help';
+import 'tinymce/plugins/wordcount';
 
 export default function EditBlogPost({ blog, onClose, onSuccess }) {
   const navigate = useNavigate();
@@ -132,12 +152,14 @@ export default function EditBlogPost({ blog, onClose, onSuccess }) {
                 </label>
                 <div className="border rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
                   <Editor
-                    apiKey="c93zx5i653sjbqxuuusf6hl7rqbbt8sg2c8l6o70p2x3ldjn"
                     value={content}
                     onEditorChange={setContent}
                     init={{
                       height: 400,
+                      license_key: 'gpl',
                       menubar: 'file edit view insert format tools table help',
+                      base_url: '/node_modules/tinymce',
+                      suffix: '.min',
                       plugins: [
                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                         'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
