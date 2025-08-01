@@ -11,6 +11,7 @@ import { FaTrash } from "react-icons/fa";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import { Country, State, City } from 'country-state-city';
 
 const VENDOR_TYPES = [
   'Photographers',
@@ -36,24 +37,15 @@ const VENDOR_TYPES = [
   'Astrologers'
 ];
 
-const LOCATIONS = [
-  'Delhi',
-  'New Delhi',
-  'Noida',
-  'Greater Noida',
-  'Gurgaon',
-  'Faridabad',
-  'Ghaziabad',
-  'Indirapuram',
-  'Dwarka',
-  'Rohini',
-  'Janakpuri',
-  'Laxmi Nagar',
-  'Vasant Kunj',
-  'Connaught Place',
-  'Saket',
-  'Other'
-];
+const NEAR_LOCATIONS = {
+  'New Delhi': ['Connaught Place', 'India Gate', 'Red Fort', 'Karol Bagh', 'Paharganj'],
+  'Mumbai': ['Bandra', 'Andheri', 'Juhu', 'Powai', 'Colaba', 'Marine Drive'],
+  'Bangalore': ['Koramangala', 'Indiranagar', 'Whitefield', 'Electronic City', 'Jayanagar'],
+  'Chennai': ['T. Nagar', 'Anna Nagar', 'Adyar', 'Velachery', 'OMR'],
+  'Pune': ['Koregaon Park', 'Hinjewadi', 'Baner', 'Wakad', 'Kothrud'],
+  'Gurgaon': ['Cyber City', 'Golf Course Road', 'Sohna Road', 'MG Road', 'Sector 14'],
+  'Noida': ['Sector 18', 'Sector 62', 'Greater Noida', 'Sector 15', 'Sector 37']
+};
 
 
 
@@ -111,10 +103,13 @@ const EditProfile = () => {
     }
 
     if (!vendorId) {
-
       toast.error('Error: Vendor ID is missing. Please try logging in again.');
       navigate('/vendor/login');
     } else {
+      // Load Indian states
+      const indianStates = State.getStatesOfCountry('IN');
+      setStates(indianStates);
+      
       // Fetch FAQ data when vendor ID is available
       setIsLoadingFaqs(true);
       getVendorsFaqs({ vendorId })
@@ -127,8 +122,7 @@ const EditProfile = () => {
           }
         })
         .catch((error) => {
-
-          setFaqs([]); // Set empty array on error
+          setFaqs([]);
         })
         .finally(() => {
           setIsLoadingFaqs(false);
@@ -156,13 +150,15 @@ const EditProfile = () => {
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
-  const [country, setCountry] = useState('');
+  const [country, setCountry] = useState('IN');
   const [pinCode, setPincode] = useState('');
+  const [nearLocation, setNearLocation] = useState('');
   const [services, setServices] = useState(['']);
   const [isSavingInfo, setIsSavingInfo] = useState(false);
   const [isSavingContact, setIsSavingContact] = useState(false);
-  // Add state for contact errors
   const [contactErrors, setContactErrors] = useState({});
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
 
 
   const fileInputRef = useRef(null);
@@ -228,34 +224,48 @@ const EditProfile = () => {
   }, [businessName, category, businessDescription, serviceAreas, contactEmail, contactPhone, contactName, address, coverImage, vendor?.profilePicture, portfolioData?.images, faqs]);
 
   useEffect(() => {
-    if (vendor) {
-      setBusinessName(vendor.businessName || 'Dream Wedding Photography');
-      setCategory(vendor.vendorType || 'Photography');
-      setBusinessDescription(data?.vendor?.description || vendor.description || 'This is a sample description.');
+    if (vendor && data?.vendor) {
+      const vendorData = data.vendor;
+      
+  
+      
+      setBusinessName(vendorData.businessName || vendor.businessName || 'Dream Wedding Photography');
+      setCategory(vendorData.vendorType || vendor.vendorType || 'Photography');
+      setBusinessDescription(vendorData.description || vendor.description || 'This is a sample description.');
       
       // Handle serviceAreas properly - convert to string if it's an array
-      if (Array.isArray(vendor.serviceAreas)) {
-        setServiceAreas(vendor.serviceAreas.length > 0 ? vendor.serviceAreas[0] : 'New Delhi, India');
+      const serviceAreasData = vendorData.serviceAreas || vendor.serviceAreas;
+      if (Array.isArray(serviceAreasData)) {
+        setServiceAreas(serviceAreasData.length > 0 ? serviceAreasData[0] : 'New Delhi, India');
       } else {
-        setServiceAreas(vendor.serviceAreas || 'New Delhi, India');
+        setServiceAreas(serviceAreasData || 'New Delhi, India');
       }
       
-      setContactEmail(vendor.email || 'mybestvenuehelp@gmail.com');
-      setContactPhone(vendor.phone || '‪+91 9999999999‬');
-      setWebsite(vendor.website || 'mybestvenue.com');
-      setcontactName(vendor.contactName || 'John Doe');
+      setContactEmail(vendorData.email || vendor.email || 'mybestvenuehelp@gmail.com');
+      setContactPhone(vendorData.phone || vendor.phone || '‪+91 9999999999‬');
+      setWebsite(vendorData.website || vendor.website || 'mybestvenue.com');
+      setcontactName(vendorData.contactName || vendor.contactName || 'John Doe');
       
       // Always use the latest profile picture from vendor or data
-      const latestProfilePicture = data?.vendor?.profilePicture || vendor.profilePicture;
+      const latestProfilePicture = vendorData.profilePicture || vendor.profilePicture;
       setCoverImage(latestProfilePicture || null);
       
-      setAddress(data?.vendor?.address || 'No Address');
-      setCity(data?.vendor?.city || 'New Delhi');
-      setState(data?.vendor?.state || 'Delhi');
-      setCountry(data?.vendor?.country || 'India');
-      setPincode(data?.vendor?.pinCode || '000000');
+      // Location data - prioritize data from API response
+      setAddress(vendorData.address || 'No Address');
+      setCity(vendorData.city || 'New Delhi');
+      const vendorState = vendorData.state || 'DL';
+      setState(vendorState);
+      setCountry(vendorData.country || 'IN');
+      setPincode(vendorData.pinCode || '000000');
+      setNearLocation(vendorData.nearLocation || '');
       
-      const servicesData = data?.vendor?.services;
+      // Load cities for the current state
+      if (vendorState && vendorState !== '') {
+        const stateCities = City.getCitiesOfState('IN', vendorState);
+        setCities(stateCities);
+      }
+      
+      const servicesData = vendorData.services;
       if (Array.isArray(servicesData)) {
         setServices(servicesData);
       } else if (typeof servicesData === 'string') {
@@ -288,48 +298,45 @@ const EditProfile = () => {
 
 
 
-    formData.append("_id", vendorId); // Add vendor ID to form data
-    formData.append("businessName", businessName);
-    formData.append("vendorType", category);
-    formData.append("description", businessDescription);
+    formData.append("_id", vendorId);
+    formData.append("businessName", businessName || '');
+    formData.append("vendorType", category || '');
+    formData.append("description", businessDescription || '');
 
     const formattedServiceAreas = Array.isArray(serviceAreas)
       ? serviceAreas.join(",")
-      : serviceAreas;
+      : serviceAreas || '';
     formData.append("serviceAreas", formattedServiceAreas);
 
-    // formData.append("pricing", priceRange);
-    formData.append("email", contactEmail);
-    formData.append("phone", contactPhone);
-    formData.append("website", website);
+    formData.append("email", contactEmail || '');
+    formData.append("phone", contactPhone || '');
+    formData.append("website", website || '');
     formData.append("termsAccepted", true);
     formData.append("isApproved", true);
-    formData.append("contactName", contactName);
+    formData.append("contactName", contactName || '');
 
-    formData.append("address", address);
-    formData.append("city", city);
-    formData.append("state", state);
-    formData.append("country", country);
-    formData.append("pinCode", pinCode);
-    // formData.append("services", services);
-    formData.append("services", Array.isArray(services) ? services.join(',') : services);
+    // Location fields - ensure they're not undefined
+    formData.append("address", address || '');
+    formData.append("city", city || '');
+    formData.append("state", state || '');
+    formData.append("country", country || 'IN');
+    formData.append("pinCode", pinCode || '');
+    formData.append("nearLocation", nearLocation || '');
+    
+    formData.append("services", Array.isArray(services) ? services.join(',') : (services || ''));
+    
     priceRange.forEach((item, index) => {
-      formData.append(`pricing[${index}][type]`, item.type);
-      formData.append(`pricing[${index}][price]`, item.price);
+      formData.append(`pricing[${index}][type]`, item.type || '');
+      formData.append(`pricing[${index}][price]`, item.price || '');
       formData.append(`pricing[${index}][currency]`, item.currency || 'INR');
       formData.append(`pricing[${index}][unit]`, item.unit || 'per plate');
     });
 
-    // If a new image file is provided, use it
     if (imageFile) {
       formData.append("profilePicture", imageFile);
-    }
-    // If there's a selected file but no new image file provided, use the selected file
-    else if (selectedFile) {
+    } else if (selectedFile) {
       formData.append("profilePicture", selectedFile);
-    }
-    // If there's an existing image URL, preserve it
-    else if (vendor.profilePicture) {
+    } else if (vendor.profilePicture) {
       formData.append("profilePicture", vendor.profilePicture);
     }
 
@@ -415,21 +422,21 @@ const EditProfile = () => {
       formData.append("_id", vendorId);
 
       // Keep existing data
-      formData.append("businessName", businessName);
-      formData.append("vendorType", category);
-      formData.append("description", businessDescription);
-      formData.append("serviceAreas", Array.isArray(serviceAreas) ? serviceAreas.join(",") : serviceAreas);
-      // formData.append("pricing", priceRange);
-      formData.append("email", contactEmail);
-      formData.append("phone", contactPhone);
-      formData.append("website", website);
-      formData.append("contactName", contactName);
-      formData.append("address", address);
-      formData.append("city", city);
-      formData.append("state", state);
-      formData.append("country", country);
-      formData.append("pinCode", pinCode);
-      formData.append("services", services);
+      formData.append("businessName", businessName || '');
+      formData.append("vendorType", category || '');
+      formData.append("description", businessDescription || '');
+      formData.append("serviceAreas", Array.isArray(serviceAreas) ? serviceAreas.join(",") : (serviceAreas || ''));
+      formData.append("email", contactEmail || '');
+      formData.append("phone", contactPhone || '');
+      formData.append("website", website || '');
+      formData.append("contactName", contactName || '');
+      formData.append("address", address || '');
+      formData.append("city", city || '');
+      formData.append("state", state || '');
+      formData.append("country", country || 'IN');
+      formData.append("pinCode", pinCode || '');
+      formData.append("nearLocation", nearLocation || '');
+      formData.append("services", Array.isArray(services) ? services.join(',') : (services || ''));
       priceRange.forEach((item, index) => {
         formData.append(`pricing[${index}][type]`, item.type);
         formData.append(`pricing[${index}][price]`, item.price);
@@ -519,22 +526,42 @@ const EditProfile = () => {
   const handleRemovePricing = async (index) => {
     const item = priceRange[index];
 
-
     if (item._id) {
       try {
         await deleteVendorPricingItem({ vendorId, pricingId: item._id }).unwrap();
         toast.success("Price range deleted Succesfully");
       } catch (err) {
-
         toast.error("Failed to delete pricing data");
         return;
       }
     }
 
-
     if (priceRange.length > 1) {
       setPriceRange(priceRange.filter((_, i) => i !== index));
     }
+  };
+
+  const handleCountryChange = (value) => {
+    const countryStates = State.getStatesOfCountry(value);
+    setStates(countryStates);
+    setCities([]);
+    setCountry(value);
+    setState('');
+    setCity('');
+    setNearLocation('');
+  };
+
+  const handleStateChange = (value) => {
+    const stateCities = City.getCitiesOfState(country, value);
+    setCities(stateCities);
+    setState(value);
+    setCity('');
+    setNearLocation('');
+  };
+
+  const handleCityChange = (value) => {
+    setCity(value);
+    setNearLocation('');
   };
 
 
@@ -586,36 +613,63 @@ const EditProfile = () => {
                 <label className="form-label">Address</label>
                 <input type="text" className="form-control" value={address || ''} onChange={(e) => setAddress(e.target.value)} />
               </div>
+              
               <div className="mb-3">
-                <label className="form-label">City</label>
-                <input type="text" className="form-control" value={city || ''} onChange={(e) => setCity(e.target.value)} />
+                <label className="form-label">Country <span className="text-danger">*</span></label>
+                <select className="form-control" value={country} onChange={(e) => handleCountryChange(e.target.value)}>
+                  <option value="IN">India</option>
+                </select>
               </div>
+              
               <div className="mb-3">
-                <label className="form-label">State</label>
-                <input type="text" className="form-control" value={state || ''} onChange={(e) => setState(e.target.value)} />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Pin Code</label>
-                <input type="text" className="form-control" value={pinCode || ''} onChange={(e) => setPincode(e.target.value)} />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Country</label>
-
-                <input type="text" className="form-control" value={country || ''} onChange={(e) => setCountry(e.target.value)} />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Location</label>
-                {/* <input type="text" className="form-control" value={serviceAreas} onChange={(e) => setServiceAreas(e.target.value)} /> */}
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={Array.isArray(serviceAreas) ? (serviceAreas[0] || '') : serviceAreas}
-                  onChange={(e) => setServiceAreas(e.target.value)}
-                >
-                  <option value="">Select Location</option>
-                  {LOCATIONS.map((location) => (
-                    <option key={location} value={location}>{location}</option>
+                <label className="form-label">State <span className="text-danger">*</span></label>
+                <select className="form-control" value={state} onChange={(e) => handleStateChange(e.target.value)}>
+                  <option value="">Select State</option>
+                  {states.map((stateItem) => (
+                    <option key={stateItem.isoCode} value={stateItem.isoCode}>
+                      {stateItem.name}
+                    </option>
                   ))}
                 </select>
+              </div>
+              
+              <div className="mb-3">
+                <label className="form-label">City <span className="text-danger">*</span></label>
+                <select className="form-control" value={city} onChange={(e) => handleCityChange(e.target.value)} disabled={!state}>
+                  <option value="">Select City</option>
+                  {cities.map((cityItem) => (
+                    <option key={cityItem.name} value={cityItem.name}>
+                      {cityItem.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="mb-3">
+                <label className="form-label">Near Location</label>
+                <select className="form-control" value={nearLocation} onChange={(e) => setNearLocation(e.target.value)} disabled={!city}>
+                  <option value="">Select Near Location (Optional)</option>
+                  {city && NEAR_LOCATIONS[city]?.map((location) => (
+                    <option key={location} value={location}>
+                      {location}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="mb-3">
+                <label className="form-label">Pin Code <span className="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  value={pinCode || ''} 
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 6) setPincode(value);
+                  }}
+                  maxLength={6}
+                  placeholder="Enter 6-digit PIN code"
+                />
               </div>
 
               <div className="mb-3">

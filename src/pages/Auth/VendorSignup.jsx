@@ -3,9 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useRegisterVendorMutation } from '../../features/vendors/vendorAPI';
 import 'react-toastify/dist/ReactToastify.css';
 import { Eye, EyeOff } from 'react-feather';
-import { showToast } from '../../utils/toast';  // Import showToast from the correct path
+import { showToast } from '../../utils/toast';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { Country, State, City } from 'country-state-city';
 
 
 
@@ -33,25 +34,15 @@ const VENDOR_TYPES = [
   'Astrologers'
 ];
 
-// Delhi-NCR locations
-const LOCATIONS = [
-  'Delhi',
-  'New Delhi',
-  'Noida',
-  'Greater Noida',
-  'Gurgaon',
-  'Faridabad',
-  'Ghaziabad',
-  'Indirapuram',
-  'Dwarka',
-  'Rohini',
-  'Janakpuri',
-  'Laxmi Nagar',
-  'Vasant Kunj',
-  'Connaught Place',
-  'Saket',
-  'Other'
-];
+const NEAR_LOCATIONS = {
+  'New Delhi': ['Connaught Place', 'India Gate', 'Red Fort', 'Karol Bagh', 'Paharganj'],
+  'Mumbai': ['Bandra', 'Andheri', 'Juhu', 'Powai', 'Colaba', 'Marine Drive'],
+  'Bangalore': ['Koramangala', 'Indiranagar', 'Whitefield', 'Electronic City', 'Jayanagar'],
+  'Chennai': ['T. Nagar', 'Anna Nagar', 'Adyar', 'Velachery', 'OMR'],
+  'Pune': ['Koregaon Park', 'Hinjewadi', 'Baner', 'Wakad', 'Kothrud'],
+  'Gurgaon': ['Cyber City', 'Golf Course Road', 'Sohna Road', 'MG Road', 'Sector 14'],
+  'Noida': ['Sector 18', 'Sector 62', 'Greater Noida', 'Sector 15', 'Sector 37']
+};
 
 const VendorSignup = () => {
   const [formData, setFormData] = useState({
@@ -64,10 +55,17 @@ const VendorSignup = () => {
     password: '',
     confirmPassword: '',
     termsAccepted: false,
-    location: '',
-    otherLocation: '',
+    country: 'IN',
+    state: '',
+    city: '',
+    nearLocation: '',
+    pinCode: '',
+    address: '',
     serviceAreas: []
   });
+
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
 
   const [profilePicture, setProfilePicture] = useState(null);
   const [phoneError, setPhoneError] = useState('');
@@ -100,6 +98,9 @@ const VendorSignup = () => {
       if (nameInputRef.current) {
         nameInputRef.current.focus();
       }
+      // Load Indian states on component mount
+      const indianStates = State.getStatesOfCountry('IN');
+      setStates(indianStates);
       return () => {
         isMounted.current = false;
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -117,27 +118,44 @@ const VendorSignup = () => {
   const handleChange = (e) => {
     const { name, value, type: inputType, checked } = e.target;
 
-    if (name === 'location') {
-      if (value === 'Other') {
-        setFormData(prev => ({
-          ...prev,
-          location: value,
-          serviceAreas: []
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          location: value,
-          otherLocation: '',
-          serviceAreas: [value]
-        }));
+    if (name === 'country') {
+      const countryStates = State.getStatesOfCountry(value);
+      setStates(countryStates);
+      setCities([]);
+      setFormData(prev => ({
+        ...prev,
+        country: value,
+        state: '',
+        city: '',
+        nearLocation: '',
+        pinCode: ''
+      }));
+    } else if (name === 'state') {
+      const stateCities = City.getCitiesOfState(formData.country, value);
+      setCities(stateCities);
+      setFormData(prev => ({
+        ...prev,
+        state: value,
+        city: '',
+        nearLocation: '',
+        pinCode: ''
+      }));
+    } else if (name === 'city') {
+      setFormData(prev => ({
+        ...prev,
+        city: value,
+        nearLocation: ''
+      }));
+    } else if (name === 'pinCode') {
+      const numericValue = value.replace(/\D/g, '');
+      if (numericValue.length <= 6) {
+        setFormData(prev => ({ ...prev, pinCode: numericValue }));
       }
     } else {
       setFormData((prev) => ({
         ...prev,
         [name]: inputType === 'checkbox' ? checked : value,
-        ...(name === 'vendorType' && value !== 'Other' ? { otherVendorType: '' } : {}),
-        ...(name === 'otherLocation' ? { serviceAreas: [value] } : {})
+        ...(name === 'vendorType' && value !== 'Other' ? { otherVendorType: '' } : {})
       }));
     }
   };
@@ -262,12 +280,20 @@ const VendorSignup = () => {
       errors.push("Please specify your custom vendor type");
     }
 
-    if (!formData.location) {
-      errors.push("Please select a location");
+    if (!formData.country) {
+      errors.push("Please select a country");
     }
 
-    if (formData.location === "Other" && !formData.otherLocation.trim()) {
-      errors.push("Please specify your location");
+    if (!formData.state) {
+      errors.push("Please select a state");
+    }
+
+    if (!formData.city) {
+      errors.push("Please select a city");
+    }
+
+    if (!formData.pinCode || formData.pinCode.length !== 6) {
+      errors.push("Please enter a valid 6-digit PIN code");
     }
 
     // 🔹 Terms and Conditions - Specific Toast Notification
@@ -298,25 +324,23 @@ const VendorSignup = () => {
     if (isLoading) return;
 
     setIsLoading(true);
-    const { confirmPassword, otherLocation, location, serviceAreas, ...vendorData } = formData;
+    const { confirmPassword, ...vendorData } = formData;
     const data = new FormData();
 
     Object.entries(vendorData).forEach(([key, value]) => {
       if (key === "vendorType" && vendorData.vendorType === "Other") {
         data.append(key, vendorData.otherVendorType.trim());
       } else if (key === "contactName" || key === "businessName" || key === "email") {
-        data.append(key, value.trim()); // Trim spaces for specific fields
+        data.append(key, value.trim());
       } else if (key !== "otherVendorType") {
         data.append(key, value);
       }
     });
 
-
-    const selectedLocation = formData.location === "Other" ? formData.otherLocation : formData.location;
-    if (selectedLocation) {
-      const serviceAreasArray = [selectedLocation];
-      data.append("serviceAreas", JSON.stringify(serviceAreasArray));
-    }
+    const selectedState = states.find(s => s.isoCode === formData.state);
+    const locationString = `${formData.city}, ${selectedState?.name || formData.state}, India`;
+    const serviceAreasArray = [locationString];
+    data.append("serviceAreas", JSON.stringify(serviceAreasArray));
 
     if (profilePicture) {
       data.append("profilePicture", profilePicture);
@@ -457,19 +481,75 @@ const VendorSignup = () => {
               </div>
             )}
 
-            {/* Location dropdown */}
+            {/* Country dropdown */}
             <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location <span className="text-red-500">*</span></label>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">Country <span className="text-red-500">*</span></label>
               <select
-                id="location"
-                name="location"
-                value={formData.location}
+                id="country"
+                name="country"
+                value={formData.country}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select your primary service area</option>
-                {LOCATIONS.map((location) => (
+                <option value="IN">India</option>
+              </select>
+            </div>
+
+            {/* State dropdown */}
+            <div>
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">State <span className="text-red-500">*</span></label>
+              <select
+                id="state"
+                name="state"
+                value={formData.state}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select State</option>
+                {states.map((state) => (
+                  <option key={state.isoCode} value={state.isoCode}>
+                    {state.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* City dropdown */}
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">City <span className="text-red-500">*</span></label>
+              <select
+                id="city"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                required
+                disabled={!formData.state}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              >
+                <option value="">Select City</option>
+                {cities.map((city) => (
+                  <option key={city.name} value={city.name}>
+                    {city.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Near Location dropdown */}
+            <div>
+              <label htmlFor="nearLocation" className="block text-sm font-medium text-gray-700 mb-1">Near Location</label>
+              <select
+                id="nearLocation"
+                name="nearLocation"
+                value={formData.nearLocation}
+                onChange={handleChange}
+                disabled={!formData.city}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              >
+                <option value="">Select Near Location (Optional)</option>
+                {formData.city && NEAR_LOCATIONS[formData.city]?.map((location) => (
                   <option key={location} value={location}>
                     {location}
                   </option>
@@ -477,21 +557,35 @@ const VendorSignup = () => {
               </select>
             </div>
 
-            {formData.location === 'Other' && (
-              <div>
-                <label htmlFor="otherLocation" className="block text-sm font-medium text-gray-700 mb-1">Other Location <span className="text-red-500">*</span></label>
-                <input
-                  id="otherLocation"
-                  name="otherLocation"
-                  type="text"
-                  value={formData.otherLocation}
-                  onChange={handleChange}
-                  placeholder="Enter your service area"
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            )}
+            {/* Pin Code field */}
+            <div>
+              <label htmlFor="pinCode" className="block text-sm font-medium text-gray-700 mb-1">Pin Code <span className="text-red-500">*</span></label>
+              <input
+                id="pinCode"
+                name="pinCode"
+                type="text"
+                value={formData.pinCode}
+                onChange={handleChange}
+                placeholder="Enter 6-digit PIN code"
+                required
+                maxLength={6}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Address field */}
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="Enter your address"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
