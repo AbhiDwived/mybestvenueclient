@@ -153,6 +153,7 @@ const EditProfile = () => {
   const [country, setCountry] = useState('IN');
   const [pinCode, setPincode] = useState('');
   const [nearLocation, setNearLocation] = useState('');
+  const [customNearLocation, setCustomNearLocation] = useState('');
   const [services, setServices] = useState(['']);
   const [isSavingInfo, setIsSavingInfo] = useState(false);
   const [isSavingContact, setIsSavingContact] = useState(false);
@@ -257,7 +258,14 @@ const EditProfile = () => {
       setState(vendorState);
       setCountry(vendorData.country || 'IN');
       setPincode(vendorData.pinCode || '000000');
-      setNearLocation(vendorData.nearLocation || '');
+      const vendorNearLocation = vendorData.nearLocation || '';
+      if (vendorNearLocation && city && NEAR_LOCATIONS[city] && !NEAR_LOCATIONS[city].includes(vendorNearLocation)) {
+        setNearLocation('other');
+        setCustomNearLocation(vendorNearLocation);
+      } else {
+        setNearLocation(vendorNearLocation);
+        setCustomNearLocation('');
+      }
       
       // Load cities for the current state
       if (vendorState && vendorState !== '') {
@@ -321,7 +329,8 @@ const EditProfile = () => {
     formData.append("state", state || '');
     formData.append("country", country || 'IN');
     formData.append("pinCode", pinCode || '');
-    formData.append("nearLocation", nearLocation || '');
+    const finalNearLocation = nearLocation === 'other' ? customNearLocation : nearLocation;
+    formData.append("nearLocation", finalNearLocation || '');
     
     formData.append("services", Array.isArray(services) ? services.join(',') : (services || ''));
     
@@ -435,7 +444,8 @@ const EditProfile = () => {
       formData.append("state", state || '');
       formData.append("country", country || 'IN');
       formData.append("pinCode", pinCode || '');
-      formData.append("nearLocation", nearLocation || '');
+      const finalNearLocationImg = nearLocation === 'other' ? customNearLocation : nearLocation;
+      formData.append("nearLocation", finalNearLocationImg || '');
       formData.append("services", Array.isArray(services) ? services.join(',') : (services || ''));
       priceRange.forEach((item, index) => {
         formData.append(`pricing[${index}][type]`, item.type);
@@ -562,6 +572,7 @@ const EditProfile = () => {
   const handleCityChange = (value) => {
     setCity(value);
     setNearLocation('');
+    setCustomNearLocation('');
   };
 
 
@@ -647,14 +658,38 @@ const EditProfile = () => {
               
               <div className="mb-3">
                 <label className="form-label">Near Location</label>
-                <select className="form-control" value={nearLocation} onChange={(e) => setNearLocation(e.target.value)} disabled={!city}>
+                <select 
+                  className="form-control" 
+                  value={nearLocation === 'other' ? 'other' : (NEAR_LOCATIONS[city]?.includes(nearLocation) ? nearLocation : '')}
+                  onChange={(e) => {
+                    if (e.target.value === 'other') {
+                      setNearLocation('other');
+                      setCustomNearLocation('');
+                    } else {
+                      setNearLocation(e.target.value);
+                      setCustomNearLocation('');
+                    }
+                  }}
+                  disabled={!city}
+                >
                   <option value="">Select Near Location (Optional)</option>
                   {city && NEAR_LOCATIONS[city]?.map((location) => (
                     <option key={location} value={location}>
                       {location}
                     </option>
                   ))}
+                  <option value="other">Other</option>
                 </select>
+                {nearLocation === 'other' && (
+                  <input
+                    type="text"
+                    className="form-control mt-2"
+                    placeholder="Enter your near location"
+                    value={customNearLocation}
+                    onChange={(e) => setCustomNearLocation(e.target.value)}
+                    autoFocus
+                  />
+                )}
               </div>
               
               <div className="mb-3">

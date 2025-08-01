@@ -59,6 +59,7 @@ const VendorSignup = () => {
     state: '',
     city: '',
     nearLocation: '',
+    customNearLocation: '',
     pinCode: '',
     address: '',
     serviceAreas: []
@@ -324,12 +325,15 @@ const VendorSignup = () => {
     if (isLoading) return;
 
     setIsLoading(true);
-    const { confirmPassword, ...vendorData } = formData;
+    const { confirmPassword, customNearLocation, ...vendorData } = formData;
     const data = new FormData();
 
     Object.entries(vendorData).forEach(([key, value]) => {
       if (key === "vendorType" && vendorData.vendorType === "Other") {
         data.append(key, vendorData.otherVendorType.trim());
+      } else if (key === "nearLocation") {
+        const finalNearLocation = value === 'other' ? customNearLocation : value;
+        data.append(key, finalNearLocation || '');
       } else if (key === "contactName" || key === "businessName" || key === "email") {
         data.append(key, value.trim());
       } else if (key !== "otherVendorType") {
@@ -537,14 +541,18 @@ const VendorSignup = () => {
               </select>
             </div>
 
-            {/* Near Location dropdown */}
+            {/* Near Location */}
             <div>
-              <label htmlFor="nearLocation" className="block text-sm font-medium text-gray-700 mb-1">Near Location</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Near Location</label>
               <select
-                id="nearLocation"
-                name="nearLocation"
-                value={formData.nearLocation}
-                onChange={handleChange}
+                value={formData.nearLocation === 'other' ? 'other' : (NEAR_LOCATIONS[formData.city]?.includes(formData.nearLocation) ? formData.nearLocation : '')}
+                onChange={(e) => {
+                  if (e.target.value === 'other') {
+                    setFormData(prev => ({ ...prev, nearLocation: 'other', customNearLocation: '' }));
+                  } else {
+                    setFormData(prev => ({ ...prev, nearLocation: e.target.value, customNearLocation: '' }));
+                  }
+                }}
                 disabled={!formData.city}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
               >
@@ -554,7 +562,18 @@ const VendorSignup = () => {
                     {location}
                   </option>
                 ))}
+                <option value="other">Other</option>
               </select>
+              {formData.nearLocation === 'other' && (
+                <input
+                  type="text"
+                  placeholder="Enter your near location"
+                  value={formData.customNearLocation || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, customNearLocation: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
+                  autoFocus
+                />
+              )}
             </div>
 
             {/* Pin Code field */}
