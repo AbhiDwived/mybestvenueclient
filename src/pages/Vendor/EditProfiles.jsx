@@ -259,11 +259,20 @@ const EditProfile = () => {
       setCountry(vendorData.country || 'IN');
       setPincode(vendorData.pinCode || '000000');
       const vendorNearLocation = vendorData.nearLocation || '';
-      if (vendorNearLocation && city && NEAR_LOCATIONS[city] && !NEAR_LOCATIONS[city].includes(vendorNearLocation)) {
-        setNearLocation('other');
-        setCustomNearLocation(vendorNearLocation);
+      const currentCity = vendorData.city || city || 'New Delhi';
+      
+      if (vendorNearLocation) {
+        // Check if it's a predefined location for the current city
+        if (NEAR_LOCATIONS[currentCity] && NEAR_LOCATIONS[currentCity].includes(vendorNearLocation)) {
+          setNearLocation(vendorNearLocation);
+          setCustomNearLocation('');
+        } else {
+          // It's a custom location
+          setNearLocation('other');
+          setCustomNearLocation(vendorNearLocation);
+        }
       } else {
-        setNearLocation(vendorNearLocation);
+        setNearLocation('');
         setCustomNearLocation('');
       }
       
@@ -330,6 +339,7 @@ const EditProfile = () => {
     formData.append("country", country || 'IN');
     formData.append("pinCode", pinCode || '');
     const finalNearLocation = nearLocation === 'other' ? customNearLocation : nearLocation;
+
     formData.append("nearLocation", finalNearLocation || '');
     
     formData.append("services", Array.isArray(services) ? services.join(',') : (services || ''));
@@ -445,6 +455,7 @@ const EditProfile = () => {
       formData.append("country", country || 'IN');
       formData.append("pinCode", pinCode || '');
       const finalNearLocationImg = nearLocation === 'other' ? customNearLocation : nearLocation;
+
       formData.append("nearLocation", finalNearLocationImg || '');
       formData.append("services", Array.isArray(services) ? services.join(',') : (services || ''));
       priceRange.forEach((item, index) => {
