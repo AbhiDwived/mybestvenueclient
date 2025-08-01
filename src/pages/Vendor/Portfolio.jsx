@@ -116,6 +116,7 @@ const VideoViewModal = ({ videoUrl, onClose }) => {
 };
 
 const PortfolioTab = () => {
+  const { vendor } = useSelector((state) => state.vendor);
   const { user, token, isAuthenticated } = useSelector((state) => state.auth);
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [portfolioVideos, setPortfolioVideos] = useState([]);
@@ -139,43 +140,108 @@ const PortfolioTab = () => {
   // Get vendorId from user object or local storage
   useEffect(() => {
     const extractVendorId = () => {
-      // Try getting vendor ID from different sources
-      if (user?.id) {
+      console.log('🔍 Extracting vendor ID...');
+      
+      // Method 0: Check URL params for admin edit mode
+      const urlParams = new URLSearchParams(window.location.search);
+      const adminEditId = urlParams.get('adminEdit');
+      if (adminEditId) {
+        console.log('✅ Found vendor ID from URL adminEdit param:', adminEditId);
+        return adminEditId;
+      }
+      
+      // Method 1: Check vendor state from Redux
+      if (vendor?.id) {
+        console.log('✅ Found vendor ID from Redux vendor state:', vendor.id);
+        return vendor.id;
+      }
+      if (vendor?._id) {
+        console.log('✅ Found vendor _id from Redux vendor state:', vendor._id);
+        return vendor._id;
+      }
+      
+      // Method 2: Check user state from Redux (if vendor is logged in as user)
+      if (user?.id && user?.role === 'vendor') {
+        console.log('✅ Found vendor ID from Redux user state:', user.id);
         return user.id;
       }
+      if (user?._id && user?.role === 'vendor') {
+        console.log('✅ Found vendor _id from Redux user state:', user._id);
+        return user._id;
+      }
 
-      // Try local storage
-      const vendorData = localStorage.getItem('vendorInfo');
+      // Method 3: Try vendor from localStorage
+      const vendorData = localStorage.getItem('vendor');
       if (vendorData) {
         try {
           const parsedData = JSON.parse(vendorData);
           const storedId = parsedData.id || parsedData._id;
-          return storedId;
+          if (storedId) {
+            console.log('✅ Found vendor ID from localStorage vendor:', storedId);
+            return storedId;
+          }
         } catch (error) {
-          // Silently handle parsing error
+          console.warn('⚠️ Error parsing vendor data from localStorage:', error);
         }
       }
 
-      // Try token from local storage
+      // Method 4: Try vendorInfo from localStorage (legacy)
+      const vendorInfo = localStorage.getItem('vendorInfo');
+      if (vendorInfo) {
+        try {
+          const parsedData = JSON.parse(vendorInfo);
+          const storedId = parsedData.id || parsedData._id;
+          if (storedId) {
+            console.log('✅ Found vendor ID from localStorage vendorInfo:', storedId);
+            return storedId;
+          }
+        } catch (error) {
+          console.warn('⚠️ Error parsing vendorInfo from localStorage:', error);
+        }
+      }
+
+      // Method 5: Try decoding token from localStorage
       const vendorToken = localStorage.getItem('vendorToken');
       if (vendorToken) {
         try {
           const tokenParts = vendorToken.split('.');
           if (tokenParts.length === 3) {
             const payload = JSON.parse(atob(tokenParts[1]));
-            return payload.id;
+            if (payload.id) {
+              console.log('✅ Found vendor ID from token:', payload.id);
+              return payload.id;
+            }
           }
         } catch (error) {
-          // Silently handle token decoding error
+          console.warn('⚠️ Error decoding vendor token:', error);
         }
       }
 
+      // Method 6: Try regular user token if it's a vendor
+      const userToken = localStorage.getItem('token');
+      if (userToken) {
+        try {
+          const tokenParts = userToken.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            if (payload.id && payload.role === 'vendor') {
+              console.log('✅ Found vendor ID from user token:', payload.id);
+              return payload.id;
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Error decoding user token:', error);
+        }
+      }
+
+      console.log('❌ No vendor ID found from any source');
       return null;
     };
 
     const id = extractVendorId();
+    console.log('🎯 Final vendor ID:', id);
     setVendorId(id);
-  }, [user]);
+  }, [user, vendor]);
 
   // API hooks
   const [uploadPortfolioImage] = useUploadPortfolioImageMutation();
@@ -196,6 +262,7 @@ const PortfolioTab = () => {
       skip: !vendorId,
       onError: (error) => {
         console.error('Portfolio Images Query Error:', error);
+        console.error('Vendor ID used:', vendorId);
         toast.error('Failed to load portfolio images');
       }
     }
@@ -213,10 +280,31 @@ const PortfolioTab = () => {
       skip: !vendorId,
       onError: (error) => {
         console.error('Portfolio Videos Query Error:', error);
+        console.error('Vendor ID used:', vendorId);
         toast.error('Failed to load portfolio videos');
       }
     }
   );
+
+  // Debug logging for API errors
+  useEffect(() => {
+    if (isImagesError) {
+      console.error('Images Error Details:', {
+        error: imagesError,
+        vendorId,
+        status: imagesError?.status,
+        data: imagesError?.data
+      });
+    }
+    if (isVideosError) {
+      console.error('Videos Error Details:', {
+        error: videosError,
+        vendorId,
+        status: videosError?.status,
+        data: videosError?.data
+      });
+    }
+  }, [isImagesError, isVideosError, imagesError, videosError, vendorId]);
 
   // Update state when data is fetched
   useEffect(() => {
@@ -263,6 +351,7 @@ const PortfolioTab = () => {
         const formData = new FormData();
         formData.append('image', files[0]);
         formData.append('title', `Portfolio Image ${portfolioImages.length}`);
+        formData.append('vendorId', vendorId);
         await uploadPortfolioImage(formData).unwrap();
       }
       // For multiple uploads or adding new images
@@ -272,6 +361,7 @@ const PortfolioTab = () => {
           const formData = new FormData();
           formData.append('image', files[i]);
           formData.append('title', `Portfolio Image ${portfolioImages.length + i + 1}`);
+          formData.append('vendorId', vendorId);
           await uploadPortfolioImage(formData).unwrap();
         }
       }
@@ -306,12 +396,11 @@ const PortfolioTab = () => {
     try {
       setIsLoading(true);
       const imageId = portfolioImages[index]._id;
-      await deletePortfolioImage(imageId).unwrap();
+      await deletePortfolioImage({ imageId, vendorId }).unwrap();
       refetchImages();
       toast.success('Image removed successfully');
     } catch (error) {
-      console.error('Error removing image:', error);
-      toast.error(error?.data?.message || 'Failed to remove image');
+      toast.error('Failed to remove image');
     } finally {
       setIsLoading(false);
     }
@@ -456,6 +545,7 @@ const PortfolioTab = () => {
       const formData = new FormData();
       formData.append('video', selectedVideoFile);
       formData.append('title', `Portfolio Video ${portfolioVideos.length + 1}`);
+      formData.append('vendorId', vendorId);
 
       // Upload video
       const response = await uploadPortfolioVideo(formData).unwrap();

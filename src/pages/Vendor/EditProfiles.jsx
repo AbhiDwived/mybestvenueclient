@@ -68,7 +68,7 @@ const EditProfile = () => {
   const vendorId = vendor?._id || vendor?.id;
 
   const { data, error, isLoading: isLoadingVendor, refetch } = useGetVendorByIdQuery(vendorId);
-  // console.log("data ff", data);
+
 
   const [deleteVendorPricingItem, { isLoading: isDeleting }] = useDeleteVendorPricingItemMutation();
 
@@ -92,7 +92,7 @@ const EditProfile = () => {
           setFaqs([]);
         }
       } catch (error) {
-        console.error('Error refreshing FAQs:', error);
+
         setFaqs([]);
       } finally {
         setIsLoadingFaqs(false);
@@ -111,7 +111,7 @@ const EditProfile = () => {
     }
 
     if (!vendorId) {
-      // console.error('Vendor ID is missing:', vendor);
+
       toast.error('Error: Vendor ID is missing. Please try logging in again.');
       navigate('/vendor/login');
     } else {
@@ -127,7 +127,7 @@ const EditProfile = () => {
           }
         })
         .catch((error) => {
-          console.error('Error fetching FAQs:', error);
+
           setFaqs([]); // Set empty array on error
         })
         .finally(() => {
@@ -219,25 +219,7 @@ const EditProfile = () => {
 
     const percentage = Math.round((completedWeight / totalWeight) * 100);
 
-    // Debug log for development
-    console.log('Profile Completion Debug:', {
-      businessName: !!businessName?.trim(),
-      category: !!category?.trim(),
-      businessDescription: !!businessDescription?.trim(),
-      serviceAreas: Array.isArray(serviceAreas) ? serviceAreas.length > 0 : !!serviceAreas?.trim(),
-      contactEmail: !!contactEmail?.trim(),
-      contactPhone: !!contactPhone?.trim(),
-      contactName: !!contactName?.trim(),
-      address: !!address?.trim(),
-      city: !!city?.trim(),
-      state: !!state?.trim(),
-      country: !!country?.trim(),
-      pinCode: !!pinCode?.trim(),
-      profilePhoto: !!(coverImage || vendor?.profilePicture),
-      portfolioCount: portfolioData?.images?.length || 0,
-      faqCount: faqs?.length || 0,
-      percentage
-    });
+
 
     return {
       percentage,
@@ -250,33 +232,37 @@ const EditProfile = () => {
       setBusinessName(vendor.businessName || 'Dream Wedding Photography');
       setCategory(vendor.vendorType || 'Photography');
       setBusinessDescription(data?.vendor?.description || vendor.description || 'This is a sample description.');
-      setServiceAreas(vendor.serviceAreas || 'New Delhi, India');
-      // setPriceRange(vendor.pricing || '10000 - 50000');
+      
+      // Handle serviceAreas properly - convert to string if it's an array
+      if (Array.isArray(vendor.serviceAreas)) {
+        setServiceAreas(vendor.serviceAreas.length > 0 ? vendor.serviceAreas[0] : 'New Delhi, India');
+      } else {
+        setServiceAreas(vendor.serviceAreas || 'New Delhi, India');
+      }
+      
       setContactEmail(vendor.email || 'mybestvenuehelp@gmail.com');
       setContactPhone(vendor.phone || '‪+91 9999999999‬');
       setWebsite(vendor.website || 'mybestvenue.com');
       setcontactName(vendor.contactName || 'John Doe');
-      setCoverImage(vendor.profilePicture || null);
-      // setAddress(vendor.address || 'No Address');
+      
+      // Always use the latest profile picture from vendor or data
+      const latestProfilePicture = data?.vendor?.profilePicture || vendor.profilePicture;
+      setCoverImage(latestProfilePicture || null);
+      
       setAddress(data?.vendor?.address || 'No Address');
       setCity(data?.vendor?.city || 'New Delhi');
       setState(data?.vendor?.state || 'Delhi');
       setCountry(data?.vendor?.country || 'India');
       setPincode(data?.vendor?.pinCode || '000000');
-      // setServices(data?.vendor.services || 'Photographers,Gifts');
+      
       const servicesData = data?.vendor?.services;
       if (Array.isArray(servicesData)) {
         setServices(servicesData);
       } else if (typeof servicesData === 'string') {
         setServices(servicesData.split(',').map(s => s.trim()));
       } else {
-        // setServices(['Photographers', 'Gifts']);
         setServices(['']);
-
       }
-
-
-
     }
   }, [vendor, data]);
 
@@ -300,8 +286,7 @@ const EditProfile = () => {
   const prepareFormData = (imageFile = null) => {
     const formData = new FormData();
 
-    // Log the vendor ID being used
-    // console.log('Preparing form data with vendor ID:', vendorId);
+
 
     formData.append("_id", vendorId); // Add vendor ID to form data
     formData.append("businessName", businessName);
@@ -375,7 +360,7 @@ const EditProfile = () => {
     // if (type === 'contact') setIsSavingContact(true);
 
     try {
-      // console.log('Attempting to update vendor with ID:', vendorId);
+
       const formData = prepareFormData();
 
       const res = await updateProfile({
@@ -386,15 +371,15 @@ const EditProfile = () => {
 
       const updatedVendor = res.vendor || res;
 
-      // Only update the image state if a new image was actually returned
-      if (updatedVendor.profilePicture && updatedVendor.profilePicture !== coverImage) {
+      // Always update the cover image from the server response
+      if (updatedVendor.profilePicture) {
         setCoverImage(updatedVendor.profilePicture);
       }
 
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
       toast.success("Profile updated successfully!");
     } catch (err) {
-      // console.error('Update failed:', err);
+
       if (err.status === 404) {
         toast.error("Error: Vendor not found. Please try logging in again.");
         navigate('/vendor/login');
@@ -457,15 +442,20 @@ const EditProfile = () => {
         profileData: formData,
       }).unwrap();
 
-      // console.log("services", vendor.services)
-      // Update with the server URL
-      if (res.profilePicture) {
-        setCoverImage(res.profilePicture);
+      // Force refetch vendor data to get updated profile
+      await refetch();
+
+      // Update with the server URL - check both possible response structures
+      const updatedProfilePicture = res.profilePicture || res.vendor?.profilePicture;
+      
+      if (updatedProfilePicture) {
+        setCoverImage(updatedProfilePicture);
         setSelectedFile(null); // Clear selected file after successful upload
 
-        // Update the vendor state in Redux
+        // Update the vendor state in Redux with the complete updated vendor data
+        const updatedVendor = res.vendor || { ...vendor, profilePicture: updatedProfilePicture };
         dispatch(setVendorCredentials({
-          vendor: { ...vendor, profilePicture: res.profilePicture },
+          vendor: updatedVendor,
           token
         }));
 
@@ -474,15 +464,15 @@ const EditProfile = () => {
         throw new Error("No profile picture URL received from server");
       }
     } catch (err) {
-      console.error("Error uploading image:", err);
+
       toast.error("Failed to update profile image: " + (err.message || "Unknown error"));
       // Revert to previous image on error
       setCoverImage(vendor.profilePicture || null);
       setSelectedFile(null);
     } finally {
       // Clean up the temporary object URL
-      if (localPreview) {
-        URL.revokeObjectURL(localPreview);
+      if (file) {
+        URL.revokeObjectURL(URL.createObjectURL(file));
       }
     }
   };
@@ -535,7 +525,7 @@ const EditProfile = () => {
         await deleteVendorPricingItem({ vendorId, pricingId: item._id }).unwrap();
         toast.success("Price range deleted Succesfully");
       } catch (err) {
-        // console.error("Failed to delete from DB:", err);
+
         toast.error("Failed to delete pricing data");
         return;
       }
@@ -577,11 +567,11 @@ const EditProfile = () => {
             <form>
               <div className="mb-3">
                 <label className="form-label">Business Name</label>
-                <input type="text" className="form-control" value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+                <input type="text" className="form-control" value={businessName || ''} onChange={(e) => setBusinessName(e.target.value)} />
               </div>
               <div className="mb-3">
                 <label className="form-label"> Category</label>
-                <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+                <select className="form-select" value={category || ''} onChange={(e) => setCategory(e.target.value)}>
                   <option value="">Select Category</option>
                   {VENDOR_TYPES.map((type) => (
                     <option key={type} value={type}>{type}</option>
@@ -590,35 +580,35 @@ const EditProfile = () => {
               </div>
               <div className="mb-3">
                 <label className="form-label">Business Description</label>
-                <textarea className="form-control" rows="4" value={businessDescription} onChange={(e) => setBusinessDescription(e.target.value)}></textarea>
+                <textarea className="form-control" rows="4" value={businessDescription || ''} onChange={(e) => setBusinessDescription(e.target.value)}></textarea>
               </div>
               <div className="mb-3">
                 <label className="form-label">Address</label>
-                <input type="text" className="form-control" value={address} onChange={(e) => setAddress(e.target.value)} />
+                <input type="text" className="form-control" value={address || ''} onChange={(e) => setAddress(e.target.value)} />
               </div>
               <div className="mb-3">
                 <label className="form-label">City</label>
-                <input type="text" className="form-control" value={city} onChange={(e) => setCity(e.target.value)} />
+                <input type="text" className="form-control" value={city || ''} onChange={(e) => setCity(e.target.value)} />
               </div>
               <div className="mb-3">
                 <label className="form-label">State</label>
-                <input type="text" className="form-control" value={state} onChange={(e) => setState(e.target.value)} />
+                <input type="text" className="form-control" value={state || ''} onChange={(e) => setState(e.target.value)} />
               </div>
               <div className="mb-3">
                 <label className="form-label">Pin Code</label>
-                <input type="text" className="form-control" value={pinCode} onChange={(e) => setPincode(e.target.value)} />
+                <input type="text" className="form-control" value={pinCode || ''} onChange={(e) => setPincode(e.target.value)} />
               </div>
               <div className="mb-3">
                 <label className="form-label">Country</label>
 
-                <input type="text" className="form-control" value={country} onChange={(e) => setCountry(e.target.value)} />
+                <input type="text" className="form-control" value={country || ''} onChange={(e) => setCountry(e.target.value)} />
               </div>
               <div className="mb-3">
                 <label className="form-label">Location</label>
                 {/* <input type="text" className="form-control" value={serviceAreas} onChange={(e) => setServiceAreas(e.target.value)} /> */}
                 <select
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={serviceAreas}
+                  value={Array.isArray(serviceAreas) ? (serviceAreas[0] || '') : serviceAreas}
                   onChange={(e) => setServiceAreas(e.target.value)}
                 >
                   <option value="">Select Location</option>
@@ -635,7 +625,7 @@ const EditProfile = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={service}
+                      value={service || ''}
                       onChange={(e) => handleServiceChange(index, e.target.value)}
                     />
 
@@ -679,14 +669,14 @@ const EditProfile = () => {
                       type="text"
                       className="form-control"
                       placeholder="Type (e.g. Veg)"
-                      value={item.type}
+                      value={item.type || ''}
                       onChange={(e) => handlePricingChange(index, 'type', e.target.value)}
                     />
                     <input
                       type="number"
                       className="form-control"
                       placeholder="Price"
-                      value={item.price}
+                      value={item.price || ''}
                       onChange={(e) => handlePricingChange(index, 'price', e.target.value)}
                     />
                     <input
@@ -694,7 +684,7 @@ const EditProfile = () => {
                       className="form-control"
                       list="pricing-units"
                       placeholder="Unit (e.g. per plate)"
-                      value={item.unit}
+                      value={item.unit || ''}
                       onChange={(e) => handlePricingChange(index, 'unit', e.target.value)}
                     />
                     <datalist id="pricing-units">
@@ -756,13 +746,13 @@ const EditProfile = () => {
             <p className="text-muted small">This will be displayed as your profile banner</p>
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden', borderRadius: '0.5rem' }}>
               <img
-                src={coverImage || vendor.profilePicture || coverimage}
+                src={coverImage || data?.vendor?.profilePicture || vendor?.profilePicture || coverimage}
                 className="w-100 h-100 object-fit-cover"
                 alt="Cover"
+                key={coverImage || data?.vendor?.profilePicture || vendor?.profilePicture} // Force re-render when image changes
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = coverimage; // Fallback to default image
-                  console.error("Failed to load image:", coverImage);
                 }}
               />
 
@@ -840,14 +830,14 @@ const EditProfile = () => {
             <form>
               <div className="mb-3">
                 <label className="form-label">Contact Email</label>
-                <input type="email" className="form-control" value={contactEmail} readOnly disabled />
+                <input type="email" className="form-control" value={contactEmail || ''} readOnly disabled />
               </div>
               <div className="mb-3">
                 <label className="form-label">Contact Phone</label>
                 <input
                   type="tel"
                   className={`form-control ${contactErrors.contactPhone ? 'border-red-500' : ''}`}
-                  value={contactPhone}
+                  value={contactPhone || ''}
                   onChange={(e) => {
                     let val = e.target.value.replace(/\D/g, '');
                     if (val.startsWith('91') && val.length > 10) val = val.slice(-10);
@@ -860,7 +850,7 @@ const EditProfile = () => {
               </div>
               <div className="mb-3">
                 <label className="form-label">Website (optional)</label>
-                <input type="url" className="form-control" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                <input type="url" className="form-control" value={website || ''} onChange={(e) => setWebsite(e.target.value)} />
               </div>
               {/* <button type="button" onClick={handleSave} className="btn text-white" style={{ backgroundColor: '#0f4c81' }}>
                 {isLoading ? 'Saving...' : 'Save Contact Info'}

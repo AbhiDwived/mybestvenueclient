@@ -345,8 +345,8 @@ export const vendorApi = createApi({
     }),
 
     deletePortfolioImage: builder.mutation({
-      query: (imageId) => ({
-        url: `/vendor/portfolio/image/${imageId}`,
+      query: ({ imageId, vendorId }) => ({
+        url: `/vendor/portfolio/image/${imageId}${vendorId ? `?vendorId=${vendorId}` : ''}`,
         method: "DELETE",
       }),
       invalidatesTags: ["PortfolioImages"],

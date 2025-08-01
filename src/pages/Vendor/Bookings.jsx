@@ -32,16 +32,12 @@ export default function BookingManagement() {
 
   // Get vendor info from Redux store
   const vendor = useSelector((state) => state.vendor.vendor);
-  const vendorId = vendor?.id;
-
-  if (!vendorId) {
-    return <div className="text-center mt-10 text-red-500">Error: Vendor ID not found. Please log in again.</div>;
-  }
-
-
+  const vendorId = vendor?._id || vendor?.id;
 
   // API queries and mutations
-  const { data, isLoading, error, refetch } = useGetVendorBookingsListQuery(vendorId);
+  const { data, isLoading, error, refetch } = useGetVendorBookingsListQuery(vendorId, {
+    skip: !vendorId,
+  });
   const [updateVendorBooking, { isLoading: updating }] = useUpdateVendorBookingMutation();
   const {
     data: userList,
@@ -293,6 +289,14 @@ export default function BookingManagement() {
 
  
 
+  if (!vendorId) {
+    return (
+      <div className="text-center mt-10 text-red-500">
+        Vendor ID not found. Please refresh the page.
+      </div>
+    );
+  }
+
   if (isLoading) {
     return <Loader />;
   }
@@ -300,7 +304,7 @@ export default function BookingManagement() {
   if (error) {
     return (
       <div className="text-center mt-10 text-red-500">
-        Error loading bookings: {error.message || 'Unknown error'}
+        Error loading bookings: {error?.data?.message || error?.message || 'Unknown error'}
       </div>
     );
   }
@@ -706,4 +710,3 @@ export default function BookingManagement() {
     </div>
   );
 }
-

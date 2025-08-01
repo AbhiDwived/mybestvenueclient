@@ -15,12 +15,16 @@ import ReviewSection from './Reviews';
 import Bookings from './Bookings';
 import VendorPreviewProfile from "./PreviewProfile/VendorPreviewProfile";
 import EventModal from '../../components/EventModal';
-import { useSelector } from 'react-redux';
+
+import { useSelector, useDispatch } from 'react-redux';
 import { FaAngleLeft, FaChevronRight } from "react-icons/fa6";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useGetVendorByIdQuery, useUserInquiryListQuery, useGetVendorBookingsListQuery } from '../../features/vendors/vendorAPI';
 import { useGetVendorEventsQuery, useDeleteEventMutation, useGetUpcomingEventsQuery } from '../../features/events/eventAPI';
+
 import { toast } from 'react-toastify';
+import { setVendorCredentials } from '../../features/vendors/vendorSlice';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
@@ -29,6 +33,10 @@ const Dashboard = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const vendor = useSelector((state) => state.vendor.vendor);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [isAdminEdit, setIsAdminEdit] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDatePickerForWedding, setShowDatePickerForWedding] = useState(null);
@@ -60,9 +68,12 @@ const Dashboard = () => {
   });
 
   const [deleteEvent] = useDeleteEventMutation();
+  
+
 
   // Get vendor inquiries for recent activity
-  const { data: inquiriesData, isLoading: isInquiriesLoading } = useUserInquiryListQuery(undefined, {
+  const { data: inquiriesData, isLoading: isInquiriesLoading } = useUserInquiryListQuery(vendorId, {
+    skip: !vendorId,
     refetchOnMountOrArgChange: true
   });
 
@@ -74,11 +85,34 @@ const Dashboard = () => {
     localStorage.setItem('activeTab', tab);
   };
 
+  // Handle admin edit mode
+  useEffect(() => {
+    const adminEditId = searchParams.get('adminEdit');
+    const adminEditData = localStorage.getItem('adminEditingVendor');
+    
+    if (adminEditId && adminEditData) {
+      try {
+        const editData = JSON.parse(adminEditData);
+        if (editData.isAdminEdit && editData.vendor) {
+          // Set up vendor data for admin editing
+          dispatch(setVendorCredentials({
+            vendor: editData.vendor,
+            token: localStorage.getItem('adminToken') || localStorage.getItem('token'),
+            isAuthenticated: true
+          }));
+          setIsAdminEdit(true);
+        }
+      } catch (error) {
+        console.error('Error parsing admin edit data:', error);
+      }
+    }
+  }, [searchParams, dispatch]);
+
   useEffect(() => {
     // Tab change handler
   }, [activeTab, vendor, isAuthenticated, vendorId]);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isAdminEdit) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
   }
 
@@ -273,6 +307,29 @@ const Dashboard = () => {
 
   return (
     <div className="p-2 sm:p-6 bg-white min-h-screen text-gray-800 font-serif">
+      {/* Admin Edit Mode Banner */}
+      {isAdminEdit && (
+        <div className="bg-orange-100 border-l-4 border-orange-500 p-4 mb-4 rounded">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="text-orange-700">
+                <h4 className="font-bold">Admin Edit Mode</h4>
+                <p className="text-sm">You are editing {vendor?.businessName || 'this vendor'} as an administrator</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.removeItem('adminEditingVendor');
+                navigate('/admin/vendor_management');
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+            >
+              Exit Admin Mode
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="mb-2 px-2 sm:px-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
@@ -394,6 +451,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {activeTab === 'Overview' && (
           <>
+
             {/* Performance Overview */}
             <div className="col-span-2 bg-gray-50 p-3 sm:p-4 rounded border">
               <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Performance Overview</h2>

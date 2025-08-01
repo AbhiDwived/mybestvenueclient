@@ -14,7 +14,9 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
   const vendorAuth = useSelector((state) => state.vendor || {});
   const adminAuth = useSelector((state) => state.adminAuth || {});
 
- 
+  // Check for admin edit mode
+  const adminEditData = localStorage.getItem('adminEditingVendor');
+  const isAdminEditMode = adminEditData && JSON.parse(adminEditData)?.isAdminEdit;
 
   let isAuthenticated = false;
   let currentRole = null;
@@ -40,12 +42,15 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
     currentRole = userAuth.user.role || 'user';
   }
 
-
-
   // Not authenticated, redirect to login page based on first allowed role or default to user login
   if (!isAuthenticated) {
     const redirectTo = loginRedirects[allowedRoles[0]] || '/user/login';
     return <Navigate to={redirectTo} replace />;
+  }
+
+  // Special case: Allow admin to access vendor routes when in admin edit mode
+  if (allowedRoles.includes('vendor') && currentRole === 'admin' && isAdminEditMode) {
+    return children ? children : <Outlet />;
   }
 
   // Authenticated but role not authorized

@@ -134,6 +134,7 @@ import VendorManagement from '../pages/Admin/VendorManagement';
 import PendingVendorApprovals from "../pages/Admin/PendingApprovals";
 import ReviewModeration from "../pages/Admin/ReviewModeration";
 import AdminAddBlogPost from '../pages/Admin/AdminAddBlogPost';
+import AdminAddVendor from '../pages/Admin/AdminAddVendor';
 import CategoryManagement from '../pages/Admin/CategoryManagement';
 import InquiryReply from '../pages/Vendor/Inquiries/InquiryReply';
 import BlogDetails from '../pages/Admin/BlogDetails';
@@ -324,6 +325,7 @@ const index = () => {
                     <Route path="review_moderation" element={<ReviewModeration />} />
                     <Route path="category_management" element={<CategoryManagement />} />
                     <Route path="add-blog-post" element={<AdminAddBlogPost />} />
+                    <Route path="add-vendor" element={<AdminAddVendor />} />
                     <Route path="blogs/:slug" element={<BlogDetails />} />
                     <Route path="contact" element={<Contact />} />
                 </Route>

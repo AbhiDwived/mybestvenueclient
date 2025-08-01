@@ -92,7 +92,14 @@ const VendorManagement = () => {
   const handleEdit = (vendor) => {
     const vendorId = vendor._id;
     if (vendorId) {
-      navigate(`/preview-profile/${vendorId}`);
+      // Store vendor data in localStorage for admin access
+      localStorage.setItem('adminEditingVendor', JSON.stringify({
+        vendor: vendor,
+        isAdminEdit: true,
+        originalAdminToken: localStorage.getItem('adminToken')
+      }));
+      // Navigate to vendor dashboard
+      navigate(`/vendor/dashboard?adminEdit=${vendorId}`);
     } else {
       alert("Unable to edit vendor: ID not found");
     }
@@ -122,30 +129,30 @@ const VendorManagement = () => {
 
   return (
     <div className=" bg-white rounded-xl ">
-      <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+      <div className="flex justify-between items-center mb-4">
         <div className="p-3">
           <h2 className="text-2xl font-semibold">Vendor Management</h2>
           <p className="text-sm text-gray-500">Manage all registered vendors on the platform</p>
         </div>
-
-        <div className="flex flex-wrap gap-4 px-3">
+        
+        <div className="flex gap-2 px-3">
           <input
             type="text"
-            placeholder="Search by name, business name, or email..."
-            className="border px-3 py-2 rounded-md text-sm w-64"
+            placeholder="Search vendors..."
+            className="border px-2 py-1 rounded text-xs w-40"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset to first page when searching
+              setCurrentPage(1);
             }}
           />
           <select
             value={selectedCategory}
             onChange={(e) => {
               setSelectedCategory(e.target.value);
-              setCurrentPage(1); // Reset to first page when filtering
+              setCurrentPage(1);
             }}
-            className="border px-3 py-2 rounded-md text-sm w-64"
+            className="border px-2 py-1 rounded text-xs w-40"
           >
             {categories.map((cat, i) => (
               <option key={i} value={cat}>
@@ -153,6 +160,13 @@ const VendorManagement = () => {
               </option>
             ))}
           </select>
+          <button
+            onClick={() => navigate('/admin/add-vendor')}
+            className="text-white px-2 py-1 rounded text-xs w-40"
+            style={{ backgroundColor: '#0f4c81' }}
+          >
+            Add Vendor
+          </button>
         </div>
       </div>
 

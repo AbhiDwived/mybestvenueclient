@@ -115,6 +115,15 @@ export const adminApi = createApi({
       invalidatesTags: ['PendingVendors'],
     }),
 
+    // Create Vendor by Admin
+    createVendorByAdmin: builder.mutation({
+      query: (vendorData) => ({
+        url: '/admin/create-vendor',
+        method: 'POST',
+        body: vendorData,
+      }),
+    }),
+
     // ✅ Activity Endpoints — UPDATED to use /activity instead of /admin
     getRecentActivities: builder.query({
       query: () => '/activity/recent', // ✅ Updated
@@ -157,6 +166,43 @@ export const adminApi = createApi({
       query: (location) => `/admin/vendor-counts/${location}`,
     }),
 
+    // Ride management endpoints
+    getAllRides: builder.query({
+      query: () => '/admin/rides',
+      providesTags: ['Rides'],
+    }),
+
+    createRide: builder.mutation({
+      query: (rideData) => ({
+        url: '/admin/rides',
+        method: 'POST',
+        body: rideData,
+      }),
+      invalidatesTags: ['Rides'],
+    }),
+
+    updateRide: builder.mutation({
+      query: ({ rideId, ...rideData }) => ({
+        url: `/admin/rides/${rideId}`,
+        method: 'PUT',
+        body: rideData,
+      }),
+      invalidatesTags: ['Rides'],
+    }),
+
+    deleteRide: builder.mutation({
+      query: ({ rideId }) => ({
+        url: `/admin/rides/${rideId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Rides'],
+    }),
+
+    getRidesByVendor: builder.query({
+      query: (vendorId) => `/admin/rides/vendor/${vendorId}`,
+      providesTags: ['Rides'],
+    }),
+
   }),
 });
 
@@ -177,6 +223,7 @@ export const {
   useGetPendingVendorsQuery,
   useApproveVendorMutation,
   useDeleteVendorByAdminMutation,
+  useCreateVendorByAdminMutation,
 
   // ✅ Activity Hooks
   useGetRecentActivitiesQuery,
@@ -186,4 +233,11 @@ export const {
   useBulkDeleteActivitiesMutation,
 
   useGetVendorCountsByLocationQuery,
+
+  // Ride management hooks
+  useGetAllRidesQuery,
+  useCreateRideMutation,
+  useUpdateRideMutation,
+  useDeleteRideMutation,
+  useGetRidesByVendorQuery,
 } = adminApi;

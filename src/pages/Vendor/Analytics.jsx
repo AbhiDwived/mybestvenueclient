@@ -21,9 +21,10 @@ const Analytics = () => {
   const [stats, setStats] = useState([]);
   const vendor = useSelector((state) => state.vendor.vendor);
   // console.log("vendor", vendor);
-  const vendorId = vendor.id;
- const { data: bookings, isLoading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useGetVendorBookingsListQuery(vendorId);
-  const { data: inquiries, isLoading, isError, error, refetch: refetchInquiries } = useUserInquiryListQuery(undefined, {
+  const vendorId = vendor?.id;
+ const { data: bookings, isLoading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useGetVendorBookingsListQuery(vendorId, { skip: !vendorId });
+  const { data: inquiries, isLoading, isError, error, refetch: refetchInquiries } = useUserInquiryListQuery(vendorId, {
+    skip: !vendorId,
     // The query will use the auth token from the state, so we don't need to pass vendorId
     refetchOnMountOrArgChange: true
   });
