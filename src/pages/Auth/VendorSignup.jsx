@@ -29,9 +29,47 @@ const VENDOR_TYPES = [
   'Gift Providers',
   'Tent House Services',
   'Entertainers',
+  'Bus On Rent',
   'Wedding Planners',
   'Wedding Photographers',
   'Astrologers'
+];
+
+const VENUE_TYPES = [
+  'Art Gallery',
+  'Amusement Park',
+  'Auditorium',
+  'Banquet halls',
+  'Bars',
+  'Clubs',
+  'Pool Side',
+  'Conference Rooms',
+  'Farm Houses',
+  'Hotels',
+  'Party lawn',
+  'Resort',
+  'Restaurants',
+  'Seminar Halls',
+  'Theater',
+  'Unique Venues',
+  'Roof Top',
+  'Gaming Zone',
+  'Villas',
+  'Pubs',
+  'Meeting Rooms',
+  'Boat / Yatch',
+  'Vacation Homes',
+  'Cafes',
+  'Co-working spaces',
+  'Business Centres',
+  'Guest Houses',
+  '5 Star Hotel',
+  'Marriage Garden',
+  'Wedding Hotels',
+  'Marriage Lawn',
+  'Wedding Resort',
+  'Training Rooms',
+  'Kids Play Area'
 ];
 
 const NEAR_LOCATIONS = {
@@ -48,7 +86,9 @@ const VendorSignup = () => {
   const [formData, setFormData] = useState({
     contactName: '',
     businessName: '',
+    businessType: '',
     vendorType: '',
+    venueType: '',
     otherVendorType: '',
     email: '',
     phone: '',
@@ -272,9 +312,17 @@ const VendorSignup = () => {
       errors.push("Passwords do not match");
     }
 
-    // 🔹 Vendor type and location
-    if (!formData.vendorType) {
+    // 🔹 Business type validation
+    if (!formData.businessType) {
+      errors.push("Please select business type (Vendor or Venue)");
+    }
+
+    if (formData.businessType === 'vendor' && !formData.vendorType) {
       errors.push("Please select a vendor type");
+    }
+
+    if (formData.businessType === 'venue' && !formData.venueType) {
+      errors.push("Please select a venue type");
     }
 
     if (formData.vendorType === "Other" && !formData.otherVendorType.trim()) {
@@ -336,7 +384,11 @@ const VendorSignup = () => {
         data.append(key, finalNearLocation || '');
       } else if (key === "contactName" || key === "businessName" || key === "email") {
         data.append(key, value.trim());
-      } else if (key !== "otherVendorType") {
+      } else if (key !== "otherVendorType" && key !== "venueType" && key !== "vendorType") {
+        data.append(key, value);
+      } else if (key === "vendorType" && vendorData.businessType === "vendor") {
+        data.append(key, value);
+      } else if (key === "venueType" && vendorData.businessType === "venue") {
         data.append(key, value);
       }
     });
@@ -374,7 +426,9 @@ const VendorSignup = () => {
             navigate(`/vendor/verify-otp?email=${encodeURIComponent(email)}`, {
               state: {
                 email: email,
-                vendorType: formData.vendorType === "Other" ? formData.otherVendorType : formData.vendorType
+                businessType: formData.businessType,
+                vendorType: formData.businessType === 'vendor' ? (formData.vendorType === "Other" ? formData.otherVendorType : formData.vendorType) : null,
+                venueType: formData.businessType === 'venue' ? formData.venueType : null
               }
             });
           }
@@ -450,24 +504,84 @@ const VendorSignup = () => {
               />
             </div>
 
+            {/* Business Type Selection */}
             <div>
-              <label htmlFor="vendorType" className="block text-sm font-medium text-gray-700 mb-1">Vendor Type <span className="text-red-500">*</span></label>
-              <select
-                id="vendorType"
-                name="vendorType"
-                value={formData.vendorType}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a vendor type</option>
-                {VENDOR_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Business Type <span className="text-red-500">*</span></label>
+              <div className="flex space-x-6">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.businessType === 'vendor'}
+                    onChange={() => setFormData(prev => ({
+                      ...prev,
+                      businessType: prev.businessType === 'vendor' ? '' : 'vendor',
+                      vendorType: '',
+                      venueType: ''
+                    }))}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Vendor Type</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.businessType === 'venue'}
+                    onChange={() => setFormData(prev => ({
+                      ...prev,
+                      businessType: prev.businessType === 'venue' ? '' : 'venue',
+                      vendorType: '',
+                      venueType: ''
+                    }))}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Venue Type</span>
+                </label>
+              </div>
             </div>
+
+            {/* Vendor Type Dropdown */}
+            {formData.businessType === 'vendor' && (
+              <div>
+                <label htmlFor="vendorType" className="block text-sm font-medium text-gray-700 mb-1">Vendor Type <span className="text-red-500">*</span></label>
+                <select
+                  id="vendorType"
+                  name="vendorType"
+                  value={formData.vendorType}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select a vendor type</option>
+                  {VENDOR_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Venue Type Dropdown */}
+            {formData.businessType === 'venue' && (
+              <div>
+                <label htmlFor="venueType" className="block text-sm font-medium text-gray-700 mb-1">Venue Type <span className="text-red-500">*</span></label>
+                <select
+                  id="venueType"
+                  name="venueType"
+                  value={formData.venueType}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select a venue type</option>
+                  {VENUE_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {formData.vendorType === 'Other' && (
               <div>

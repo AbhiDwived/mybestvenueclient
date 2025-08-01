@@ -32,9 +32,47 @@ const VENDOR_TYPES = [
   'Gift Providers',
   'Tent House Services',
   'Entertainers',
+  'Bus On Rent',
   'Wedding Planners',
   'Wedding Photographers',
   'Astrologers'
+];
+
+const VENUE_TYPES = [
+  'Art Gallery',
+  'Amusement Park',
+  'Auditorium',
+  'Banquet halls',
+  'Bars',
+  'Clubs',
+  'Pool Side',
+  'Conference Rooms',
+  'Farm Houses',
+  'Hotels',
+  'Party lawn',
+  'Resort',
+  'Restaurants',
+  'Seminar Halls',
+  'Theater',
+  'Unique Venues',
+  'Roof Top',
+  'Gaming Zone',
+  'Villas',
+  'Pubs',
+  'Meeting Rooms',
+  'Boat / Yatch',
+  'Vacation Homes',
+  'Cafes',
+  'Co-working spaces',
+  'Business Centres',
+  'Guest Houses',
+  '5 Star Hotel',
+  'Marriage Garden',
+  'Wedding Hotels',
+  'Marriage Lawn',
+  'Wedding Resort',
+  'Training Rooms',
+  'Kids Play Area'
 ];
 
 const NEAR_LOCATIONS = {
@@ -135,6 +173,7 @@ const EditProfile = () => {
   const profileimg = vendor.profilePicture;
 
   const [businessName, setBusinessName] = useState('');
+  const [businessType, setBusinessType] = useState('');
   const [category, setCategory] = useState('');
   const [businessDescription, setBusinessDescription] = useState('');
   const [serviceAreas, setServiceAreas] = useState([]);
@@ -230,34 +269,35 @@ const EditProfile = () => {
       
   
       
-      setBusinessName(vendorData.businessName || vendor.businessName || 'Dream Wedding Photography');
-      setCategory(vendorData.vendorType || vendor.vendorType || 'Photography');
-      setBusinessDescription(vendorData.description || vendor.description || 'This is a sample description.');
+      setBusinessName(vendorData.businessName || vendor.businessName || '');
+      setBusinessType(vendorData.businessType || vendor.businessType || '');
+      setCategory(vendorData.vendorType || vendorData.venueType || vendor.vendorType || vendor.venueType || '');
+      setBusinessDescription(vendorData.description || vendor.description || '');
       
       // Handle serviceAreas properly - convert to string if it's an array
       const serviceAreasData = vendorData.serviceAreas || vendor.serviceAreas;
       if (Array.isArray(serviceAreasData)) {
-        setServiceAreas(serviceAreasData.length > 0 ? serviceAreasData[0] : 'New Delhi, India');
+        setServiceAreas(serviceAreasData.length > 0 ? serviceAreasData[0] : '');
       } else {
-        setServiceAreas(serviceAreasData || 'New Delhi, India');
+        setServiceAreas(serviceAreasData || '');
       }
       
-      setContactEmail(vendorData.email || vendor.email || 'mybestvenuehelp@gmail.com');
-      setContactPhone(vendorData.phone || vendor.phone || '‪+91 9999999999‬');
-      setWebsite(vendorData.website || vendor.website || 'mybestvenue.com');
-      setcontactName(vendorData.contactName || vendor.contactName || 'John Doe');
+      setContactEmail(vendorData.email || vendor.email || '');
+      setContactPhone(vendorData.phone || vendor.phone || '');
+      setWebsite(vendorData.website || vendor.website || '');
+      setcontactName(vendorData.contactName || vendor.contactName || '');
       
       // Always use the latest profile picture from vendor or data
       const latestProfilePicture = vendorData.profilePicture || vendor.profilePicture;
       setCoverImage(latestProfilePicture || null);
       
       // Location data - prioritize data from API response
-      setAddress(vendorData.address || 'No Address');
-      setCity(vendorData.city || 'New Delhi');
-      const vendorState = vendorData.state || 'DL';
+      setAddress(vendorData.address || '');
+      setCity(vendorData.city || '');
+      const vendorState = vendorData.state || '';
       setState(vendorState);
       setCountry(vendorData.country || 'IN');
-      setPincode(vendorData.pinCode || '000000');
+      setPincode(vendorData.pinCode || '');
       const vendorNearLocation = vendorData.nearLocation || '';
       const currentCity = vendorData.city || city || 'New Delhi';
       
@@ -317,7 +357,12 @@ const EditProfile = () => {
 
     formData.append("_id", vendorId);
     formData.append("businessName", businessName || '');
-    formData.append("vendorType", category || '');
+    formData.append("businessType", businessType || '');
+    if (businessType === 'vendor') {
+      formData.append("vendorType", category || '');
+    } else if (businessType === 'venue') {
+      formData.append("venueType", category || '');
+    }
     formData.append("description", businessDescription || '');
 
     const formattedServiceAreas = Array.isArray(serviceAreas)
@@ -442,7 +487,12 @@ const EditProfile = () => {
 
       // Keep existing data
       formData.append("businessName", businessName || '');
-      formData.append("vendorType", category || '');
+      formData.append("businessType", businessType || '');
+      if (businessType === 'vendor') {
+        formData.append("vendorType", category || '');
+      } else if (businessType === 'venue') {
+        formData.append("venueType", category || '');
+      }
       formData.append("description", businessDescription || '');
       formData.append("serviceAreas", Array.isArray(serviceAreas) ? serviceAreas.join(",") : (serviceAreas || ''));
       formData.append("email", contactEmail || '');
@@ -616,24 +666,70 @@ const EditProfile = () => {
             <form>
               <div className="mb-3">
                 <label className="form-label">Business Name</label>
-                <input type="text" className="form-control" value={businessName || ''} onChange={(e) => setBusinessName(e.target.value)} />
+                <input type="text" className="form-control" placeholder="Enter your business name" value={businessName || ''} onChange={(e) => setBusinessName(e.target.value)} />
               </div>
+              {/* Business Type Selection */}
               <div className="mb-3">
-                <label className="form-label"> Category</label>
-                <select className="form-select" value={category || ''} onChange={(e) => setCategory(e.target.value)}>
-                  <option value="">Select Category</option>
-                  {VENDOR_TYPES.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+                <label className="form-label">Business Type</label>
+                <div className="d-flex gap-4">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={businessType === 'vendor'}
+                      onChange={() => {
+                        setBusinessType(businessType === 'vendor' ? '' : 'vendor');
+                        setCategory('');
+                      }}
+                    />
+                    <label className="form-check-label">Vendor Type</label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={businessType === 'venue'}
+                      onChange={() => {
+                        setBusinessType(businessType === 'venue' ? '' : 'venue');
+                        setCategory('');
+                      }}
+                    />
+                    <label className="form-check-label">Venue Type</label>
+                  </div>
+                </div>
               </div>
+
+              {/* Category Dropdown */}
+              {businessType === 'vendor' && (
+                <div className="mb-3">
+                  <label className="form-label">Vendor Type</label>
+                  <select className="form-select" value={category || ''} onChange={(e) => setCategory(e.target.value)}>
+                    <option value="">Select Vendor Type</option>
+                    {VENDOR_TYPES.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {businessType === 'venue' && (
+                <div className="mb-3">
+                  <label className="form-label">Venue Type</label>
+                  <select className="form-select" value={category || ''} onChange={(e) => setCategory(e.target.value)}>
+                    <option value="">Select Venue Type</option>
+                    {VENUE_TYPES.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="mb-3">
                 <label className="form-label">Business Description</label>
-                <textarea className="form-control" rows="4" value={businessDescription || ''} onChange={(e) => setBusinessDescription(e.target.value)}></textarea>
+                <textarea className="form-control" rows="4" placeholder="Describe your business and services" value={businessDescription || ''} onChange={(e) => setBusinessDescription(e.target.value)}></textarea>
               </div>
               <div className="mb-3">
                 <label className="form-label">Address</label>
-                <input type="text" className="form-control" value={address || ''} onChange={(e) => setAddress(e.target.value)} />
+                <input type="text" className="form-control" placeholder="Enter your business address" value={address || ''} onChange={(e) => setAddress(e.target.value)} />
               </div>
               
               <div className="mb-3">
@@ -725,6 +821,7 @@ const EditProfile = () => {
                     <input
                       type="text"
                       className="form-control"
+                      placeholder="Enter service name"
                       value={service || ''}
                       onChange={(e) => handleServiceChange(index, e.target.value)}
                     />
@@ -950,7 +1047,7 @@ const EditProfile = () => {
               </div>
               <div className="mb-3">
                 <label className="form-label">Website (optional)</label>
-                <input type="url" className="form-control" value={website || ''} onChange={(e) => setWebsite(e.target.value)} />
+                <input type="url" className="form-control" placeholder="https://yourwebsite.com" value={website || ''} onChange={(e) => setWebsite(e.target.value)} />
               </div>
               {/* <button type="button" onClick={handleSave} className="btn text-white" style={{ backgroundColor: '#0f4c81' }}>
                 {isLoading ? 'Saving...' : 'Save Contact Info'}

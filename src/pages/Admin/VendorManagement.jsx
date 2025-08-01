@@ -33,7 +33,7 @@ const categories = [
 
 const VendorManagement = () => {
   const navigate = useNavigate();
-  const { data: vendorsData, isLoading, isError } = useGetAllVendorsQuery();
+  const { data: vendorsData, isLoading, isError, refetch } = useGetAllVendorsQuery();
   const [deleteVendorByAdmin] = useDeleteVendorByAdminMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -118,6 +118,7 @@ const VendorManagement = () => {
       try {
         await deleteVendorByAdmin({ vendorId }).unwrap();
         alert(`Successfully deleted vendor: ${vendorName}`);
+        refetch(); // Refresh the vendor list
       } catch (err) {
         alert(`Failed to delete vendor: ${err?.data?.message || err?.error || 'Please try again'}`);
       }

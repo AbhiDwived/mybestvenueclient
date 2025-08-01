@@ -40,7 +40,7 @@ const FeaturedVendors = ({ showAll = false }) => {
     pricing: vendor.pricing || [],
   })) || [], [vendorsData]);
 
-  console.log("formattedVendors", vendorsData);
+
 
   // Show all vendors if showAll is true, otherwise show only 4
   const displayedVendors = useMemo(() => showAll ? formattedVendors : formattedVendors.slice(0, 4), [showAll, formattedVendors]);

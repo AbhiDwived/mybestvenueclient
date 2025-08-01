@@ -53,39 +53,18 @@ const DiscoverCategories = () => {
 
   // Get user's current location on component mount
   useEffect(() => {
-    const getUserLocation = () => {
-      if (navigator.geolocation) {
-        setIsLoadingLocation(true);
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            try {
-              const { latitude, longitude } = position.coords;
-              // Use reverse geocoding to get city name
-              const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-              );
-              const data = await response.json();
-              
-              // Extract city from the response
-              const city = data.address.city || 
-                           data.address.town || 
-                           data.address.village || 
-                           data.address.state || 
-                           'All India';
-              
-              setSelectedCity(city);
-            } catch (error) {
-              console.error("Error getting location:", error);
-            } finally {
-              setIsLoadingLocation(false);
-            }
-          },
-          (error) => {
-            // Silently handle geolocation errors - user may have denied permission
-            setIsLoadingLocation(false);
-            // Keep default "All India" selection
-          }
-        );
+    const getUserLocation = async () => {
+      setIsLoadingLocation(true);
+      try {
+        // Use IP-based location detection (no CORS issues)
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        const city = data.city || data.region || 'All India';
+        setSelectedCity(city);
+      } catch (error) {
+        console.error("Error getting location:", error);
+      } finally {
+        setIsLoadingLocation(false);
       }
     };
 
@@ -178,9 +157,9 @@ const DiscoverCategories = () => {
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
-                  <option value="">All Categories</option>
-                  {vendorData?.categories?.map((cat) => (
-                    <option key={cat} value={cat}>
+                  <option key="all-categories" value="">All Categories</option>
+                  {vendorData?.categories?.map((cat, index) => (
+                    <option key={`${cat}-${index}`} value={cat}>
                       {cat}
                     </option>
                   ))}
@@ -195,12 +174,12 @@ const DiscoverCategories = () => {
                   value={selectedCity}
                   onChange={(e) => setSelectedCity(e.target.value)}
                 >
-                  <option value="All India">All India</option>
+                  <option key="all-india" value="All India">All India</option>
                   {isLoadingLocation ? (
-                    <option disabled>Detecting location...</option>
+                    <option key="loading" disabled>Detecting location...</option>
                   ) : (
-                    vendorData?.locations?.map((city) => (
-                      <option key={city} value={city}>
+                    vendorData?.locations?.map((city, index) => (
+                      <option key={`${city}-${index}`} value={city}>
                         {city}
                       </option>
                     ))

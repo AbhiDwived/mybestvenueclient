@@ -338,25 +338,21 @@ const Dashboard = () => {
               {vendor?.businessName || 'DSY'}
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 font-serif">
-              {vendor?.vendorType || 'Banquet Halls'} • {
+              {vendor?.vendorType || vendor?.venueType || 'Banquet Halls'} • {
                 (() => {
-                  const vendorAddress = vendor?.address;
-                  if (vendorAddress && typeof vendorAddress === 'object') {
-                    // Handle address object format
-                    const parts = [];
-                    if (vendorAddress.street) parts.push(vendorAddress.street);
-                    if (vendorAddress.city) parts.push(vendorAddress.city);
-                    if (vendorAddress.state) parts.push(vendorAddress.state);
-                    return parts.length > 0 ? parts.join(', ') : 'Dwarka';
-                  } else if (typeof vendorAddress === 'string') {
-                    // Handle legacy string format
-                    return vendorAddress;
-                  } else if (vendor?.serviceAreas?.length > 0) {
-                    // Fallback to service areas
-                    return vendor.serviceAreas.join(', ');
-                  } else {
-                    return 'Dwarka';
+                  // If address field contains full address, use it directly
+                  if (vendor?.address && vendor.address.includes(',')) {
+                    return vendor.address;
                   }
+                  
+                  // Otherwise build from individual fields
+                  const parts = [];
+                  if (vendor?.address) parts.push(vendor.address);
+                  if (vendor?.city) parts.push(vendor.city);
+                  if (vendor?.state) parts.push(vendor.state);
+                  if (vendor?.pinCode) parts.push(vendor.pinCode);
+                  
+                  return parts.length > 0 ? parts.join(', ') : 'Address not provided';
                 })()
               }
             </p>
