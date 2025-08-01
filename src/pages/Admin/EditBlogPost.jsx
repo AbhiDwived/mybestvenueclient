@@ -156,10 +156,10 @@ export default function EditBlogPost({ blog, onClose, onSuccess }) {
                     onEditorChange={setContent}
                     init={{
                       height: 400,
-                      license_key: 'gpl',
                       menubar: 'file edit view insert format tools table help',
-                      base_url: '/node_modules/tinymce',
+                      base_url: '/tinymce',
                       suffix: '.min',
+                      license_key: 'gpl',
                       plugins: [
                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                         'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
