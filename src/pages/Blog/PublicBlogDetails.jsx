@@ -32,6 +32,33 @@ export default function PublicBlogDetails() {
   // Use matching blog if API is slow
   const blog = data?.blog || matchingBlog;
 
+  // Add smooth scrolling for TOC links - MOVED BEFORE CONDITIONAL RETURNS
+  React.useEffect(() => {
+    if (!blog) return;
+    
+    const handleTOCClick = (e) => {
+      if (e.target.tagName === 'A' && e.target.getAttribute('href')?.startsWith('#')) {
+        e.preventDefault();
+        const targetId = e.target.getAttribute('href').substring(1);
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+          targetElement.style.backgroundColor = '#fff3cd';
+          targetElement.style.transition = 'background-color 0.3s ease';
+          setTimeout(() => {
+            targetElement.style.backgroundColor = 'transparent';
+          }, 2000);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleTOCClick);
+    return () => document.removeEventListener('click', handleTOCClick);
+  }, [blog]);
+
   // If we found a matching blog and API is still loading, show the blog immediately
   if (matchingBlog && isLoading) {
     // Use the matching blog data directly to avoid loading delay
@@ -92,31 +119,6 @@ export default function PublicBlogDetails() {
       })
     };
   };
-
-  // Add smooth scrolling for TOC links
-  React.useEffect(() => {
-    const handleTOCClick = (e) => {
-      if (e.target.tagName === 'A' && e.target.getAttribute('href')?.startsWith('#')) {
-        e.preventDefault();
-        const targetId = e.target.getAttribute('href').substring(1);
-        const targetElement = document.getElementById(targetId);
-        if (targetElement) {
-          targetElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-          targetElement.style.backgroundColor = '#fff3cd';
-          targetElement.style.transition = 'background-color 0.3s ease';
-          setTimeout(() => {
-            targetElement.style.backgroundColor = 'transparent';
-          }, 2000);
-        }
-      }
-    };
-
-    document.addEventListener('click', handleTOCClick);
-    return () => document.removeEventListener('click', handleTOCClick);
-  }, [blog]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
