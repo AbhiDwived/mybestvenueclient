@@ -8,7 +8,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
 import { useCreateBookingMutation, useGetUserBookingsQuery } from '../../../features/bookings/bookingAPI';
 import { toast } from 'react-toastify';
-import mainProfile from "../../../assets/mainProfile.png";
+// import mainProfile from "../../../assets/mainProfile.png";
 
 import { FiFacebook, FiTwitter, FiShield } from "react-icons/fi";
 import PreviewProfileScreen from './PreviewProfileScreen';
@@ -289,7 +289,7 @@ const PreviewProfile = () => {
           name: inquiryForm.name,
           email: inquiryForm.email,
           phone: inquiryForm.phone,
-          weddingDate: inquiryForm.eventDate,
+          eventDate: inquiryForm.eventDate,
           message: inquiryForm.message
         }).unwrap();
         toast.success('Inquiry sent successfully!');
@@ -427,7 +427,13 @@ const PreviewProfile = () => {
 
   const { data: reviewData } = useGetVendorReviewsQuery(vendorId, { skip: !vendorId });
   const reviews = reviewData?.reviews || [];
-  const avgRating = reviews.length ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1) : 0;
+  // const avgRating = reviews.length ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1) : 0;
+  const avg = reviews.length
+  ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+  : 0;
+
+const avgRating = avg === 5 ? '5' : avg.toFixed(1);
+
   const reviewCount = reviews.length;
 
   if (isVendorLoading) {
@@ -456,7 +462,7 @@ const PreviewProfile = () => {
       <div className="border rounded-lg p-4 shadow-sm bg-white flex flex-col md:flex-row md:items-start gap-4">
         {/* Profile Image */}
         <img
-          src={vendor?.vendor?.profilePicture || vendor?.vendor?.profilePhoto || mainProfile}
+          src={vendor?.vendor?.profilePicture || vendor?.vendor?.profilePhoto }
           alt={vendor?.vendor?.businessName || "Vendor Profile"}
           className="w-40 h-40 rounded-full object-cover"
         />
@@ -580,7 +586,7 @@ const PreviewProfile = () => {
 
           {/* Description */}
           <p className="text-md text-gray-500 mt-2">
-            {vendor?.vendor?.description || 'No description available'}
+            {/* {vendor?.vendor?.description || 'No description available'} */}
           </p>
         </div>
 
@@ -950,12 +956,12 @@ const PreviewProfile = () => {
               </div>
               <div>
                 <label className="block mb-1">Your Email <span className="text-red-500">*</span></label>
-                <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.email ? 'border-red-500' : ''}`} />
+                <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className={`w-full  border rounded px-3 py-2 ${inquiryErrors.email ? 'border-red-500' : ''}`} />
                 {inquiryErrors.email && <span className="text-red-500 text-xs mt-1">{inquiryErrors.email}</span>}
               </div>
               <div>
                 <label className="block mb-1">Phone Number <span className="text-red-500">*</span></label>
-                <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.phone ? 'border-red-500' : ''}`} />
+                <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className={`w-full  border rounded px-3 py-2 ${inquiryErrors.phone ? 'border-red-500' : ''}`} />
                 {inquiryErrors.phone && <span className="text-red-500 text-xs mt-1">{inquiryErrors.phone}</span>}
               </div>
               <div>
@@ -975,7 +981,7 @@ const PreviewProfile = () => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0); 
 
-                    if (selectedDate <= today) {
+                    if (selectedDate < today) {
                       // alert("Please select Valid date.");
                       toast.error("Please select Valid date.");
                       return;

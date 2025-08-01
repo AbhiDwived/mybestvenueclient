@@ -684,7 +684,7 @@ const VendorSignup = () => {
 
           <p className="text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <Link to="/vendor-login" className="text-[#0F4C81] font-medium hover:text-[#0D3F6A] hover:underline">
+            <Link to="/vendor/login" className="text-[#0F4C81] font-medium hover:text-[#0D3F6A] hover:underline">
               Log In
             </Link>
           </p>

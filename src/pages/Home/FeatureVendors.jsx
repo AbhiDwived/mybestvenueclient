@@ -37,14 +37,13 @@ const FeaturedVendors = ({ showAll = false }) => {
         ? `${vendor.address.city}, ${vendor.address.state}`
         : vendor.address?.city || vendor.address?.state || 'Location not specified',
     services: vendor.services,
-    price: vendor.pricingRange && vendor.pricingRange.min && vendor.pricingRange.max
-      ? `₹${vendor.pricingRange.min.toLocaleString()} - ₹${vendor.pricingRange.max.toLocaleString()}`
-      : 'Price on request'
+    pricing: vendor.pricing || [],
   })) || [], [vendorsData]);
+
+  console.log("formattedVendors", vendorsData);
 
   // Show all vendors if showAll is true, otherwise show only 4
   const displayedVendors = useMemo(() => showAll ? formattedVendors : formattedVendors.slice(0, 4), [showAll, formattedVendors]);
-
   // Fetch review stats for all displayed vendors
   const vendorIds = useMemo(() => displayedVendors.map(v => v.id), [displayedVendors]);
   const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(vendorIds, { skip: !vendorIds.length });
@@ -133,7 +132,7 @@ const FeaturedVendors = ({ showAll = false }) => {
               {/* Details */}
               <div className="flex flex-col justify-between flex-grow p-2 font-serif">
                 <div>
-                  <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.category || "Vendor"}</p>
+                  <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.category}</p>
                   <div className="flex justify-between items-center gap-2 mb-2">
                     <h5 className="text-md font-semibold truncate max-w-[65%] font-serif">
                       {vendor.name || "Vendor Name"}
