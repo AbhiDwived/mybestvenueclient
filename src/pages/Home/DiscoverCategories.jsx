@@ -56,15 +56,49 @@ const DiscoverCategories = () => {
     const getUserLocation = async () => {
       setIsLoadingLocation(true);
       try {
-        // Use IP-based location detection (no CORS issues)
+        // First try geolocation API for more accurate location
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const { latitude, longitude } = position.coords;
+                // Use a different reverse geocoding service
+                const response = await fetch(
+                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                );
+                const data = await response.json();
+                const city = data.city || data.locality || data.principalSubdivision || 'All India';
+                setSelectedCity(city);
+              } catch (error) {
+                // Fallback to IP-based location
+                await getIPLocation();
+              }
+            },
+            async () => {
+              // User denied geolocation, fallback to IP-based location
+              await getIPLocation();
+            }
+          );
+        } else {
+          // Geolocation not supported, use IP-based location
+          await getIPLocation();
+        }
+      } catch (error) {
+        console.error("Error getting location:", error);
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    };
+
+    const getIPLocation = async () => {
+      try {
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
         const city = data.city || data.region || 'All India';
         setSelectedCity(city);
       } catch (error) {
-        console.error("Error getting location:", error);
-      } finally {
-        setIsLoadingLocation(false);
+        console.error("IP location error:", error);
+        setSelectedCity('All India');
       }
     };
 
@@ -133,8 +167,11 @@ const DiscoverCategories = () => {
                     placeholder="Search venues or vendors..."
                     className="w-full outline-none text-gray-700 text-lg pr-8"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onClick={() => setShowSuggestions(true)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
                   />
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
                     <svg 
@@ -213,7 +250,7 @@ const DiscoverCategories = () => {
                         vendorData.vendors
                           .filter(vendor => 
                             !searchTerm || 
-                            vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase())
+                            (vendor.businessName && vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase()))
                           )
                           .slice(0, 8)
                           .map(vendor => (
@@ -272,7 +309,7 @@ const DiscoverCategories = () => {
                         vendorData.categories
                           .filter(cat => 
                             !searchTerm || 
-                            cat.toLowerCase().includes(searchTerm.toLowerCase())
+                            (cat && cat.toLowerCase().includes(searchTerm.toLowerCase()))
                           )
                           .slice(0, 8)
                           .map(cat => (
@@ -331,7 +368,7 @@ const DiscoverCategories = () => {
                         vendorData.locations
                           .filter(loc => 
                             !searchTerm || 
-                            loc.toLowerCase().includes(searchTerm.toLowerCase())
+                            (loc && loc.toLowerCase().includes(searchTerm.toLowerCase()))
                           )
                           .slice(0, 8)
                           .map(loc => (
@@ -380,9 +417,9 @@ const DiscoverCategories = () => {
                 
                 {/* No Results */}
                 {searchTerm && 
-                 !vendorData?.vendors?.some(v => v.businessName.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                 !vendorData?.categories?.some(c => c.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                 !vendorData?.locations?.some(l => l.toLowerCase().includes(searchTerm.toLowerCase())) && (
+                 !vendorData?.vendors?.some(v => v.businessName && v.businessName.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                 !vendorData?.categories?.some(c => c && c.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                 !vendorData?.locations?.some(l => l && l.toLowerCase().includes(searchTerm.toLowerCase())) && (
                   <div className="py-4 px-3 text-center border-t border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
                     <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
                       <Star className="w-4 h-4 text-gray-400" />
