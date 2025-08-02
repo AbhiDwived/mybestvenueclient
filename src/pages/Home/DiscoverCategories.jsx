@@ -6,7 +6,7 @@ import { useGetAllPublicVendorsQuery } from '../../features/vendors/vendorAPI';
 import Loader from '../../components/{Shared}/Loader';
 import { MapPin, Building2, Camera, Music, Utensils, Car, Flower, Users, Star, ChevronRight } from 'lucide-react';
 
-const DiscoverCategories = () => {
+const DiscoverCategories = ({ onLocationChange }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
@@ -69,6 +69,7 @@ const DiscoverCategories = () => {
                 const data = await response.json();
                 const city = data.city || data.locality || data.principalSubdivision || 'All India';
                 setSelectedCity(city);
+                onLocationChange?.(city);
               } catch (error) {
                 // Fallback to IP-based location
                 await getIPLocation();
@@ -96,6 +97,7 @@ const DiscoverCategories = () => {
         const data = await response.json();
         const city = data.city || data.region || 'All India';
         setSelectedCity(city);
+        onLocationChange?.(city);
       } catch (error) {
         console.error("IP location error:", error);
         setSelectedCity('All India');

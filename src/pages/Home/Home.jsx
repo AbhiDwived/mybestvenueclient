@@ -7,15 +7,21 @@ import SuccessfulEvents from '../Home/SuccessfullEvents';
 import Testimonials from '../Home/Tesstimonials';
 import HowItWorks from '../Home/HowItWorks';
 import FeaturedVendors from '../Home/FeatureVendors';
+import WeddingVenuesByLocation from '../Home/WeddingVenuesByLocation';
 import LocationList from '../Location/LocationList'
 
 
 export default function Home() {
   const [location, setLocation] = useState('All India');
+  
+  const handleLocationChange = (newLocation) => {
+    setLocation(newLocation);
+  };
+  
   return (
     <div >
-      
-      <DiscoverCategories />
+      <DiscoverCategories onLocationChange={handleLocationChange} />
+      <WeddingVenuesByLocation currentLocation={location} />
       <VendorByCategory location={location}/>
       <ProjectList />
       <FeaturedVendors/>

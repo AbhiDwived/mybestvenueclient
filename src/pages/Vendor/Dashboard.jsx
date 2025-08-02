@@ -341,13 +341,13 @@ const Dashboard = () => {
               {vendor?.vendorType || vendor?.venueType || 'Banquet Halls'} • {
                 (() => {
                   // If address field contains full address, use it directly
-                  if (vendor?.address && vendor.address.includes(',')) {
+                  if (vendor?.address && typeof vendor.address === 'string' && vendor.address.includes(',')) {
                     return vendor.address;
                   }
                   
                   // Otherwise build from individual fields
                   const parts = [];
-                  if (vendor?.address) parts.push(vendor.address);
+                  if (vendor?.address && typeof vendor.address === 'string') parts.push(vendor.address);
                   if (vendor?.city) parts.push(vendor.city);
                   if (vendor?.state) parts.push(vendor.state);
                   if (vendor?.pinCode) parts.push(vendor.pinCode);

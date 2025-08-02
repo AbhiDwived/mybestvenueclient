@@ -675,26 +675,30 @@ const EditProfile = () => {
                   <div className="form-check">
                     <input
                       className="form-check-input"
-                      type="checkbox"
+                      type="radio"
+                      name="businessType"
+                      id="vendor"
                       checked={businessType === 'vendor'}
                       onChange={() => {
-                        setBusinessType(businessType === 'vendor' ? '' : 'vendor');
+                        setBusinessType('vendor');
                         setCategory('');
                       }}
                     />
-                    <label className="form-check-label">Vendor Type</label>
+                    <label className="form-check-label" htmlFor="vendor">Vendor</label>
                   </div>
                   <div className="form-check">
                     <input
                       className="form-check-input"
-                      type="checkbox"
+                      type="radio"
+                      name="businessType"
+                      id="venue"
                       checked={businessType === 'venue'}
                       onChange={() => {
-                        setBusinessType(businessType === 'venue' ? '' : 'venue');
+                        setBusinessType('venue');
                         setCategory('');
                       }}
                     />
-                    <label className="form-check-label">Venue Type</label>
+                    <label className="form-check-label" htmlFor="venue">Venue</label>
                   </div>
                 </div>
               </div>
