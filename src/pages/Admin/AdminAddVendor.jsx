@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCreateVendorByAdminMutation } from '../../features/admin/adminAPI';
 import { toast } from 'react-toastify';
 import { Country, State, City } from 'country-state-city';
+import axios from 'axios';
 
 const VENDOR_TYPES = [
   'Photographers',
@@ -101,12 +102,14 @@ export default function AdminAddVendor() {
   
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     const indianStates = State.getStatesOfCountry('IN');
     setStates(indianStates);
   }, []);
-  const [profilePicture, setProfilePicture] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -124,6 +127,40 @@ export default function AdminAddVendor() {
       }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+    
+    try {
+      const response = await axios.post('/api/v1/upload/profile-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data.success) {
+        setProfilePictureUrl(response.data.url);
+        toast.success('Image uploaded successfully!');
+      }
+    } catch (error) {
+      toast.error('Failed to upload image');
+      console.error('Upload error:', error);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePicture(file);
+      handleImageUpload(file);
     }
   };
 
@@ -181,8 +218,8 @@ export default function AdminAddVendor() {
       data.append('isVerified', true);
       data.append('isApproved', true);
       data.append('termsAccepted', true);
-      if (profilePicture) {
-        data.append('profilePicture', profilePicture);
+      if (profilePictureUrl) {
+        data.append('profilePictureUrl', profilePictureUrl);
       }
       
       await createVendorByAdmin(data).unwrap();
@@ -451,31 +488,37 @@ export default function AdminAddVendor() {
         <div>
           <label className="block text-sm font-medium mb-2">Profile Picture</label>
           <div className="flex items-center space-x-4">
-            {profilePicture && (
+            {(profilePictureUrl || profilePicture) && (
               <img
-                src={URL.createObjectURL(profilePicture)}
+                src={profilePictureUrl || (profilePicture ? URL.createObjectURL(profilePicture) : '')}
                 alt="Preview"
                 className="h-16 w-16 rounded-full object-cover border"
               />
             )}
             <label
               htmlFor="profilePicture"
-              className="cursor-pointer inline-block px-4 py-2 text-white text-sm font-medium rounded-md shadow transition"
+              className={`cursor-pointer inline-block px-4 py-2 text-white text-sm font-medium rounded-md shadow transition ${
+                uploadingImage ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
               style={{ backgroundColor: '#0f4c81' }}
             >
-              Choose File
+              {uploadingImage ? 'Uploading...' : 'Choose File'}
               <input
                 id="profilePicture"
                 name="profilePicture"
                 type="file"
                 accept="image/*"
-                onChange={(e) => setProfilePicture(e.target.files[0])}
+                onChange={handleFileChange}
+                disabled={uploadingImage}
                 className="hidden"
               />
             </label>
           </div>
           {profilePicture && (
             <p className="mt-2 text-sm text-gray-500">{profilePicture.name}</p>
+          )}
+          {profilePictureUrl && (
+            <p className="mt-2 text-sm text-green-600">✓ Image uploaded to cloud storage</p>
           )}
         </div>
 

@@ -19,8 +19,8 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
   const { data: savedVendorsData } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
   const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
-  // Filter venues by location and venue type
-  const locationVenues = useMemo(() => {
+  // Filter venues by location and venue type - show only latest from each venue type
+  const baseVenues = useMemo(() => {
     if (!vendorsData?.vendors && !vendorsData?.data) {
       return [];
     }
@@ -68,12 +68,25 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
       return matchesLocation;
     });
     
-    return venues
-      .slice(0, 12)
+    // Sort by creation date (latest first)
+    const sortedVenues = venues.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // Group by venue type and get only the latest from each type
+    const venuesByType = {};
+    sortedVenues.forEach(vendor => {
+      const venueType = vendor.venueType || vendor.vendorType || vendor.businessType || 'Venue';
+      if (!venuesByType[venueType]) {
+        venuesByType[venueType] = vendor;
+      }
+    });
+    
+    // Convert to array and limit to 8 venues
+    return Object.values(venuesByType)
+      .slice(0, 8)
       .map(vendor => ({
         id: vendor._id,
         image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
-        category: vendor.venueType || vendor.businessType || 'Venue',
+        category: vendor.venueType || vendor.vendorType || vendor.businessType || 'Venue',
         name: vendor.businessName,
         location: vendor.serviceAreas?.length > 0
           ? vendor.serviceAreas[0]
@@ -87,20 +100,59 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
       }));
   }, [vendorsData, currentLocation]);
 
+  // Create infinite scroll array by duplicating venues
+  const locationVenues = useMemo(() => {
+    if (baseVenues.length === 0) return [];
+    // Duplicate venues for infinite scroll effect
+    return [...baseVenues, ...baseVenues];
+  }, [baseVenues]);
+
   // Fetch review stats for venues
   const venueIds = useMemo(() => locationVenues.map(v => v.id), [locationVenues]);
   const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(venueIds, { skip: !venueIds.length });
   const stats = statsData?.stats || {};
 
   const slidesToShow = 4;
-  const maxSlide = Math.max(0, locationVenues.length - slidesToShow);
+  const totalSlides = baseVenues.length;
+
+  // Auto-slider functionality with infinite scroll
+  useEffect(() => {
+    if (baseVenues.length <= slidesToShow) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => {
+        const nextSlide = prev + 1;
+        // When we reach the end of original venues, reset to 0 without animation
+        if (nextSlide >= totalSlides) {
+          setTimeout(() => setCurrentSlide(0), 50);
+          return totalSlides;
+        }
+        return nextSlide;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [baseVenues.length, totalSlides, slidesToShow]);
 
   const nextSlide = () => {
-    setCurrentSlide(prev => Math.min(prev + 1, maxSlide));
+    setCurrentSlide(prev => {
+      const nextSlide = prev + 1;
+      if (nextSlide >= totalSlides) {
+        setTimeout(() => setCurrentSlide(0), 50);
+        return totalSlides;
+      }
+      return nextSlide;
+    });
   };
 
   const prevSlide = () => {
-    setCurrentSlide(prev => Math.max(prev - 1, 0));
+    setCurrentSlide(prev => {
+      if (prev <= 0) {
+        setTimeout(() => setCurrentSlide(totalSlides - 1), 50);
+        return -1;
+      }
+      return prev - 1;
+    });
   };
 
   const toggleFavorite = async (e, id) => {
@@ -139,7 +191,7 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
   }
 
   // Show message if no venues found
-  if (locationVenues.length === 0) {
+  if (baseVenues.length === 0) {
     return (
       <div className="lg:mx-2 px-4 md:px-10 xl:px-20 py-10">
         <h3 className="font-semibold text-gray-800 font-serif mb-4">
@@ -169,19 +221,17 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
             <IoIosArrowForward className="ml-1 mt-1 text-[#052038]" />
           </Link>
           
-          {locationVenues.length > slidesToShow && (
+          {baseVenues.length > slidesToShow && (
             <div className="flex gap-2">
               <button
                 onClick={prevSlide}
-                disabled={currentSlide === 0}
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
               >
                 <FaChevronLeft className="text-gray-600" />
               </button>
               <button
                 onClick={nextSlide}
-                disabled={currentSlide >= maxSlide}
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
               >
                 <FaChevronRight className="text-gray-600" />
               </button>
@@ -192,7 +242,7 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
 
       <div className="relative overflow-hidden">
         <div 
-          className="flex transition-transform duration-300 ease-in-out gap-6"
+          className={`flex gap-6 ${currentSlide === totalSlides || currentSlide === -1 ? '' : 'transition-transform duration-300 ease-in-out'}`}
           style={{ transform: `translateX(-${currentSlide * (100 / slidesToShow)}%)` }}
         >
           {locationVenues.map((venue) => {
