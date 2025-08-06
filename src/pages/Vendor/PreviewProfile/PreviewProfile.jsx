@@ -5,7 +5,7 @@ import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 import { HiOutlineCalendar } from "react-icons/hi";
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
+import { useGetVendorByIdQuery, useGetVendorBySeoUrlQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
 import { useCreateBookingMutation, useGetUserBookingsQuery } from '../../../features/bookings/bookingAPI';
 import { toast } from 'react-toastify';
 // import mainProfile from "../../../assets/mainProfile.png";
@@ -29,20 +29,43 @@ const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
   const [activeGalleryTab, setActiveGalleryTab] = useState('images');
   const navigate = useNavigate();
-  const { vendorId } = useParams();
-  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
-    skip: !vendorId || vendorId === 'undefined'
-  });
+  const { vendorId, businessType, city, type, slug } = useParams();
+  const location = useLocation();
+  
+  // Determine businessType from the URL path
+  const isVenueLocation = location.pathname.startsWith('/venue/location');
+  const finalBusinessType = isVenueLocation ? 'venue' : businessType;
+  
+  // Check if we have SEO URL params
+  const hasSeoParams = city && finalBusinessType && type && slug;
+  
+  // Use SEO URL if all SEO params are present, otherwise use vendorId
+  const { data: vendorById, isLoading: isLoadingById, error: errorById } = useGetVendorByIdQuery(
+    vendorId,
+    { skip: !vendorId || hasSeoParams }
+  );
+  
+  const { data: vendorBySeo, isLoading: isLoadingBySeo, error: errorBySeo } = useGetVendorBySeoUrlQuery(
+    { businessType: finalBusinessType, city, type, slug },
+    { skip: !hasSeoParams }
+  );
+  
+  // Use appropriate data
+  const vendor = hasSeoParams ? vendorBySeo : vendorById;
+  const isVendorLoading = hasSeoParams ? isLoadingBySeo : isLoadingById;
+  const vendorError = hasSeoParams ? errorBySeo : errorById;
+  
+  const actualVendorId = vendor?.vendor?._id || vendorId;
+
+
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  
   const [createBooking, { isLoading: isBookingLoading }] = useCreateBookingMutation();
-  const { refetch: refetchBookings } = useGetUserBookingsQuery();
+  const { refetch: refetchBookings } = useGetUserBookingsQuery(undefined, { skip: !isAuthenticated });
   const [packages, setPackages] = useState([]);
   const [getVendorPackages] = useVendorservicesPackageListMutation();
   const [currentPage, setCurrentPage] = useState(1);
   const imagesPerPage = 9;
-
-  
-
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
   // const userId = user?._id;
 
 
@@ -149,8 +172,6 @@ const PreviewProfile = () => {
   // Fetch vendor packages
   useEffect(() => {
     const fetchPackages = async () => {
-      const actualVendorId = vendor?.vendor?._id;
-
       if (!actualVendorId) {
         return;
       }
@@ -169,10 +190,10 @@ const PreviewProfile = () => {
       }
     };
 
-    if (!isVendorLoading && vendor?.vendor?._id) {
+    if (!isVendorLoading && actualVendorId) {
       fetchPackages();
     }
-  }, [vendor, isVendorLoading, getVendorPackages]);
+  }, [actualVendorId, isVendorLoading, getVendorPackages]);
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
@@ -199,7 +220,7 @@ const PreviewProfile = () => {
         : selectedPackageDetails?.price || 0;
 
       const response = await createBooking({
-        vendorId: vendorId,
+        vendorId: actualVendorId,
         vendorName: vendor?.vendor?.businessName || '',
         eventType: bookingForm.eventType,
         packageName: selectedPackageDetails?.packageName || '',
@@ -319,8 +340,6 @@ const PreviewProfile = () => {
     }
   };
 
-  const location = useLocation();
-
   // Only scroll to top on initial page load, not after form submit or any form interaction
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -387,45 +406,22 @@ const PreviewProfile = () => {
   );
 
   // Portfolio Gallery Queries
-  const [vendorPortfolio, setVendorPortfolio] = useState({
-    images: [],
-    videos: []
+  const { data: portfolioImagesData } = useGetPortfolioImagesQuery(actualVendorId, {
+    skip: !actualVendorId
   });
 
-  const { data: portfolioImagesData, refetch: refetchPortfolioImages } = useGetPortfolioImagesQuery(vendorId, {
-    skip: !vendorId,
-    refetchOnMountOrArgChange: true,
-    selectFromResult: ({ data }) => ({ data: data?.images || [] }),
+  const { data: portfolioVideosData } = useGetPortfolioVideosQuery(actualVendorId, {
+    skip: !actualVendorId
   });
 
-  const { data: portfolioVideosData, refetch: refetchPortfolioVideos } = useGetPortfolioVideosQuery(vendorId, {
-    skip: !vendorId,
-    selectFromResult: ({ data }) => ({
-      data: data?.videos || []
-    })
-  });
+  const vendorPortfolio = {
+    images: portfolioImagesData?.images || [],
+    videos: portfolioVideosData?.videos || []
+  };
 
-  // Load images from query result
-  useEffect(() => {
-    if (portfolioImagesData) {
-      setVendorPortfolio(prev => ({
-        ...prev,
-        images: portfolioImagesData
-      }));
-    }
-  }, [portfolioImagesData]);
 
-  // Load videos from query result
-  useEffect(() => {
-    if (portfolioVideosData) {
-      setVendorPortfolio(prev => ({
-        ...prev,
-        videos: portfolioVideosData
-      }));
-    }
-  }, [portfolioVideosData]);
 
-  const { data: reviewData } = useGetVendorReviewsQuery(vendorId, { skip: !vendorId });
+  const { data: reviewData } = useGetVendorReviewsQuery(actualVendorId, { skip: !actualVendorId });
   const reviews = reviewData?.reviews || [];
   // const avgRating = reviews.length ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1) : 0;
   const avg = reviews.length
@@ -1012,7 +1008,7 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
           </div>
         </div>
       </div>
-      <SimilarVendors vendorType={vendor?.vendorType} currentVendorId={vendorId} />
+      {actualVendorId && <SimilarVendors vendorType={vendor?.vendor?.vendorType} currentVendorId={actualVendorId} />}
       {selectedImage && <ImageViewModal imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />}
       {selectedVideo && <VideoViewModal videoUrl={selectedVideo} onClose={() => setSelectedVideo(null)} />}
     </div>

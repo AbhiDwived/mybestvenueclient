@@ -10,6 +10,7 @@ import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
+import { navigateToVendor } from '../../utils/seoUrl';
 
 
 const FeaturedVendors = ({ showAll = false }) => {
@@ -38,6 +39,14 @@ const FeaturedVendors = ({ showAll = false }) => {
         : vendor.address?.city || vendor.address?.state || 'Location not specified',
     services: vendor.services,
     pricing: vendor.pricing || [],
+    // Add all original vendor fields for SEO URL generation
+    businessName: vendor.businessName,
+    vendorType: vendor.vendorType,
+    venueType: vendor.venueType,
+    businessType: vendor.businessType,
+    city: vendor.city,
+    nearLocation: vendor.nearLocation,
+    serviceAreas: vendor.serviceAreas,
   })) || [], [vendorsData]);
 
 
@@ -86,7 +95,7 @@ const FeaturedVendors = ({ showAll = false }) => {
   };
 
   const handleVendorClick = (vendor) => {
-    navigate(`/preview-profile/${vendor.id}`);
+    navigateToVendor(navigate, vendor);
   };
 
   return (
@@ -178,9 +187,7 @@ const FeaturedVendors = ({ showAll = false }) => {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-3 text-xs text-gray-600">
-                    <span className="text-gray-600   p-1 rounded"
-                      onClick={() => handleVendorClick(vendor._id)}
-                    >
+                    <span className="text-gray-600   p-1 rounded">
                       {(() => {
                         let raw = vendor.services || [];
                         let vendorServices = Array.isArray(raw)

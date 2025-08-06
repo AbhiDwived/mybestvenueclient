@@ -158,7 +158,19 @@ const VendorListPage = () => {
     }
   };
 
-  const handleVendorClick = (id) => navigate(`/preview-profile/${id}`);
+  const handleVendorClick = (vendor) => {
+    if (vendor?.city && vendor?.businessName) {
+      const city = vendor.city.toLowerCase().replace(/\s+/g, '-');
+      const businessType = vendor.businessType || 'vendor';
+      const type = (vendor.vendorType || vendor.venueType || 'service').toLowerCase().replace(/\s+/g, '-');
+      const businessName = vendor.businessName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+      const location = vendor.nearLocation?.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-') || 'area';
+      const seoUrl = `/${city}/${businessType}/${type}/${businessName}-in-${location}`;
+      navigate(seoUrl);
+    } else {
+      navigate(`/preview-profile/${vendor._id}`);
+    }
+  };
 
   /* ------------------------- filtering ----------------------- */
 
@@ -294,7 +306,7 @@ const VendorListPage = () => {
             {sortedVendors.map((v) => (
               <div
                 key={v._id}
-                onClick={() => handleVendorClick(v._id)}
+                onClick={() => handleVendorClick(v)}
                 className="bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
               >
                 <div className="relative group">
@@ -363,7 +375,7 @@ const VendorListPage = () => {
                     </div>
                     <div className="flex flex-wrap gap-3 text-xs text-gray-600">
                       <span className="text-gray-600   p-1 rounded"
-                        onClick={() => handleVendorClick(v._id)}
+                        onClick={() => handleVendorClick(v)}
                       >
                         {(() => {
                           let raw = v.services || [];

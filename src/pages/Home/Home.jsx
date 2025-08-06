@@ -12,17 +12,11 @@ import LocationList from '../Location/LocationList'
 
 
 export default function Home() {
-  const [location, setLocation] = useState('All India');
-  
-  const handleLocationChange = (newLocation) => {
-    setLocation(newLocation);
-  };
-  
   return (
     <div >
-      <DiscoverCategories onLocationChange={handleLocationChange} />
-      <WeddingVenuesByLocation currentLocation={location} />
-      <VendorByCategory location={location}/>
+      <DiscoverCategories />
+      <WeddingVenuesByLocation />
+      <VendorByCategory />
       <ProjectList />
       <FeaturedVendors/>
       <SuccessfulEvents />

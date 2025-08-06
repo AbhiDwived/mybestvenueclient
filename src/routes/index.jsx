@@ -255,6 +255,8 @@ const index = () => {
                     <Route path="/vendor/verify-password-reset" element={<VendorVerifyResetOTP />} />
                     <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
                     <Route path="/preview-profile/:vendorId" element={<PreviewProfile />} />
+                    <Route path="/venue/location/:city/:type/:slug" element={<PreviewProfile />} />
+                    <Route path="/:businessType/:city/:type/:slug" element={<PreviewProfile />} />
 
                     {/* Admin Auth Route */}
                     <Route path="admin/login" element={<AdminLogin />} />

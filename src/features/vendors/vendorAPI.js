@@ -14,6 +14,11 @@ export const vendorApi = createApi({
         "registerVendor",
         "verifyPasswordReset",
         "resendPasswordResetOtp",
+        "getSimilarVendors",
+        "getVendorById",
+        "getAllPublicVendors",
+        "getVendorBySeoUrl",
+        "vendorservicesPackageList",
       ];
 
       // Skip adding token for public endpoints
@@ -441,11 +446,22 @@ export const vendorApi = createApi({
 
     // get similar vendor
     getSimilarVendors: builder.query({
-      query: (vendorId) => ({
-        url: `/vendor/getSimilarVendors/${vendorId}`,
-        method: "GET",
-      }),
+      query: (vendorId) => {
+        // Validate the vendorId before making the request
+        if (!vendorId || vendorId === "undefined" || vendorId === "null") {
+          throw new Error("Invalid vendor ID for similar vendors");
+        }
+        return {
+          url: `/vendor/getSimilarVendors/${vendorId}`,
+          method: "GET",
+        };
+      },
       providesTags: ["SimilarVendors"],
+    }),
+
+    // Get vendor by SEO URL
+    getVendorBySeoUrl: builder.query({
+      query: ({ businessType, city, type, slug }) => `/vendor/${businessType}/${city}/${type}/${slug}`,
     }),
   }),
 });
@@ -488,4 +504,5 @@ export const {
   useDeleteVendorPricingItemMutation,
   useDeleteFaqsMutation,
   useGetSimilarVendorsQuery,
+  useGetVendorBySeoUrlQuery,
 } = vendorApi;

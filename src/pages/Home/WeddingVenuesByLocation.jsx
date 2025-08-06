@@ -8,8 +8,59 @@ import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
+import { navigateToVendor } from "../../utils/seoUrl";
 
-const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
+const WeddingVenuesByLocation = () => {
+  const [currentLocation, setCurrentLocation] = useState('All India');
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  useEffect(() => {
+    const getUserLocation = async () => {
+      setIsLoadingLocation(true);
+      try {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const { latitude, longitude } = position.coords;
+                const response = await fetch(
+                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                );
+                const data = await response.json();
+                const city = data.city || data.locality || data.principalSubdivision || 'All India';
+                setCurrentLocation(city);
+              } catch (error) {
+                await getIPLocation();
+              }
+            },
+            async () => {
+              await getIPLocation();
+            }
+          );
+        } else {
+          await getIPLocation();
+        }
+      } catch (error) {
+        console.error("Error getting location:", error);
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    };
+
+    const getIPLocation = async () => {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        const city = data.city || data.region || 'All India';
+        setCurrentLocation(city);
+      } catch (error) {
+        console.error("IP location error:", error);
+        setCurrentLocation('All India');
+      }
+    };
+
+    getUserLocation();
+  }, []);
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const { data: vendorsData, isLoading, error } = useGetAllPublicVendorsQuery();
@@ -71,7 +122,30 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
     // Sort by creation date (latest first)
     const sortedVenues = venues.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
-    // Group by venue type and get only the latest from each type
+    // If location is "All India", show the latest 8 venues regardless of type.
+    // Otherwise, group by venue type to show variety for a specific location.
+    if (currentLocation === "All India") {
+      return sortedVenues
+        .slice(0, 8)
+        .map(vendor => ({
+          id: vendor._id,
+          image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
+          category: vendor.venueType || vendor.vendorType || vendor.businessType || 'Venue',
+          name: vendor.businessName,
+          displayLocation: vendor.serviceAreas?.length > 0
+            ? vendor.serviceAreas[0]
+            : vendor.address?.city && vendor.address?.state
+              ? `${vendor.address.city}, ${vendor.address.state}`
+              : vendor.city && vendor.state
+                ? `${vendor.city}, ${vendor.state}`
+                : vendor.address?.city || vendor.address?.state || vendor.city || vendor.state || 'Location not specified',
+          services: vendor.services,
+          pricing: vendor.pricing || [],
+          ...vendor
+        }));
+    }
+
+    // Group by venue type for specific locations
     const venuesByType = {};
     sortedVenues.forEach(vendor => {
       const venueType = vendor.venueType || vendor.vendorType || vendor.businessType || 'Venue';
@@ -88,7 +162,7 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
         image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
         category: vendor.venueType || vendor.vendorType || vendor.businessType || 'Venue',
         name: vendor.businessName,
-        location: vendor.serviceAreas?.length > 0
+        displayLocation: vendor.serviceAreas?.length > 0
           ? vendor.serviceAreas[0]
           : vendor.address?.city && vendor.address?.state
             ? `${vendor.address.city}, ${vendor.address.state}`
@@ -97,6 +171,8 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
               : vendor.address?.city || vendor.address?.state || vendor.city || vendor.state || 'Location not specified',
         services: vendor.services,
         pricing: vendor.pricing || [],
+        // Add all original vendor fields for SEO URL generation
+        ...vendor
       }));
   }, [vendorsData, currentLocation]);
 
@@ -179,7 +255,10 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
   };
 
   const handleVenueClick = (venue) => {
-    navigate(`/preview-profile/${venue.id}`);
+    navigateToVendor(navigate, {
+      ...venue,
+      city: currentLocation !== 'All India' ? currentLocation : venue.city
+    });
   };
 
   if (isLoading) {
@@ -192,16 +271,7 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
 
   // Show message if no venues found
   if (baseVenues.length === 0) {
-    return (
-      <div className="lg:mx-2 px-4 md:px-10 xl:px-20 py-10">
-        <h3 className="font-semibold text-gray-800 font-serif mb-4">
-          Wedding Venues in {currentLocation}
-        </h3>
-        <p className="text-gray-500 text-center py-8">
-          No wedding venues found in {currentLocation}. Try searching in All India.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -245,11 +315,11 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
           className={`flex gap-6 ${currentSlide === totalSlides || currentSlide === -1 ? '' : 'transition-transform duration-300 ease-in-out'}`}
           style={{ transform: `translateX(-${currentSlide * (100 / slidesToShow)}%)` }}
         >
-          {locationVenues.map((venue) => {
+          {locationVenues.map((venue, index) => {
             const stat = stats[venue.id] || { avgRating: 0, reviewCount: 0 };
             return (
               <div
-                key={venue.id}
+                key={`${venue.id}-${index}`}
                 className="flex-shrink-0 w-1/4 bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
                 onClick={() => handleVenueClick(venue)}
               >
@@ -294,7 +364,7 @@ const WeddingVenuesByLocation = ({ currentLocation = "All India" }) => {
                     </div>
                     <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
                       <MapPin size={14} />
-                      <span className="truncate">{venue.location || "Location not specified"}</span>
+                      <span className="truncate">{venue.displayLocation || "Location not specified"}</span>
                     </div>
                   </div>
                   

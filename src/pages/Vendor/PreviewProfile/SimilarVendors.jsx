@@ -5,15 +5,17 @@ import { useGetSimilarVendorsQuery } from '../../../features/vendors/vendorAPI';
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetVendorsReviewStatsQuery } from '../../../features/reviews/reviewAPI';
 import { useSelector } from 'react-redux';
+import { navigateToVendor } from '../../../utils/seoUrl';
 import mainProfile from "../../../assets/mainProfile.png";
 
-const SimilarVendors = () => {
+const SimilarVendors = ({ vendorType, currentVendorId }) => {
   const navigate = useNavigate();
-  const { vendorId } = useParams();
   const [showAll, setShowAll] = useState(false);
   const { isAuthenticated } = useSelector((state) => state.auth);
 
-  const { data, isLoading, isError } = useGetSimilarVendorsQuery(vendorId);
+  const { data, isLoading, isError } = useGetSimilarVendorsQuery(currentVendorId, {
+    skip: !currentVendorId
+  });
   const vendors = data?.similarVendors || [];
 
   // Format vendors data for display (like FeatureVendors)
@@ -32,6 +34,14 @@ const SimilarVendors = () => {
       ? `₹${vendor.pricingRange.min.toLocaleString()} - ₹${vendor.pricingRange.max.toLocaleString()}`
       : 'Price on request',
     pricing: vendor.pricing || [],
+    // Add all original vendor fields for SEO URL generation
+    businessName: vendor.businessName,
+    vendorType: vendor.vendorType,
+    venueType: vendor.venueType,
+    businessType: vendor.businessType,
+    city: vendor.city,
+    nearLocation: vendor.nearLocation,
+    serviceAreas: vendor.serviceAreas,
   })), [vendors]);
 
   // Show all or first 4
@@ -43,11 +53,13 @@ const SimilarVendors = () => {
   const stats = statsData?.stats || {};
 
   const handleVendorClick = (vendor) => {
-    navigate(`/preview-profile/${vendor.id}`);
-     window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateToVendor(navigate, vendor);
   };
 
 
+  // Don't render if no vendor ID is provided
+  if (!currentVendorId) return null;
+  
   if (isLoading) return <p className="text-center">Loading similar vendors...</p>;
   if (isError) return <p className="text-center text-red-500">Failed to load similar vendors.</p>;
 

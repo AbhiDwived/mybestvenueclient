@@ -41,36 +41,59 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   const state = api.getState();
 
   if (result.error && result.error.status === 401) {
-    // Try to get a new token
-    const refreshResult = await baseQuery(
-      { 
-        url: determineRefreshEndpoint(state),
-        method: 'POST',
-        body: { refreshToken: getRefreshToken(state) }
-      },
-      api,
-      extraOptions
-    );
+    console.log('🔒 401 Unauthorized - attempting token refresh');
+    
+    const refreshEndpoint = determineRefreshEndpoint(state);
+    const refreshToken = getRefreshToken(state);
+    
+    if (refreshEndpoint && refreshToken) {
+      // Try to get a new token
+      const refreshResult = await baseQuery(
+        { 
+          url: refreshEndpoint,
+          method: 'POST',
+          body: { refreshToken }
+        },
+        api,
+        extraOptions
+      );
 
-    if (refreshResult.data) {
-      // Store the new token
-      const userType = determineUserType(state);
-      switch (userType) {
-        case 'user':
-          api.dispatch(setCredentials(refreshResult.data));
-          break;
-        case 'vendor':
-          api.dispatch(setVendorCredentials(refreshResult.data));
-          break;
-        case 'admin':
-          api.dispatch(setAdminCredentials(refreshResult.data));
-          break;
+      if (refreshResult.data) {
+        console.log('✅ Token refreshed successfully');
+        // Store the new token
+        const userType = determineUserType(state);
+        switch (userType) {
+          case 'user':
+            api.dispatch(setCredentials(refreshResult.data));
+            break;
+          case 'vendor':
+            api.dispatch(setVendorCredentials(refreshResult.data));
+            break;
+          case 'admin':
+            api.dispatch(setAdminCredentials(refreshResult.data));
+            break;
+        }
+
+        // Retry the original request
+        result = await baseQuery(args, api, extraOptions);
+      } else {
+        console.log('❌ Token refresh failed - logging out');
+        // Logout based on user type
+        switch (determineUserType(state)) {
+          case 'user':
+            api.dispatch(logout());
+            break;
+          case 'vendor':
+            api.dispatch(logoutVendor());
+            break;
+          case 'admin':
+            api.dispatch(logoutAdmin());
+            break;
+        }
       }
-
-      // Retry the original request
-      result = await baseQuery(args, api, extraOptions);
     } else {
-      // Logout based on user type
+      console.log('❌ No refresh token available - logging out');
+      // No refresh token available, logout immediately
       switch (determineUserType(state)) {
         case 'user':
           api.dispatch(logout());

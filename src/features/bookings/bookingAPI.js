@@ -1,43 +1,22 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { apiSlice } from '../../services/api.js';
 
-export const bookingApi = createApi({
-  reducerPath: 'bookingApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL,
-    prepareHeaders: (headers, { getState }) => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ['Booking', 'Vendors'],
+export const bookingApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Get all bookings (Admin)
     getAllBookings: builder.query({
-      query: () => ({
-        url: '/booking/all',
-        method: 'GET',
-      }),
+      query: () => '/booking/all',
       providesTags: ['Booking'],
     }),
 
     // Get user's bookings
     getUserBookings: builder.query({
-      query: () => ({
-        url: '/booking',
-        method: 'GET',
-      }),
+      query: () => '/booking',
       providesTags: ['Booking'],
     }),
 
     // Get a single booking by ID
     getBookingById: builder.query({
-      query: (bookingId) => ({
-        url: `/booking/${bookingId}`,
-        method: 'GET',
-      }),
+      query: (bookingId) => `/booking/${bookingId}`,
       providesTags: (result, error, bookingId) => [{ type: 'Booking', id: bookingId }],
     }),
 
@@ -77,13 +56,15 @@ export const bookingApi = createApi({
     getAvailableVendors: builder.query({
       query: (category) => ({
         url: '/booking/vendors',
-        method: 'GET',
         params: category ? { category } : undefined,
       }),
       providesTags: ['Vendors'],
     }),
   }),
 });
+
+// Export the booking API
+export const bookingApiSlice = bookingApi;
 
 export const {
   useGetAllBookingsQuery,
