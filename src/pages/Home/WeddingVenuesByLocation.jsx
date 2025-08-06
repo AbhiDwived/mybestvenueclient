@@ -55,16 +55,81 @@ const WeddingVenuesByLocation = () => {
   useEffect(() => {
     const getUserLocation = async () => {
       setIsLoadingLocation(true);
-      try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        const city = data.city || data.region || 'All India';
-        setSelectedCity(city);
-      } catch (error) {
-        setSelectedCity('All India');
-      } finally {
-        setIsLoadingLocation(false);
+      
+      const locationProviders = [
+        async () => {
+          return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+              resolve('All India');
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                try {
+                  const { latitude, longitude } = position.coords;
+                  const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+                  );
+                  const data = await response.json();
+                  const city = data.address?.city || 
+                              data.address?.town || 
+                              data.address?.village || 
+                              data.address?.state || 
+                              'All India';
+                  resolve(city);
+                } catch {
+                  resolve('All India');
+                }
+              },
+              () => resolve('All India'),
+              { timeout: 5000, enableHighAccuracy: false }
+            );
+          });
+        },
+        async () => {
+          try {
+            const response = await fetch('https://freegeoip.app/json/');
+            const data = await response.json();
+            return data.city || data.region_name || 'All India';
+          } catch {
+            return 'All India';
+          }
+        },
+        async () => {
+          try {
+            const response = await fetch('http://ip-api.com/json/');
+            const data = await response.json();
+            return data.city || data.regionName || 'All India';
+          } catch {
+            return 'All India';
+          }
+        },
+        async () => {
+          try {
+            const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
+            const data = await response.json();
+            return data.city || data.region || 'All India';
+          } catch {
+            return 'All India';
+          }
+        }
+      ];
+      
+      for (const provider of locationProviders) {
+        try {
+          const city = await provider();
+          if (city && city !== 'All India') {
+            setSelectedCity(city);
+            setIsLoadingLocation(false);
+            return;
+          }
+        } catch {
+          // ignore and continue
+        }
       }
+      
+      setSelectedCity('All India');
+      setIsLoadingLocation(false);
     };
     getUserLocation();
   }, []);
@@ -259,7 +324,7 @@ const WeddingVenuesByLocation = () => {
             // Card structure from FeatureVendors.jsx
             return (
               <div
-                key={venue.id}
+                key={venue.id || index}
                 className="flex-shrink-0 w-1/4 bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
                 onClick={() => navigateToVendor(navigate, venue)}
               >

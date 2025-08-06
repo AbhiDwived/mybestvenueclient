@@ -26,7 +26,10 @@ export const reviewAPI = api.injectEndpoints({
       }),
     }),
     getVendorsReviewStats: builder.query({
-      query: (vendorIds) => `/reviews/stats?vendorIds=${vendorIds.join(',')}`,
+      query: (vendorIds) => {
+        const validVendorIds = vendorIds.filter(id => id && id.trim() !== '');
+        return `/reviews/stats?vendorIds=${validVendorIds.join(',')}`;
+      },
     }),
     getReportedReviews: builder.query({
       query: () => '/reviews/reported',

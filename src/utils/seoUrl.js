@@ -22,7 +22,7 @@ export const generateVendorSeoUrl = (vendor) => {
   } else if (vendor.address?.city) {
     city = vendor.address.city;
   }
-  city = String(city).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'delhi';
+  city = String(city).toLowerCase().split('-')[0].replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'delhi';
   
   // Handle business type
   let businessType = vendor.businessType || 'vendor';
