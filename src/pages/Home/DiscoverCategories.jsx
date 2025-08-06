@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useGeolocated } from 'react-geolocated';
 import { useNavigate, Link } from 'react-router-dom';
 import DiscoverImage from "../../assets/newPics/discoverImage.jpg";
 import BrowseVenues from '../WeddingVenues/BrowserVenues';
@@ -12,7 +11,6 @@ const DiscoverCategories = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
   const [selectedCity, setSelectedCity] = useState('All India');
-  const [detectedCity, setDetectedCity] = useState('All India');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -53,85 +51,25 @@ const DiscoverCategories = () => {
     };
   }, []);
 
-  // Use react-geolocated for location tracking
-  const geo = useGeolocated({
-    positionOptions: { enableHighAccuracy: true },
-    userDecisionTimeout: 10000,
-  });
-
+  // Get user's current location on component mount
   useEffect(() => {
-    const fetchCityFromCoords = async (lat, lon) => {
+    const getUserLocation = async () => {
       setIsLoadingLocation(true);
       try {
-        const response = await fetch(
-          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
-        );
+        // Use IP-based location detection (no CORS issues)
+        const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
-        const foundCity = data.city || data.locality || data.principalSubdivision || 'All India';
-        setDetectedCity(foundCity);
+        const city = data.city || data.region || 'All India';
+        setSelectedCity(city);
       } catch (error) {
-        setDetectedCity('All India');
+        console.error("Error getting location:", error);
       } finally {
         setIsLoadingLocation(false);
       }
     };
 
-    if (geo.coords) {
-      fetchCityFromCoords(geo.coords.latitude, geo.coords.longitude);
-    } else if (geo.isGeolocationAvailable && geo.isGeolocationEnabled && !geo.coords) {
-      setIsLoadingLocation(true);
-    } else if (!geo.isGeolocationAvailable || !geo.isGeolocationEnabled) {
-      setDetectedCity('All India');
-      setIsLoadingLocation(false);
-    }
-  }, [geo.coords, geo.isGeolocationAvailable, geo.isGeolocationEnabled]);
-
-  // Helper: Find the most similar city from a list
-  function findNearestCity(target, cityList) {
-    if (!target || !cityList || cityList.length === 0) return 'All India';
-    const targetLower = target.toLowerCase();
-    // Prefer substring match first
-    let best = cityList.find(city => city.toLowerCase().includes(targetLower));
-    if (best) return best;
-    // Otherwise, use Levenshtein distance
-    function levenshtein(a, b) {
-      const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
-      for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
-      for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
-      for (let i = 1; i <= a.length; i++) {
-        for (let j = 1; j <= b.length; j++) {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j - 1] + (a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1)
-          );
-        }
-      }
-      return matrix[a.length][b.length];
-    }
-    let minDist = Infinity;
-    let nearest = cityList[0];
-    for (const city of cityList) {
-      const dist = levenshtein(target, city);
-      if (dist < minDist) {
-        minDist = dist;
-        nearest = city;
-      }
-    }
-    return nearest;
-  }
-
-  // When vendorData.locations or detectedCity changes, set selectedCity
-  useEffect(() => {
-    if (
-      detectedCity &&
-      detectedCity !== 'All India'
-    ) {
-      setSelectedCity(detectedCity);
-    } else {
-      setSelectedCity('All India');
-    }
-  }, [detectedCity]);
+    getUserLocation();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -195,11 +133,8 @@ const DiscoverCategories = () => {
                     placeholder="Search venues or vendors..."
                     className="w-full outline-none text-gray-700 text-lg pr-8"
                     value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setShowSuggestions(true);
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onClick={() => setShowSuggestions(true)}
                   />
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
                     <svg 
@@ -243,18 +178,11 @@ const DiscoverCategories = () => {
                   {isLoadingLocation ? (
                     <option key="loading" disabled>Detecting location...</option>
                   ) : (
-                    [
-                      detectedCity && detectedCity !== 'All India' && !vendorData?.locations?.includes(detectedCity) ? (
-                        <option key={`detected-${detectedCity}`} value={detectedCity}>
-                          {detectedCity} (Detected)
-                        </option>
-                      ) : null,
-                      vendorData?.locations?.map((city, index) => (
-                        <option key={`${city}-${index}`} value={city}>
-                          {city}
-                        </option>
-                      ))
-                    ]
+                    vendorData?.locations?.map((city, index) => (
+                      <option key={`${city}-${index}`} value={city}>
+                        {city}
+                      </option>
+                    ))
                   )}
                 </select>
               </div>
@@ -285,7 +213,7 @@ const DiscoverCategories = () => {
                         vendorData.vendors
                           .filter(vendor => 
                             !searchTerm || 
-                            (vendor.businessName && vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase()))
+                            vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase())
                           )
                           .slice(0, 8)
                           .map(vendor => (
@@ -344,7 +272,7 @@ const DiscoverCategories = () => {
                         vendorData.categories
                           .filter(cat => 
                             !searchTerm || 
-                            (cat && cat.toLowerCase().includes(searchTerm.toLowerCase()))
+                            cat.toLowerCase().includes(searchTerm.toLowerCase())
                           )
                           .slice(0, 8)
                           .map(cat => (
@@ -403,7 +331,7 @@ const DiscoverCategories = () => {
                         vendorData.locations
                           .filter(loc => 
                             !searchTerm || 
-                            (loc && loc.toLowerCase().includes(searchTerm.toLowerCase()))
+                            loc.toLowerCase().includes(searchTerm.toLowerCase())
                           )
                           .slice(0, 8)
                           .map(loc => (
@@ -452,9 +380,9 @@ const DiscoverCategories = () => {
                 
                 {/* No Results */}
                 {searchTerm && 
-                 !vendorData?.vendors?.some(v => v.businessName && v.businessName.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                 !vendorData?.categories?.some(c => c && c.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                 !vendorData?.locations?.some(l => l && l.toLowerCase().includes(searchTerm.toLowerCase())) && (
+                 !vendorData?.vendors?.some(v => v.businessName.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                 !vendorData?.categories?.some(c => c.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                 !vendorData?.locations?.some(l => l.toLowerCase().includes(searchTerm.toLowerCase())) && (
                   <div className="py-4 px-3 text-center border-t border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
                     <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
                       <Star className="w-4 h-4 text-gray-400" />
