@@ -116,6 +116,7 @@ const VendorSignup = () => {
   const [registerVendor] = useRegisterVendorMutation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [businessNameError, setBusinessNameError] = useState('');
 
   const nameInputRef = useRef(null);
     const isMounted = useRef(true);
@@ -158,6 +159,10 @@ const VendorSignup = () => {
 
   const handleChange = (e) => {
     const { name, value, type: inputType, checked } = e.target;
+
+    if (name === 'businessName') {
+      setBusinessNameError('');
+    }
 
     if (name === 'country') {
       const countryStates = State.getStatesOfCountry(value);
@@ -442,6 +447,11 @@ const VendorSignup = () => {
       setIsLoading(false);
 
       const errorMessage = err.data?.message || 'Registration failed. Please try again.';
+      if (errorMessage === 'Business name already taken') {
+        setBusinessNameError('Business name already taken');
+        const businessNameInput = document.getElementById('businessName');
+        if (businessNameInput) businessNameInput.focus();
+      }
       showToast.error(`❌ ${errorMessage}`);
     }
   };
@@ -500,8 +510,13 @@ const VendorSignup = () => {
                 onChange={handleChange}
                 placeholder="ABC Photography"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${businessNameError ? 'border-red-500' : 'border-gray-300'}`}
+                aria-invalid={!!businessNameError}
+                aria-describedby={businessNameError ? 'businessName-error' : undefined}
               />
+              {businessNameError && (
+                <p id="businessName-error" className="text-red-500 text-xs mt-1">{businessNameError}</p>
+              )}
             </div>
 
             {/* Business Type Selection */}

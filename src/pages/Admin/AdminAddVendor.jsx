@@ -227,7 +227,21 @@ export default function AdminAddVendor() {
       toast.success('Vendor created successfully!');
       navigate('/admin/vendor_management');
     } catch (error) {
-      toast.error(error?.data?.message || 'Failed to create vendor');
+      // Debug: log the error object to inspect its structure
+      // eslint-disable-next-line no-console
+      console.error('AdminAddVendor error:', error);
+      const errorMessage =
+        error?.data?.message ||
+        error?.error ||
+        error?.message ||
+        error?.response?.data?.message ||
+        (typeof error === 'string' ? error : null) ||
+        'Failed to create vendor';
+      if (errorMessage && errorMessage.toLowerCase().includes('business name already taken')) {
+        toast.error('Business name already taken');
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
 
