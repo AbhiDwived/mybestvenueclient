@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useGeolocated } from 'react-geolocated';
 import { useNavigate, Link } from 'react-router-dom';
 import DiscoverImage from "../../assets/newPics/discoverImage.jpg";
 import BrowseVenues from '../WeddingVenues/BrowserVenues';
@@ -11,6 +12,7 @@ const DiscoverCategories = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
   const [selectedCity, setSelectedCity] = useState('All India');
+  const [detectedCity, setDetectedCity] = useState('All India');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -51,59 +53,85 @@ const DiscoverCategories = () => {
     };
   }, []);
 
-  // Get user's current location on component mount
+  // Use react-geolocated for location tracking
+  const geo = useGeolocated({
+    positionOptions: { enableHighAccuracy: true },
+    userDecisionTimeout: 10000,
+  });
+
   useEffect(() => {
-    const getUserLocation = async () => {
+    const fetchCityFromCoords = async (lat, lon) => {
       setIsLoadingLocation(true);
       try {
-        // First try geolocation API for more accurate location
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              try {
-                const { latitude, longitude } = position.coords;
-                // Use a different reverse geocoding service
-                const response = await fetch(
-                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-                );
-                const data = await response.json();
-                const city = data.city || data.locality || data.principalSubdivision || 'All India';
-                setSelectedCity(city);
-              } catch (error) {
-                // Fallback to IP-based location
-                await getIPLocation();
-              }
-            },
-            async () => {
-              // User denied geolocation, fallback to IP-based location
-              await getIPLocation();
-            }
-          );
-        } else {
-          // Geolocation not supported, use IP-based location
-          await getIPLocation();
-        }
+        const response = await fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+        );
+        const data = await response.json();
+        const foundCity = data.city || data.locality || data.principalSubdivision || 'All India';
+        setDetectedCity(foundCity);
       } catch (error) {
-        console.error("Error getting location:", error);
+        setDetectedCity('All India');
       } finally {
         setIsLoadingLocation(false);
       }
     };
 
-    const getIPLocation = async () => {
-      try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        const city = data.city || data.region || 'All India';
-        setSelectedCity(city);
-      } catch (error) {
-        console.error("IP location error:", error);
-        setSelectedCity('All India');
-      }
-    };
+    if (geo.coords) {
+      fetchCityFromCoords(geo.coords.latitude, geo.coords.longitude);
+    } else if (geo.isGeolocationAvailable && geo.isGeolocationEnabled && !geo.coords) {
+      setIsLoadingLocation(true);
+    } else if (!geo.isGeolocationAvailable || !geo.isGeolocationEnabled) {
+      setDetectedCity('All India');
+      setIsLoadingLocation(false);
+    }
+  }, [geo.coords, geo.isGeolocationAvailable, geo.isGeolocationEnabled]);
 
-    getUserLocation();
-  }, []);
+  // Helper: Find the most similar city from a list
+  function findNearestCity(target, cityList) {
+    if (!target || !cityList || cityList.length === 0) return 'All India';
+    const targetLower = target.toLowerCase();
+    // Prefer substring match first
+    let best = cityList.find(city => city.toLowerCase().includes(targetLower));
+    if (best) return best;
+    // Otherwise, use Levenshtein distance
+    function levenshtein(a, b) {
+      const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+      for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+      for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j - 1] + (a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1)
+          );
+        }
+      }
+      return matrix[a.length][b.length];
+    }
+    let minDist = Infinity;
+    let nearest = cityList[0];
+    for (const city of cityList) {
+      const dist = levenshtein(target, city);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = city;
+      }
+    }
+    return nearest;
+  }
+
+  // When vendorData.locations or detectedCity changes, set selectedCity
+  useEffect(() => {
+    if (
+      detectedCity &&
+      detectedCity !== 'All India'
+    ) {
+      setSelectedCity(detectedCity);
+    } else {
+      setSelectedCity('All India');
+    }
+  }, [detectedCity]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -215,11 +243,18 @@ const DiscoverCategories = () => {
                   {isLoadingLocation ? (
                     <option key="loading" disabled>Detecting location...</option>
                   ) : (
-                    vendorData?.locations?.map((city, index) => (
-                      <option key={`${city}-${index}`} value={city}>
-                        {city}
-                      </option>
-                    ))
+                    [
+                      detectedCity && detectedCity !== 'All India' && !vendorData?.locations?.includes(detectedCity) ? (
+                        <option key={`detected-${detectedCity}`} value={detectedCity}>
+                          {detectedCity} (Detected)
+                        </option>
+                      ) : null,
+                      vendorData?.locations?.map((city, index) => (
+                        <option key={`${city}-${index}`} value={city}>
+                          {city}
+                        </option>
+                      ))
+                    ]
                   )}
                 </select>
               </div>

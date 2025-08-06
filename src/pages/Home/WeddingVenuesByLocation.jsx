@@ -12,58 +12,122 @@ import { navigateToVendor } from "../../utils/seoUrl";
 
 const WeddingVenuesByLocation = () => {
   const [currentLocation, setCurrentLocation] = useState('All India');
+  const [detectedCity, setDetectedCity] = useState('All India');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
+  // Helper: Find the most similar city from a list
+  function findNearestCity(target, cityList) {
+    if (!target || !cityList || cityList.length === 0) return 'All India';
+    const targetLower = target.toLowerCase();
+    // Prefer substring match first
+    let best = cityList.find(city => city.toLowerCase().includes(targetLower));
+    if (best) return best;
+    // Otherwise, use Levenshtein distance
+    function levenshtein(a, b) {
+      const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+      for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+      for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j - 1] + (a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1)
+          );
+        }
+      }
+      return matrix[a.length][b.length];
+    }
+    let minDist = Infinity;
+    let nearest = cityList[0];
+    for (const city of cityList) {
+      const dist = levenshtein(target, city);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = city;
+      }
+    }
+    return nearest;
+  }
+
+  const { data: vendorsData, isLoading, error } = useGetAllPublicVendorsQuery();
+
+  // Detect location and set currentLocation to detected/nearest city
   useEffect(() => {
     const getUserLocation = async () => {
       setIsLoadingLocation(true);
+      let foundCity = 'All India';
       try {
         if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              try {
-                const { latitude, longitude } = position.coords;
-                const response = await fetch(
-                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-                );
-                const data = await response.json();
-                const city = data.city || data.locality || data.principalSubdivision || 'All India';
-                setCurrentLocation(city);
-              } catch (error) {
-                await getIPLocation();
+          await new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                try {
+                  const { latitude, longitude } = position.coords;
+                  const response = await fetch(
+                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                  );
+                  const data = await response.json();
+                  foundCity = data.city || data.locality || data.principalSubdivision || 'All India';
+                  setDetectedCity(foundCity);
+                  resolve();
+                } catch (error) {
+                  await getIPLocation(resolve);
+                }
+              },
+              async () => {
+                await getIPLocation(resolve);
               }
-            },
-            async () => {
-              await getIPLocation();
-            }
-          );
+            );
+          });
         } else {
-          await getIPLocation();
+          await new Promise((resolve) => getIPLocation(resolve));
         }
       } catch (error) {
-        console.error("Error getting location:", error);
+        setDetectedCity('All India');
       } finally {
         setIsLoadingLocation(false);
       }
     };
 
-    const getIPLocation = async () => {
+    const getIPLocation = async (resolve) => {
       try {
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
         const city = data.city || data.region || 'All India';
-        setCurrentLocation(city);
+        setDetectedCity(city);
+        resolve && resolve();
       } catch (error) {
-        console.error("IP location error:", error);
-        setCurrentLocation('All India');
+        setDetectedCity('All India');
+        resolve && resolve();
       }
     };
 
     getUserLocation();
   }, []);
+
+  // When vendorData.locations or detectedCity changes, set currentLocation
+  useEffect(() => {
+    const locations = vendorsData?.locations || [];
+    if (
+      detectedCity &&
+      detectedCity !== 'All India' &&
+      locations.length > 0
+    ) {
+      if (locations.includes(detectedCity)) {
+        setCurrentLocation(detectedCity);
+      } else {
+        // Find nearest city
+        const nearest = findNearestCity(detectedCity, locations);
+        setCurrentLocation(nearest);
+      }
+    } else {
+      setCurrentLocation('All India');
+    }
+  }, [detectedCity, vendorsData?.locations]);
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { data: vendorsData, isLoading, error } = useGetAllPublicVendorsQuery();
+  // const { data: vendorsData, isLoading, error } = useGetAllPublicVendorsQuery(); // Duplicate removed
   const [saveVendor] = useSaveVendorMutation();
   const [unsaveVendor] = useUnsaveVendorMutation();
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -176,12 +240,8 @@ const WeddingVenuesByLocation = () => {
       }));
   }, [vendorsData, currentLocation]);
 
-  // Create infinite scroll array by duplicating venues
-  const locationVenues = useMemo(() => {
-    if (baseVenues.length === 0) return [];
-    // Duplicate venues for infinite scroll effect
-    return [...baseVenues, ...baseVenues];
-  }, [baseVenues]);
+  // Use a single array for slider
+  const locationVenues = baseVenues;
 
   // Fetch review stats for venues
   const venueIds = useMemo(() => locationVenues.map(v => v.id), [locationVenues]);
@@ -191,24 +251,14 @@ const WeddingVenuesByLocation = () => {
   const slidesToShow = 4;
   const totalSlides = baseVenues.length;
 
-  // Auto-slider functionality with infinite scroll
+  // Auto-slider functionality (simple loop)
   useEffect(() => {
-    if (baseVenues.length <= slidesToShow) return;
-    
+    if (locationVenues.length <= slidesToShow) return;
     const interval = setInterval(() => {
-      setCurrentSlide(prev => {
-        const nextSlide = prev + 1;
-        // When we reach the end of original venues, reset to 0 without animation
-        if (nextSlide >= totalSlides) {
-          setTimeout(() => setCurrentSlide(0), 50);
-          return totalSlides;
-        }
-        return nextSlide;
-      });
+      setCurrentSlide(prev => (prev + 1) % (locationVenues.length - slidesToShow + 1));
     }, 3000);
-
     return () => clearInterval(interval);
-  }, [baseVenues.length, totalSlides, slidesToShow]);
+  }, [locationVenues.length, slidesToShow]);
 
   const nextSlide = () => {
     setCurrentSlide(prev => {
@@ -312,7 +362,7 @@ const WeddingVenuesByLocation = () => {
 
       <div className="relative overflow-hidden">
         <div 
-          className={`flex gap-6 ${currentSlide === totalSlides || currentSlide === -1 ? '' : 'transition-transform duration-300 ease-in-out'}`}
+          className={`flex gap-6 transition-transform duration-500 ease-in-out`}
           style={{ transform: `translateX(-${currentSlide * (100 / slidesToShow)}%)` }}
         >
           {locationVenues.map((venue, index) => {
