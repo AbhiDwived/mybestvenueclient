@@ -8,6 +8,14 @@ import { useSelector } from 'react-redux';
 import { navigateToVendor } from '../../../utils/seoUrl';
 import mainProfile from "../../../assets/mainProfile.png";
 
+const getDisplayLocation = (vendor) => {
+  const locationString = vendor.city || (vendor.serviceAreas?.length > 0 ? vendor.serviceAreas[0] : vendor.address?.city);
+  if (locationString && typeof locationString === 'string') {
+    return locationString.split(',')[0];
+  }
+  return 'Location not specified';
+}
+
 const SimilarVendors = ({ vendorType, currentVendorId }) => {
   const navigate = useNavigate();
   const [showAll, setShowAll] = useState(false);
@@ -22,13 +30,9 @@ const SimilarVendors = ({ vendorType, currentVendorId }) => {
   const formattedVendors = useMemo(() => vendors.map(vendor => ({
     id: vendor._id,
     image: vendor.profilePicture || vendor.galleryImages?.[0]?.url || mainProfile,
-    category: vendor.vendorType,
+    category: vendor.businessType === 'venue' ? vendor.venueType : vendor.vendorType,
     name: vendor.businessName || vendor.name,
-    location: vendor.serviceAreas?.length > 0
-      ? vendor.serviceAreas[0]
-      : vendor.address?.city && vendor.address?.state
-        ? `${vendor.address.city}, ${vendor.address.state}`
-        : vendor.address?.city || vendor.address?.state || 'Location not specified',
+    location: getDisplayLocation(vendor),
     services: vendor.services,
     price: vendor.pricingRange && vendor.pricingRange.min && vendor.pricingRange.max
       ? `₹${vendor.pricingRange.min.toLocaleString()} - ₹${vendor.pricingRange.max.toLocaleString()}`
@@ -186,4 +190,3 @@ const SimilarVendors = ({ vendorType, currentVendorId }) => {
 };
 
 export default SimilarVendors;
-

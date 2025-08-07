@@ -51,8 +51,16 @@ const WeddingVenuesByLocation = () => {
 
   const { data: vendorsData, isLoading, error } = useGetAllPublicVendorsQuery();
 
+  const uniqueCities = useMemo(() => {
+    if (!vendorsData?.locations) return [];
+    const cities = vendorsData.locations.map(loc => loc.split(',')[0]);
+    return [...new Set(cities)];
+  }, [vendorsData]);
+
   // Detect location and set selectedCity to detected city
   useEffect(() => {
+    if (!vendorsData) return; // Wait for vendor data to be available
+
     const getUserLocation = async () => {
       setIsLoadingLocation(true);
       
@@ -103,7 +111,8 @@ const WeddingVenuesByLocation = () => {
         try {
           const city = await provider();
           if (city && city !== 'All India') {
-            setSelectedCity(city);
+            const nearestCity = findNearestCity(city, uniqueCities);
+            setSelectedCity(nearestCity);
             setIsLoadingLocation(false);
             return;
           }
@@ -116,7 +125,7 @@ const WeddingVenuesByLocation = () => {
       setIsLoadingLocation(false);
     };
     getUserLocation();
-  }, []);
+  }, [vendorsData]);
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   // const { data: vendorsData, isLoading, error } = useGetAllPublicVendorsQuery(); // Duplicate removed
@@ -233,6 +242,14 @@ const WeddingVenuesByLocation = () => {
     }
   };
 
+  const getDisplayLocation = (venue) => {
+    const locationString = venue.city || venue.location || venue.displayLocation || venue.address?.city;
+    if (locationString && typeof locationString === 'string') {
+      return locationString.split(',')[0];
+    }
+    return 'Location not specified';
+  }
+
   const handleVenueClick = (venue) => {
     navigateToVendor(navigate, venue);
   };
@@ -264,7 +281,7 @@ const WeddingVenuesByLocation = () => {
             disabled={isLoadingLocation}
           >
             <option value="All India">All India</option>
-            {vendorsData?.locations?.map((city, idx) => (
+            {uniqueCities.map((city, idx) => (
               <option key={city + idx} value={city}>{city}</option>
             ))}
           </select>
@@ -350,7 +367,7 @@ const WeddingVenuesByLocation = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
                       <MapPin size={14} />
-                      <span className="truncate">{venue.location || venue.displayLocation || venue.address?.city || venue.city || 'Location not specified'}</span>
+                      <span className="truncate">{getDisplayLocation(venue)}</span>
                     </div>
                     <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1"></div>
                   </div>

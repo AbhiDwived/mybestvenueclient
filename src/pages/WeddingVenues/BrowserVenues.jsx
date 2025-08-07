@@ -37,16 +37,17 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
       ? urlCity.split('-').map(str => str.charAt(0).toUpperCase() + str.slice(1)).join(' ')
       : null;
 
-    if (fromProp || fromURL) {
-      setActiveLocation(fromProp || fromURL);
+    const locationToSet = fromProp || fromURL;
+    if (locationToSet) {
+      setActiveLocation(locationToSet.split(',')[0]);
     }
     window.scrollTo({ top: 0, category: "top" })
   }, [currentLocation, urlCity]);
 
-  const handleLocationClick = (location) => {
-    setActiveLocation(location);
-    onLocationSelect?.(location);
-    navigate(`/locations/${location.replace(/\s+/g, '-').toLowerCase()}`);
+  const handleLocationClick = (city) => {
+    setActiveLocation(city);
+    onLocationSelect?.(city);
+    navigate(`/locations/${city.replace(/\s+/g, '-').toLowerCase()}`);
   };
 
   const filteredLocations = allLocations.filter(loc =>
@@ -87,25 +88,28 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
             transform: `translateX(-${(scrollIndex * 100) / filteredLocations.length}%)`,
           }}
         >
-          {filteredLocations.map((location) => (
-            <div
-              key={location}
-              className="flex-shrink-0 px-2"
-              style={{ width: `${100 / filteredLocations.length}%` }}
-            >
-              <button
-                onClick={() => handleLocationClick(location)}
-                className={`w-full flex items-center justify-center py-4 text-sm font-medium transition-colors duration-200 border rounded
-                  ${location === activeLocation
-                    ? 'bg-[#0f4c81] text-white'
-                    : 'hover:bg-[#f3f3f3] text-gray-700 hover:text-gray-900'
-                  }`}
+          {filteredLocations.map((location) => {
+            const city = location.split(',')[0];
+            return (
+              <div
+                key={location}
+                className="flex-shrink-0 px-2"
+                style={{ width: `${100 / filteredLocations.length}%` }}
               >
-                <MapPin className="mr-2 h-4 w-4" />
-                {location}
-              </button>
-            </div>
-          ))}
+                <button
+                  onClick={() => handleLocationClick(city)}
+                  className={`w-full flex items-center justify-center py-4 text-sm font-medium transition-colors duration-200 border rounded
+                  ${city === activeLocation
+                      ? 'bg-[#0f4c81] text-white'
+                      : 'hover:bg-[#f3f3f3] text-gray-700 hover:text-gray-900'
+                    }`}
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  {city}
+                </button>
+              </div>
+            )
+          })}
         </div>
 
         {filteredLocations.length > visibleCount && (

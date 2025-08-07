@@ -24,6 +24,13 @@ const FeaturedVendors = ({ showAll = false }) => {
   const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
 
+  const getDisplayLocation = (vendor) => {
+    const locationString = vendor.city || (vendor.serviceAreas?.length > 0 ? vendor.serviceAreas[0] : vendor.address?.city);
+    if (locationString && typeof locationString === 'string') {
+      return locationString.split(',')[0];
+    }
+    return 'Location not specified';
+  }
   
 
   // Format vendors data according to our display needs
@@ -32,11 +39,7 @@ const FeaturedVendors = ({ showAll = false }) => {
     image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
     category: vendor.businessType === 'venue' ? vendor.venueType : vendor.vendorType,
     name: vendor.businessName,
-    location: vendor.serviceAreas?.length > 0
-      ? vendor.serviceAreas[0]
-      : vendor.address?.city && vendor.address?.state
-        ? `${vendor.address.city}, ${vendor.address.state}`
-        : vendor.address?.city || vendor.address?.state || 'Location not specified',
+    location: getDisplayLocation(vendor),
     services: vendor.services,
     pricing: vendor.pricing || [],
     // Add all original vendor fields for SEO URL generation

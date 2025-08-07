@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import DiscoverImage from "../../assets/newPics/discoverImage.jpg";
 import BrowseVenues from '../WeddingVenues/BrowserVenues';
@@ -13,6 +13,41 @@ const DiscoverCategories = () => {
   const [selectedCity, setSelectedCity] = useState('All India');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Helper: Find the most similar city from a list
+  function findNearestCity(target, cityList) {
+    if (!target || !cityList || cityList.length === 0) return 'All India';
+    const targetLower = target.toLowerCase();
+    // Prefer substring match first
+    let best = cityList.find(city => city.toLowerCase().includes(targetLower));
+    if (best) return best;
+    // Otherwise, use Levenshtein distance
+    function levenshtein(a, b) {
+      const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+      for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+      for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j - 1] + (a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1)
+          );
+        }
+      }
+      return matrix[a.length][b.length];
+    }
+    let minDist = Infinity;
+    let nearest = cityList[0];
+    for (const city of cityList) {
+      const dist = levenshtein(target, city);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = city;
+      }
+    }
+    return nearest;
+  }
 
   // Category icons mapping
   const getCategoryIcon = (category) => {
@@ -34,6 +69,12 @@ const DiscoverCategories = () => {
   // Fetch all vendors to get categories
   const { data: vendorData, isLoading } = useGetAllPublicVendorsQuery();
 
+  const uniqueCities = useMemo(() => {
+    if (!vendorData?.locations) return [];
+    const cities = vendorData.locations.map(loc => loc.split(',')[0]);
+    return [...new Set(cities)];
+  }, [vendorData]);
+
   // Reference for the search container
   const searchContainerRef = useRef(null);
 
@@ -53,43 +94,73 @@ const DiscoverCategories = () => {
 
   // Get user's current location on component mount
   useEffect(() => {
+    if (!vendorData) return; // Wait for vendor data to be available
+
     const getUserLocation = async () => {
       setIsLoadingLocation(true);
-      if (!navigator.geolocation) {
-        setSelectedCity('All India');
-        setIsLoadingLocation(false);
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            // Reverse geocoding using OpenStreetMap Nominatim
-            const { latitude, longitude } = position.coords;
-            const response = await fetch(
-              `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`
+      
+      const locationProviders = [
+        async () => {
+          return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+              resolve('All India');
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                try {
+                  const { latitude, longitude } = position.coords;
+                  const response = await fetch(
+                    `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`
+                  );
+                  if (!response.ok) throw new Error('Failed to fetch location');
+                  const data = await response.json();
+                  const city = data.address?.city || 
+                              data.address?.town || 
+                              data.address?.village || 
+                              data.address?.state || 
+                              'All India';
+                  resolve(city);
+                } catch {
+                  resolve('All India');
+                }
+              },
+              () => resolve('All India'),
+              { timeout: 5000, enableHighAccuracy: false }
             );
-            if (!response.ok) throw new Error('Failed to fetch location');
+          });
+        },
+        async () => {
+          try {
+            const response = await fetch('/api/ip-location');
+            if (!response.ok) throw new Error('Failed to fetch IP location');
             const data = await response.json();
-            const city = data.address?.city || 
-                        data.address?.town || 
-                        data.address?.village || 
-                        data.address?.state || 
-                        'All India';
-            setSelectedCity(city);
-          } catch (error) {
-            setSelectedCity('All India');
+            return data.city || data.region_name || 'All India';
+          } catch {
+            return 'All India';
           }
-          setIsLoadingLocation(false);
-        },
-        (error) => {
-          setSelectedCity('All India');
-          setIsLoadingLocation(false);
-        },
-        { timeout: 5000, enableHighAccuracy: false }
-      );
+        }
+      ];
+      
+      for (const provider of locationProviders) {
+        try {
+          const city = await provider();
+          if (city && city !== 'All India') {
+            const nearestCity = findNearestCity(city, uniqueCities);
+            setSelectedCity(nearestCity);
+            setIsLoadingLocation(false);
+            return;
+          }
+        } catch {
+          // ignore and continue
+        }
+      }
+      
+      setSelectedCity('All India');
+      setIsLoadingLocation(false);
     };
     getUserLocation();
-  }, []);
+  }, [vendorData]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -198,7 +269,7 @@ const DiscoverCategories = () => {
                   {isLoadingLocation ? (
                     <option key="loading" disabled>Detecting location...</option>
                   ) : (
-                    vendorData?.locations?.map((city, index) => (
+                    uniqueCities.map((city, index) => (
                       <option key={`${city}-${index}`} value={city}>
                         {city}
                       </option>
