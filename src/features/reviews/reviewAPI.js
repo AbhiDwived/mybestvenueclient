@@ -28,6 +28,9 @@ export const reviewAPI = api.injectEndpoints({
     getVendorsReviewStats: builder.query({
       query: (vendorIds) => {
         const validVendorIds = vendorIds.filter(id => id && id.trim() !== '');
+        if (validVendorIds.length === 0) {
+          throw new Error('No valid vendor IDs provided');
+        }
         return `/reviews/stats?vendorIds=${validVendorIds.join(',')}`;
       },
     }),

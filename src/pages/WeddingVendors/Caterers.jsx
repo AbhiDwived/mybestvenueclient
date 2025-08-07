@@ -3,7 +3,7 @@ import { MapPin } from 'lucide-react';
 import { FaStar, FaHeart, FaRegHeart } from 'react-icons/fa';
 import WeVendorr1 from '../../assets/newPics/WeVendorr1.avif';
 import WeVendorr2 from '../../assets/newPics/WeVendor3.avif';
-import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+import { useGetAllPublicVendorsQuery } from '../../features/vendors/vendorAPI';
 import { useNavigate } from 'react-router-dom';
 import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from '../../features/savedVendors/savedVendorAPI';
 import { useSelector } from 'react-redux';
@@ -15,7 +15,7 @@ export default function Caterers() {
   const [selectedCategory, setSelectedCategory] = useState("Caterers");
   const [sortType, setSortType] = useState("popular");
   const [filteredVendors, setFilteredVendors] = useState([]);
-  const { data, isLoading, isError, error } = useGetAllVendorsQuery();
+  const { data, isLoading, isError, error } = useGetAllPublicVendorsQuery();
   const [favorites, setFavorites] = useState([]);
   const [saveVendor] = useSaveVendorMutation();
   const [unsaveVendor] = useUnsaveVendorMutation();

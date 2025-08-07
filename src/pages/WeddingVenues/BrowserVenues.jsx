@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { IoIosArrowRoundBack, IoIosArrowRoundForward } from "react-icons/io";
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+import { useGetAllPublicVendorsQuery } from '../../features/vendors/vendorAPI';
 import Loader from '../../components/{Shared}/Loader';
 
 // Keep All India as default option
@@ -16,7 +16,7 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
   const [visibleCount, setVisibleCount] = useState(5);
 
   // Fetch vendors data to get locations
-  const { data: vendorsData, isLoading } = useGetAllVendorsQuery();
+  const { data: vendorsData, isLoading } = useGetAllPublicVendorsQuery();
   
   // Combine default locations with vendor locations
   const allLocations = [...defaultLocations, ...(vendorsData?.locations || [])];

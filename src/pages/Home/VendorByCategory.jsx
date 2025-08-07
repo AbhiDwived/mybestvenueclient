@@ -14,7 +14,7 @@ import {
   FaLandmark
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
+import { useGetAllPublicVendorsQuery } from '../../features/vendors/vendorAPI';
 
 // Helper function to get icon by venue category title
 const getCategoryIcon = (title) => {
@@ -83,7 +83,7 @@ const VendorByCategory = ({ location = "All India" }) => {
   const navigate = useNavigate();
   
   // Fetch all vendors from Redux
-  const { data: vendorsData, isLoading } = useGetAllVendorsQuery();
+  const { data: vendorsData, isLoading } = useGetAllPublicVendorsQuery();
 
   // Define all venue categories
   const categoryTitles = [

@@ -68,8 +68,9 @@ const WeddingVenuesByLocation = () => {
                 try {
                   const { latitude, longitude } = position.coords;
                   const response = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+                    `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`
                   );
+                  if (!response.ok) throw new Error('Failed to fetch location');
                   const data = await response.json();
                   const city = data.address?.city || 
                               data.address?.town || 
@@ -88,27 +89,10 @@ const WeddingVenuesByLocation = () => {
         },
         async () => {
           try {
-            const response = await fetch('https://freegeoip.app/json/');
+            const response = await fetch('/api/ip-location');
+            if (!response.ok) throw new Error('Failed to fetch IP location');
             const data = await response.json();
             return data.city || data.region_name || 'All India';
-          } catch {
-            return 'All India';
-          }
-        },
-        async () => {
-          try {
-            const response = await fetch('http://ip-api.com/json/');
-            const data = await response.json();
-            return data.city || data.regionName || 'All India';
-          } catch {
-            return 'All India';
-          }
-        },
-        async () => {
-          try {
-            const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
-            const data = await response.json();
-            return data.city || data.region || 'All India';
           } catch {
             return 'All India';
           }
@@ -189,7 +173,7 @@ const WeddingVenuesByLocation = () => {
   const locationVenues = baseVenues;
 
   // Fetch review stats for venues
-  const venueIds = useMemo(() => locationVenues.map(v => v.id), [locationVenues]);
+  const venueIds = useMemo(() => locationVenues.map(v => v.id).filter(id => id && id.trim() !== ''), [locationVenues]);
   const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(venueIds, { skip: !venueIds.length });
   const stats = statsData?.stats || {};
 
@@ -252,7 +236,7 @@ const WeddingVenuesByLocation = () => {
   const handleVenueClick = (venue) => {
     navigateToVendor(navigate, {
       ...venue,
-      city: currentLocation !== 'All India' ? currentLocation : venue.city
+      city: selectedCity !== 'All India' ? selectedCity : venue.city
     });
   };
 
