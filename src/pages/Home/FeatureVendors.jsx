@@ -30,7 +30,7 @@ const FeaturedVendors = ({ showAll = false }) => {
   const formattedVendors = useMemo(() => vendorsData?.data?.map(vendor => ({
     id: vendor._id,
     image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
-    category: vendor.vendorType,
+    category: vendor.businessType === 'venue' ? vendor.venueType : vendor.vendorType,
     name: vendor.businessName,
     location: vendor.serviceAreas?.length > 0
       ? vendor.serviceAreas[0]
