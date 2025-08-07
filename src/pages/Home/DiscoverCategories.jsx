@@ -55,88 +55,39 @@ const DiscoverCategories = () => {
   useEffect(() => {
     const getUserLocation = async () => {
       setIsLoadingLocation(true);
-      
-      // Try multiple location detection methods
-      const locationProviders = [
-        // Method 1: Browser Geolocation API
-        async () => {
-          return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-              reject(new Error('Geolocation not supported'));
-              return;
-            }
-            
-            navigator.geolocation.getCurrentPosition(
-              async (position) => {
-                try {
-                  // Reverse geocoding using OpenStreetMap Nominatim
-                  const { latitude, longitude } = position.coords;
-                  const response = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-                  );
-                  const data = await response.json();
-                  const city = data.address?.city || 
-                              data.address?.town || 
-                              data.address?.village || 
-                              data.address?.state || 
-                              'All India';
-                  resolve(city);
-                } catch (error) {
-                  reject(error);
-                }
-              },
-              (error) => reject(error),
-              { timeout: 5000, enableHighAccuracy: false }
-            );
-          });
-        },
-        
-        // Method 2: IP-based location using freegeoip.app
-        async () => {
-          const response = await fetch('https://freegeoip.app/json/');
-          const data = await response.json();
-          return data.city || data.region_name || 'All India';
-        },
-        
-        // Method 3: IP-based location using ip-api.com
-        async () => {
-          const response = await fetch('http://ip-api.com/json/');
-          const data = await response.json();
-          return data.city || data.regionName || 'All India';
-        },
-        
-        // Method 4: IP-based location using geojs.io
-        async () => {
-          const response = await fetch('https://get.geojs.io/v1/ip/geo.json');
-          const data = await response.json();
-          return data.city || data.region || 'All India';
-        }
-      ];
-      
-      let lastError = null;
-      
-      // Try each provider in sequence
-      for (const provider of locationProviders) {
-        try {
-          const city = await provider();
-          if (city && city !== 'All India') {
-            setSelectedCity(city);
-            setIsLoadingLocation(false);
-            return;
-          }
-        } catch (error) {
-          lastError = error;
-          console.warn('Location provider failed:', error.message);
-          // Continue to next provider
-        }
+      if (!navigator.geolocation) {
+        setSelectedCity('All India');
+        setIsLoadingLocation(false);
+        return;
       }
-      
-      // All providers failed, use default
-      console.error('All location providers failed:', lastError);
-      setSelectedCity('All India');
-      setIsLoadingLocation(false);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            // Reverse geocoding using OpenStreetMap Nominatim
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(
+              `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`
+            );
+            if (!response.ok) throw new Error('Failed to fetch location');
+            const data = await response.json();
+            const city = data.address?.city || 
+                        data.address?.town || 
+                        data.address?.village || 
+                        data.address?.state || 
+                        'All India';
+            setSelectedCity(city);
+          } catch (error) {
+            setSelectedCity('All India');
+          }
+          setIsLoadingLocation(false);
+        },
+        (error) => {
+          setSelectedCity('All India');
+          setIsLoadingLocation(false);
+        },
+        { timeout: 5000, enableHighAccuracy: false }
+      );
     };
-
     getUserLocation();
   }, []);
 
