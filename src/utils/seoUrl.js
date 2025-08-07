@@ -48,19 +48,20 @@ export const generateVendorSeoUrl = (vendor) => {
   }
   businessName = String(businessName).toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-') || 'business';
   
-  // Handle location - use nearLocation, location, serviceAreas, or default
+  // Handle location - use nearLocation, address details, or fallbacks
   let location = 'central-delhi';
   if (vendor.nearLocation) {
     location = vendor.nearLocation;
-  } else if (vendor.location) {
-    location = vendor.location;
-  } else if (vendor.address?.area) {
-    location = vendor.address.area;
   } else if (vendor.address?.locality) {
     location = vendor.address.locality;
+  } else if (vendor.address?.area) {
+    location = vendor.address.area;
+  } else if (vendor.location) {
+    location = vendor.location;
   } else if (vendor.serviceAreas && vendor.serviceAreas.length > 0) {
-    location = vendor.serviceAreas[0];
+    location = vendor.serviceAreas[0].split(',')[0]; // Take first part of service area
   }
+  
   location = String(location).toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-') || 'central-delhi';
   
   const slug = `${businessName}-in-${location}`;

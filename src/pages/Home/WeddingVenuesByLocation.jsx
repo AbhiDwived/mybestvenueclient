@@ -234,10 +234,7 @@ const WeddingVenuesByLocation = () => {
   };
 
   const handleVenueClick = (venue) => {
-    navigateToVendor(navigate, {
-      ...venue,
-      city: selectedCity !== 'All India' ? selectedCity : venue.city
-    });
+    navigateToVendor(navigate, venue);
   };
 
   if (isLoading) {
@@ -310,7 +307,7 @@ const WeddingVenuesByLocation = () => {
               <div
                 key={venue.id || index}
                 className="flex-shrink-0 w-1/4 bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
-                onClick={() => navigateToVendor(navigate, venue)}
+                onClick={() => handleVenueClick(venue)}
               >
                 <div className="relative group">
                   <img
