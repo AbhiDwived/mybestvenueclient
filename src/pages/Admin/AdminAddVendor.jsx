@@ -133,24 +133,159 @@ export default function AdminAddVendor() {
   const handleImageUpload = async (file) => {
     if (!file) return;
     
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Please select a valid image file (JPEG, PNG, GIF, or WebP)', {
+        position: "top-center",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      // Clear the selected file
+      setProfilePicture(null);
+      // Reset file input
+      const fileInput = document.getElementById('profilePicture');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      return;
+    }
+    
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast.error('Image size must be less than 5MB. Please compress your image and try again.', {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      // Clear the selected file
+      setProfilePicture(null);
+      // Reset file input
+      const fileInput = document.getElementById('profilePicture');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      return;
+    }
+    
     setUploadingImage(true);
-    const formData = new FormData();
-    formData.append('profilePicture', file);
+    const uploadFormData = new FormData();
+    uploadFormData.append('profilePicture', file);
+    
+    // Create a toast ID for progress updates
+    let uploadToastId = null;
     
     try {
-      const response = await axios.post('/api/v1/upload/profile-picture', formData, {
+      // Show initial upload toast
+      uploadToastId = toast.loading('🔄 Preparing to upload image...', {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: false,
+        draggable: false,
+      });
+      
+      const response = await axios.post('/api/v1/upload/profile-picture', uploadFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 60000, // 60 second timeout for large files
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.lengthComputable) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            
+            // Update the existing toast with progress
+            toast.update(uploadToastId, {
+              render: `📤 Uploading image to cloud storage... ${percentCompleted}%`,
+              type: "info",
+              isLoading: true,
+              progress: percentCompleted / 100,
+            });
+          }
+        }
       });
       
-      if (response.data.success) {
+      // Dismiss the upload progress toast
+      if (uploadToastId) {
+        toast.dismiss(uploadToastId);
+      }
+      
+      if (response.data && response.data.success) {
         setProfilePictureUrl(response.data.url);
-        toast.success('Image uploaded successfully!');
+        toast.success('✅ Image uploaded successfully to cloud storage!', {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } else {
+        throw new Error(response.data?.message || 'Upload response indicates failure');
       }
     } catch (error) {
-      toast.error('Failed to upload image');
+      // Dismiss progress toast if it exists
+      if (uploadToastId) {
+        toast.dismiss(uploadToastId);
+      }
+      
       console.error('Upload error:', error);
+      
+      let errorMessage = 'Failed to upload image';
+      let autoCloseTime = 5000;
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Upload timeout - please try again with a smaller image or check your internet connection';
+        autoCloseTime = 6000;
+      } else if (error.response) {
+        // Server responded with error status
+        const status = error.response.status;
+        const serverMessage = error.response.data?.message;
+        
+        if (status === 413) {
+          errorMessage = 'Image file is too large. Please use an image smaller than 5MB.';
+        } else if (status === 415) {
+          errorMessage = 'Unsupported image format. Please use JPEG, PNG, GIF, or WebP.';
+        } else if (status === 500) {
+          errorMessage = 'Server error during upload. Please try again later.';
+        } else {
+          errorMessage = serverMessage || `Upload failed with status ${status}`;
+        }
+      } else if (error.request) {
+        // Network error
+        errorMessage = 'Network error - please check your internet connection and try again';
+        autoCloseTime = 6000;
+      } else {
+        // Other error
+        errorMessage = error.message || 'Unexpected error during upload';
+      }
+      
+      toast.error(`❌ ${errorMessage}`, {
+        position: "top-center",
+        autoClose: autoCloseTime,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      // Clear the selected file and URL on error
+      setProfilePicture(null);
+      setProfilePictureUrl('');
+      
+      // Reset file input
+      const fileInput = document.getElementById('profilePicture');
+      if (fileInput) {
+        fileInput.value = '';
+      }
     } finally {
       setUploadingImage(false);
     }
@@ -218,17 +353,27 @@ export default function AdminAddVendor() {
       data.append('isVerified', true);
       data.append('isApproved', true);
       data.append('termsAccepted', true);
+      
+      // Use cloud URL if available, otherwise use the file
       if (profilePictureUrl) {
         data.append('profilePictureUrl', profilePictureUrl);
+      } else if (profilePicture) {
+        data.append('profilePicture', profilePicture);
       }
       
       await createVendorByAdmin(data).unwrap();
       
-      toast.success('Vendor created successfully!');
+      toast.success('✅ Vendor created successfully!', {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       navigate('/admin/vendor_management');
     } catch (error) {
       // Debug: log the error object to inspect its structure
-      // eslint-disable-next-line no-console
       console.error('AdminAddVendor error:', error);
       const errorMessage =
         error?.data?.message ||
@@ -238,9 +383,15 @@ export default function AdminAddVendor() {
         (typeof error === 'string' ? error : null) ||
         'Failed to create vendor';
       if (errorMessage && errorMessage.toLowerCase().includes('business name already taken')) {
-        toast.error('Business name already taken');
+        toast.error('❌ Business name already taken', {
+          position: "top-center",
+          autoClose: 4000,
+        });
       } else {
-        toast.error(errorMessage);
+        toast.error(`❌ ${errorMessage}`, {
+          position: "top-center",
+          autoClose: 5000,
+        });
       }
     }
   };
@@ -257,7 +408,7 @@ export default function AdminAddVendor() {
             name="businessName"
             value={formData.businessName}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -305,7 +456,7 @@ export default function AdminAddVendor() {
               name="vendorType"
               value={formData.vendorType}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="">Select vendor type</option>
@@ -324,7 +475,7 @@ export default function AdminAddVendor() {
               name="venueType"
               value={formData.venueType}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="">Select venue type</option>
@@ -342,7 +493,7 @@ export default function AdminAddVendor() {
             name="contactName"
             value={formData.contactName}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -354,7 +505,7 @@ export default function AdminAddVendor() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -366,7 +517,7 @@ export default function AdminAddVendor() {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -378,7 +529,7 @@ export default function AdminAddVendor() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -390,7 +541,7 @@ export default function AdminAddVendor() {
             name="country"
             value={formData.country}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
             <option value="IN">India</option>
@@ -404,7 +555,7 @@ export default function AdminAddVendor() {
             name="state"
             value={formData.state}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
             <option value="">Select State</option>
@@ -423,7 +574,7 @@ export default function AdminAddVendor() {
             name="city"
             value={formData.city}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
             disabled={!formData.state}
           >
@@ -449,7 +600,7 @@ export default function AdminAddVendor() {
                 setFormData(prev => ({ ...prev, nearLocation: e.target.value, customNearLocation: '' }));
               }
             }}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={!formData.city}
           >
             <option value="">Select Near Location (Optional)</option>
@@ -466,7 +617,7 @@ export default function AdminAddVendor() {
               placeholder="Enter your near location"
               value={formData.customNearLocation}
               onChange={(e) => setFormData(prev => ({ ...prev, customNearLocation: e.target.value }))}
-              className="w-full px-3 py-2 border rounded-md mt-2"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
             />
           )}
         </div>
@@ -480,7 +631,7 @@ export default function AdminAddVendor() {
             value={formData.pinCode}
             onChange={handleChange}
             placeholder="Enter 6-digit PIN code"
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             maxLength={6}
             required
           />
@@ -495,44 +646,92 @@ export default function AdminAddVendor() {
             value={formData.address}
             onChange={handleChange}
             placeholder="Enter your address"
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
+        {/* Enhanced Profile Picture Upload */}
         <div>
           <label className="block text-sm font-medium mb-2">Profile Picture</label>
           <div className="flex items-center space-x-4">
             {(profilePictureUrl || profilePicture) && (
-              <img
-                src={profilePictureUrl || (profilePicture ? URL.createObjectURL(profilePicture) : '')}
-                alt="Preview"
-                className="h-16 w-16 rounded-full object-cover border"
-              />
+              <div className="relative">
+                <img
+                  src={profilePictureUrl || (profilePicture ? URL.createObjectURL(profilePicture) : '')}
+                  alt="Preview"
+                  className="h-20 w-20 rounded-full object-cover border-2 border-gray-300 shadow-sm"
+                />
+                {uploadingImage && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                  </div>
+                )}
+              </div>
             )}
-            <label
-              htmlFor="profilePicture"
-              className={`cursor-pointer inline-block px-4 py-2 text-white text-sm font-medium rounded-md shadow transition ${
-                uploadingImage ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              style={{ backgroundColor: '#0f4c81' }}
-            >
-              {uploadingImage ? 'Uploading...' : 'Choose File'}
-              <input
-                id="profilePicture"
-                name="profilePicture"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                disabled={uploadingImage}
-                className="hidden"
-              />
-            </label>
+            <div className="flex flex-col space-y-2">
+              <label
+                htmlFor="profilePicture"
+                className={`cursor-pointer inline-block px-4 py-2 text-white text-sm font-medium rounded-md shadow transition ${
+                  uploadingImage ? 'opacity-50 cursor-not-allowed bg-gray-400' : 'hover:opacity-90'
+                }`}
+                style={{ backgroundColor: uploadingImage ? '#9CA3AF' : '#0f4c81' }}
+              >
+                {uploadingImage ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Uploading...
+                  </span>
+                ) : (
+                  'Choose File'
+                )}
+                <input
+                  id="profilePicture"
+                  name="profilePicture"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  onChange={handleFileChange}
+                  disabled={uploadingImage}
+                  className="hidden"
+                />
+              </label>
+              <p className="text-xs text-gray-500">
+                Supported: JPEG, PNG, GIF, WebP (Max: 5MB)
+              </p>
+            </div>
           </div>
-          {profilePicture && (
-            <p className="mt-2 text-sm text-gray-500">{profilePicture.name}</p>
+          {profilePicture && !uploadingImage && (
+            <div className="mt-2 p-2 bg-gray-50 rounded-md">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">File:</span> {profilePicture.name}
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Size:</span> {(profilePicture.size / 1024 / 1024).toFixed(2)} MB
+              </p>
+            </div>
           )}
           {profilePictureUrl && (
-            <p className="mt-2 text-sm text-green-600">✓ Image uploaded to cloud storage</p>
+            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-700 flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Image uploaded successfully to cloud storage
+              </p>
+            </div>
+          )}
+          {uploadingImage && (
+            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-700 flex items-center">
+                <svg className="animate-spin w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Uploading image to cloud storage...
+              </p>
+            </div>
           )}
         </div>
 
@@ -540,17 +739,33 @@ export default function AdminAddVendor() {
           <button
             type="button"
             onClick={() => navigate('/admin/vendor_management')}
-            className="px-4 py-2 border rounded-md hover:bg-gray-50"
+            className="px-4 py-2 border rounded-md hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={isLoading}
-            className="px-4 py-2 text-white rounded-md"
-            style={{ backgroundColor: '#0f4c81' }}
+            disabled={isLoading || uploadingImage}
+            className={`px-4 py-2 text-white rounded-md transition-colors ${
+              isLoading || uploadingImage 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'hover:opacity-90'
+            }`}
+            style={{ backgroundColor: isLoading || uploadingImage ? '#9CA3AF' : '#0f4c81' }}
           >
-            {isLoading ? 'Creating...' : 'Create Vendor'}
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating...
+              </span>
+            ) : uploadingImage ? (
+              'Please wait for image upload...'
+            ) : (
+              'Create Vendor'
+            )}
           </button>
         </div>
       </form>
