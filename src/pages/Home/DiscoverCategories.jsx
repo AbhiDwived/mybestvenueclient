@@ -17,11 +17,37 @@ const DiscoverCategories = () => {
   // Helper: Find the most similar city from a list
   function findNearestCity(target, cityList) {
     if (!target || !cityList || cityList.length === 0) return 'All India';
-    const targetLower = target.toLowerCase();
-    // Prefer substring match first
-    let best = cityList.find(city => city.toLowerCase().includes(targetLower));
-    if (best) return best;
-    // Otherwise, use Levenshtein distance
+    
+    const targetLower = target.toLowerCase().trim();
+    
+    // First, try exact match (case insensitive)
+    let exactMatch = cityList.find(city => 
+      city.toLowerCase().trim() === targetLower
+    );
+    if (exactMatch) {
+      return exactMatch;
+    }
+    
+    // Second, try substring match (target contains city or city contains target)
+    let substringMatch = cityList.find(city => {
+      const cityLower = city.toLowerCase().trim();
+      return cityLower.includes(targetLower) || targetLower.includes(cityLower);
+    });
+    if (substringMatch) {
+      return substringMatch;
+    }
+    
+    // Third, try word-by-word matching
+    const targetWords = targetLower.split(/\s+/).filter(word => word.length > 2);
+    let wordMatch = cityList.find(city => {
+      const cityLower = city.toLowerCase().trim();
+      return targetWords.some(word => cityLower.includes(word));
+    });
+    if (wordMatch) {
+      return wordMatch;
+    }
+    
+    // Fourth, use Levenshtein distance for fuzzy matching
     function levenshtein(a, b) {
       const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
       for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
@@ -37,16 +63,23 @@ const DiscoverCategories = () => {
       }
       return matrix[a.length][b.length];
     }
+    
     let minDist = Infinity;
     let nearest = cityList[0];
     for (const city of cityList) {
-      const dist = levenshtein(target, city);
+      const dist = levenshtein(targetLower, city.toLowerCase().trim());
       if (dist < minDist) {
         minDist = dist;
         nearest = city;
       }
     }
-    return nearest;
+    
+    // Only return the nearest city if the distance is reasonable (not too different)
+    if (minDist <= Math.max(targetLower.length, nearest.toLowerCase().length) * 0.5) {
+      return nearest;
+    }
+    
+    return cityList[0] || 'All India';
   }
 
   // Category icons mapping
@@ -100,67 +133,175 @@ const DiscoverCategories = () => {
       setIsLoadingLocation(true);
       
       const locationProviders = [
+        // Method 1: Browser Geolocation + Reverse Geocoding
         async () => {
           return new Promise((resolve) => {
             if (!navigator.geolocation) {
-              resolve('All India');
+              resolve(null);
               return;
             }
             navigator.geolocation.getCurrentPosition(
               async (position) => {
                 try {
                   const { latitude, longitude } = position.coords;
+                  
                   const response = await fetch(
                     `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`
                   );
-                  if (!response.ok) throw new Error('Failed to fetch location');
+                  
+                  if (!response.ok) {
+                    resolve(null);
+                    return;
+                  }
+                  
                   const data = await response.json();
+                  
                   const city = data.address?.city || 
                               data.address?.town || 
                               data.address?.village || 
                               data.address?.state || 
-                              'All India';
+                              data.address?.county ||
+                              null;
+                  
                   resolve(city);
-                } catch {
-                  resolve('All India');
+                } catch (error) {
+                  console.error('Error in reverse geocoding:', error);
+                  resolve(null);
                 }
               },
-              () => resolve('All India'),
-              { timeout: 5000, enableHighAccuracy: false }
+              (error) => {
+                resolve(null);
+              },
+              { 
+                timeout: 10000, 
+                enableHighAccuracy: false,
+                maximumAge: 300000 // 5 minutes
+              }
             );
           });
         },
+        
+        // Method 2: IP-based location
         async () => {
           try {
             const response = await fetch('/api/ip-location');
-            if (!response.ok) throw new Error('Failed to fetch IP location');
+            
+            if (!response.ok) {
+              return null;
+            }
+            
             const data = await response.json();
-            return data.city || data.region_name || 'All India';
-          } catch {
-            return 'All India';
+            
+            const city = data.city || data.region_name || data.region || null;
+            return city;
+          } catch (error) {
+            console.error('Error in IP location:', error);
+            return null;
+          }
+        },
+        
+        // Method 3: Timezone-based location estimation
+        async () => {
+          try {
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            
+            // Simple timezone to city mapping for India
+            const timezoneMap = {
+              'Asia/Kolkata': 'Mumbai',
+              'Asia/Calcutta': 'Mumbai',
+              'Asia/Dhaka': 'Kolkata',
+              'Asia/Karachi': 'Delhi',
+              'Asia/Colombo': 'Chennai',
+              'Asia/Kathmandu': 'Delhi',
+              'Asia/Thimphu': 'Delhi',
+              'Asia/Yangon': 'Kolkata',
+              'Asia/Bangkok': 'Kolkata',
+              'Asia/Singapore': 'Chennai',
+              'Asia/Jakarta': 'Chennai',
+              'Asia/Manila': 'Chennai',
+              'Asia/Tokyo': 'Delhi',
+              'Asia/Seoul': 'Delhi',
+              'Asia/Shanghai': 'Delhi',
+              'Asia/Hong_Kong': 'Delhi',
+              'Asia/Taipei': 'Delhi',
+              'Asia/Saigon': 'Chennai',
+              'Asia/Ho_Chi_Minh': 'Chennai',
+              'Asia/Vientiane': 'Chennai',
+              'Asia/Phnom_Penh': 'Chennai',
+              'Asia/Kuala_Lumpur': 'Chennai',
+              'Asia/Brunei': 'Chennai',
+              'Asia/Makassar': 'Chennai',
+              'Asia/Jayapura': 'Chennai',
+              'Asia/Ulaanbaatar': 'Delhi',
+              'Asia/Ulan_Bator': 'Delhi',
+              'Asia/Pyongyang': 'Delhi',
+              'Asia/Tehran': 'Delhi',
+              'Asia/Baghdad': 'Delhi',
+              'Asia/Riyadh': 'Delhi',
+              'Asia/Kuwait': 'Delhi',
+              'Asia/Qatar': 'Delhi',
+              'Asia/Bahrain': 'Delhi',
+              'Asia/Muscat': 'Delhi',
+              'Asia/Dubai': 'Delhi',
+              'Asia/Aden': 'Delhi',
+              'Asia/Aqtau': 'Delhi',
+              'Asia/Aqtobe': 'Delhi',
+              'Asia/Ashgabat': 'Delhi',
+              'Asia/Dushanbe': 'Delhi',
+              'Asia/Tashkent': 'Delhi',
+              'Asia/Samarkand': 'Delhi',
+              'Asia/Bishkek': 'Delhi',
+              'Asia/Almaty': 'Delhi',
+              'Asia/Qyzylorda': 'Delhi',
+              'Asia/Atyrau': 'Delhi',
+              'Asia/Oral': 'Delhi',
+              'Asia/Yekaterinburg': 'Delhi',
+              'Asia/Novosibirsk': 'Delhi',
+              'Asia/Novokuznetsk': 'Delhi',
+              'Asia/Krasnoyarsk': 'Delhi',
+              'Asia/Irkutsk': 'Delhi',
+              'Asia/Chita': 'Delhi',
+              'Asia/Yakutsk': 'Delhi',
+              'Asia/Vladivostok': 'Delhi',
+              'Asia/Magadan': 'Delhi',
+              'Asia/Kamchatka': 'Delhi',
+              'Asia/Anadyr': 'Delhi'
+            };
+            
+            const estimatedCity = timezoneMap[timezone];
+            return estimatedCity;
+          } catch (error) {
+            console.error('Error in timezone-based location:', error);
+            return null;
           }
         }
       ];
       
-      for (const provider of locationProviders) {
+      // Try each location provider
+      for (let i = 0; i < locationProviders.length; i++) {
         try {
-          const city = await provider();
-          if (city && city !== 'All India') {
+          const city = await locationProviders[i]();
+          
+          if (city && city !== 'All India' && city.trim() !== '') {
             const nearestCity = findNearestCity(city, uniqueCities);
-            setSelectedCity(nearestCity);
-            setIsLoadingLocation(false);
-            return;
+            
+            if (nearestCity && nearestCity !== 'All India') {
+              setSelectedCity(nearestCity);
+              setIsLoadingLocation(false);
+              return;
+            }
           }
-        } catch {
-          // ignore and continue
+        } catch (error) {
+          // Error handling for location provider
         }
       }
       
       setSelectedCity('All India');
       setIsLoadingLocation(false);
     };
+    
     getUserLocation();
-  }, [vendorData]);
+  }, [vendorData, uniqueCities]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -362,8 +503,7 @@ const DiscoverCategories = () => {
                       {vendorData?.categories?.length > 0 ? (
                         vendorData.categories
                           .filter(cat => 
-                            !searchTerm || 
-                            cat.toLowerCase().includes(searchTerm.toLowerCase())
+                            cat && (!searchTerm || cat.toLowerCase().includes(searchTerm.toLowerCase()))
                           )
                           .slice(0, 8)
                           .map(cat => (
@@ -421,8 +561,7 @@ const DiscoverCategories = () => {
                       {vendorData?.locations?.length > 0 ? (
                         vendorData.locations
                           .filter(loc => 
-                            !searchTerm || 
-                            loc.toLowerCase().includes(searchTerm.toLowerCase())
+                            loc && (!searchTerm || loc.toLowerCase().includes(searchTerm.toLowerCase()))
                           )
                           .slice(0, 8)
                           .map(loc => (
@@ -471,9 +610,9 @@ const DiscoverCategories = () => {
                 
                 {/* No Results */}
                 {searchTerm && 
-                 !vendorData?.vendors?.some(v => v.businessName.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                 !vendorData?.categories?.some(c => c.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                 !vendorData?.locations?.some(l => l.toLowerCase().includes(searchTerm.toLowerCase())) && (
+                 !vendorData?.vendors?.some(v => v?.businessName?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                 !vendorData?.categories?.some(c => c?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                 !vendorData?.locations?.some(l => l?.toLowerCase().includes(searchTerm.toLowerCase())) && (
                   <div className="py-4 px-3 text-center border-t border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
                     <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
                       <Star className="w-4 h-4 text-gray-400" />
