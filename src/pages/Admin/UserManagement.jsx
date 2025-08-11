@@ -127,9 +127,7 @@ const UserManagement = () => {
   }, [userProfileError, vendorProfileError]);
 
   const handleView = useCallback((user) => {
-    console.log('View clicked for:', user);
     const userId = user.id || user._id;
-    console.log('Using user ID:', userId);
     setSelectedUserId(userId);
     setSelectedUserRole(user.role);
     setSelectedUser(user);
@@ -188,7 +186,7 @@ const UserManagement = () => {
   };
 
   const handleEdit = (user) => {
-    console.log('Edit clicked for:', user);
+    // Edit user clicked
     setSelectedUser(user);
     setSelectedUserRole(user.role);
     
@@ -235,8 +233,7 @@ const UserManagement = () => {
         };
         
         // Need to create an admin API endpoint for updating user profiles
-        console.log('Attempting to update user with ID:', userId);
-        console.log('Update data:', userData);
+        // Updating user data
         
         // Since the admin API doesn't have a specific user update endpoint,
         // we'll show a message for now

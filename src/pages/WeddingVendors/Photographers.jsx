@@ -76,9 +76,7 @@ export default function Photographers() {
   }
 
 
-  filteredVendors.map((vendor) => {
-    console.log("vendorpppp000", vendor);
-  })
+  // Vendors filtered successfully
   const rawServices = data?.vendor?.services || [];
   const services = Array.isArray(rawServices)
     ? rawServices.length === 1 && typeof rawServices[0] === "string"

@@ -101,7 +101,7 @@ const AboutUs = () => {
 
         <div className="flex flex-wrap justify-center gap-4 mt-8 px-4 font-serif">
           <Link
-            to="/wedding-venues _city"
+            to="/venues-city"
             className="flex items-center bg-white text-gray-700 px-4 py-2 rounded-md hover:bg-[#0f4c81e7] transition sm:px-3 sm:py-2 text-sm sm:text-base"
             style={{ textDecoration: 'none', color: '#364153' }}
           >
@@ -245,7 +245,7 @@ const AboutUs = () => {
           {venueTypes.map((venueType) => (
             <Link
               key={venueType.title}
-              to={`/vendor-list/all-india/${venueType.title}`}
+              to={`/vendor-list/all-india/${venueType.title.toLowerCase()}`}
               style={{ textDecoration: 'none' }}
               className="block bg-white rounded-lg hover:shadow-sm text-center border-2 border-[#0f4c81] transition duration-300"
             >
@@ -281,7 +281,7 @@ const AboutUs = () => {
           {popularCities.map((city) => (
             <Link
               key={city.title}
-              to={`/locations/${city.title}`}
+              to={`/locations/${city.title.toLowerCase()}`}
               style={{ textDecoration: 'none' }}
               onClick={() => setSelectedCity(city.title)}
               className="bg-[#366A9B] text-white rounded-lg hover:shadow-lg text-center transition duration-300 block"
@@ -304,7 +304,7 @@ const AboutUs = () => {
 
         <div>
           <Link
-            to="/wedding-venues _city"
+            to="/venues-city"
             style={{ textDecoration: 'none', color: '#4A5565' }}
             className="inline-block bg-white px-4 py-2 rounded-md hover:bg-[#0f4c81e7] transition text-md sm:text-base"
           >

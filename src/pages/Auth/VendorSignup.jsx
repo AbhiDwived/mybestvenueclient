@@ -57,7 +57,7 @@ const VENUE_TYPES = [
   'Villas',
   'Pubs',
   'Meeting Rooms',
-  'Boat / Yatch',
+  'Boat Yatch',
   'Vacation Homes',
   'Cafes',
   'Co-working spaces',
@@ -286,6 +286,9 @@ const VendorSignup = () => {
 
     const errors = [];
 
+    // Debug log for city and cities
+    console.log('Submitting city:', formData.city, 'Available cities:', cities.map(c => c.name));
+
     // 🔹 Custom Required Fields
     if (!formData.contactName.trim()) errors.push("Full Name is required");
     if (!formData.businessName.trim()) errors.push("Business Name is required");
@@ -342,8 +345,11 @@ const VendorSignup = () => {
       errors.push("Please select a state");
     }
 
+    // 🔹 City validation (extra check)
     if (!formData.city) {
       errors.push("Please select a city");
+    } else if (!cities.map(c => c.name).includes(formData.city)) {
+      errors.push("Invalid city selected. Please choose a city from the list.");
     }
 
     if (!formData.pinCode || formData.pinCode.length !== 6) {
@@ -389,7 +395,16 @@ const VendorSignup = () => {
         data.append(key, finalNearLocation || '');
       } else if (key === "contactName" || key === "businessName" || key === "email") {
         data.append(key, value.trim());
-      } else if (key !== "otherVendorType" && key !== "venueType" && key !== "vendorType") {
+      } else if (key === "city") {
+        // Defensive: always submit city as a string
+        const cityValue = typeof value === 'string' ? value : (Array.isArray(value) ? value[0] : '');
+        data.append(key, cityValue);
+      } else if (
+        key !== "otherVendorType" &&
+        key !== "venueType" &&
+        key !== "vendorType" &&
+        key !== "serviceAreas" // Avoid appending empty array; we append properly below
+      ) {
         data.append(key, value);
       } else if (key === "vendorType" && vendorData.businessType === "vendor") {
         data.append(key, value);
@@ -400,8 +415,11 @@ const VendorSignup = () => {
 
     const selectedState = states.find(s => s.isoCode === formData.state);
     const locationString = `${formData.city}, ${selectedState?.name || formData.state}, India`;
-    const serviceAreasArray = [locationString];
-    data.append("serviceAreas", JSON.stringify(serviceAreasArray));
+    if (formData.city && selectedState && locationString) {
+      // Append serviceAreas exactly once as a JSON string array
+      data.append("serviceAreas", JSON.stringify([locationString]));
+    }
+    data.append("termsAccepted", formData.termsAccepted ? "true" : "false");
 
     if (profilePicture) {
       data.append("profilePicture", profilePicture);

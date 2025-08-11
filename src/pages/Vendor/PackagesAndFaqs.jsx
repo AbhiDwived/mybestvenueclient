@@ -40,7 +40,7 @@ const [deletingFaqId, setDeletingFaqId] = useState(null);
   const isAuthenticated = useSelector((state) => state.vendor.isAuthenticated);
   // const vendorId = vendor?._id || vendor?.id;
   const vendorId = vendor?.id;
-  console.log("vendorId", vendorId);
+  // Vendor ID extracted
   const [deleteFaqs, { isLoading: faqDelete, isSuccess: faqDeleteSuccess, isError: faqDeleteError, error: deleteFaqError }] = useDeleteFaqsMutation();
 
   const [addservicesPackage, { isLoading, isError, isSuccess, error: addPackageError }] = useAddservicesPackageMutation();
@@ -56,7 +56,7 @@ const [deletingFaqId, setDeletingFaqId] = useState(null);
       if (!vendorId) return console.error("Vendor ID missing.");
       try {
         const res = await vendorservicesPackageList({ vendorId }).unwrap();
-        console.log("res", res);
+        // Package created successfully
         setPackages(res.packages || []);
       } catch (err) {
         console.error("Error fetching vendor packages:", err);
@@ -135,7 +135,7 @@ const [deletingFaqId, setDeletingFaqId] = useState(null);
 
   const handleDeletePackage = async (packageId) => {
 
-    console.log("PackageId", packageId)
+    // Package ID extracted
 
     if (!window.confirm('Are you sure you want to delete this package?')) return;
 

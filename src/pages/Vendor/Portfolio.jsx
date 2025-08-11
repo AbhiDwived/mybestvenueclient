@@ -140,33 +140,26 @@ const PortfolioTab = () => {
   // Get vendorId from user object or local storage
   useEffect(() => {
     const extractVendorId = () => {
-      console.log('🔍 Extracting vendor ID...');
-      
       // Method 0: Check URL params for admin edit mode
       const urlParams = new URLSearchParams(window.location.search);
       const adminEditId = urlParams.get('adminEdit');
       if (adminEditId) {
-        console.log('✅ Found vendor ID from URL adminEdit param:', adminEditId);
         return adminEditId;
       }
       
       // Method 1: Check vendor state from Redux
       if (vendor?.id) {
-        console.log('✅ Found vendor ID from Redux vendor state:', vendor.id);
         return vendor.id;
       }
       if (vendor?._id) {
-        console.log('✅ Found vendor _id from Redux vendor state:', vendor._id);
         return vendor._id;
       }
       
       // Method 2: Check user state from Redux (if vendor is logged in as user)
       if (user?.id && user?.role === 'vendor') {
-        console.log('✅ Found vendor ID from Redux user state:', user.id);
         return user.id;
       }
       if (user?._id && user?.role === 'vendor') {
-        console.log('✅ Found vendor _id from Redux user state:', user._id);
         return user._id;
       }
 
@@ -177,11 +170,10 @@ const PortfolioTab = () => {
           const parsedData = JSON.parse(vendorData);
           const storedId = parsedData.id || parsedData._id;
           if (storedId) {
-            console.log('✅ Found vendor ID from localStorage vendor:', storedId);
             return storedId;
           }
         } catch (error) {
-          console.warn('⚠️ Error parsing vendor data from localStorage:', error);
+          // Silent error handling
         }
       }
 
@@ -192,11 +184,10 @@ const PortfolioTab = () => {
           const parsedData = JSON.parse(vendorInfo);
           const storedId = parsedData.id || parsedData._id;
           if (storedId) {
-            console.log('✅ Found vendor ID from localStorage vendorInfo:', storedId);
             return storedId;
           }
         } catch (error) {
-          console.warn('⚠️ Error parsing vendorInfo from localStorage:', error);
+          // Silent error handling
         }
       }
 
@@ -208,12 +199,11 @@ const PortfolioTab = () => {
           if (tokenParts.length === 3) {
             const payload = JSON.parse(atob(tokenParts[1]));
             if (payload.id) {
-              console.log('✅ Found vendor ID from token:', payload.id);
               return payload.id;
             }
           }
         } catch (error) {
-          console.warn('⚠️ Error decoding vendor token:', error);
+          // Silent error handling
         }
       }
 
@@ -225,21 +215,18 @@ const PortfolioTab = () => {
           if (tokenParts.length === 3) {
             const payload = JSON.parse(atob(tokenParts[1]));
             if (payload.id && payload.role === 'vendor') {
-              console.log('✅ Found vendor ID from user token:', payload.id);
               return payload.id;
             }
           }
         } catch (error) {
-          console.warn('⚠️ Error decoding user token:', error);
+          // Silent error handling
         }
       }
 
-      console.log('❌ No vendor ID found from any source');
       return null;
     };
 
     const id = extractVendorId();
-    console.log('🎯 Final vendor ID:', id);
     setVendorId(id);
   }, [user, vendor]);
 

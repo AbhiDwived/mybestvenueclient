@@ -67,7 +67,7 @@ const getCategoryIcon = (title) => {
     case 'Vacation Homes':
     case 'Guest Houses':
       return <FaHome size={24} />;
-    case 'Boat / Yatch':
+    case 'Boat Yatch':
       return <FaUmbrellaBeach size={24} />;
     case 'Co-working Spaces':
     case 'Business Centres':
@@ -108,7 +108,7 @@ const VendorByCategory = ({ location = "All India" }) => {
     "Villas",
     "Pubs",
     "Meeting Rooms",
-    "Boat / Yatch",
+    "Boat Yatch",
     "Vacation Homes",
     "Cafes",
     "Co-working Spaces",

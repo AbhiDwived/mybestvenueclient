@@ -280,7 +280,7 @@ export default function Inquiry() {
                             You haven't sent any inquiries to vendors. Browse vendors and contact them to start planning your wedding.
                         </p>
                         <button>
-                            <Link to="/wedding-vendor">Browse Vendors</Link>
+                            <Link to="/vendor">Browse Vendors</Link>
                         </button>
                     </div>
                 )}

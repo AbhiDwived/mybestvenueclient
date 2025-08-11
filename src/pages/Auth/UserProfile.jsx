@@ -14,7 +14,7 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const userId = user?.id || user?._id;
-  console.log("User ID:", userId);
+  // User ID extracted
 
 
   const [activeTab, setActiveTab] = useState("profile");

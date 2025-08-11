@@ -160,13 +160,10 @@ const index = () => {
                     <Route path="/footer" element={<Footer />} />
                     <Route path="/search" element={<SearchResults />} />
 
-                    <Route path="/about" element={<AboutUs />} />
+                    <Route path="/about-us" element={<AboutUs />} />
 
                     {/* Footer */}
                     <Route path='/terms' element={<Terms />} />
-
-
-                   
 
                     {/* Idea Blog */}
                     <Route path="/blog" element={<IdeaBlog />} />
@@ -186,12 +183,11 @@ const index = () => {
                     <Route path="/award-night" element={<AwardNight />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/networking" element={<Networking />} />
-                    <Route path="/contactUs" element={<ContactUs />} />
+<Route path="/contact-us" element={<ContactUs />} />
 
-                   
                     {/* Wedding Vendor public page */}
-                    <Route path="/wedding-vendor" element={<WeedingVendor />} />
-                    <Route path="/Cakes" element={<Cakes/>}/>
+                    <Route path="/vendor" element={<WeedingVendor />} />
+                    <Route path="/cakes" element={<Cakes/>}/>
                     <Route path ="/caterers" element={<Caterers/>}/>
                     <Route path='/choreographers' element={<Choreographers/>}/>
                     <Route path='/decorators' element={<Decorators/>}/>
@@ -201,50 +197,49 @@ const index = () => {
                     <Route path='/gifts' element={<Gifts/>}/>
                     <Route path='/invitation' element={<Invitation/>}/>
                     <Route path='/music' element={<Music/>}/>
-                    <Route path='/partyPlaces' element={<PartyPlaces/>}/>
+                    <Route path='/party-places' element={<PartyPlaces/>}/>
                     <Route path='/photobooth' element={<Photobooth/>}/>
                     <Route path="/photographers" element={<Photographers />} />
                     <Route path="/planners"  element={<Planners/>}/> 
                     <Route path="/videography" element={<Videography />} />
-                    <Route path="/tentHouse"  element={<TentHouse/>}/> 
+                    <Route path="/tent-house"  element={<TentHouse/>}/> 
                     <Route path="/transportation"  element={<Transportation/>}/> 
                     <Route path="/promotion"  element={<VendorPromotion/>}/> 
-                    <Route path="/makeUp"  element={<WeddingMakeUp/>}/> 
+                    <Route path="/makeup"  element={<WeddingMakeUp/>}/> 
 
                     {/* Home additional pages */}
-                    <Route path='/BrowserVenues' element={<BrowserVenues />} />
-                    <Route path='/discoverCategories' element={<DiscoverCategories />} />
-                    <Route path='/featurevendors' element={<FeatureVendors showAll={true} />} /> {/* ✅ Fixed 'featureVendors' */}
-                    <Route path='/HowItWorks' element={<HowItWorks />} />
-                    <Route path='/ProjectList' element={<ProjectList />} />
-                    <Route path='/SuccessfullEvents' element={<SuccessfullEvents />} />
-                    <Route path='/Tesstimonials' element={<Tesstimonials />} />
-                    <Route path='/VendorByCategory' element={<VendorByCategory />} />
+                    <Route path='/browser-venues' element={<BrowserVenues />} />
+                    <Route path='/discover-categories' element={<DiscoverCategories />} />
+<Route path='/featurevendors' element={<FeatureVendors showAll={true} />} />
+                    <Route path='/how-it-works' element={<HowItWorks />} />
+                    <Route path='/project-list' element={<ProjectList />} />
+                    <Route path='/successfull-events' element={<SuccessfullEvents />} />
+                    <Route path='/testimonials' element={<Tesstimonials />} />
+                    <Route path='/vendor-by-category' element={<VendorByCategory />} />
 
                     {/* Wedding Venues */}
-                    <Route path="wedding-venues" element={<WeddingVenues />} />
-                    <Route path="wedding-venues _city" element={<WeddingVenuesCity />} />
-                    <Route path="blue-dimond-venue" element={<BlueDimondVenue />} />
-                    <Route path="Hotel-Prince-Inn-By" element={<HotelPrinceInn />} />
-                    <Route path="Hotel-Prience-Stay" element={<HotelPrienceStay />} />
-                    <Route path="Hotel-Culture-By-Dsy" element={<HotelCultureByDsy />} />
+                    <Route path="/venues" element={<WeddingVenues />} />
+                    <Route path="/venues-city" element={<WeddingVenuesCity />} />
+                    <Route path="/blue-dimond-venue" element={<BlueDimondVenue />} />
+                    <Route path="/hotel-prince-inn-by" element={<HotelPrinceInn />} />
+                    <Route path="/hotel-prience-stay" element={<HotelPrienceStay />} />
+                    <Route path="/hotel-culture-by-dsy" element={<HotelCultureByDsy />} />
 
                     {/* Location */}
-                    <Route path="locations/:city" element={<LocationVendors />} />
-                    <Route path="category-selector" element={<CategorySelector />} />
+                    <Route path="/locations/:city" element={<LocationVendors />} />
+                    <Route path="/category-selector" element={<CategorySelector />} />
                     <Route path="/vendors/:city/:category" element={<VendorListPage />} />
                     <Route path="/vendor-list/:city/:category" element={<VendorListPage />} />
 
-
                     {/* User Auth Routes */}
                     <Route path="/user/signup" element={<UserSignup />} />
-                    <Route path="verify-otp" element={<VerifyOTP />} />
+                    <Route path="/verify-otp" element={<VerifyOTP />} />
                     <Route path="/user/login" element={<UserLogin />} />
-                    <Route path="forgot-password" element={<ForgotPassword />} />
-                    <Route path="reset-password" element={<ResetPassword />} />
-                    <Route path="verify-password-reset" element={<VerifyPasswordReset />} />
-                    <Route path="edit-profile" element={<EditProfile />} />
-                    <Route path="delete-account" element={<DeleteAccount />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/verify-password-reset" element={<VerifyPasswordReset />} />
+                    <Route path="/edit-profile" element={<EditProfile />} />
+                    <Route path="/delete-account" element={<DeleteAccount />} />
 
                     {/* Vendor Auth Routes */}
                     <Route path="/not-approved" element={<NotApproved />} />
@@ -254,12 +249,12 @@ const index = () => {
                     <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
                     <Route path="/vendor/verify-password-reset" element={<VendorVerifyResetOTP />} />
                     <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
-                    <Route path="/preview-profile/:vendorId" element={<PreviewProfile />} />
+                    <Route path="/preview-profile/:vendorid" element={<PreviewProfile />} />
                     <Route path="/venue/location/:city/:type/:slug" element={<PreviewProfile />} />
-                    <Route path="/:businessType/:city/:type/:slug" element={<PreviewProfile />} />
+                    <Route path="/:businesstype/:city/:type/:slug" element={<PreviewProfile />} />
 
                     {/* Admin Auth Route */}
-                    <Route path="admin/login" element={<AdminLogin />} />
+                    <Route path="/admin/login" element={<AdminLogin />} />
                 </Route>
 
                 {/* User Dashboard Protected Routes */}
@@ -291,22 +286,22 @@ const index = () => {
                     }
                 >
                     <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="edit_profile" element={<EditProfiles />} />
-                    <Route path="hiring_vendors" element={<HiringVendors />} />
+                    <Route path="edit-profile" element={<EditProfiles />} />
+                    <Route path="hiring-vendors" element={<HiringVendors />} />
                     <Route path="inquiries" element={<Inquiries />} />
                     <Route path="reviews" element={<Reviews />} />
-                    <Route path="packages_and_faqs" element={<PackagesAndFaqs />} />
+                    <Route path="packages-and-faqs" element={<PackagesAndFaqs />} />
                     <Route path="portfolio" element={<Portfolio />} />
-                    <Route path="preview_profilescreen" element={<PreviewProfileScreen />} />
-                    <Route path="similar_vendors" element={<SimilarVendors />} />
+                    <Route path="preview-profilescreen" element={<PreviewProfileScreen />} />
+                    <Route path="similar-vendors" element={<SimilarVendors />} />
                     <Route path="reviews" element={<Reviews />} />
-                    <Route path="customer_reviews" element={<CustomerReviews />} />
-                    <Route path="faqs_Questions" element={<FaqQuestions />} />
+                    <Route path="customer-reviews" element={<CustomerReviews />} />
+                    <Route path="faqs-questions" element={<FaqQuestions />} />
                     <Route path="inquiry" element={<FaqQuestions />} />
-                    <Route path="inquiryReply" element={<InquiryReply />} />
+                    <Route path="inquiry-reply" element={<InquiryReply />} />
                     <Route path="blogs" element={<VendorBlog />} />
                     <Route path="add-blog-post" element={<AddBlogPost />} />
-                    <Route path="vendorpreview_profile" element={<VendorPreviewProfile />} />
+                    <Route path="vendorpreview-profile" element={<VendorPreviewProfile />} />
                     <Route path="bookings" element={<Bookings />} />
                 </Route>
 
@@ -320,12 +315,12 @@ const index = () => {
                     }
                 >
                     <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="sub_dashboard" element={<SubDashboard />} />
-                    <Route path="user_management" element={<UserManagement />} />
-                    <Route path="vendor_management" element={<VendorManagement />} />
-                    <Route path="pending_vendor_approvals" element={<PendingVendorApprovals />} />
-                    <Route path="review_moderation" element={<ReviewModeration />} />
-                    <Route path="category_management" element={<CategoryManagement />} />
+                    <Route path="sub-dashboard" element={<SubDashboard />} />
+                    <Route path="user-management" element={<UserManagement />} />
+                    <Route path="vendor-management" element={<VendorManagement />} />
+                    <Route path="pending-vendor-approvals" element={<PendingVendorApprovals />} />
+                    <Route path="review-moderation" element={<ReviewModeration />} />
+                    <Route path="category-management" element={<CategoryManagement />} />
                     <Route path="add-blog-post" element={<AdminAddBlogPost />} />
                     <Route path="add-vendor" element={<AdminAddVendor />} />
                     <Route path="blogs/:slug" element={<BlogDetails />} />

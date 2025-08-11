@@ -226,7 +226,7 @@ export default function Corporate() {
           </p>
           <div className="flex justify-center">
             <div className="bg-white text-black rounded-lg px-6 py-2">
-              <Link to="/contactUs" style={{textDecoration:'none'}} className="font-semibold text-black">Contact Us</Link>
+              <Link to="/contact-us  " style={{textDecoration:'none'}} className="font-semibold text-black">Contact Us</Link>
             </div>
           </div>
         </div>

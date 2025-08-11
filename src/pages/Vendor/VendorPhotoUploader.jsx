@@ -141,7 +141,7 @@ const ImageUploader = () => {
         {gallery.map((file, index) => (
           <div key={index} className="border p-2 rounded shadow-sm relative bg-white">
             <img
-              src={`http://localhost:3000/uploads/${file}`}
+              src={`${import.meta.env.VITE_API_URL?.replace('/api/v1', '')}/uploads/${file}`}
               alt="Uploaded"
               className="w-full h-48 object-cover rounded"
             />

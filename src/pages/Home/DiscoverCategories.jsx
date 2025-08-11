@@ -632,14 +632,14 @@ const DiscoverCategories = () => {
 
           <div className="mt-12 flex flex-wrap justify-center gap-6">
             <Link 
-              to='/contactUs'
+              to='/contact-us  '
               style={{borderRadius:'5px', textDecoration:'none'}}
               className="px-6 py-2 bg-white/10 text-white border border-white rounded-md backdrop-blur-sm hover:text-black hover:bg-white/20 transition-colors text-lg"
             >
               Contact Us
             </Link>
             <a
-              href="/about"
+              href="/about-us"
               style={{textDecoration:'none'}}
               className="px-6 py-2 bg-[#445D7B] text-white border border-white rounded-md hover:bg-[#3a4f6a] transition-colors text-lg"
             >

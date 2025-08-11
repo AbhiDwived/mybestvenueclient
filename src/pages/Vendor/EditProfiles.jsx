@@ -60,7 +60,7 @@ const VENUE_TYPES = [
   'Villas',
   'Pubs',
   'Meeting Rooms',
-  'Boat / Yatch',
+  'Boat Yatch',
   'Vacation Homes',
   'Cafes',
   'Co-working spaces',
@@ -202,7 +202,7 @@ const EditProfile = () => {
 
 
   const fileInputRef = useRef(null);
-  const serverURL = "http://localhost:5000"
+  const serverURL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || "http://localhost:5000"
 
   // Calculate profile completion dynamically with useMemo
   const profileCompletion = useMemo(() => {

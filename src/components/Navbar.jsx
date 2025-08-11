@@ -132,11 +132,11 @@ const Navbar = () => {
 
     return (
       <div className="space-y-3">
-        {renderLink('/wedding-vendor', <FiBriefcase size={16} />, 'Vendors')}
-        {renderLink('/wedding-venues', <FiUser size={16} />, 'Venues')}
+        {renderLink('/vendor', <FiBriefcase size={16} />, 'Vendors')}
+        {renderLink('/venues', <FiUser size={16} />, 'Venues')}
         {renderLink('/blog', <FiPackage size={16} />, 'Blogs')}
         {renderLink('/corporate', <FiPackage size={16} />, 'Corporate')}
-        {renderLink('/about', <FiPackage size={16} />, 'About')}
+        {renderLink('/about-us', <FiPackage size={16} />, 'About')}
         <hr />
 
         {!isUserLoggedIn ? (
@@ -218,11 +218,11 @@ const Navbar = () => {
           </Button>
         </div>
         <nav className="d-none d-lg-flex align-items-center gap-4">
-          {renderLink('/wedding-vendor', 'Vendors')}
-          {renderLink('/wedding-venues', 'Venues')}
+          {renderLink('/vendor', 'Vendors')}
+          {renderLink('/venues', 'Venues')}
           {renderLink('/blog', 'Blogs')}
           {renderLink('/corporate', 'Corporate')}
-          {renderLink('/about', 'About')}
+          {renderLink('/about-us', 'About')}
 
           {!isUserLoggedIn ? (
             <div style={{ marginTop: '-2px' }}>

@@ -74,14 +74,14 @@ const Footer = () => {
         <div className="hidden sm:hidden md:block mt-1">
           <h5 className="text-lg font-semibold border-b border-blue-500">Quick Links</h5>
           <ul style={{ marginLeft: '-30px' }}>
-            <li className='mt-7'><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
+            <li className='mt-7'><Link to="/vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
             <li className='mt-2'><Link to="/corporate" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Corporate Events</Link></li>
             <li className='mt-2'><Link to="/Blog" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Event Blog</Link></li>
           </ul>
         </div>
         <AccordionSection title="Quick Links">
           <ul className="text-[#D1D5DB]">
-            <li><Link to="/wedding-vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
+            <li><Link to="/vendor" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Find Vendors</Link></li>
             <li className='mt-2'><Link to="/corporate" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Corporate Events</Link></li>
             <li className='mt-2'><Link to="/blog" style={{ textDecoration: 'none', color: '#D1D5DB' }}>› Event Blog</Link></li>
           </ul>
@@ -89,14 +89,14 @@ const Footer = () => {
 
         {/* Contact Info */}
         <div className="hidden sm:hidden md:block">
-          <h5 className="text-lg font-semibold border-b  border-blue-500 mb-4 pb-1"> <Link to='/contactUs' style={{ textDecoration: 'none', color: 'white' }}>Contact Us</Link></h5>
+          <h5 className="text-lg font-semibold border-b  border-blue-500 mb-4 pb-1"> <Link to='/contact-us  ' style={{ textDecoration: 'none', color: 'white' }}>Contact Us</Link></h5>
           <ul className="text-md p-0 text-[#D1D5DB]">
             <li className='sm:text-[#D1D5DB] text-sm '><Link to="https://www.google.com/maps/dir/?api=1&destination=A-223%2C+Sector+151%2C+Noida%2C+Uttar+Pradesh+201310" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaLocationDot className="inline mr-2 " style={{ textDecoration: 'none', color: '#D1D5DB' }} />A-223, Sector-151, Near-148 metro station, Greater Noida, India, Uttar Pradesh code - 201310</Link></li>
             <li className="mt-3"><Link to="tel:9990555740" style={{ textDecoration: 'none', color: '#D1D5DB' }}><FaPhone className="inline mr-2" /> +91 9990555740</Link></li>
             <li className="mt-3"><Link to="mailto:info@mybestvenue.com" style={{ textDecoration: 'none', color: '#D1D5DB' }}><BiSolidContact className="inline mr-2" />info@mybestvenue.com</Link></li>
           </ul>
         </div>
-        <AccordionSection Link to='/contactUs' title="Contact Us">
+        <AccordionSection Link to='/contact-us  ' title="Contact Us">
           <ul className="sm:text-[#D1D5DB] text-sm ">
             <li><Link to='https://www.google.com/maps/dir/?api=1&destination=A-223%2C+Sector+151%2C+Noida%2C+Uttar+Pradesh+201310' target="_blank"
               rel="noopener noreferrer"

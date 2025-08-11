@@ -13,16 +13,37 @@ export const generateVendorSeoUrl = (vendor) => {
     location: vendor.location
   });
   
-  // Handle city - use city, serviceAreas, or default
+  // Handle city - use city, serviceAreas, or default (robust parsing)
+  const normalize = (value) => {
+    if (Array.isArray(value)) return value[0] || '';
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          const arr = JSON.parse(trimmed);
+          if (Array.isArray(arr)) return arr[0] || '';
+        } catch (_) {}
+      }
+      return trimmed;
+    }
+    return '';
+  };
+
   let city = 'location';
-  if (vendor.city) {
+  if (vendor.city && typeof vendor.city === 'string') {
     city = vendor.city;
   } else if (vendor.serviceAreas && vendor.serviceAreas.length > 0) {
-    city = vendor.serviceAreas[0];
+    city = normalize(vendor.serviceAreas);
   } else if (vendor.address?.city) {
     city = vendor.address.city;
   }
-  city = String(city).toLowerCase().split('-')[0].replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'delhi';
+  city = String(city)
+    .replace(/^\[\"?/, '')
+    .replace(/\"?\]$/, '')
+    .toLowerCase()
+    .split('-')[0]
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '') || 'delhi';
   
   // Handle business type
   let businessType = vendor.businessType || 'vendor';

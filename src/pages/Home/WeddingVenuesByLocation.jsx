@@ -18,6 +18,8 @@ const WeddingVenuesByLocation = () => {
   function findNearestCity(target, cityList) {
     if (!target || !cityList || cityList.length === 0) return 'All India';
     
+    // Clean and normalize the target city name - take only the first word
+    const cleanTarget = target.toLowerCase().trim().split(/\s+/)[0];
     const targetLower = target.toLowerCase().trim();
     
     // First, try exact match (case insensitive)
@@ -28,26 +30,34 @@ const WeddingVenuesByLocation = () => {
       return exactMatch;
     }
     
-    // Second, try substring match (target contains city or city contains target)
+    // Second, try matching the first word of the city
+    let firstWordMatch = cityList.find(city => {
+      const cityFirstWord = city.toLowerCase().trim().split(/\s+/)[0];
+      return cityFirstWord === cleanTarget;
+    });
+    if (firstWordMatch) {
+      return firstWordMatch;
+    }
+    
+    // Third, try substring match (target contains city or city contains target)
     let substringMatch = cityList.find(city => {
       const cityLower = city.toLowerCase().trim();
-      return cityLower.includes(targetLower) || targetLower.includes(cityLower);
+      return cityLower.includes(cleanTarget) || cleanTarget.includes(cityLower);
     });
     if (substringMatch) {
       return substringMatch;
     }
     
-    // Third, try word-by-word matching
-    const targetWords = targetLower.split(/\s+/).filter(word => word.length > 2);
+    // Fourth, try word-by-word matching with the first word
     let wordMatch = cityList.find(city => {
       const cityLower = city.toLowerCase().trim();
-      return targetWords.some(word => cityLower.includes(word));
+      return cityLower.includes(cleanTarget);
     });
     if (wordMatch) {
       return wordMatch;
     }
     
-    // Fourth, use Levenshtein distance for fuzzy matching
+    // Fifth, use Levenshtein distance for fuzzy matching
     function levenshtein(a, b) {
       const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
       for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
@@ -67,7 +77,7 @@ const WeddingVenuesByLocation = () => {
     let minDist = Infinity;
     let nearest = cityList[0];
     for (const city of cityList) {
-      const dist = levenshtein(targetLower, city.toLowerCase().trim());
+      const dist = levenshtein(cleanTarget, city.toLowerCase().trim());
       if (dist < minDist) {
         minDist = dist;
         nearest = city;
@@ -75,7 +85,7 @@ const WeddingVenuesByLocation = () => {
     }
     
     // Only return the nearest city if the distance is reasonable (not too different)
-    if (minDist <= Math.max(targetLower.length, nearest.toLowerCase().length) * 0.5) {
+    if (minDist <= Math.max(cleanTarget.length, nearest.toLowerCase().length) * 0.5) {
       return nearest;
     }
     
@@ -233,7 +243,6 @@ const WeddingVenuesByLocation = () => {
             };
             
             const estimatedCity = timezoneMap[timezone];
-            console.log('Estimated city from timezone:', estimatedCity);
             return estimatedCity;
           } catch (error) {
             console.error('Error in timezone-based location:', error);
@@ -245,7 +254,6 @@ const WeddingVenuesByLocation = () => {
       // Try each location provider
       for (let i = 0; i < locationProviders.length; i++) {
         try {
-          console.log(`Trying location provider ${i + 1}...`);
           const city = await locationProviders[i]();
           
           if (city && city !== 'All India' && city.trim() !== '') {
@@ -278,9 +286,28 @@ const WeddingVenuesByLocation = () => {
   const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
   const getDisplayLocation = (venue) => {
-    const locationString = venue.city || (venue.serviceAreas?.length > 0 ? venue.serviceAreas[0] : venue.address?.city);
+    const normalize = (value) => {
+      if (Array.isArray(value)) return value[0] || '';
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed.startsWith('[')) {
+          try {
+            const arr = JSON.parse(trimmed);
+            if (Array.isArray(arr)) return arr[0] || '';
+          } catch (_) {
+            // fall through
+          }
+        }
+        return trimmed;
+      }
+      return '';
+    };
+
+    const primary = venue.city && typeof venue.city === 'string' ? venue.city : '';
+    const fallback = normalize(venue.serviceAreas) || venue.address?.city || '';
+    const locationString = primary || fallback;
     if (locationString && typeof locationString === 'string') {
-      return locationString.split(',')[0];
+      return locationString.split(',')[0].replace(/^\["?/, '').replace(/"?\]$/, '').trim();
     }
     return 'Location not specified';
   }

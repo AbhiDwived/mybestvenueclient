@@ -16,7 +16,7 @@ const RegisterForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form Submitted:', formData);
+    // Form submitted successfully
   };
 
   return (

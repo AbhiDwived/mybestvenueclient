@@ -9,9 +9,26 @@ import { navigateToVendor } from '../../../utils/seoUrl';
 import mainProfile from "../../../assets/mainProfile.png";
 
 const getDisplayLocation = (vendor) => {
-  const locationString = vendor.city || (vendor.serviceAreas?.length > 0 ? vendor.serviceAreas[0] : vendor.address?.city);
+  const normalize = (value) => {
+    if (Array.isArray(value)) return value[0] || '';
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          const arr = JSON.parse(trimmed);
+          if (Array.isArray(arr)) return arr[0] || '';
+        } catch (_) {}
+      }
+      return trimmed;
+    }
+    return '';
+  };
+
+  const primary = typeof vendor.city === 'string' ? vendor.city : '';
+  const fallback = normalize(vendor.serviceAreas) || vendor.address?.city || '';
+  const locationString = primary || fallback;
   if (locationString && typeof locationString === 'string') {
-    return locationString.split(',')[0];
+    return locationString.split(',')[0].replace(/^\["?/, '').replace(/"?\]$/, '').trim();
   }
   return 'Location not specified';
 }

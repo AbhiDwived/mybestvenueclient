@@ -51,7 +51,7 @@ const VENUE_TYPES = [
   'Villas',
   'Pubs',
   'Meeting Rooms',
-  'Boat / Yatch',
+  'Boat Yatch',
   'Vacation Homes',
   'Cafes',
   'Co-working spaces',

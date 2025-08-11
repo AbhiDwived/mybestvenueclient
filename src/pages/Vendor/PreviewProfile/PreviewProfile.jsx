@@ -29,20 +29,20 @@ const PreviewProfile = () => {
   const [activeTab, setActiveTab] = useState("About");
   const [activeGalleryTab, setActiveGalleryTab] = useState('images');
   const navigate = useNavigate();
-  const { vendorId, businessType, city, type, slug } = useParams();
+  const { vendorid, businesstype, city, type, slug } = useParams();
   const location = useLocation();
   
   // Determine businessType from the URL path
   const isVenueLocation = location.pathname.startsWith('/venue/location');
-  const finalBusinessType = isVenueLocation ? 'venue' : businessType;
+  const finalBusinessType = isVenueLocation ? 'venue' : businesstype;
   
   // Check if we have SEO URL params
   const hasSeoParams = city && finalBusinessType && type && slug;
   
   // Use SEO URL if all SEO params are present, otherwise use vendorId
   const { data: vendorById, isLoading: isLoadingById, error: errorById } = useGetVendorByIdQuery(
-    vendorId,
-    { skip: !vendorId || hasSeoParams }
+    vendorid,
+    { skip: !vendorid || hasSeoParams }
   );
   
   const { data: vendorBySeo, isLoading: isLoadingBySeo, error: errorBySeo } = useGetVendorBySeoUrlQuery(
@@ -55,7 +55,7 @@ const PreviewProfile = () => {
   const isVendorLoading = hasSeoParams ? isLoadingBySeo : isLoadingById;
   const vendorError = hasSeoParams ? errorBySeo : errorById;
   
-  const actualVendorId = vendor?.vendor?._id || vendorId;
+  const actualVendorId = vendor?.vendor?._id || vendorid;
 
 
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -801,9 +801,7 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
             <select
               value={bookingForm.packageName}
               onChange={(e) => {
-                console.log('Selected package ID:', e.target.value);
-                const selectedPackage = packages.find(pkg => pkg._id === e.target.value);
-                console.log('Found package:', selectedPackage);
+                    const selectedPackage = packages.find(pkg => pkg._id === e.target.value);
                 handleBookingInputChange('packageName', e.target.value);
                 if (selectedPackage) {
                   handleBookingInputChange('plannedAmount', selectedPackage.price || 0);

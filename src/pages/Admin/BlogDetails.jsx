@@ -36,7 +36,7 @@ export default function BlogDetails() {
     return null;
   }, [allBlogsData, slug]);
   
-  console.log('Matching blog found:', matchingBlog);
+  // Blog matching logic completed
   
   // Add smooth scrolling for TOC links
   React.useEffect(() => {
