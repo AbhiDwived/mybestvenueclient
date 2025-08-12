@@ -309,7 +309,7 @@ const PortfolioTab = () => {
   // Image handling methods
   const handleAddImageClick = (index = null) => {
     setEditingImageIndex(index);
-    fileInputRef.current.accept = 'image/*';
+    fileInputRef.current.accept = 'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/avif,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,image/bmp,image/apng,image/heic,image/heif';
     fileInputRef.current.multiple = true; // Enable multiple file selection
     fileInputRef.current.click();
   };
@@ -317,6 +317,38 @@ const PortfolioTab = () => {
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
+
+    // Validate files before upload
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/avif',
+      'image/svg+xml',
+      'image/x-icon',
+      'image/vnd.microsoft.icon',
+      'image/bmp',
+      'image/apng',
+      'image/heic',
+      'image/heif'
+    ];
+    
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
+
+    // Validate each file
+    for (let file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`Unsupported file format: ${file.name}. Supported formats: JPEG, PNG, GIF, WebP, AVIF, SVG, ICO, BMP, APNG, HEIC`);
+        return;
+      }
+      
+      if (file.size > maxFileSize) {
+        toast.error(`File too large: ${file.name}. Maximum file size is 10MB.`);
+        return;
+      }
+    }
 
     try {
       setIsLoading(true);
@@ -621,7 +653,7 @@ const PortfolioTab = () => {
         type="file"
         ref={fileInputRef}
         onChange={(e) => {
-          if (fileInputRef.current.accept === 'image/*') {
+          if (fileInputRef.current.accept.includes('image/')) {
             handleImageChange(e);
           } else {
             handleVideoFileSelect(e);
@@ -730,7 +762,7 @@ const PortfolioTab = () => {
             >
               <LuImagePlus size={32} className="text-muted mb-2" />
               <div className="fw-medium">Add New Images</div>
-              <div className="text-muted small mt-1">Upload Max 10MB multiple JPG or PNG</div>
+              <div className="text-muted small mt-1">JPEG, PNG, GIF, WebP, AVIF, SVG, ICO, BMP, APNG, HEIC (Max: 10MB)</div>
               <div className="text-muted small">Hold Ctrl/Cmd to select multiple</div>
             </div>
           </div>
