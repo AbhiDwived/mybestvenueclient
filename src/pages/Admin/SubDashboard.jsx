@@ -173,21 +173,21 @@ const SubDashboard = () => {
       detail: `${pendingVendorsData?.vendors?.length || 0} vendors waiting for approval`,
       action: 'Review Now',
       color: 'bg-yellow-100 border-yellow-300 text-yellow-500',
-      onClick: () => navigate('/admin/pending_vendor_approvals'),
+      onClick: () => navigate('/admin/pending-vendor-approvals'),
     },
     {
       title: 'Reported Reviews',
       detail: '3 reviews flagged for moderation',
       action: 'Moderate',
       color: 'bg-red-100 border-red-300 text-red-500',
-      onClick: () => navigate('/admin/review_moderation'),
+      onClick: () => navigate('/admin/review-moderation'),
     },
     {
       title: 'Content Updates',
       detail: '6 entries pending to review',
       action: 'View Content',
       color: 'bg-blue-100 border-blue-300 text-blue-500',
-      onClick: () => navigate('/admin/content_management'),
+      onClick: () => navigate('/admin/content-management'),
     },
   ];
 
@@ -240,7 +240,7 @@ const SubDashboard = () => {
           )}
           <button
             className="mt-4 w-full text-gray-800 border border-[#0f4c81] rounded py-1.5 text-xs hover:bg-[#DEBF78] transition duration-200"
-            onClick={() => navigate('/admin/activity_logs')}
+            onClick={() => navigate('/admin/activity-logs')}
           >
             View All Activity
           </button>
@@ -296,7 +296,7 @@ const SubDashboard = () => {
           </div>
           <button
             className="mt-4 w-full border border-gray-300 rounded py-2 text-sm text-gray-700 hover:bg-[#DEBF78] transition"
-            onClick={() => navigate('/admin/user_management')}
+            onClick={() => navigate('/admin/user-management')}
           >
             View All Users
           </button>

@@ -27,7 +27,7 @@ const BookingManagement = () => {
   const handleViewUser = (booking) => {
     const userId = booking.user?._id || booking.user?.id || booking.userId;
     if (userId) {
-      navigate(`/admin/user_management?userId=${userId}`);
+      navigate(`/admin/user-management?userId=${userId}`);
     } else {
       console.error("User ID missing for booking", booking);
       toast.warning("User ID is missing. Cannot view user profile.");

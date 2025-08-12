@@ -107,6 +107,65 @@ export default function AdminAddVendor() {
     setStates(indianStates);
   }, []);
   const [profilePicture, setProfilePicture] = useState(null);
+  
+  // Supported image formats
+  const supportedImageFormats = [
+    'image/jpeg',
+    'image/jpg', 
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/avif',
+    'image/svg+xml',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    'image/bmp',
+    'image/apng',
+    'image/heic',
+    'image/heif'
+  ];
+
+  const getReadableFormat = (mimeType) => {
+    const formatMap = {
+      'image/jpeg': 'JPEG',
+      'image/jpg': 'JPEG',
+      'image/png': 'PNG',
+      'image/gif': 'GIF',
+      'image/webp': 'WebP',
+      'image/avif': 'AVIF',
+      'image/svg+xml': 'SVG',
+      'image/x-icon': 'ICO',
+      'image/vnd.microsoft.icon': 'ICO',
+      'image/bmp': 'BMP',
+      'image/apng': 'APNG',
+      'image/heic': 'HEIC',
+      'image/heif': 'HEIF'
+    };
+    return formatMap[mimeType] || mimeType.replace('image/', '').toUpperCase();
+  };
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!supportedImageFormats.includes(file.type)) {
+      toast.error('Unsupported image format. Please select JPEG, PNG, GIF, WebP, AVIF, SVG, ICO, BMP, APNG, or HEIC files.');
+      e.target.value = ''; // Clear the input
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast.error('File size too large. Please select an image smaller than 10MB.');
+      e.target.value = ''; // Clear the input
+      return;
+    }
+
+    setProfilePicture(file);
+    toast.success(`${getReadableFormat(file.type)} image selected successfully!`);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -188,7 +247,7 @@ export default function AdminAddVendor() {
       await createVendorByAdmin(data).unwrap();
       
       toast.success('Vendor created successfully!');
-      navigate('/admin/vendor_management');
+      navigate('/admin/vendor-management');
     } catch (error) {
       toast.error(error?.data?.message || 'Failed to create vendor');
     }
@@ -452,37 +511,56 @@ export default function AdminAddVendor() {
           <label className="block text-sm font-medium mb-2">Profile Picture</label>
           <div className="flex items-center space-x-4">
             {profilePicture && (
-              <img
-                src={URL.createObjectURL(profilePicture)}
-                alt="Preview"
-                className="h-16 w-16 rounded-full object-cover border"
-              />
+              <div className="relative">
+                <img
+                  src={URL.createObjectURL(profilePicture)}
+                  alt="Preview"
+                  className="h-16 w-16 rounded-full object-cover border"
+                />
+                <button
+                  type="button"
+                  onClick={() => setProfilePicture(null)}
+                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                  title="Remove image"
+                >
+                  ×
+                </button>
+              </div>
             )}
-            <label
-              htmlFor="profilePicture"
-              className="cursor-pointer inline-block px-4 py-2 text-white text-sm font-medium rounded-md shadow transition"
-              style={{ backgroundColor: '#0f4c81' }}
-            >
-              Choose File
-              <input
-                id="profilePicture"
-                name="profilePicture"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setProfilePicture(e.target.files[0])}
-                className="hidden"
-              />
-            </label>
+            <div className="flex-1">
+              <label
+                htmlFor="profilePicture"
+                className="cursor-pointer inline-block px-4 py-2 text-white text-sm font-medium rounded-md shadow transition hover:opacity-90"
+                style={{ backgroundColor: '#0f4c81' }}
+              >
+                {profilePicture ? 'Change Image' : 'Choose Image'}
+                <input
+                  id="profilePicture"
+                  name="profilePicture"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.svg,.ico,.bmp,.apng,.heic,.heif,image/*"
+                  onChange={handleProfilePictureChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
           </div>
           {profilePicture && (
-            <p className="mt-2 text-sm text-gray-500">{profilePicture.name}</p>
+            <div className="mt-2 text-sm text-gray-600">
+              <p><strong>File:</strong> {profilePicture.name}</p>
+              <p><strong>Size:</strong> {(profilePicture.size / 1024 / 1024).toFixed(2)} MB</p>
+              <p><strong>Type:</strong> {getReadableFormat(profilePicture.type)}</p>
+            </div>
           )}
+          <p className="mt-2 text-xs text-gray-500">
+            Supported formats: JPEG, PNG, GIF, WebP, AVIF, SVG, ICO, BMP, APNG, HEIC (Max: 10MB)
+          </p>
         </div>
 
         <div className="flex gap-4 pt-4">
           <button
             type="button"
-            onClick={() => navigate('/admin/vendor_management')}
+            onClick={() => navigate('/admin/vendor-management')}
             className="px-4 py-2 border rounded-md hover:bg-gray-50"
           >
             Cancel

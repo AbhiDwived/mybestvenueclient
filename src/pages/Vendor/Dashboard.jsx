@@ -47,10 +47,80 @@ const Dashboard = () => {
     const savedTab = localStorage.getItem('activeTab') || 'Overview';
     return savedTab;
   });
-   const vendorId = vendor?._id || vendor?.id;
 
+  // Handle admin edit mode first
+  useEffect(() => {
+    const adminEditId = searchParams.get('adminEdit');
+    const adminEditData = localStorage.getItem('adminEditingVendor');
+    
+    if (adminEditId && adminEditData) {
+      try {
+        const editData = JSON.parse(adminEditData);
+        if (editData.isAdminEdit && editData.vendor && editData.vendor._id === adminEditId) {
+          // Set up vendor data for admin editing
+          const adminToken = editData.originalAdminToken || localStorage.getItem('adminToken') || localStorage.getItem('token');
+          
+          // Preserve original vendor token if it exists
+          const existingVendorToken = localStorage.getItem('vendorToken');
+          if (existingVendorToken) {
+            localStorage.setItem('originalVendorToken', existingVendorToken);
+          }
+          
+          // Store the admin token as vendor token for API calls
+          localStorage.setItem('vendorToken', adminToken);
+          
+          dispatch(setVendorCredentials({
+            vendor: editData.vendor,
+            token: adminToken,
+            isAuthenticated: true
+          }));
+          setIsAdminEdit(true);
+        }
+      } catch (error) {
+        console.error('Error parsing admin edit data:', error);
+        // Clear invalid data
+        localStorage.removeItem('adminEditingVendor');
+      }
+    } else if (adminEditId && !adminEditData) {
+      // If adminEdit param exists but no localStorage data, redirect back
+      console.warn('Admin edit mode requested but no vendor data found');
+      navigate('/admin/vendor-management');
+    }
+  }, [searchParams, dispatch, navigate]);
+
+  // Get vendor ID after admin edit setup
+  const vendorId = vendor?._id || vendor?.id;
+  
+  // Debug logging for troubleshooting
+  useEffect(() => {
+    console.log('Dashboard Debug:', {
+      vendor,
+      vendorId,
+      isAuthenticated,
+      isAdminEdit,
+      searchParams: searchParams.get('adminEdit')
+    });
+  }, [vendor, vendorId, isAuthenticated, isAdminEdit, searchParams]);
+
+  // Cleanup effect for admin mode
+  useEffect(() => {
+    return () => {
+      if (isAdminEdit) {
+        // Clean up temporary vendor token when component unmounts
+        const originalVendorToken = localStorage.getItem('originalVendorToken');
+        if (originalVendorToken) {
+          localStorage.setItem('vendorToken', originalVendorToken);
+          localStorage.removeItem('originalVendorToken');
+        } else {
+          localStorage.removeItem('vendorToken');
+        }
+      }
+    };
+  }, [isAdminEdit]);
+
+  // Always call hooks in the same order - use skip to conditionally execute
   const { data: vendorData, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
-    skip: !vendorId || vendorId === 'undefined'
+    skip: !vendorId || vendorId === 'undefined' || (!isAuthenticated && !isAdminEdit)
   });
 
   // Get events for the current month
@@ -59,70 +129,48 @@ const Dashboard = () => {
     vendorId,
     month: currentDate.getMonth() + 1,
     year: currentDate.getFullYear()
+  }, {
+    skip: !vendorId || vendorId === 'undefined' || (!isAuthenticated && !isAdminEdit)
   });
 
   // Get upcoming events
   const { data: upcomingEventsData, isLoading: isUpcomingEventsLoading } = useGetUpcomingEventsQuery({
     vendorId,
     limit: 10
+  }, {
+    skip: !vendorId || vendorId === 'undefined' || (!isAuthenticated && !isAdminEdit)
   });
 
   const [deleteEvent] = useDeleteEventMutation();
-  
-
 
   // Get vendor inquiries for recent activity
   const { data: inquiriesData, isLoading: isInquiriesLoading } = useUserInquiryListQuery(vendorId, {
-    skip: !vendorId,
+    skip: !vendorId || vendorId === 'undefined' || (!isAuthenticated && !isAdminEdit),
     refetchOnMountOrArgChange: true
   });
 
   // Get vendor bookings for analytics
-  const { data: bookingsData, isLoading: isBookingsLoading } = useGetVendorBookingsListQuery(vendorId);
+  const { data: bookingsData, isLoading: isBookingsLoading } = useGetVendorBookingsListQuery(vendorId, {
+    skip: !vendorId || vendorId === 'undefined' || (!isAuthenticated && !isAdminEdit)
+  });
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     localStorage.setItem('activeTab', tab);
   };
 
-  // Handle admin edit mode
   useEffect(() => {
-    const adminEditId = searchParams.get('adminEdit');
-    const adminEditData = localStorage.getItem('adminEditingVendor');
-    
-    if (adminEditId && adminEditData) {
-      try {
-        const editData = JSON.parse(adminEditData);
-        if (editData.isAdminEdit && editData.vendor) {
-          // Set up vendor data for admin editing
-          dispatch(setVendorCredentials({
-            vendor: editData.vendor,
-            token: localStorage.getItem('adminToken') || localStorage.getItem('token'),
-            isAuthenticated: true
-          }));
-          setIsAdminEdit(true);
-        }
-      } catch (error) {
-        console.error('Error parsing admin edit data:', error);
-      }
+    if (!isAuthenticated && !isAdminEdit) {
+      localStorage.removeItem('activeTab');
     }
-  }, [searchParams, dispatch]);
+  }, [isAuthenticated, isAdminEdit]);
 
-  useEffect(() => {
-    // Tab change handler
-  }, [activeTab, vendor, isAuthenticated, vendorId]);
-
+  // Early return after all hooks are called
   if (!isAuthenticated && !isAdminEdit) {
     return <h3 className='text-red-600 font-bold m-5'>You are not logged in.</h3>;
   }
 
   const tabs = ['Overview', 'Bookings', 'Profile', 'Portfolio', 'Packages & FAQs', 'Inquiries', 'Reviews'];
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      localStorage.removeItem('activeTab');
-    }
-  }, [isAuthenticated]);
 
   const handleDateSelect = (date, name) => {
     setSelectedDateForEvent(date);
@@ -319,8 +367,19 @@ const Dashboard = () => {
             </div>
             <button
               onClick={() => {
+                // Clean up admin edit data
                 localStorage.removeItem('adminEditingVendor');
-                navigate('/admin/vendor_management');
+                
+                // Restore original vendor token if it exists
+                const originalVendorToken = localStorage.getItem('originalVendorToken');
+                if (originalVendorToken) {
+                  localStorage.setItem('vendorToken', originalVendorToken);
+                  localStorage.removeItem('originalVendorToken');
+                } else {
+                  localStorage.removeItem('vendorToken');
+                }
+                
+                navigate('/admin/vendor-management');
               }}
               className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
             >

@@ -31,6 +31,16 @@ const Navbar = () => {
   const { isAuthenticated: isVendorAuthenticated, vendor } = vendorState;
   const { isAuthenticated: isAdminAuthenticated, admin } = adminState;
 
+  // Debug logging to understand authentication states
+  console.log('Auth States:', {
+    isAuthenticated,
+    isVendorAuthenticated,
+    isAdminAuthenticated,
+    user: user?.name || user?.email,
+    vendor: vendor?.businessName || vendor?.name,
+    admin: admin?.name || admin?.email
+  });
+
   const isUserLoggedIn = isAuthenticated || isVendorAuthenticated || isAdminAuthenticated;
   const currentUser = user || vendor || admin;
 
@@ -38,18 +48,43 @@ const Navbar = () => {
   const isActive = (path) => currentPath === path || currentPath.startsWith(path);
 
   const getUserRole = () => {
-    if (!currentUser) return 'user';
-    if ([currentUser.role, currentUser.userType, currentUser.type].includes('admin') || isAdminAuthenticated) return 'admin';
-    if ([currentUser.role, currentUser.userType, currentUser.type].includes('vendor') || isVendorAuthenticated) return 'vendor';
+    // Prioritize authentication states over user object properties
+    if (isAdminAuthenticated) return 'admin';
+    if (isVendorAuthenticated) return 'vendor';
+    if (isAuthenticated) return 'user';
+    
+    // Fallback to checking user object properties
+    if (currentUser) {
+      if ([currentUser.role, currentUser.userType, currentUser.type].includes('admin')) return 'admin';
+      if ([currentUser.role, currentUser.userType, currentUser.type].includes('vendor')) return 'vendor';
+    }
+    
     return 'user';
   };
 
   const getDisplayName = () => {
     const role = getUserRole();
     if (!currentUser) return 'User';
-    if (role === 'admin') return (currentUser.name || currentUser.username || currentUser.firstName || currentUser.email?.split('@')[0] || 'Admin').substring(0, 10);
-    if (role === 'vendor') return (currentUser.businessName || currentUser.name || currentUser.username || 'Vendor').substring(0, 10);
-    return (currentUser.name || currentUser.firstName || currentUser.username || 'User').substring(0, 10);
+    
+    // Prioritize admin authentication state
+    if (isAdminAuthenticated && admin) {
+      return (admin.name || admin.username || admin.firstName || admin.email?.split('@')[0] || 'Admin').substring(0, 10);
+    }
+    
+    // Then vendor authentication state
+    if (isVendorAuthenticated && vendor) {
+      return (vendor.businessName || vendor.name || vendor.username || 'Vendor').substring(0, 10);
+    }
+    
+    // Finally user authentication state
+    if (isAuthenticated && user) {
+      return (user.name || user.firstName || user.username || 'User').substring(0, 10);
+    }
+    
+    // Fallback based on role
+    if (role === 'admin') return 'Admin';
+    if (role === 'vendor') return 'Vendor';
+    return 'User';
   };
 
   const handleLogout = () => {
@@ -110,8 +145,8 @@ const Navbar = () => {
         )}
         {role === 'admin' && (
           <>
-            {renderLink('user_management', <FiUsers size={16} />, 'Users')}
-            {renderLink('vendor_management', <FiBriefcase size={16} />, 'Vendors')}
+            {renderLink('/admin/user-management', <FiUsers size={16} />, 'Users')}
+            {renderLink('/admin/vendor-management', <FiBriefcase size={16} />, 'Vendors')}
           </>
         )}
 
@@ -180,8 +215,8 @@ const Navbar = () => {
                 )}
                 {role === 'admin' && (
                   <>
-                    {renderLink('user_management', <FiUsers size={16} />, 'Users')}
-                    {renderLink('vendor_management', <FiBriefcase size={16} />, 'Vendors')}
+                    {renderLink('/admin/user-management', <FiUsers size={16} />, 'Users')}
+                    {renderLink('/admin/vendor-management', <FiBriefcase size={16} />, 'Vendors')}
                     {renderLink('/admin/bookings', <FiPackage size={16} />, 'All Bookings')}
                   </>
                 )}
