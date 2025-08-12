@@ -351,43 +351,43 @@ const WeddingVenuesByLocation = () => {
   }, [vendorsData, selectedCity]);
 
   const locationVenues = useMemo(() => {
-    if (baseVenues.length > 0 && baseVenues.length < 4) {
-      const repeated = [];
-      while (repeated.length < 20) {
-        repeated.push(...baseVenues);
-      }
-      return repeated;
-    }
     return baseVenues;
   }, [baseVenues]);
 
-  const venueIds = useMemo(() => locationVenues.map(v => v.id).filter(id => id && id.trim() !== ''), [locationVenues]);
+  const uniqueVendors = useMemo(() => {
+    const seen = new Set();
+    return locationVenues.filter(vendor => {
+      const duplicate = seen.has(vendor.id);
+      seen.add(vendor.id);
+      return !duplicate;
+    });
+  }, [locationVenues]);
+
+  const venueIds = useMemo(() => uniqueVendors.map(v => v.id).filter(id => id && id.trim() !== ''), [uniqueVendors]);
   const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(venueIds, { skip: !venueIds.length });
   const stats = statsData?.stats || {};
 
   const totalSlides = locationVenues.length;
 
   useEffect(() => {
-    if (totalSlides > 1) {
+    if (totalSlides > 4) {
       const interval = setInterval(() => {
-        setCurrentSlide(prev => {
-          const nextSlide = prev + 1;
-          if (baseVenues.length < 4 && nextSlide >= totalSlides) {
-            return 0;
-          }
-          return nextSlide % totalSlides;
-        });
+        setCurrentSlide(prev => (prev + 1) % (totalSlides - 3));
       }, 3000);
       return () => clearInterval(interval);
     }
-  }, [totalSlides, baseVenues.length]);
+  }, [totalSlides]);
 
   const nextSlide = () => {
-    setCurrentSlide(prev => (prev + 1) % totalSlides);
+    if (totalSlides <= 4) return;
+    const slideLimit = totalSlides - 3;
+    setCurrentSlide(prev => (prev + 1) % slideLimit);
   };
 
   const prevSlide = () => {
-    setCurrentSlide(prev => (prev - 1 + totalSlides) % totalSlides);
+    if (totalSlides <= 4) return;
+    const slideLimit = totalSlides - 3;
+    setCurrentSlide(prev => (prev - 1 + slideLimit) % slideLimit);
   };
 
   const toggleFavorite = async (e, id) => {
@@ -447,7 +447,7 @@ const WeddingVenuesByLocation = () => {
               <option key={city + idx} value={city}>{city}</option>
             ))}
           </select>
-          {baseVenues.length > 1 && (
+          {baseVenues.length > 4 && (
             <div className="flex gap-2">
               <button
                 onClick={prevSlide}
@@ -471,7 +471,7 @@ const WeddingVenuesByLocation = () => {
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentSlide * 25}%)` }}
         >
-          {locationVenues.map((venue, index) => {
+          {uniqueVendors.map((venue, index) => {
             const stat = stats[venue.id] || { avgRating: 0, reviewCount: 0 };
             return (
               <div

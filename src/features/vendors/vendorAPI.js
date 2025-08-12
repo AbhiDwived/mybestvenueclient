@@ -350,10 +350,15 @@ export const vendorApi = createApi({
     }),
 
     deletePortfolioImage: builder.mutation({
-      query: ({ imageId, vendorId }) => ({
-        url: `/vendor/portfolio/image/${imageId}${vendorId ? `?vendorId=${vendorId}` : ''}`,
-        method: "DELETE",
-      }),
+      query: ({ imageId, vendorId }) => {
+        if (!imageId) {
+          throw new Error('Image ID is required for deletion');
+        }
+        return {
+          url: `/vendor/portfolio/image/${imageId}${vendorId ? `?vendorId=${vendorId}` : ''}`,
+          method: "DELETE",
+        };
+      },
       invalidatesTags: ["PortfolioImages"],
     }),
 
@@ -398,9 +403,10 @@ export const vendorApi = createApi({
 
     // Delete Portfolio Video
     deletePortfolioVideo: builder.mutation({
-      query: (videoId) => ({
+      query: ({ videoId, vendorId }) => ({
         url: `/vendor/portfolio/video/${videoId}`,
         method: "DELETE",
+        body: { vendorId },
       }),
       transformResponse: (response) => {
         return response;

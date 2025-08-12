@@ -18,8 +18,9 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
   // Fetch vendors data to get locations
   const { data: vendorsData, isLoading } = useGetAllPublicVendorsQuery();
   
-  // Combine default locations with vendor locations
-  const allLocations = [...defaultLocations, ...(vendorsData?.locations || [])];
+  // Extract city names and remove duplicates properly
+  const allLocationStrings = [...defaultLocations, ...(vendorsData?.locations || [])];
+  const uniqueCityNames = [...new Set(allLocationStrings.map(loc => loc.split(',')[0].trim()))];
 
   useEffect(() => {
     const handleResize = () => {
@@ -39,7 +40,7 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
 
     const locationToSet = fromProp || fromURL;
     if (locationToSet) {
-      setActiveLocation(locationToSet.split(',')[0]);
+      setActiveLocation(locationToSet.split(',')[0].trim());
     }
     window.scrollTo({ top: 0, category: "top" })
   }, [currentLocation, urlCity]);
@@ -50,8 +51,8 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
     navigate(`/locations/${city.replace(/\s+/g, '-').toLowerCase()}`);
   };
 
-  const filteredLocations = allLocations.filter(loc =>
-    loc.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredLocations = uniqueCityNames.filter(city =>
+    city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handlePrev = () => {
@@ -88,11 +89,10 @@ const BrowseVenues = ({ onLocationSelect, currentLocation, searchTerm = "" }) =>
             transform: `translateX(-${(scrollIndex * 100) / filteredLocations.length}%)`,
           }}
         >
-          {filteredLocations.map((location) => {
-            const city = location.split(',')[0];
+          {filteredLocations.map((city) => {
             return (
               <div
-                key={location}
+                key={city}
                 className="flex-shrink-0 px-2"
                 style={{ width: `${100 / filteredLocations.length}%` }}
               >

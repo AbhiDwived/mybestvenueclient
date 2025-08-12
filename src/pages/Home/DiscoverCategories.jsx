@@ -17,17 +17,17 @@ const DiscoverCategories = () => {
   // Helper: Find the most similar city from a list
   function findNearestCity(target, cityList) {
     if (!target || !cityList || cityList.length === 0) return 'All India';
-    
+
     const targetLower = target.toLowerCase().trim();
-    
+
     // First, try exact match (case insensitive)
-    let exactMatch = cityList.find(city => 
+    let exactMatch = cityList.find(city =>
       city.toLowerCase().trim() === targetLower
     );
     if (exactMatch) {
       return exactMatch;
     }
-    
+
     // Second, try substring match (target contains city or city contains target)
     let substringMatch = cityList.find(city => {
       const cityLower = city.toLowerCase().trim();
@@ -36,7 +36,7 @@ const DiscoverCategories = () => {
     if (substringMatch) {
       return substringMatch;
     }
-    
+
     // Third, try word-by-word matching
     const targetWords = targetLower.split(/\s+/).filter(word => word.length > 2);
     let wordMatch = cityList.find(city => {
@@ -46,7 +46,7 @@ const DiscoverCategories = () => {
     if (wordMatch) {
       return wordMatch;
     }
-    
+
     // Fourth, use Levenshtein distance for fuzzy matching
     function levenshtein(a, b) {
       const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
@@ -63,7 +63,7 @@ const DiscoverCategories = () => {
       }
       return matrix[a.length][b.length];
     }
-    
+
     let minDist = Infinity;
     let nearest = cityList[0];
     for (const city of cityList) {
@@ -73,12 +73,12 @@ const DiscoverCategories = () => {
         nearest = city;
       }
     }
-    
+
     // Only return the nearest city if the distance is reasonable (not too different)
     if (minDist <= Math.max(targetLower.length, nearest.toLowerCase().length) * 0.5) {
       return nearest;
     }
-    
+
     return cityList[0] || 'All India';
   }
 
@@ -94,7 +94,7 @@ const DiscoverCategories = () => {
       'Event Planning': Users,
       'default': Star
     };
-    
+
     const IconComponent = iconMap[category] || iconMap.default;
     return <IconComponent className="w-4 h-4 text-blue-600" />;
   };
@@ -104,7 +104,7 @@ const DiscoverCategories = () => {
 
   const uniqueCities = useMemo(() => {
     if (!vendorData?.locations) return [];
-    const cities = vendorData.locations.map(loc => loc.split(',')[0]);
+    const cities = vendorData.locations.map(loc => loc.split(',')[0].trim());
     return [...new Set(cities)];
   }, [vendorData]);
 
@@ -131,7 +131,7 @@ const DiscoverCategories = () => {
 
     const getUserLocation = async () => {
       setIsLoadingLocation(true);
-      
+
       const locationProviders = [
         // Method 1: Browser Geolocation + Reverse Geocoding
         async () => {
@@ -144,25 +144,25 @@ const DiscoverCategories = () => {
               async (position) => {
                 try {
                   const { latitude, longitude } = position.coords;
-                  
+
                   const response = await fetch(
                     `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`
                   );
-                  
+
                   if (!response.ok) {
                     resolve(null);
                     return;
                   }
-                  
+
                   const data = await response.json();
-                  
-                  const city = data.address?.city || 
-                              data.address?.town || 
-                              data.address?.village || 
-                              data.address?.state || 
-                              data.address?.county ||
-                              null;
-                  
+
+                  const city = data.address?.city ||
+                    data.address?.town ||
+                    data.address?.village ||
+                    data.address?.state ||
+                    data.address?.county ||
+                    null;
+
                   resolve(city);
                 } catch (error) {
                   console.error('Error in reverse geocoding:', error);
@@ -172,26 +172,26 @@ const DiscoverCategories = () => {
               (error) => {
                 resolve(null);
               },
-              { 
-                timeout: 10000, 
+              {
+                timeout: 10000,
                 enableHighAccuracy: false,
                 maximumAge: 300000 // 5 minutes
               }
             );
           });
         },
-        
+
         // Method 2: IP-based location
         async () => {
           try {
             const response = await fetch('/api/ip-location');
-            
+
             if (!response.ok) {
               return null;
             }
-            
+
             const data = await response.json();
-            
+
             const city = data.city || data.region_name || data.region || null;
             return city;
           } catch (error) {
@@ -199,12 +199,12 @@ const DiscoverCategories = () => {
             return null;
           }
         },
-        
+
         // Method 3: Timezone-based location estimation
         async () => {
           try {
             const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            
+
             // Simple timezone to city mapping for India
             const timezoneMap = {
               'Asia/Kolkata': 'Mumbai',
@@ -267,7 +267,7 @@ const DiscoverCategories = () => {
               'Asia/Kamchatka': 'Delhi',
               'Asia/Anadyr': 'Delhi'
             };
-            
+
             const estimatedCity = timezoneMap[timezone];
             return estimatedCity;
           } catch (error) {
@@ -276,15 +276,15 @@ const DiscoverCategories = () => {
           }
         }
       ];
-      
+
       // Try each location provider
       for (let i = 0; i < locationProviders.length; i++) {
         try {
           const city = await locationProviders[i]();
-          
+
           if (city && city !== 'All India' && city.trim() !== '') {
             const nearestCity = findNearestCity(city, uniqueCities);
-            
+
             if (nearestCity && nearestCity !== 'All India') {
               setSelectedCity(nearestCity);
               setIsLoadingLocation(false);
@@ -295,20 +295,20 @@ const DiscoverCategories = () => {
           // Error handling for location provider
         }
       }
-      
+
       setSelectedCity('All India');
       setIsLoadingLocation(false);
     };
-    
+
     getUserLocation();
   }, [vendorData, uniqueCities]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    
+
     // Close suggestions dropdown
     setShowSuggestions(false);
-    
+
     // Build the search query parameters
     const params = new URLSearchParams();
     if (searchTerm) params.set('q', searchTerm);
@@ -369,10 +369,10 @@ const DiscoverCategories = () => {
                     onClick={() => setShowSuggestions(true)}
                   />
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                    <svg 
-                      className="w-4 h-4 text-gray-500" 
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className="w-4 h-4 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                       onClick={() => setShowSuggestions(!showSuggestions)}
                     >
@@ -427,7 +427,7 @@ const DiscoverCategories = () => {
                 Search
               </button>
             </form>
-            
+
             {/* Enhanced Suggestions Dropdown */}
             {showSuggestions && (
               <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 mx-auto max-w-4xl overflow-hidden">
@@ -443,14 +443,14 @@ const DiscoverCategories = () => {
                     <div>
                       {vendorData?.vendors?.length > 0 ? (
                         vendorData.vendors
-                          .filter(vendor => 
-                            !searchTerm || 
+                          .filter(vendor =>
+                            !searchTerm ||
                             vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase())
                           )
                           .slice(0, 8)
                           .map(vendor => (
-                            <div 
-                              key={vendor._id} 
+                            <div
+                              key={vendor._id}
                               className="px-3 py-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 cursor-pointer border-b border-gray-50 last:border-b-0 transition-all duration-200 group"
                               onClick={() => {
                                 setSearchTerm(vendor.businessName);
@@ -474,10 +474,10 @@ const DiscoverCategories = () => {
                           <p className="text-xs text-gray-500">No vendors available</p>
                         </div>
                       )}
-                      
+
                       {vendorData?.vendors?.length > 8 && (
                         <div className="px-3 py-2 bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-100">
-                          <button 
+                          <button
                             className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
                             onClick={() => {
                               navigate('/search');
@@ -490,7 +490,7 @@ const DiscoverCategories = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Categories Section */}
                   <div className="md:w-1/3 border-b md:border-b-0 md:border-r border-gray-100">
                     <div className="px-3 py-2 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-100">
@@ -502,13 +502,13 @@ const DiscoverCategories = () => {
                     <div>
                       {vendorData?.categories?.length > 0 ? (
                         vendorData.categories
-                          .filter(cat => 
+                          .filter(cat =>
                             cat && (!searchTerm || cat.toLowerCase().includes(searchTerm.toLowerCase()))
                           )
                           .slice(0, 8)
                           .map(cat => (
-                            <div 
-                              key={cat} 
+                            <div
+                              key={cat}
                               className="px-3 py-2 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 cursor-pointer border-b border-gray-50 last:border-b-0 transition-all duration-200 group"
                               onClick={() => {
                                 setCategory(cat);
@@ -532,10 +532,10 @@ const DiscoverCategories = () => {
                           <p className="text-xs text-gray-500">No categories available</p>
                         </div>
                       )}
-                      
+
                       {vendorData?.categories?.length > 8 && (
                         <div className="px-3 py-2 bg-gradient-to-r from-gray-50 to-purple-50 border-t border-gray-100">
-                          <button 
+                          <button
                             className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1 transition-colors"
                             onClick={() => {
                               navigate('/search?category=all');
@@ -548,7 +548,7 @@ const DiscoverCategories = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Locations Section */}
                   <div className="md:w-1/3">
                     <div className="px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100">
@@ -558,18 +558,18 @@ const DiscoverCategories = () => {
                       </div>
                     </div>
                     <div>
-                      {vendorData?.locations?.length > 0 ? (
-                        vendorData.locations
-                          .filter(loc => 
-                            loc && (!searchTerm || loc.toLowerCase().includes(searchTerm.toLowerCase()))
+                      {uniqueCities?.length > 0 ? (
+                        uniqueCities
+                          .filter(city =>
+                            city && (!searchTerm || city.toLowerCase().includes(searchTerm.toLowerCase()))
                           )
                           .slice(0, 8)
-                          .map(loc => (
-                            <div 
-                              key={loc} 
+                          .map(city => (
+                            <div
+                              key={city}
                               className="px-3 py-2 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 cursor-pointer border-b border-gray-50 last:border-b-0 transition-all duration-200 group"
                               onClick={() => {
-                                setSelectedCity(loc);
+                                setSelectedCity(city);
                                 setShowSuggestions(false);
                               }}
                             >
@@ -578,7 +578,7 @@ const DiscoverCategories = () => {
                                   <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                                     <MapPin className="w-3 h-3 text-green-600" />
                                   </div>
-                                  <span className="text-xs text-gray-800">{loc}</span>
+                                  <span className="text-xs text-gray-800">{city}</span>
                                 </div>
                                 <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-green-600 transition-colors" />
                               </div>
@@ -590,10 +590,10 @@ const DiscoverCategories = () => {
                           <p className="text-xs text-gray-500">No locations available</p>
                         </div>
                       )}
-                      
-                      {vendorData?.locations?.length > 8 && (
+
+                      {uniqueCities?.length > 8 && (
                         <div className="px-3 py-2 bg-gradient-to-r from-gray-50 to-green-50 border-t border-gray-100">
-                          <button 
+                          <button
                             className="text-xs text-green-600 hover:text-green-800 flex items-center gap-1 transition-colors"
                             onClick={() => {
                               navigate('/locations');
@@ -607,40 +607,40 @@ const DiscoverCategories = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* No Results */}
-                {searchTerm && 
-                 !vendorData?.vendors?.some(v => v?.businessName?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                 !vendorData?.categories?.some(c => c?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                 !vendorData?.locations?.some(l => l?.toLowerCase().includes(searchTerm.toLowerCase())) && (
-                  <div className="py-4 px-3 text-center border-t border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <Star className="w-4 h-4 text-gray-400" />
+                {searchTerm &&
+                  !vendorData?.vendors?.some(v => v?.businessName?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                  !vendorData?.categories?.some(c => c?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                  !uniqueCities?.some(city => city?.toLowerCase().includes(searchTerm.toLowerCase())) && (
+                    <div className="py-4 px-3 text-center border-t border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
+                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <Star className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <p className="text-xs text-gray-600 mb-2">No results found for "{searchTerm}"</p>
+                      <button
+                        className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                        onClick={() => setSearchTerm('')}
+                      >
+                        Clear search
+                      </button>
                     </div>
-                    <p className="text-xs text-gray-600 mb-2">No results found for "{searchTerm}"</p>
-                    <button 
-                      className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
-                      onClick={() => setSearchTerm('')}
-                    >
-                      Clear search
-                    </button>
-                  </div>
-                )}
+                  )}
               </div>
             )}
           </div>
 
           <div className="mt-12 flex flex-wrap justify-center gap-6">
-            <Link 
+            <Link
               to='/contact-us  '
-              style={{borderRadius:'5px', textDecoration:'none'}}
+              style={{ borderRadius: '5px', textDecoration: 'none' }}
               className="px-6 py-2 bg-white/10 text-white border border-white rounded-md backdrop-blur-sm hover:text-black hover:bg-white/20 transition-colors text-lg"
             >
               Contact Us
             </Link>
             <a
               href="/about-us"
-              style={{textDecoration:'none'}}
+              style={{ textDecoration: 'none' }}
               className="px-6 py-2 bg-[#445D7B] text-white border border-white rounded-md hover:bg-[#3a4f6a] transition-colors text-lg"
             >
               About

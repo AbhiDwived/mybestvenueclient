@@ -102,9 +102,18 @@ const adminSlice = createSlice({
       state.error = null;
       state.updateLoading = false;
       state.updateError = null;
+      
+      // Clear all possible admin-related tokens and data
       localStorage.removeItem("token");
+      localStorage.removeItem("adminToken");
       localStorage.removeItem("adminRefreshToken");
       localStorage.removeItem("admin");
+      localStorage.removeItem("adminEditingVendor");
+      
+      // Clear any session storage as well
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("adminToken");
+      sessionStorage.removeItem("admin");
     },
     setLoading: (state) => {
       state.loading = true;

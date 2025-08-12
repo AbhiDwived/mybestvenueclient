@@ -203,6 +203,14 @@ export const adminApi = createApi({
       providesTags: ['Rides'],
     }),
 
+    // Logout Admin
+    logoutAdmin: builder.mutation({
+      query: () => ({
+        url: '/admin/logout',
+        method: 'POST',
+      }),
+    }),
+
   }),
 });
 
@@ -240,4 +248,7 @@ export const {
   useUpdateRideMutation,
   useDeleteRideMutation,
   useGetRidesByVendorQuery,
+
+  // Logout hook
+  useLogoutAdminMutation,
 } = adminApi;

@@ -8,6 +8,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../features/auth/authSlice';
 import { logoutVendor } from '../features/vendors/vendorSlice';
 import { logout as logoutAdmin } from '../features/admin/adminSlice';
+import { useLogoutAdminMutation } from '../features/admin/adminAPI';
+import { useLogoutUserMutation } from '../features/auth/authAPI';
+import { useLogoutVendorMutation } from '../features/vendors/vendorAPI';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import Button from 'react-bootstrap/Button';
 import { RiLogoutCircleLine, RiArrowDropDownFill } from 'react-icons/ri';
@@ -22,6 +25,11 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+
+  // API mutations for logout
+  const [logoutAdminMutation] = useLogoutAdminMutation();
+  const [logoutUserMutation] = useLogoutUserMutation();
+  const [logoutVendorMutation] = useLogoutVendorMutation();
 
   const authState = useSelector((state) => state.auth || {});
   const vendorState = useSelector((state) => state.vendorAuth || state.vendor || {});
@@ -87,13 +95,56 @@ const Navbar = () => {
     return 'User';
   };
 
-  const handleLogout = () => {
-    if (isAdminAuthenticated) dispatch(logoutAdmin());
-    else if (isVendorAuthenticated) dispatch(logoutVendor());
-    else dispatch(logout());
-    setProfileDropdown(false);
-    setShowOffcanvas(false);
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      // Call server-side logout first, then clear local state
+      if (isAdminAuthenticated) {
+        try {
+          await logoutAdminMutation().unwrap();
+        } catch (error) {
+          console.warn('Admin logout API call failed:', error);
+        }
+        dispatch(logoutAdmin());
+      } else if (isVendorAuthenticated) {
+        try {
+          await logoutVendorMutation().unwrap();
+        } catch (error) {
+          console.warn('Vendor logout API call failed:', error);
+        }
+        dispatch(logoutVendor());
+      } else {
+        try {
+          await logoutUserMutation().unwrap();
+        } catch (error) {
+          console.warn('User logout API call failed:', error);
+        }
+        dispatch(logout());
+      }
+
+      // Clear any remaining tokens and data
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Close dropdowns
+      setProfileDropdown(false);
+      setShowOffcanvas(false);
+
+      // Navigate to home and replace history to prevent back button issues
+      navigate('/', { replace: true });
+      
+      // Force page reload to ensure clean state
+      window.location.reload();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if logout fails, clear local state
+      dispatch(logoutAdmin());
+      dispatch(logoutVendor());
+      dispatch(logout());
+      localStorage.clear();
+      sessionStorage.clear();
+      navigate('/', { replace: true });
+      window.location.reload();
+    }
   };
 
   useEffect(() => {

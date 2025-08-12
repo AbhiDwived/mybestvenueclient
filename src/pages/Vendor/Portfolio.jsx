@@ -11,7 +11,23 @@ import {
   useUploadPortfolioVideoMutation
 } from '../../features/vendors/vendorAPI';
 
-const ImageViewModal = ({ imageUrl, onClose }) => {
+const ImageViewModal = ({ imageUrl, onClose, onPrevious, onNext, showNavigation }) => {
+  // Handle keyboard navigation
+  React.useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'ArrowLeft' && onPrevious) {
+        onPrevious();
+      } else if (e.key === 'ArrowRight' && onNext) {
+        onNext();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [onClose, onPrevious, onNext]);
+
   return (
     <div
       className="modal fade show"
@@ -32,7 +48,55 @@ const ImageViewModal = ({ imageUrl, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content bg-transparent border-0">
-          <div className="modal-body text-center">
+          <div className="modal-body text-center position-relative">
+            {/* Previous Arrow */}
+            {showNavigation && onPrevious && (
+              <button
+                className="btn btn-light position-absolute"
+                style={{
+                  left: '20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 1051,
+                  fontSize: '24px',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%'
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPrevious();
+                }}
+                title="Previous image (Left arrow key)"
+              >
+                &#8249;
+              </button>
+            )}
+            
+            {/* Next Arrow */}
+            {showNavigation && onNext && (
+              <button
+                className="btn btn-light position-absolute"
+                style={{
+                  right: '20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 1051,
+                  fontSize: '24px',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%'
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNext();
+                }}
+                title="Next image (Right arrow key)"
+              >
+                &#8250;
+              </button>
+            )}
+
             <img
               src={imageUrl}
               alt="Full Size"
@@ -43,12 +107,19 @@ const ImageViewModal = ({ imageUrl, onClose }) => {
                 objectFit: 'contain'
               }}
             />
-            <button
-              className="btn btn-light mt-3"
-              onClick={onClose}
-            >
-              Close
-            </button>
+            <div className="mt-3">
+              <button
+                className="btn btn-light me-2"
+                onClick={onClose}
+              >
+                Close (Esc)
+              </button>
+              {showNavigation && (
+                <small className="text-light">
+                  Use arrow keys to navigate
+                </small>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -131,6 +202,7 @@ const PortfolioTab = () => {
   const videoInputRef = useRef(null);
   const [selectedImageForView, setSelectedImageForView] = useState(null);
   const [selectedVideoForView, setSelectedVideoForView] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Extensive logging for debugging
   useEffect(() => {
@@ -296,6 +368,11 @@ const PortfolioTab = () => {
   // Update state when data is fetched
   useEffect(() => {
     if (portfolioImagesData?.images) {
+      // Debug: Log the first image to see its structure
+      if (portfolioImagesData.images.length > 0) {
+        console.log('Sample portfolio image structure:', portfolioImagesData.images[0]);
+        console.log('Available keys:', Object.keys(portfolioImagesData.images[0]));
+      }
       setPortfolioImages(portfolioImagesData.images);
     }
   }, [portfolioImagesData]);
@@ -361,9 +438,10 @@ const PortfolioTab = () => {
       // If editing a single image
       if (editingImageIndex !== null && files.length === 1) {
         // Delete the old image first
-        const imageId = portfolioImages[editingImageIndex]._id;
+        const image = portfolioImages[editingImageIndex];
+        const imageId = image._id || image.id;
         if (imageId) {
-          await deletePortfolioImage(imageId).unwrap();
+          await deletePortfolioImage({ imageId, vendorId }).unwrap();
         }
 
         // Then upload the new image
@@ -414,12 +492,34 @@ const PortfolioTab = () => {
   const handleRemoveImage = async (index) => {
     try {
       setIsLoading(true);
-      const imageId = portfolioImages[index]._id;
+      const image = portfolioImages[index];
+      
+      // Debug logging
+      console.log('Attempting to remove image at index:', index);
+      console.log('Image object:', image);
+      console.log('Available keys:', Object.keys(image || {}));
+      
+      const imageId = image._id || image.id;
+      
+      if (!imageId) {
+        console.error('No image ID found. Image object:', image);
+        toast.error('Image ID not found. Please refresh the page and try again.');
+        return;
+      }
+      
+      console.log('Using imageId:', imageId, 'vendorId:', vendorId);
+      
       await deletePortfolioImage({ imageId, vendorId }).unwrap();
       refetchImages();
       toast.success('Image removed successfully');
     } catch (error) {
-      toast.error('Failed to remove image');
+      console.error('Error removing image:', error);
+      console.error('Error details:', {
+        status: error?.status,
+        data: error?.data,
+        message: error?.message
+      });
+      toast.error(error?.data?.message || error?.message || 'Failed to remove image');
     } finally {
       setIsLoading(false);
     }
@@ -483,7 +583,10 @@ const PortfolioTab = () => {
       }
 
       // Attempt video deletion
-      await deletePortfolioVideo(videoToRemove._id).unwrap();
+      await deletePortfolioVideo({ 
+        videoId: videoToRemove._id, 
+        vendorId: vendorId 
+      }).unwrap();
 
       // Optimistic update of local state
       const updatedVideos = portfolioVideos.filter((_, i) => i !== index);
@@ -594,8 +697,22 @@ const PortfolioTab = () => {
   };
 
   // Image viewing handler
-  const handleViewImage = (image) => {
+  const handleViewImage = (image, index) => {
     setSelectedImageForView(image);
+    setCurrentImageIndex(index);
+  };
+
+  // Navigation handlers for image modal
+  const handlePreviousImage = () => {
+    const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : portfolioImages.length - 1;
+    setCurrentImageIndex(newIndex);
+    setSelectedImageForView(portfolioImages[newIndex]);
+  };
+
+  const handleNextImage = () => {
+    const newIndex = currentImageIndex < portfolioImages.length - 1 ? currentImageIndex + 1 : 0;
+    setCurrentImageIndex(newIndex);
+    setSelectedImageForView(portfolioImages[newIndex]);
   };
 
   // Video viewing handler
@@ -637,6 +754,9 @@ const PortfolioTab = () => {
         <ImageViewModal
           imageUrl={selectedImageForView.url}
           onClose={() => setSelectedImageForView(null)}
+          onPrevious={portfolioImages.length > 1 ? handlePreviousImage : null}
+          onNext={portfolioImages.length > 1 ? handleNextImage : null}
+          showNavigation={portfolioImages.length > 1}
         />
       )}
 
@@ -727,7 +847,7 @@ const PortfolioTab = () => {
                 <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center opacity-0 hover-opacity-100 transition-all">
                   <div className="d-flex gap-2">
                     <button
-                      onClick={() => handleViewImage(image)}
+                      onClick={() => handleViewImage(image, index)}
                       className="btn btn-light btn-sm hover-bg-blue"
                       title="View Image"
                     >

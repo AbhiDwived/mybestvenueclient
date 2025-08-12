@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../utils/ProtectedRoute';
+import NavigationGuard from '../utils/NavigationGuard';
 
 import MainLayout from '../layouts/MainLayout';
 import UserLayout from '../layouts/UserLayout';
@@ -152,6 +153,7 @@ import ContactUs from '../pages/Corporate/ContactUs';
 const index = () => {
     return (
         <Router>
+            <NavigationGuard />
             <Routes>
                 {/* Main public routes with MainLayout */}
                 <Route path="/" element={<MainLayout />}>
