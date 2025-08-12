@@ -85,13 +85,13 @@ import WeddingMakeUp from '../pages/WeddingVendors/WeddingMakeUp';
 import Choreographers from '../pages/WeddingVendors/Choreographers';
 import Decorators from '../pages/WeddingVendors/Decorators';
 import DJ from '../pages/WeddingVendors/DJ';
-import Entertainment from  '../pages/WeddingVendors/Entertainment';
+import Entertainment from '../pages/WeddingVendors/Entertainment';
 import Florists from '../pages/WeddingVendors/Florists';
 import Gifts from '../pages/WeddingVendors/Gifts';
 import Invitation from '../pages/WeddingVendors/Invitations';
 import Music from '../pages/WeddingVendors/Music';
 import PartyPlaces from '../pages/WeddingVendors/PartyPlaces';
-import Photobooth from  '../pages/WeddingVendors/Photobooth';
+import Photobooth from '../pages/WeddingVendors/Photobooth';
 import Planners from '../pages/WeddingVendors/Planners';
 import Transportation from '../pages/WeddingVendors/Transportation';
 import TentHouse from '../pages/WeddingVendors/TentHouse';
@@ -183,34 +183,34 @@ const index = () => {
                     <Route path="/award-night" element={<AwardNight />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/networking" element={<Networking />} />
-<Route path="/contact-us" element={<ContactUs />} />
+                    <Route path="/contact-us" element={<ContactUs />} />
 
                     {/* Wedding Vendor public page */}
                     <Route path="/vendor" element={<WeedingVendor />} />
-                    <Route path="/cakes" element={<Cakes/>}/>
-                    <Route path ="/caterers" element={<Caterers/>}/>
-                    <Route path='/choreographers' element={<Choreographers/>}/>
-                    <Route path='/decorators' element={<Decorators/>}/>
-                    <Route path='/dj' element={<DJ/>}/>
-                    <Route path='/entertainment' element={<Entertainment/>}/>
-                    <Route path='/florist' element={<Florists/>}/>
-                    <Route path='/gifts' element={<Gifts/>}/>
-                    <Route path='/invitation' element={<Invitation/>}/>
-                    <Route path='/music' element={<Music/>}/>
-                    <Route path='/party-places' element={<PartyPlaces/>}/>
-                    <Route path='/photobooth' element={<Photobooth/>}/>
+                    <Route path="/cakes" element={<Cakes />} />
+                    <Route path="/caterers" element={<Caterers />} />
+                    <Route path='/choreographers' element={<Choreographers />} />
+                    <Route path='/decorators' element={<Decorators />} />
+                    <Route path='/dj' element={<DJ />} />
+                    <Route path='/entertainment' element={<Entertainment />} />
+                    <Route path='/florist' element={<Florists />} />
+                    <Route path='/gifts' element={<Gifts />} />
+                    <Route path='/invitation' element={<Invitation />} />
+                    <Route path='/music' element={<Music />} />
+                    <Route path='/party-places' element={<PartyPlaces />} />
+                    <Route path='/photobooth' element={<Photobooth />} />
                     <Route path="/photographers" element={<Photographers />} />
-                    <Route path="/planners"  element={<Planners/>}/> 
+                    <Route path="/planners" element={<Planners />} />
                     <Route path="/videography" element={<Videography />} />
-                    <Route path="/tent-house"  element={<TentHouse/>}/> 
-                    <Route path="/transportation"  element={<Transportation/>}/> 
-                    <Route path="/promotion"  element={<VendorPromotion/>}/> 
-                    <Route path="/makeup"  element={<WeddingMakeUp/>}/> 
+                    <Route path="/tent-house" element={<TentHouse />} />
+                    <Route path="/transportation" element={<Transportation />} />
+                    <Route path="/promotion" element={<VendorPromotion />} />
+                    <Route path="/makeup" element={<WeddingMakeUp />} />
 
                     {/* Home additional pages */}
                     <Route path='/browser-venues' element={<BrowserVenues />} />
                     <Route path='/discover-categories' element={<DiscoverCategories />} />
-<Route path='/featurevendors' element={<FeatureVendors showAll={true} />} />
+                    <Route path='/featurevendors' element={<FeatureVendors showAll={true} />} />
                     <Route path='/how-it-works' element={<HowItWorks />} />
                     <Route path='/project-list' element={<ProjectList />} />
                     <Route path='/successfull-events' element={<SuccessfullEvents />} />

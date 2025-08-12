@@ -1,8 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { FaStar, FaHeart, FaRegHeart, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { MapPin } from 'lucide-react';
-import { IoIosArrowForward } from "react-icons/io";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useGetAllPublicVendorsQuery } from "../../features/vendors/vendorAPI";
 import { useSaveVendorMutation, useGetSavedVendorsQuery, useUnsaveVendorMutation } from "../../features/savedVendors/savedVendorAPI";
 import { toast } from 'react-toastify';
@@ -13,6 +12,7 @@ import { navigateToVendor } from "../../utils/seoUrl";
 const WeddingVenuesByLocation = () => {
   const [selectedCity, setSelectedCity] = useState('All India');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   // Helper: Find the most similar city from a list
   function findNearestCity(target, cityList) {
@@ -277,8 +277,6 @@ const WeddingVenuesByLocation = () => {
     getUserLocation();
   }, [vendorsData, uniqueCities]);
   const navigate = useNavigate();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  // const { data: vendorsData, isLoading, error } = useGetAllPublicVendorsQuery(); // Duplicate removed
   const [saveVendor] = useSaveVendorMutation();
   const [unsaveVendor] = useUnsaveVendorMutation();
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -312,7 +310,7 @@ const WeddingVenuesByLocation = () => {
     return 'Location not specified';
   }
 
-  // Filter venues by location and venue type - show only latest from each venue type
+  // Filter venues by location and venue type
   const baseVenues = useMemo(() => {
     if (!vendorsData?.vendors && !vendorsData?.data) {
       return [];
@@ -320,43 +318,20 @@ const WeddingVenuesByLocation = () => {
     const vendors = vendorsData.vendors || vendorsData.data || [];
     
     const venues = vendors.filter(vendor => {
-      // Filter by businessType = 'venue' OR venue-related keywords in name
-      const isVenueByType = vendor.businessType === 'venue';
-      const businessName = (vendor.businessName || '').toLowerCase();
-      const isVenueByName = businessName.includes('banquet') ||
-        businessName.includes('hotel') ||
-        businessName.includes('resort') ||
-        businessName.includes('farmhouse') ||
-        businessName.includes('farm') ||
-        businessName.includes('venue') ||
-        businessName.includes('hall') ||
-        businessName.includes('garden') ||
-        businessName.includes('palace') ||
-        businessName.includes('manor') ||
-        businessName.includes('residency') ||
-        businessName.includes('grand') ||
-        businessName.includes('plaza') ||
-        businessName.includes('inn') ||
-        businessName.includes('suites');
-      const isVenue = isVenueByType || isVenueByName;
-      if (!isVenue) return false;
+      if (vendor.businessType !== 'venue') return false;
       if (selectedCity === "All India") return true;
-      // Location matching
+      
       const locationLower = selectedCity.toLowerCase();
-      const matchesLocation =
-        vendor.serviceAreas?.some(area => area && area.toLowerCase().includes(locationLower)) ||
-        (vendor.address?.city && vendor.address.city.toLowerCase().includes(locationLower)) ||
-        (vendor.address?.state && vendor.address.state.toLowerCase().includes(locationLower)) ||
-        (vendor.city && vendor.city.toLowerCase().includes(locationLower)) ||
-        (vendor.state && vendor.state.toLowerCase().includes(locationLower));
-      return matchesLocation;
+      const cityMatch = (vendor.city && vendor.city.toLowerCase() === locationLower) ||
+                      (vendor.address?.city && vendor.address.city.toLowerCase() === locationLower);
+      
+      return cityMatch;
     })
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 8)
     .map(vendor => ({
       id: vendor._id,
       image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
-      category: vendor.businessType === 'venue' ? vendor.venueType : vendor.vendorType,
+      category: vendor.venueType,
       name: vendor.businessName,
       businessName: vendor.businessName,
       vendorType: vendor.vendorType,
@@ -375,45 +350,44 @@ const WeddingVenuesByLocation = () => {
     return venues;
   }, [vendorsData, selectedCity]);
 
-  // Use a single array for slider
-  const locationVenues = baseVenues;
+  const locationVenues = useMemo(() => {
+    if (baseVenues.length > 0 && baseVenues.length < 4) {
+      const repeated = [];
+      while (repeated.length < 20) {
+        repeated.push(...baseVenues);
+      }
+      return repeated;
+    }
+    return baseVenues;
+  }, [baseVenues]);
 
-  // Fetch review stats for venues
   const venueIds = useMemo(() => locationVenues.map(v => v.id).filter(id => id && id.trim() !== ''), [locationVenues]);
   const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(venueIds, { skip: !venueIds.length });
   const stats = statsData?.stats || {};
 
-  const slidesToShow = 4;
-  const totalSlides = baseVenues.length;
+  const totalSlides = locationVenues.length;
 
-  // Auto-slider functionality (simple loop)
   useEffect(() => {
-    if (locationVenues.length <= slidesToShow) return;
-    const interval = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % (locationVenues.length - slidesToShow + 1));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [locationVenues.length, slidesToShow]);
+    if (totalSlides > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlide(prev => {
+          const nextSlide = prev + 1;
+          if (baseVenues.length < 4 && nextSlide >= totalSlides) {
+            return 0;
+          }
+          return nextSlide % totalSlides;
+        });
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [totalSlides, baseVenues.length]);
 
   const nextSlide = () => {
-    setCurrentSlide(prev => {
-      const nextSlide = prev + 1;
-      if (nextSlide >= totalSlides) {
-        setTimeout(() => setCurrentSlide(0), 50);
-        return totalSlides;
-      }
-      return nextSlide;
-    });
+    setCurrentSlide(prev => (prev + 1) % totalSlides);
   };
 
   const prevSlide = () => {
-    setCurrentSlide(prev => {
-      if (prev <= 0) {
-        setTimeout(() => setCurrentSlide(totalSlides - 1), 50);
-        return -1;
-      }
-      return prev - 1;
-    });
+    setCurrentSlide(prev => (prev - 1 + totalSlides) % totalSlides);
   };
 
   const toggleFavorite = async (e, id) => {
@@ -451,7 +425,6 @@ const WeddingVenuesByLocation = () => {
     return null;
   }
 
-  // Show message if no venues found
   if (baseVenues.length === 0) {
     return null;
   }
@@ -474,15 +447,7 @@ const WeddingVenuesByLocation = () => {
               <option key={city + idx} value={city}>{city}</option>
             ))}
           </select>
-          <Link
-            style={{ textDecoration: 'none' }}
-            to={`/search?category=venue&city=${selectedCity !== 'All India' ? selectedCity : ''}`}
-            className="flex text-[#052038] hover:underline"
-          >
-            <p className="text-[#052038] hover:text-black">View All</p>
-            <IoIosArrowForward className="ml-1 mt-1 text-[#052038]" />
-          </Link>
-          {baseVenues.length > slidesToShow && (
+          {baseVenues.length > 1 && (
             <div className="flex gap-2">
               <button
                 onClick={prevSlide}
@@ -503,16 +468,15 @@ const WeddingVenuesByLocation = () => {
 
       <div className="relative overflow-hidden">
         <div 
-          className={`flex gap-6 transition-transform duration-500 ease-in-out`}
-          style={{ transform: `translateX(-${currentSlide * (100 / slidesToShow)}%)` }}
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{ transform: `translateX(-${currentSlide * 25}%)` }}
         >
-          {baseVenues.map((venue, index) => {
+          {locationVenues.map((venue, index) => {
             const stat = stats[venue.id] || { avgRating: 0, reviewCount: 0 };
-            // Card structure from FeatureVendors.jsx
             return (
               <div
-                key={venue.id || index}
-                className="flex-shrink-0 w-1/4 bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
+                key={`${venue.id}-${index}`}
+                className="flex-shrink-0 w-[24%] mr-[1%] bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
                 onClick={() => handleVenueClick(venue)}
               >
                 <div className="relative group">
@@ -533,7 +497,6 @@ const WeddingVenuesByLocation = () => {
                     )}
                   </button>
                 </div>
-                {/* Details */}
                 <div className="flex flex-col justify-between flex-grow p-2 font-serif">
                   <div>
                     <p className="text-xs text-gray-500 mb-1 uppercase">{venue.category}</p>
