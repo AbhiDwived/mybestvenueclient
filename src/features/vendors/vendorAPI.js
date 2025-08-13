@@ -469,6 +469,11 @@ export const vendorApi = createApi({
     getVendorBySeoUrl: builder.query({
       query: ({ businessType, city, type, slug }) => `/vendor/${businessType}/${city}/${type}/${slug}`,
     }),
+
+    // Get vendors by city and type
+    getVendorsByCityAndType: builder.query({
+      query: ({ city, type }) => `/vendor/Vendor/${city}?type=${type}`,
+    }),
   }),
 });
 

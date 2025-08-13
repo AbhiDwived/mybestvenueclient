@@ -5,7 +5,7 @@ import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 import { HiOutlineCalendar } from "react-icons/hi";
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useGetVendorByIdQuery, useGetVendorBySeoUrlQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
+import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
 import { useCreateBookingMutation, useGetUserBookingsQuery } from '../../../features/bookings/bookingAPI';
 import { toast } from 'react-toastify';
 // import mainProfile from "../../../assets/mainProfile.png";
@@ -40,20 +40,10 @@ const PreviewProfile = () => {
   const hasSeoParams = city && finalBusinessType && type && slug;
   
   // Use SEO URL if all SEO params are present, otherwise use vendorId
-  const { data: vendorById, isLoading: isLoadingById, error: errorById } = useGetVendorByIdQuery(
+  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(
     vendorid,
-    { skip: !vendorid || hasSeoParams }
+    { skip: !vendorid }
   );
-  
-  const { data: vendorBySeo, isLoading: isLoadingBySeo, error: errorBySeo } = useGetVendorBySeoUrlQuery(
-    { businessType: finalBusinessType, city, type, slug },
-    { skip: !hasSeoParams }
-  );
-  
-  // Use appropriate data
-  const vendor = hasSeoParams ? vendorBySeo : vendorById;
-  const isVendorLoading = hasSeoParams ? isLoadingBySeo : isLoadingById;
-  const vendorError = hasSeoParams ? errorBySeo : errorById;
   
   const actualVendorId = vendor?.vendor?._id || vendorid;
 

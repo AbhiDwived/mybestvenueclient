@@ -284,25 +284,8 @@ const WeddingVenuesByLocation = () => {
   const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
   const getDisplayLocation = (venue) => {
-    const normalize = (value) => {
-      if (Array.isArray(value)) return value[0] || '';
-      if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (trimmed.startsWith('[')) {
-          try {
-            const arr = JSON.parse(trimmed);
-            if (Array.isArray(arr)) return arr[0] || '';
-          } catch (_) {
-            // fall through
-          }
-        }
-        return trimmed;
-      }
-      return '';
-    };
-
     const primary = venue.city && typeof venue.city === 'string' ? venue.city : '';
-    const fallback = normalize(venue.serviceAreas) || venue.address?.city || '';
+    const fallback = venue.address?.city || '';
     const locationString = primary || fallback;
     if (locationString && typeof locationString === 'string') {
       return locationString.split(',')[0].replace(/^\["?/, '').replace(/"?\]$/, '').trim();
