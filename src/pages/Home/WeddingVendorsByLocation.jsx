@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
 import { navigateToVendor } from "../../utils/seoUrl";
 
-const WeddingVenuesByLocation = () => {
+const WeddingVendorsByLocation = () => {
   const [selectedCity, setSelectedCity] = useState('All India');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -283,9 +283,9 @@ const WeddingVenuesByLocation = () => {
   const { data: savedVendorsData } = useGetSavedVendorsQuery(undefined, { skip: !isAuthenticated });
   const savedVendorIds = savedVendorsData?.data?.map(v => v._id || v.id) || [];
 
-  const getDisplayLocation = (venue) => {
-    const primary = venue.city && typeof venue.city === 'string' ? venue.city : '';
-    const fallback = venue.address?.city || '';
+  const getDisplayLocation = (vendor) => {
+    const primary = vendor.city && typeof vendor.city === 'string' ? vendor.city : '';
+    const fallback = vendor.address?.city || '';
     const locationString = primary || fallback;
     if (locationString && typeof locationString === 'string') {
       return locationString.split(',')[0].replace(/^\["?/, '').replace(/"?\]$/, '').trim();
@@ -293,15 +293,15 @@ const WeddingVenuesByLocation = () => {
     return 'Location not specified';
   }
 
-  // Filter venues by location and venue type
-  const baseVenues = useMemo(() => {
+  // Filter vendors by location and business type
+  const baseVendors = useMemo(() => {
     if (!vendorsData?.vendors && !vendorsData?.data) {
       return [];
     }
     const vendors = vendorsData.vendors || vendorsData.data || [];
     
-    const venues = vendors.filter(vendor => {
-      if (vendor.businessType !== 'venue') return false;
+    const filteredVendors = vendors.filter(vendor => {
+      if (vendor.businessType === 'venue') return false; // Exclude venues
       if (selectedCity === "All India") return true;
       
       const locationLower = selectedCity.toLowerCase();
@@ -314,11 +314,10 @@ const WeddingVenuesByLocation = () => {
     .map(vendor => ({
       id: vendor._id,
       image: vendor.profilePicture || vendor.galleryImages?.[0]?.url,
-      category: vendor.venueType,
+      category: vendor.vendorType,
       name: vendor.businessName,
       businessName: vendor.businessName,
       vendorType: vendor.vendorType,
-      venueType: vendor.venueType,
       businessType: vendor.businessType,
       city: vendor.city,
       nearLocation: vendor.nearLocation,
@@ -330,27 +329,27 @@ const WeddingVenuesByLocation = () => {
       createdAt: vendor.createdAt
     }));
     
-    return venues;
+    return filteredVendors;
   }, [vendorsData, selectedCity]);
 
-  const locationVenues = useMemo(() => {
-    return baseVenues;
-  }, [baseVenues]);
+  const locationVendors = useMemo(() => {
+    return baseVendors;
+  }, [baseVendors]);
 
   const uniqueVendors = useMemo(() => {
     const seen = new Set();
-    return locationVenues.filter(vendor => {
+    return locationVendors.filter(vendor => {
       const duplicate = seen.has(vendor.id);
       seen.add(vendor.id);
       return !duplicate;
     });
-  }, [locationVenues]);
+  }, [locationVendors]);
 
-  const venueIds = useMemo(() => uniqueVendors.map(v => v.id).filter(id => id && id.trim() !== ''), [uniqueVendors]);
-  const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(venueIds, { skip: !venueIds.length });
+  const vendorIds = useMemo(() => uniqueVendors.map(v => v.id).filter(id => id && id.trim() !== ''), [uniqueVendors]);
+  const { data: statsData, isLoading: isLoadingStats } = useGetVendorsReviewStatsQuery(vendorIds, { skip: !vendorIds.length });
   const stats = statsData?.stats || {};
 
-  const totalSlides = locationVenues.length;
+  const totalSlides = locationVendors.length;
 
   useEffect(() => {
     if (totalSlides > 4) {
@@ -376,39 +375,39 @@ const WeddingVenuesByLocation = () => {
   const toggleFavorite = async (e, id) => {
     e.stopPropagation();
     if (!isAuthenticated) {
-      toast.error('Please log in to save venues.');
+      toast.error('Please log in to save vendors.');
       return;
     }
     if (savedVendorIds.includes(id)) {
       try {
         await unsaveVendor(id).unwrap();
-        toast.success('Venue removed from favorites!');
+        toast.success('Vendor removed from favorites!');
       } catch (err) {
-        toast.error(err?.data?.message || 'Failed to unsave venue');
+        toast.error(err?.data?.message || 'Failed to unsave vendor');
       }
     } else {
       try {
         await saveVendor(id).unwrap();
-        toast.success('Venue saved to favorites!');
+        toast.success('Vendor saved to favorites!');
       } catch (err) {
-        toast.error(err?.data?.message || 'Failed to save venue');
+        toast.error(err?.data?.message || 'Failed to save vendor');
       }
     }
   };
 
-  const handleVenueClick = (venue) => {
-    navigateToVendor(navigate, venue);
+  const handleVendorClick = (vendor) => {
+    navigateToVendor(navigate, vendor);
   };
 
   if (isLoading) {
-    return <div className="text-center py-10">Loading venues...</div>;
+    return <div className="text-center py-10">Loading vendors...</div>;
   }
 
   if (error) {
     return null;
   }
 
-  if (baseVenues.length === 0) {
+  if (baseVendors.length === 0) {
     return null;
   }
 
@@ -416,7 +415,7 @@ const WeddingVenuesByLocation = () => {
     <div className="lg:mx-2 px-4 md:px-10 xl:px-20 py-10">
       <div className="flex justify-between items-center mb-6">
         <h3 className="font-semibold text-gray-800 font-serif">
-          Wedding Venues in {selectedCity}
+          Wedding Vendors in {selectedCity}
         </h3>
         <div className="flex items-center gap-4">
           <select
@@ -433,7 +432,7 @@ const WeddingVenuesByLocation = () => {
               <option key={city + idx} value={city}>{city}</option>
             ))}
           </select>
-          {baseVenues.length > 4 && (
+          {baseVendors.length > 4 && (
             <div className="flex gap-2">
               <button
                 onClick={prevSlide}
@@ -457,26 +456,26 @@ const WeddingVenuesByLocation = () => {
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentSlide * 25}%)` }}
         >
-          {uniqueVendors.map((venue, index) => {
-            const stat = stats[venue.id] || { avgRating: 0, reviewCount: 0 };
+          {uniqueVendors.map((vendor, index) => {
+            const stat = stats[vendor.id] || { avgRating: 0, reviewCount: 0 };
             return (
               <div
-                key={`${venue.id}-${index}`}
+                key={`${vendor.id}-${index}`}
                 className="flex-shrink-0 w-[24%] mr-[1%] bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer"
-                onClick={() => handleVenueClick(venue)}
+                onClick={() => handleVendorClick(vendor)}
               >
                 <div className="relative group">
                   <img
-                    src={venue.image || 'default-vendor-image.jpg'}
-                    alt={venue.name || venue.businessName}
+                    src={vendor.image || 'default-vendor-image.jpg'}
+                    alt={vendor.name || vendor.businessName}
                     className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
                   />
                   <button
-                    onClick={(e) => toggleFavorite(e, venue.id)}
+                    onClick={(e) => toggleFavorite(e, vendor.id)}
                     className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-gray-800"
-                    aria-label={savedVendorIds.includes(venue.id) ? "Remove from favorites" : "Add to favorites"}
+                    aria-label={savedVendorIds.includes(vendor.id) ? "Remove from favorites" : "Add to favorites"}
                   >
-                    {savedVendorIds.includes(venue.id) ? (
+                    {savedVendorIds.includes(vendor.id) ? (
                       <FaHeart className="text-red-500" />
                     ) : (
                       <FaRegHeart />
@@ -485,10 +484,10 @@ const WeddingVenuesByLocation = () => {
                 </div>
                 <div className="flex flex-col justify-between flex-grow p-2 font-serif">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1 uppercase">{venue.category}</p>
+                    <p className="text-xs text-gray-500 mb-1 uppercase">{vendor.category}</p>
                     <div className="flex justify-between items-center gap-2 mb-2">
                       <h5 className="text-md font-semibold truncate max-w-[65%] font-serif">
-                        {venue.name || venue.businessName || "Vendor Name"}
+                        {vendor.name || vendor.businessName || "Vendor Name"}
                       </h5>
                       <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 bg-blue-50 border rounded-full px-2 py-1 w-fit shadow-sm">
                         <FaStar size={18} className="text-yellow-500" />
@@ -505,14 +504,14 @@ const WeddingVenuesByLocation = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
                       <MapPin size={14} />
-                      <span className="truncate">{getDisplayLocation(venue)}</span>
+                      <span className="truncate">{getDisplayLocation(vendor)}</span>
                     </div>
                     <div className="flex items-center flex-wrap gap-2 text-xs text-gray-600 mt-1"></div>
                   </div>
                   <div className="border-t mt-3 pt-3 text-sm text-gray-800">
                     <div className="flex items-center gap-5 text-sm text-gray-600 mb-3 border-amber-300">
-                      {venue?.pricing?.filter(item => item?.type && item?.price)?.length > 0 ? (
-                        venue.pricing
+                      {vendor?.pricing?.filter(item => item?.type && item?.price)?.length > 0 ? (
+                        vendor.pricing
                           .filter(item => item?.type && item?.price)
                           .slice(0, 2)
                           .map((item, index) => (
@@ -533,7 +532,7 @@ const WeddingVenuesByLocation = () => {
                     <div className="flex flex-wrap gap-3 text-xs text-gray-600">
                       <span className="text-gray-600   p-1 rounded">
                         {(() => {
-                          let raw = venue.services || [];
+                          let raw = vendor.services || [];
                           let vendorServices = Array.isArray(raw)
                             ? raw.length === 1 && typeof raw[0] === "string"
                               ? raw[0].split(',').map(s => s.trim())
@@ -572,4 +571,4 @@ const WeddingVenuesByLocation = () => {
   );
 };
 
-export default WeddingVenuesByLocation;
+export default WeddingVendorsByLocation;

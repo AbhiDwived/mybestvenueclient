@@ -101,7 +101,7 @@ const AboutUs = () => {
 
         <div className="flex flex-wrap justify-center gap-4 mt-8 px-4 font-serif">
           <Link
-            to="/venues-city"
+            to="/venues"
             className="flex items-center bg-white text-gray-700 px-4 py-2 rounded-md hover:bg-[#0f4c81e7] transition sm:px-3 sm:py-2 text-sm sm:text-base"
             style={{ textDecoration: 'none', color: '#364153' }}
           >

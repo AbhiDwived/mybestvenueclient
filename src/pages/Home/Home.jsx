@@ -8,6 +8,7 @@ import Testimonials from '../Home/Tesstimonials';
 import HowItWorks from '../Home/HowItWorks';
 import FeaturedVendors from '../Home/FeatureVendors';
 import WeddingVenuesByLocation from '../Home/WeddingVenuesByLocation';
+import WeddingVendorsByLocation from '../Home/WeddingVendorsByLocation';
 import LocationList from '../Location/LocationList'
 
 
@@ -16,6 +17,7 @@ export default function Home() {
     <div >
       <DiscoverCategories />
       <WeddingVenuesByLocation />
+      <WeddingVendorsByLocation />
       <VendorByCategory />
       <ProjectList />
       <FeaturedVendors/>
