@@ -1,17 +1,22 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useGetVendorsFaqsMutation } from '../../../features/vendors/vendorAPI';
-import { useParams } from 'react-router-dom';
+import { useGetVendorsFaqsMutation, useGetVendorBySeoUrlQuery } from '../../../features/vendors/vendorAPI';
+import { useParams, useLocation } from 'react-router-dom';
 import { BsFillPatchQuestionFill } from "react-icons/bs";
 
-const FaqQuestions = () => {
-  // const vendor = useSelector((state) => state.vendor.vendor);
-  // const vendorId = vendor?.id;
-  const { vendorId } = useParams();
-  // console.log("vendorId", vendorId);
+const FaqQuestions = ({ vendorId: propVendorId }) => {
+  const params = useParams();
+  const location = useLocation();
+  const isVenueLocation = location.pathname.startsWith('/venue/location');
+  const finalBusinessType = isVenueLocation ? 'venue' : params.businesstype;
+  const hasSeoParams = Boolean(params.city && finalBusinessType && params.type && params.slug);
+  const { data: vendorBySeo } = useGetVendorBySeoUrlQuery(
+    { businessType: finalBusinessType, city: params.city, type: params.type, slug: params.slug },
+    { skip: !hasSeoParams }
+  );
+  const vendorId = propVendorId || params.vendorId || params.vendorid || vendorBySeo?.vendor?._id;
 
   const [getVendorsFaqs, { data, isLoading, isError, error }] = useGetVendorsFaqsMutation();
-  //  console.log("datafaqqqq", data);
 
   useEffect(() => {
     if (vendorId) {

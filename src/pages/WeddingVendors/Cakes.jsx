@@ -142,7 +142,7 @@ export default function Cakes() {
                   {/* Location */}
                   <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
                     <MapPin size={14} />
-                    <span className="truncate">{vendor.serviceAreas?.join(", ") || "Location not specified"}</span>
+                    <span className="truncate">{vendor.city || "Location not specified"}</span>
                     {/* <span className="before:content-['•'] before:mx-1">{vendor.vendorType || "Category"}</span> */}
                   </div>
 

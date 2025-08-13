@@ -933,8 +933,8 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
         {/* Left side: Tabbed content */}
         <div className="md:col-span-2 space-y-6">
           {activeTab === 'About' && <PreviewProfileScreen />}
-          {activeTab === 'Reviews' && <CustomerReviews />}
-          {activeTab === 'FAQ' && <FaqQuestions />}
+          {activeTab === 'Reviews' && <CustomerReviews vendorId={actualVendorId} />}
+          {activeTab === 'FAQ' && <FaqQuestions vendorId={actualVendorId} />}
         </div>
 
         {/* Right side: Inquiry */}

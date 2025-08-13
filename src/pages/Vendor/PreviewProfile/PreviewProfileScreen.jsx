@@ -1,17 +1,35 @@
 import { FaCamera } from 'react-icons/fa';
-import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
+import { useGetVendorByIdQuery, useVendorservicesPackageListMutation, useGetVendorBySeoUrlQuery } from '../../../features/vendors/vendorAPI';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const PreviewProfileScreen = () => {
-  const { vendorId } = useParams();
+  const { vendorId, vendorid, businesstype, city, type, slug } = useParams();
+  const location = useLocation();
   const [packages, setPackages] = useState([]);
   const [getVendorPackages] = useVendorservicesPackageListMutation();
 
-  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useGetVendorByIdQuery(vendorId, {
-    skip: !vendorId || vendorId === 'undefined'
+  // Determine business type based on route; handle venue-only SEO route
+  const isVenueLocation = location.pathname.startsWith('/venue/location');
+  const finalBusinessType = isVenueLocation ? 'venue' : businesstype;
+
+  // Determine if SEO params are present
+  const hasSeoParams = Boolean(city && finalBusinessType && type && slug);
+  const finalVendorId = vendorId || vendorid;
+
+  // Fetch by SEO URL when present, otherwise by vendorId
+  const { data: vendorById, isLoading: isLoadingById, error: errorById } = useGetVendorByIdQuery(finalVendorId, {
+    skip: !finalVendorId || hasSeoParams || finalVendorId === 'undefined'
   });
+  const { data: vendorBySeo, isLoading: isLoadingBySeo, error: errorBySeo } = useGetVendorBySeoUrlQuery(
+    { businessType: finalBusinessType, city, type, slug },
+    { skip: !hasSeoParams }
+  );
+
+  const vendor = hasSeoParams ? vendorBySeo : vendorById;
+  const isVendorLoading = hasSeoParams ? isLoadingBySeo : isLoadingById;
+  const vendorError = hasSeoParams ? errorBySeo : errorById;
 
   // Handle vendor error
   useEffect(() => {

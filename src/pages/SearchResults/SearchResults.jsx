@@ -67,13 +67,11 @@ const SearchResults = () => {
     return vendorData.vendors.filter(vendor => {
       const matchesSearch = searchTerm === '' || 
         vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vendor.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vendor.serviceAreas?.some(area => area.toLowerCase().includes(searchTerm.toLowerCase()));
+        vendor.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesCategory = category === '' || vendor.vendorType === category;
       
       const matchesCity = selectedCity === 'All India' || 
-        vendor.serviceAreas?.some(area => area.toLowerCase().includes(selectedCity.toLowerCase())) ||
         vendor.address?.city?.toLowerCase().includes(selectedCity.toLowerCase());
 
       return matchesSearch && matchesCategory && matchesCity;
@@ -224,7 +222,7 @@ const VendorCard = ({
           <div className="flex items-center text-sm text-gray-500 gap-1 mb-1">
             <MapPin size={14} />
             <span className="truncate">
-              {vendor.serviceAreas?.[0] || vendor.address?.city || "Location not specified"}
+              {vendor.address?.city || "Location not specified"}
             </span>
           </div>
         </div>
@@ -290,4 +288,4 @@ const VendorCard = ({
   );
 };
 
-export default SearchResults; 
+export default SearchResults;

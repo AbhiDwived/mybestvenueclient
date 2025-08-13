@@ -2,7 +2,6 @@
 export const generateVendorSeoUrl = (vendor) => {
   console.log('🛠️ Raw vendor data:', {
     city: vendor.city,
-    serviceAreas: vendor.serviceAreas,
     businessType: vendor.businessType,
     vendorType: vendor.vendorType,
     venueType: vendor.venueType,
@@ -32,8 +31,6 @@ export const generateVendorSeoUrl = (vendor) => {
   let city = 'location';
   if (vendor.city && typeof vendor.city === 'string') {
     city = vendor.city;
-  } else if (vendor.serviceAreas && vendor.serviceAreas.length > 0) {
-    city = normalize(vendor.serviceAreas);
   } else if (vendor.address?.city) {
     city = vendor.address.city;
   }
@@ -79,8 +76,6 @@ export const generateVendorSeoUrl = (vendor) => {
     location = vendor.address.area;
   } else if (vendor.location) {
     location = vendor.location;
-  } else if (vendor.serviceAreas && vendor.serviceAreas.length > 0) {
-    location = vendor.serviceAreas[0].split(',')[0]; // Take first part of service area
   }
   
   location = String(location).trim().toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-').replace(/^-+|-+$/g, '') || 'central-delhi';

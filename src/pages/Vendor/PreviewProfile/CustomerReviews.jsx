@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { FaStar, FaRegStar, FaStarHalfAlt, FaEdit, FaTrash } from "react-icons/fa";
 import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useGetVendorReviewsQuery, useCreateReviewMutation, useUpdateReviewMutation, useDeleteReviewMutation } from '../../../features/reviews/reviewAPI';
 import { useGetUserBookingsQuery } from '../../../features/bookings/bookingAPI';
 import defaultAvatar from "../../../assets/Images/user.png";
+import { useGetVendorBySeoUrlQuery } from '../../../features/vendors/vendorAPI';
 
 const StarRating = ({ rating, onChange, editable = false, size = 20 }) => {
   // If editable, allow half-star selection
@@ -51,8 +52,17 @@ const StarRating = ({ rating, onChange, editable = false, size = 20 }) => {
   return <div className="flex items-center space-x-1">{stars}</div>;
 };
 
-const CustomerReviews = () => {
-  const { vendorId } = useParams();
+const CustomerReviews = ({ vendorId: propVendorId }) => {
+  const params = useParams();
+  const location = useLocation();
+  const isVenueLocation = location.pathname.startsWith('/venue/location');
+  const finalBusinessType = isVenueLocation ? 'venue' : params.businesstype;
+  const hasSeoParams = Boolean(params.city && finalBusinessType && params.type && params.slug);
+  const { data: vendorBySeo } = useGetVendorBySeoUrlQuery(
+    { businessType: finalBusinessType, city: params.city, type: params.type, slug: params.slug },
+    { skip: !hasSeoParams }
+  );
+  const vendorId = propVendorId || params.vendorId || params.vendorid || vendorBySeo?.vendor?._id;
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const userId = user?._id || user?.id;
 

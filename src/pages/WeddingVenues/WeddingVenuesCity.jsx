@@ -133,7 +133,6 @@ const VendorByCategory = ({ location = "All India" }) => {
       const filteredVendors = vendorsData.vendors.filter(vendor => {
         const matchesCategory = vendor.vendorType === category;
         const matchesLocation = location === "All India" || 
-          (vendor.serviceAreas && vendor.serviceAreas.includes(location)) ||
           (vendor.address && vendor.address.city === location);
         return matchesCategory && matchesLocation;
       });
