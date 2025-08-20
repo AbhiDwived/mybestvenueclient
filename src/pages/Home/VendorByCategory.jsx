@@ -85,56 +85,65 @@ const VendorByCategory = ({ location = "All India" }) => {
   // Fetch all vendors from Redux
   const { data: vendorsData, isLoading } = useGetAllPublicVendorsQuery();
 
-  // Define all venue categories
+  // Define all venue categories - exact match from database
   const categoryTitles = [
-    "Art Gallery",
-    "Amusement Park",
-    "Auditorium",
-    "Banquet Halls",
-    "Bars",
-    "Clubs",
-    "Pool Side",
-    "Conference Rooms",
-    "Farm Houses",
-    "Hotels",
-    "Party Lawn",
-    "Resort",
-    "Restaurants",
-    "Seminar Halls",
-    "Theater",
-    "Unique Venues",
-    "Roof Top",
-    "Gaming Zone",
-    "Villas",
-    "Pubs",
-    "Meeting Rooms",
-    "Boat Yatch",
-    "Vacation Homes",
-    "Cafes",
-    "Co-working Spaces",
-    "Business Centres",
-    "Guest Houses",
-    "5 Star Hotel",
-    "Marriage Garden",
-    "Wedding Hotels",
-    "Marriage Lawn",
-    "Wedding Resort",
-    "Training Rooms",
-    "Kids Play Area"
+    'Art Gallery',
+    'Amusement Park',
+    'Auditorium',
+    'Banquet halls',
+    'Bars',
+    'Clubs',
+    'Pool Side',
+    'Conference Rooms',
+    'Farm Houses',
+    'Hotels',
+    'Party lawn',
+    'Resort',
+    'Restaurants',
+    'Seminar Halls',
+    'Theater',
+    'Unique Venues',
+    'Roof Top',
+    'Gaming Zone',
+    'Villas',
+    'Pubs',
+    'Meeting Rooms',
+    'Boat Yatch',
+    'Vacation Homes',
+    'Cafes',
+    'Co-working spaces',
+    'Business Centres',
+    'Guest Houses',
+    '5 Star Hotel',
+    'Marriage Garden',
+    'Wedding Hotels',
+    'Marriage Lawn',
+    'Wedding Resort',
+    'Training Rooms',
+    'Kids Play Area'
   ];
 
   // Calculate counts for each category
   const getCategoryCounts = () => {
-    if (!vendorsData?.vendors) return {};
+    if (!vendorsData?.vendors && !vendorsData?.data) return {};
     
+    const vendors = vendorsData.vendors || vendorsData.data || [];
     const counts = {};
+    
     categoryTitles.forEach(category => {
       // Filter vendors by category and location
-      const filteredVendors = vendorsData.vendors.filter(vendor => {
-        const matchesCategory = vendor.vendorType === category;
+      const filteredVendors = vendors.filter(vendor => {
+        // Check venue type matching based on businessType (exact match)
+        const matchesCategory = 
+          vendor.businessType === 'venue' && vendor.venueType === category;
+        
+        // Location matching based on actual model fields
         const matchesLocation = location === "All India" || 
-          (vendor.serviceAreas && vendor.serviceAreas.includes(location)) ||
-          (vendor.address && vendor.address.city === location);
+          (vendor.city && vendor.city.toLowerCase().includes(location.toLowerCase())) ||
+          (vendor.state && vendor.state.toLowerCase().includes(location.toLowerCase())) ||
+          (vendor.address && vendor.address.toLowerCase().includes(location.toLowerCase())) ||
+          (vendor.nearLocation && vendor.nearLocation.toLowerCase().includes(location.toLowerCase()));
+        
         return matchesCategory && matchesLocation;
       });
       counts[category] = filteredVendors.length;
@@ -157,8 +166,14 @@ const VendorByCategory = ({ location = "All India" }) => {
     const locationSlug = location.toLowerCase().replace(/\s+/g, '-');
     const categorySlug = title.toLowerCase().replace(/\s+/g, '-');
     
-    // Navigate to the vendor list page
-    navigate(`/vendor-list/${locationSlug}/${categorySlug}`);
+    // Navigate to the vendor list page with proper error handling
+    try {
+      navigate(`/vendor-list/${locationSlug}/${categorySlug}`);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to home page if navigation fails
+      navigate('/');
+    }
   };
 
   return (

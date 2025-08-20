@@ -1,47 +1,54 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const NavigationGuard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const userAuth = useSelector((state) => state.auth || {});
   const vendorAuth = useSelector((state) => state.vendor || {});
   const adminAuth = useSelector((state) => state.adminAuth || {});
 
   useEffect(() => {
-    // Check if current route is protected and user is not authenticated
     const currentPath = location.pathname;
-    const isProtectedRoute = (
-      currentPath.startsWith('/admin') || 
-      currentPath.startsWith('/vendor') || 
-      currentPath.startsWith('/user')
-    ) && !(
+    
+    // Only check authentication for dashboard routes
+    const isDashboardRoute = (
+      currentPath.startsWith('/admin/dashboard') || 
+      currentPath.startsWith('/vendor/dashboard') || 
+      currentPath.startsWith('/user/dashboard')
+    );
+
+    // Skip auth check for public routes and auth pages
+    const isPublicRoute = (
+      currentPath === '/' ||
       currentPath === '/user/login' ||
       currentPath === '/user/signup' ||
       currentPath === '/vendor/login' ||
       currentPath === '/vendor-register' ||
       currentPath === '/admin/login' ||
-      currentPath === '/vendor' || // Allow access to the main vendor page
-      currentPath.startsWith('/user/reset-password') || // Example of another public user route
-      currentPath.startsWith('/vendor/forgot-password') // Example of another public vendor route
+      currentPath.startsWith('/vendor-list') ||
+      currentPath.startsWith('/preview-profile') ||
+      currentPath.startsWith('/blog') ||
+      currentPath.startsWith('/venues') ||
+      currentPath.startsWith('/vendor') ||
+      currentPath.startsWith('/reset-password') ||
+      currentPath.startsWith('/forgot-password')
     );
 
-    if (isProtectedRoute) {
+    if (isDashboardRoute && !isPublicRoute) {
       const isAuthenticated = userAuth.isAuthenticated || 
                              vendorAuth.isAuthenticated || 
                              adminAuth.isAuthenticated;
 
-      if (!isAuthenticated) {
-        // Clear any stale data and redirect to home
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.replace('/');
+      if (isAuthenticated === false) {
+        navigate('/', { replace: true });
       }
     }
-  }, [location.pathname, userAuth.isAuthenticated, vendorAuth.isAuthenticated, adminAuth.isAuthenticated]);
+  }, [location.pathname, userAuth.isAuthenticated, vendorAuth.isAuthenticated, adminAuth.isAuthenticated, navigate]);
 
-  return null; // This component doesn't render anything
+  return null;
 };
 
 export default NavigationGuard;

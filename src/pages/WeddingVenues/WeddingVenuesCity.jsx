@@ -25,7 +25,7 @@ const getCategoryIcon = (title) => {
       return <FaMagic size={24} />;
     case 'Auditorium':
       return <FaLandmark size={24} />;
-    case 'Banquet Halls':
+    case 'Banquet halls':
       return <FaRegBuilding size={24} />;
     case 'Bars':
     case 'Clubs':
@@ -43,7 +43,7 @@ const getCategoryIcon = (title) => {
     case '5 Star Hotel':
     case 'Wedding Hotels':
       return <FaHotel size={24} />;
-    case 'Party Lawn':
+    case 'Party lawn':
     case 'Marriage Lawn':
       return <FaTree size={24} />;
     case 'Resort':
@@ -69,7 +69,7 @@ const getCategoryIcon = (title) => {
       return <FaHome size={24} />;
     case 'Boat Yatch':
       return <FaUmbrellaBeach size={24} />;
-    case 'Co-working Spaces':
+    case 'Co-working spaces':
     case 'Business Centres':
       return <FaRegBuilding size={24} />;
     case 'Marriage Garden':
@@ -85,42 +85,42 @@ const VendorByCategory = ({ location = "All India" }) => {
   // Fetch all vendors from Redux
   const { data: vendorsData, isLoading } = useGetAllVendorsQuery();
 
-  // Define all categories
+  // Define all venue categories - exact match from database
   const categoryTitles = [
-    "Art Gallery",
-    "Amusement Park",
-    "Auditorium",
-    "Banquet Halls",
-    "Bars",
-    "Clubs",
-    "Pool Side",
-    "Conference Rooms",
-    "Farm Houses",
-    "Hotels",
-    "Party Lawn",
-    "Resort",
-    "Restaurants",
-    "Seminar Halls",
-    "Theater",
-    "Unique Venues",
-    "Roof Top",
-    "Gaming Zone",
-    "Villas",
-    "Pubs",
-    "Meeting Rooms",
-    "Boat Yatch",
-    "Vacation Homes",
-    "Cafes",
-    "Co-working Spaces",
-    "Business Centres",
-    "Guest Houses",
-    "5 Star Hotel",
-    "Marriage Garden",
-    "Wedding Hotels",
-    "Marriage Lawn",
-    "Wedding Resort",
-    "Training Rooms",
-    "Kids Play Area"
+    'Art Gallery',
+    'Amusement Park',
+    'Auditorium',
+    'Banquet halls',
+    'Bars',
+    'Clubs',
+    'Pool Side',
+    'Conference Rooms',
+    'Farm Houses',
+    'Hotels',
+    'Party lawn',
+    'Resort',
+    'Restaurants',
+    'Seminar Halls',
+    'Theater',
+    'Unique Venues',
+    'Roof Top',
+    'Gaming Zone',
+    'Villas',
+    'Pubs',
+    'Meeting Rooms',
+    'Boat Yatch',
+    'Vacation Homes',
+    'Cafes',
+    'Co-working spaces',
+    'Business Centres',
+    'Guest Houses',
+    '5 Star Hotel',
+    'Marriage Garden',
+    'Wedding Hotels',
+    'Marriage Lawn',
+    'Wedding Resort',
+    'Training Rooms',
+    'Kids Play Area'
   ];
 
   // Calculate counts for each category
@@ -131,9 +131,17 @@ const VendorByCategory = ({ location = "All India" }) => {
     categoryTitles.forEach(category => {
       // Filter vendors by category and location
       const filteredVendors = vendorsData.vendors.filter(vendor => {
-        const matchesCategory = vendor.vendorType === category;
+        // Check venue type matching based on businessType
+        const matchesCategory = 
+          vendor.businessType === 'venue' && vendor.venueType === category;
+        
+        // Location matching based on actual model fields
         const matchesLocation = location === "All India" || 
-          (vendor.address && vendor.address.city === location);
+          (vendor.city && vendor.city.toLowerCase().includes(location.toLowerCase())) ||
+          (vendor.state && vendor.state.toLowerCase().includes(location.toLowerCase())) ||
+          (vendor.address && vendor.address.toLowerCase().includes(location.toLowerCase())) ||
+          (vendor.nearLocation && vendor.nearLocation.toLowerCase().includes(location.toLowerCase()));
+        
         return matchesCategory && matchesLocation;
       });
       counts[category] = filteredVendors.length;
@@ -190,7 +198,7 @@ const VendorByCategory = ({ location = "All India" }) => {
                 {title}
               </h6>
               <p className="text-xs sm:text-sm text-gray-500">
-                {isLoading ? "Loading..." : `${count} Vendors`}
+                {isLoading ? "Loading..." : `${count} Venues`}
               </p>
             </button>
           ))}

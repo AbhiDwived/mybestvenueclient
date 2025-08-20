@@ -63,17 +63,42 @@ const VendorListPage = () => {
   // Mapping between frontend category titles and database vendor types
   const categoryMapping = {
     'Banquet Halls': ['Banquet Halls', 'TentHouse'],
-    'Hotels': ['Hotels'],
-    'Marriage Garden': ['Marriage Garden'],
+    'Hotels': ['Hotels', '5 Star Hotel', 'Wedding Hotels'],
+    'Marriage Garden': ['Marriage Garden', 'Marriage Lawn'],
     'Kalyana Mandapams': ['Kalyana Mandapams'],
-    'Wedding Resorts': ['Wedding Resorts'],
-    'Wedding Lawns & Farmhouses': ['Wedding Lawns & Farmhouses'],
+    'Wedding Resorts': ['Wedding Resorts', 'Resort', 'Wedding Resort'],
+    'Wedding Lawns & Farmhouses': ['Wedding Lawns & Farmhouses', 'Party Lawn', 'Farm Houses'],
     'Wedding Photographers': ['Wedding Photographers', 'Photographers', 'Videography', 'Photobooth'],
     'Party Places': ['Party Places', 'DJ', 'Musics'],
     'Caterers': ['Caterers', 'Cakes'],
     'Wedding Decorators': ['Wedding Decorators', 'Decorator', 'Florist'],
     'Wedding Makeup': ['Wedding Makeup'],
-    'Wedding Planners': ['Wedding Planners', 'Choreographers', 'Gifts', 'Invitation', 'Transportation', 'Other']
+    'Wedding Planners': ['Wedding Planners', 'Choreographers', 'Gifts', 'Invitation', 'Transportation', 'Other'],
+    // Additional venue categories
+    'Art Gallery': ['Art Gallery'],
+    'Amusement Park': ['Amusement Park'],
+    'Auditorium': ['Auditorium'],
+    'Bars': ['Bars'],
+    'Clubs': ['Clubs'],
+    'Pubs': ['Pubs'],
+    'Pool Side': ['Pool Side'],
+    'Conference Rooms': ['Conference Rooms'],
+    'Meeting Rooms': ['Meeting Rooms'],
+    'Training Rooms': ['Training Rooms'],
+    'Restaurants': ['Restaurants'],
+    'Cafes': ['Cafes'],
+    'Seminar Halls': ['Seminar Halls'],
+    'Theater': ['Theater'],
+    'Unique Venues': ['Unique Venues'],
+    'Roof Top': ['Roof Top'],
+    'Gaming Zone': ['Gaming Zone'],
+    'Kids Play Area': ['Kids Play Area'],
+    'Villas': ['Villas'],
+    'Vacation Homes': ['Vacation Homes'],
+    'Guest Houses': ['Guest Houses'],
+    'Boat Yatch': ['Boat Yatch'],
+    'Co Working Spaces': ['Co-working Spaces'],
+    'Business Centres': ['Business Centres']
   };
 
   // Filtering
@@ -83,7 +108,9 @@ const VendorListPage = () => {
 
       /** category match */
       const mappedCategories = categoryMapping[formattedCategory] || [formattedCategory];
-      const matchesCategory = mappedCategories.includes(v.vendorType);
+      const matchesCategory = mappedCategories.includes(v.vendorType) || 
+                             mappedCategories.includes(v.venueType) ||
+                             (v.businessType === 'venue' && mappedCategories.includes(v.venueType));
 
       /** city / service‑area match */
       let matchesLocation = city === 'all-india';
@@ -91,11 +118,16 @@ const VendorListPage = () => {
         const searchCity = formattedCity.toLowerCase();
         const vendorLocations = [
           ...(v.serviceAreas ?? []),
-          v.address?.city
+          v.address?.city,
+          v.city,
+          v.state,
+          v.nearLocation
         ]
           .filter(Boolean)
           .map((loc) => loc.toLowerCase());
-        matchesLocation = vendorLocations.includes(searchCity);
+        matchesLocation = vendorLocations.some(loc => 
+          loc.includes(searchCity) || searchCity.includes(loc)
+        );
       }
 
       /** free‑text search match */
