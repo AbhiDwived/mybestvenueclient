@@ -121,6 +121,11 @@ const SimilarVendors = ({ vendorType, currentVendorId }) => {
                       <FaCrown className="text-xs" />
                     </div>
                   )}
+                  {vendor.isTrusted && (
+                    <div className="absolute top-3 left-3 bg-blue-500 text-white rounded px-2 py-1 shadow-md text-xs font-medium">
+                      Trusted
+                    </div>
+                  )}
                 </div>
                 {/* Details */}
                 <div className="flex flex-col justify-between flex-grow p-2 font-serif">

@@ -43,6 +43,7 @@ const FeaturedVendors = ({ showAll = false }) => {
     services: vendor.services,
     pricing: vendor.pricing || [],
     isPremium: vendor.isPremium || false,
+    isTrusted: vendor.isTrusted || false,
     // Add all original vendor fields for SEO URL generation
     businessName: vendor.businessName,
     vendorType: vendor.vendorType,
@@ -133,6 +134,11 @@ const FeaturedVendors = ({ showAll = false }) => {
                 {vendor.isPremium && (
                   <div className="absolute top-3 left-3 bg-red-500 text-white rounded-full p-1 shadow-md flex items-center justify-center w-8 h-8">
                     <FaCrown className="text-xs" />
+                  </div>
+                )}
+                {vendor.isTrusted && (
+                  <div className="absolute top-3 left-3 bg-blue-500 text-white rounded px-2 py-1 shadow-md text-xs font-medium">
+                    Trusted
                   </div>
                 )}
                 <button

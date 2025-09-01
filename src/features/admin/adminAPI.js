@@ -214,6 +214,16 @@ export const adminApi = createApi({
       invalidatesTags: ['Vendors'],
     }),
 
+    // Toggle Vendor Trusted Status
+    toggleVendorTrusted: builder.mutation({
+      query: ({ vendorId, isTrusted }) => ({
+        url: `/admin/toggle-trusted/${vendorId}`,
+        method: 'PUT',
+        body: { isTrusted },
+      }),
+      invalidatesTags: ['Vendors'],
+    }),
+
     // Logout Admin
     logoutAdmin: builder.mutation({
       query: () => ({
@@ -262,6 +272,9 @@ export const {
 
   // Premium toggle hook
   useToggleVendorPremiumMutation,
+
+  // Trusted toggle hook
+  useToggleVendorTrustedMutation,
 
   // Logout hook
   useLogoutAdminMutation,

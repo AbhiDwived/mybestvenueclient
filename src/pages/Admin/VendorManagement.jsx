@@ -5,6 +5,7 @@ import {
   useGetAllVendorsQuery,
   useDeleteVendorByAdminMutation,
   useToggleVendorPremiumMutation,
+  useToggleVendorTrustedMutation,
 } from "../../features/admin/adminAPI";
 import { useGetVendorsReviewStatsQuery } from '../../features/reviews/reviewAPI';
 import Loader from "../../components/{Shared}/Loader";
@@ -37,6 +38,7 @@ const VendorManagement = () => {
   const { data: vendorsData, isLoading, isError, refetch } = useGetAllVendorsQuery();
   const [deleteVendorByAdmin] = useDeleteVendorByAdminMutation();
   const [toggleVendorPremium] = useToggleVendorPremiumMutation();
+  const [toggleVendorTrusted] = useToggleVendorTrustedMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
@@ -144,6 +146,23 @@ const VendorManagement = () => {
     }
   };
 
+  const handleTrustedToggle = async (vendor, isTrusted) => {
+    const vendorId = vendor._id;
+    const vendorName = vendor.businessName || vendor.name;
+    
+    if (!vendorId) {
+      alert('Cannot update vendor: ID not found');
+      return;
+    }
+    
+    try {
+      await toggleVendorTrusted({ vendorId, isTrusted }).unwrap();
+    } catch (err) {
+      const errorMessage = err?.data?.message || err?.message || err?.error || 'Unknown error occurred';
+      alert(`Failed to update ${vendorName}: ${errorMessage}`);
+    }
+  };
+
   if (isLoading) return <Loader fullScreen />;
   if (isError) return <div className="text-center text-red-500 p-4">Error loading vendors</div>;
 
@@ -233,6 +252,11 @@ const VendorManagement = () => {
                       <FaCrown className="text-xs" />
                     </div>
                   )}
+                  {originalVendor.isTrusted && (
+                    <div className="absolute top-3 left-3 bg-blue-500 text-white rounded px-2 py-1 shadow-md text-xs font-medium">
+                      Trusted
+                    </div>
+                  )}
                 </div>
                 {/* Details */}
                 <div className="flex flex-col justify-between flex-grow p-2 font-serif">
@@ -316,24 +340,47 @@ const VendorManagement = () => {
                   </span>
                 </div>
                   </div>
-                  {/* Premium Toggle */}
+                  {/* Premium & Trusted Toggle */}
                   <div className="flex justify-between items-center mt-2 mb-2">
-                    <span className="text-sm font-medium text-gray-700">Premium Status:</span>
-                    <div className="flex items-center">
-                      <span className={`text-xs mr-2 ${originalVendor.isPremium ? 'text-green-600' : 'text-gray-500'}`}>
-                        {originalVendor.isPremium ? 'Premium' : 'Normal'}
-                      </span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={originalVendor.isPremium || false}
-                          onChange={(e) => {
-                            handlePremiumToggle(originalVendor, e.target.checked);
-                          }}
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
+                    <div className="flex w-full">
+                      <div className="flex items-center w-1/2">
+                        <span className="text-xs font-medium text-gray-700 mr-2">Premium:</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={originalVendor.isPremium || false}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                handlePremiumToggle(originalVendor, true);
+                                handleTrustedToggle(originalVendor, false);
+                              } else {
+                                handlePremiumToggle(originalVendor, false);
+                              }
+                            }}
+                          />
+                          <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                        </label>
+                      </div>
+                      <div className="flex items-center w-1/2">
+                        <span className="text-xs font-medium text-gray-700 mr-2">Trusted:</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={originalVendor.isTrusted || false}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                handleTrustedToggle(originalVendor, true);
+                                handlePremiumToggle(originalVendor, false);
+                              } else {
+                                handleTrustedToggle(originalVendor, false);
+                              }
+                            }}
+                          />
+                          <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                        </label>
+                      </div>
                     </div>
                   </div>
                   {/* Admin Actions */}

@@ -121,6 +121,11 @@ export default function SavedVendor() {
                                                 <FaCrown className="text-xs" />
                                             </div>
                                         )}
+                                        {vendor.isTrusted && (
+                                            <div className="absolute top-3 left-3 bg-blue-500 text-white rounded px-2 py-1 shadow-md text-xs font-medium">
+                                                Trusted
+                                            </div>
+                                        )}
                                         <button
                                             onClick={(e) => toggleFavorite(e, vendor.id)}
                                             className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-red-500 hover:bg-gray-50 disabled:opacity-50"
