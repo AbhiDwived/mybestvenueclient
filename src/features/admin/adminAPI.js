@@ -81,6 +81,7 @@ export const adminApi = createApi({
     // ✅ Get All Vendors
     getAllVendors: builder.query({
       query: () => '/admin/all_vendors',
+      providesTags: ['Vendors'],
     }),
 
     // Get Latest Vendors By Type
@@ -203,6 +204,16 @@ export const adminApi = createApi({
       providesTags: ['Rides'],
     }),
 
+    // Toggle Vendor Premium Status
+    toggleVendorPremium: builder.mutation({
+      query: ({ vendorId, isPremium }) => ({
+        url: `/admin/toggle-premium/${vendorId}`,
+        method: 'PUT',
+        body: { isPremium },
+      }),
+      invalidatesTags: ['Vendors'],
+    }),
+
     // Logout Admin
     logoutAdmin: builder.mutation({
       query: () => ({
@@ -248,6 +259,9 @@ export const {
   useUpdateRideMutation,
   useDeleteRideMutation,
   useGetRidesByVendorQuery,
+
+  // Premium toggle hook
+  useToggleVendorPremiumMutation,
 
   // Logout hook
   useLogoutAdminMutation,

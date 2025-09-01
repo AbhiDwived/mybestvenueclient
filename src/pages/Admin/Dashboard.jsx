@@ -65,6 +65,15 @@ const AdminDashboard = () => {
               : vendorsData?.vendors?.length || 0,
         },
         {
+          label: "Premium Vendors",
+          value: vendorsLoading
+            ? "Loading..."
+            : Array.isArray(vendorsData)
+              ? vendorsData.filter(v => v.isPremium).length
+              : vendorsData?.vendors?.filter(v => v.isPremium).length || 0,
+          className: "text-blue-600 font-semibold"
+        },
+        {
           label: "Pending Approvals",
           value: pendingLoading
             ? "Loading..."
@@ -153,9 +162,17 @@ const AdminDashboard = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">{card.stats[3].label}</p>
-                    <p className="text-lg font-bold text-gray-800">{card.stats[3].value}</p>
+                    <p className={`text-base ${card.stats[3].className || "text-gray-800 font-bold"}`}>{card.stats[3].value}</p>
                   </div>
                 </div>
+                {card.stats[4] && (
+                  <div className="flex justify-between mt-2 pr-20">
+                    <div>
+                      <p className="text-xs text-gray-500">{card.stats[4].label}</p>
+                      <p className="text-lg font-bold text-gray-800">{card.stats[4].value}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

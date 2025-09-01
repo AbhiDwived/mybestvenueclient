@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaStar, FaHeart, FaRegHeart, FaCrown } from "react-icons/fa";
 import { MapPin } from 'lucide-react';
 import { useGetSimilarVendorsQuery } from '../../../features/vendors/vendorAPI';
 import { useParams, useNavigate } from "react-router-dom";
@@ -55,6 +55,7 @@ const SimilarVendors = ({ vendorType, currentVendorId }) => {
       ? `₹${vendor.pricingRange.min.toLocaleString()} - ₹${vendor.pricingRange.max.toLocaleString()}`
       : 'Price on request',
     pricing: vendor.pricing || [],
+    isPremium: vendor.isPremium || false,
     // Add all original vendor fields for SEO URL generation
     businessName: vendor.businessName,
     vendorType: vendor.vendorType,
@@ -115,6 +116,11 @@ const SimilarVendors = ({ vendorType, currentVendorId }) => {
                     alt={vendor.name}
                     className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
                   />
+                  {vendor.isPremium && (
+                    <div className="absolute top-3 left-3 bg-red-500 text-white rounded-full p-1 shadow-md flex items-center justify-center w-8 h-8">
+                      <FaCrown className="text-xs" />
+                    </div>
+                  )}
                 </div>
                 {/* Details */}
                 <div className="flex flex-col justify-between flex-grow p-2 font-serif">

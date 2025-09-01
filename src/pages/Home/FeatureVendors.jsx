@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { FaStar, FaHeart, FaRegHeart, FaArrowLeft } from "react-icons/fa";
+import { FaStar, FaHeart, FaRegHeart, FaArrowLeft, FaCrown } from "react-icons/fa";
 
 import { MdLocationOn } from "react-icons/md";
 import { MapPin } from 'lucide-react';
@@ -42,6 +42,7 @@ const FeaturedVendors = ({ showAll = false }) => {
     location: getDisplayLocation(vendor),
     services: vendor.services,
     pricing: vendor.pricing || [],
+    isPremium: vendor.isPremium || false,
     // Add all original vendor fields for SEO URL generation
     businessName: vendor.businessName,
     vendorType: vendor.vendorType,
@@ -129,6 +130,11 @@ const FeaturedVendors = ({ showAll = false }) => {
                   alt={vendor.name}
                   className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
                 />
+                {vendor.isPremium && (
+                  <div className="absolute top-3 left-3 bg-red-500 text-white rounded-full p-1 shadow-md flex items-center justify-center w-8 h-8">
+                    <FaCrown className="text-xs" />
+                  </div>
+                )}
                 <button
                   onClick={(e) => toggleFavorite(e, vendor.id)}
                   className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-gray-800"

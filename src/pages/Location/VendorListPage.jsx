@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useGetAllVendorsQuery } from '../../features/admin/adminAPI';
-import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaStar, FaHeart, FaRegHeart, FaCrown } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import Loader from '../../components/{Shared}/Loader';
 import { FiArrowLeft } from "react-icons/fi";
@@ -347,6 +347,11 @@ const VendorListPage = () => {
                     alt={v.businessName}
                     className="w-full h-48 sm:h-56 object-cover transition-transform duration-300 transform group-hover:scale-105"
                   />
+                  {v.isPremium && (
+                    <div className="absolute top-3 left-3 bg-red-500 text-white rounded-full p-1 shadow-md flex items-center justify-center w-8 h-8">
+                      <FaCrown className="text-xs" />
+                    </div>
+                  )}
                   <button
                     onClick={(e) => toggleFavorite(e, v._id)}
                     className="absolute top-3 right-3 bg-white border border-gray-300 rounded p-1 shadow flex items-center justify-center w-8 h-8 text-gray-800"
