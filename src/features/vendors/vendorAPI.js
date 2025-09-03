@@ -111,18 +111,22 @@ export const vendorApi = createApi({
 
     // Update Vendor Profile
     updateProfile: builder.mutation({
-      query: ({ vendorId, profileData }) => ({
-        url: `/vendor/update/${vendorId}`,
-        method: "PUT",
-        body: profileData,
-        // Add proper headers for multipart form data
-        formData: true,
-      }),
-      // Transform the response to ensure we get the updated vendor data
+      query: ({ vendorId, profileData }) => {
+        console.log('🔍 API Call - Vendor ID:', vendorId);
+        console.log('🔍 API Call - Profile Data type:', typeof profileData);
+        
+        return {
+          url: `/vendor/update/${vendorId}`,
+          method: "PUT",
+          body: profileData,
+        };
+      },
       transformResponse: (response) => {
-        if (response.success && response.vendor) {
-          return response.vendor;
-        }
+        console.log('🔍 API Response:', response);
+        return response;
+      },
+      transformErrorResponse: (response) => {
+        console.log('❌ API Error Response:', response);
         return response;
       },
     }),

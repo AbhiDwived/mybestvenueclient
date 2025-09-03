@@ -85,6 +85,9 @@ const NEAR_LOCATIONS = {
   'Noida': ['Sector 18', 'Sector 62', 'Greater Noida', 'Sector 15', 'Sector 37']
 };
 
+const CUISINES = ['Indian', 'Chinese', 'Mughlai', 'Continental', 'Tandoori', 'South Indian', 'North Indian', 'Italian', 'Mexican'];
+const SPACE_TYPES = ['Indoor', 'Outdoor', 'Mixed'];
+
 
 
 const EditProfile = () => {
@@ -199,6 +202,7 @@ const EditProfile = () => {
   const [contactErrors, setContactErrors] = useState({});
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [spaces, setSpaces] = useState([]);
 
 
   const fileInputRef = useRef(null);
@@ -330,6 +334,43 @@ const EditProfile = () => {
       } else {
         setServices(['']);
       }
+
+      // Load spaces data
+      const spacesData = vendorData.spaces;
+      if (Array.isArray(spacesData) && spacesData.length > 0) {
+        setSpaces(spacesData.map(space => ({
+          name: space.name || '',
+          type: space.type || 'Indoor',
+          businessType: space.businessType || '',
+          vendorType: space.vendorType || '',
+          venueType: space.venueType || '',
+          minCapacity: space.minCapacity || '',
+          maxCapacity: space.maxCapacity || '',
+          vegPrice: space.vegPrice || '',
+          vegImflPrice: space.vegImflPrice || '',
+          nonVegPrice: space.nonVegPrice || '',
+          nonVegImflPrice: space.nonVegImflPrice || '',
+          cuisines: (() => {
+            if (Array.isArray(space.cuisines)) {
+              // If it's already an array, check if first element is a comma-separated string
+              if (space.cuisines.length === 1 && typeof space.cuisines[0] === 'string' && space.cuisines[0].includes(',')) {
+                return space.cuisines[0].split(',').map(c => c.trim()).filter(c => c);
+              }
+              return space.cuisines;
+            }
+            return space.cuisines ? space.cuisines.split(',').map(c => c.trim()).filter(c => c) : [];
+          })(),
+          contactName: space.contactName || '',
+          address: space.address || '',
+          city: space.city || '',
+          state: space.state || '',
+          country: space.country || 'IN',
+          pinCode: space.pinCode || '',
+          nearLocation: space.nearLocation || '',
+          profilePicture: space.profilePicture || '',
+          isActive: space.isActive !== undefined ? space.isActive : true
+        })));
+      }
     }
   }, [vendor, data]);
 
@@ -394,6 +435,36 @@ const EditProfile = () => {
       formData.append(`pricing[${index}][price]`, item.price || '');
       formData.append(`pricing[${index}][currency]`, item.currency || 'INR');
       formData.append(`pricing[${index}][unit]`, item.unit || 'per plate');
+    });
+
+    // Add spaces data
+    spaces.forEach((space, index) => {
+      formData.append(`spaces[${index}][name]`, space.name || '');
+      formData.append(`spaces[${index}][type]`, space.type || 'Indoor');
+      formData.append(`spaces[${index}][businessType]`, space.businessType || '');
+      formData.append(`spaces[${index}][vendorType]`, space.vendorType || '');
+      formData.append(`spaces[${index}][venueType]`, space.venueType || '');
+      formData.append(`spaces[${index}][description]`, space.description || '');
+      formData.append(`spaces[${index}][servicePrice]`, space.servicePrice || '');
+      formData.append(`spaces[${index}][priceUnit]`, space.priceUnit || 'per event');
+      formData.append(`spaces[${index}][additionalServices]`, space.additionalServices || '');
+      formData.append(`spaces[${index}][serviceCities]`, space.serviceCities || '');
+      formData.append(`spaces[${index}][minCapacity]`, space.minCapacity || '');
+      formData.append(`spaces[${index}][maxCapacity]`, space.maxCapacity || '');
+      formData.append(`spaces[${index}][vegPrice]`, space.vegPrice || '');
+      formData.append(`spaces[${index}][vegImflPrice]`, space.vegImflPrice || '');
+      formData.append(`spaces[${index}][nonVegPrice]`, space.nonVegPrice || '');
+      formData.append(`spaces[${index}][nonVegImflPrice]`, space.nonVegImflPrice || '');
+      formData.append(`spaces[${index}][cuisines]`, space.cuisines.join(','));
+      formData.append(`spaces[${index}][contactName]`, space.contactName || '');
+      formData.append(`spaces[${index}][address]`, space.address || '');
+      formData.append(`spaces[${index}][city]`, space.city || '');
+      formData.append(`spaces[${index}][state]`, space.state || '');
+      formData.append(`spaces[${index}][country]`, space.country || 'IN');
+      formData.append(`spaces[${index}][pinCode]`, space.pinCode || '');
+      formData.append(`spaces[${index}][nearLocation]`, space.nearLocation || '');
+      formData.append(`spaces[${index}][profilePicture]`, space.profilePicture || '');
+      formData.append(`spaces[${index}][isActive]`, space.isActive || true);
     });
 
     if (imageFile) {
@@ -636,6 +707,65 @@ const EditProfile = () => {
     setCustomNearLocation('');
   };
 
+  // Space management functions
+  const handleSpaceChange = (index, field, value) => {
+    const updated = [...spaces];
+    updated[index][field] = value;
+    setSpaces(updated);
+  };
+
+  const handleCuisineChange = (spaceIndex, cuisine) => {
+    const updated = [...spaces];
+    const cuisines = updated[spaceIndex].cuisines || [];
+    if (cuisines.includes(cuisine)) {
+      updated[spaceIndex].cuisines = cuisines.filter(c => c !== cuisine);
+    } else {
+      updated[spaceIndex].cuisines = [...cuisines, cuisine];
+    }
+    setSpaces(updated);
+  };
+
+  const handleAddSpace = () => {
+    setSpaces([...spaces, {
+      name: '',
+      type: 'Indoor',
+      businessType: '',
+      vendorType: '',
+      venueType: '',
+      description: '',
+      servicePrice: '',
+      priceUnit: 'per event',
+      additionalServices: '',
+      serviceCities: '',
+      minCapacity: '',
+      maxCapacity: '',
+      vegPrice: '',
+      vegImflPrice: '',
+      nonVegPrice: '',
+      nonVegImflPrice: '',
+      cuisines: [],
+      contactName: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'IN',
+      pinCode: '',
+      nearLocation: '',
+      profilePicture: '',
+      isActive: true
+    }]);
+  };
+
+  const handleToggleSpaceStatus = (index) => {
+    const updated = [...spaces];
+    updated[index].isActive = !updated[index].isActive;
+    setSpaces(updated);
+  };
+
+  const handleRemoveSpace = (index) => {
+    setSpaces(spaces.filter((_, i) => i !== index));
+  };
+
 
 
 
@@ -707,7 +837,7 @@ const EditProfile = () => {
               {businessType === 'vendor' && (
                 <div className="mb-3">
                   <label className="form-label">Vendor Type</label>
-                  <select className="form-select" value={category || ''} onChange={(e) => setCategory(e.target.value)}>
+                  <select className="form-control" value={category || ''} onChange={(e) => setCategory(e.target.value)}>
                     <option value="">Select Vendor Type</option>
                     {VENDOR_TYPES.map((type) => (
                       <option key={type} value={type}>{type}</option>
@@ -719,7 +849,7 @@ const EditProfile = () => {
               {businessType === 'venue' && (
                 <div className="mb-3">
                   <label className="form-label">Venue Type</label>
-                  <select className="form-select" value={category || ''} onChange={(e) => setCategory(e.target.value)}>
+                  <select className="form-control" value={category || ''} onChange={(e) => setCategory(e.target.value)}>
                     <option value="">Select Venue Type</option>
                     {VENUE_TYPES.map((type) => (
                       <option key={type} value={type}>{type}</option>
@@ -820,6 +950,7 @@ const EditProfile = () => {
 
               <div className="mb-3">
                 <label className="form-label">Services</label>
+                <p className="text-muted small">Add multiple services you offer (e.g., Catering + Decoration)</p>
                 {(services.length > 0 ? services : ['']).map((service, index) => (
                   <div key={index} className="d-flex align-items-center gap-2 mb-2">
                     <input
@@ -854,6 +985,21 @@ const EditProfile = () => {
                     )}
                   </div>
                 ))}
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Service Areas (Cities)</label>
+                <p className="text-muted small">Add cities where you operate</p>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g., Delhi, Mumbai, Bangalore (comma separated)"
+                  value={Array.isArray(serviceAreas) ? serviceAreas.join(', ') : serviceAreas}
+                  onChange={(e) => {
+                    const cities = e.target.value.split(',').map(city => city.trim()).filter(city => city);
+                    setServiceAreas(cities);
+                  }}
+                />
               </div>
 
 
@@ -923,10 +1069,372 @@ const EditProfile = () => {
 
               </div>
 
+              {/* Spaces Section - For both vendors and venues */}
+              {(businessType === 'vendor' || businessType === 'venue') && (
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h6>{businessType === 'venue' ? 'Venue Spaces' : 'Services'} & Pricing</h6>
+                      <p className="text-muted small mb-0">Add different {businessType === 'venue' ? 'spaces in your venue' : 'services you offer'} with their pricing</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      style={{ padding: "6px 10px", backgroundColor: '#0f4c81' }}
+                      onClick={handleAddSpace}
+                      title={`Add ${businessType === 'venue' ? 'space' : 'service'}`}
+                    >
+                      <MdOutlineAddCircle size={20} color="white" />
+                    </button>
+                  </div>
+                  
+                  {spaces.map((space, index) => (
+                    <div key={index} className="border rounded p-3 mb-3">
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h6 className="mb-0">{businessType === 'venue' ? 'Space' : 'Service'} {index + 1}</h6>
+                        <div className="d-flex align-items-center gap-2">
+                          <span className={`badge ${space.isActive ? 'bg-success' : 'bg-secondary'}`}>
+                            {space.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                          <button
+                            type="button"
+                            className={`btn btn-sm ${space.isActive ? 'btn-outline-warning' : 'btn-outline-success'}`}
+                            onClick={() => handleToggleSpaceStatus(index)}
+                            title={space.isActive ? `Deactivate ${businessType === 'venue' ? 'space' : 'service'}` : `Activate ${businessType === 'venue' ? 'space' : 'service'}`}
+                          >
+                            {space.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => handleRemoveSpace(index)}
+                            title={`Remove ${businessType === 'venue' ? 'space' : 'service'}`}
+                          >
+                            <FaTrash size={12} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <label className="form-label">Business Type</label>
+                        <div className="d-flex gap-4">
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name={`spaceBusinessType-${index}`}
+                              id={`space-vendor-${index}`}
+                              checked={space.businessType === 'vendor'}
+                              onChange={() => handleSpaceChange(index, 'businessType', 'vendor')}
+                            />
+                            <label className="form-check-label" htmlFor={`space-vendor-${index}`}>Vendor</label>
+                          </div>
+                          <div className="form-check">
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name={`spaceBusinessType-${index}`}
+                              id={`space-venue-${index}`}
+                              checked={space.businessType === 'venue'}
+                              onChange={() => handleSpaceChange(index, 'businessType', 'venue')}
+                            />
+                            <label className="form-check-label" htmlFor={`space-venue-${index}`}>Venue</label>
+                          </div>
+                        </div>
+                      </div>
 
-              {/* <button type="button" onClick={handleSave} className="btn text-white" style={{ backgroundColor: '#0f4c81' }}>
-                {isLoading ? 'Saving...' : 'Save Information'}
-              </button> */}
+                      {space.businessType === 'vendor' && (
+                        <div className="mb-3">
+                          <label className="form-label">Vendor Type</label>
+                          <select className="form-control" value={space.vendorType || ''} onChange={(e) => handleSpaceChange(index, 'vendorType', e.target.value)}>
+                            <option value="">Select Vendor Type</option>
+                            {VENDOR_TYPES.map((type) => (
+                              <option key={type} value={type}>{type}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {space.businessType === 'venue' && (
+                        <div className="mb-3">
+                          <label className="form-label">Venue Type</label>
+                          <select className="form-control" value={space.venueType || ''} onChange={(e) => handleSpaceChange(index, 'venueType', e.target.value)}>
+                            <option value="">Select Venue Type</option>
+                            {VENUE_TYPES.map((type) => (
+                              <option key={type} value={type}>{type}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {space.businessType === 'vendor' ? (
+                        // Vendor Form - Clean Service Details
+                        <>
+                          <div className="row">
+                            <div className="col-md-6 mb-3">
+                              <label className="form-label">Service Name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                placeholder="e.g. Photography, Catering"
+                                value={space.name}
+                                onChange={(e) => handleSpaceChange(index, 'name', e.target.value)}
+                              />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                              <label className="form-label">Service Price</label>
+                              <div className="input-group">
+                                <span className="input-group-text">₹</span>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  placeholder="Starting price"
+                                  value={space.servicePrice || ''}
+                                  onChange={(e) => handleSpaceChange(index, 'servicePrice', e.target.value)}
+                                />
+                                <select
+                                  className="form-control"
+                                  value={space.priceUnit || 'per event'}
+                                  onChange={(e) => handleSpaceChange(index, 'priceUnit', e.target.value)}
+                                  style={{maxWidth: '120px'}}
+                                >
+                                  <option value="per event">Per Event</option>
+                                  <option value="per hour">Per Hour</option>
+                                  <option value="per day">Per Day</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-3">
+                            <label className="form-label">Service Cities</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              placeholder="Delhi, Mumbai, Bangalore"
+                              value={space.serviceCities || ''}
+                              onChange={(e) => handleSpaceChange(index, 'serviceCities', e.target.value)}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        // Venue Form - Space Details
+                        <>
+                          <div className="row">
+                            <div className="col-md-6 mb-3">
+                              <label className="form-label">Space Name</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                placeholder="e.g. Main Hall, Garden Area"
+                                value={space.name}
+                                onChange={(e) => handleSpaceChange(index, 'name', e.target.value)}
+                              />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                              <label className="form-label">Space Type</label>
+                              <select
+                                className="form-control"
+                                value={space.type}
+                                onChange={(e) => handleSpaceChange(index, 'type', e.target.value)}
+                              >
+                                {SPACE_TYPES.map(type => (
+                                  <option key={type} value={type}>{type}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          
+                          <div className="row">
+                            <div className="col-md-6 mb-3">
+                              <label className="form-label">Min Capacity</label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                placeholder="Minimum guests"
+                                value={space.minCapacity}
+                                onChange={(e) => handleSpaceChange(index, 'minCapacity', e.target.value)}
+                              />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                              <label className="form-label">Max Capacity</label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                placeholder="Maximum guests"
+                                value={space.maxCapacity}
+                                onChange={(e) => handleSpaceChange(index, 'maxCapacity', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="mb-3">
+                            <label className="form-label">Pricing Models (per plate)</label>
+                            <div className="row">
+                              <div className="col-md-3 mb-2">
+                                <label className="form-label small">Veg Price</label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  placeholder="₹ per plate"
+                                  value={space.vegPrice}
+                                  onChange={(e) => handleSpaceChange(index, 'vegPrice', e.target.value)}
+                                />
+                              </div>
+                              <div className="col-md-3 mb-2">
+                                <label className="form-label small">Veg + IMFL</label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  placeholder="₹ per plate"
+                                  value={space.vegImflPrice}
+                                  onChange={(e) => handleSpaceChange(index, 'vegImflPrice', e.target.value)}
+                                />
+                              </div>
+                              <div className="col-md-3 mb-2">
+                                <label className="form-label small">Non-Veg Price</label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  placeholder="₹ per plate"
+                                  value={space.nonVegPrice}
+                                  onChange={(e) => handleSpaceChange(index, 'nonVegPrice', e.target.value)}
+                                />
+                              </div>
+                              <div className="col-md-3 mb-2">
+                                <label className="form-label small">Non-Veg + IMFL</label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  placeholder="₹ per plate"
+                                  value={space.nonVegImflPrice}
+                                  onChange={(e) => handleSpaceChange(index, 'nonVegImflPrice', e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-3">
+                            <label className="form-label">Cuisines Supported</label>
+                            <div className="d-flex flex-wrap gap-2">
+                              {CUISINES.map(cuisine => (
+                                <div key={cuisine} className="form-check">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id={`cuisine-${index}-${cuisine}`}
+                                    checked={(space.cuisines || []).includes(cuisine)}
+                                    onChange={() => handleCuisineChange(index, cuisine)}
+                                  />
+                                  <label className="form-check-label small" htmlFor={`cuisine-${index}-${cuisine}`}>
+                                    {cuisine}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      
+                      <div className="mb-3">
+                        <label className="form-label">Contact Name</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Contact person name"
+                          value={space.contactName || ''}
+                          onChange={(e) => handleSpaceChange(index, 'contactName', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">State <span className="text-danger">*</span></label>
+                          <select
+                            className="form-control"
+                            value={space.state || ''}
+                            onChange={(e) => handleSpaceChange(index, 'state', e.target.value)}
+                          >
+                            <option value="">Select State</option>
+                            {states.map((stateItem) => (
+                              <option key={stateItem.isoCode} value={stateItem.isoCode}>
+                                {stateItem.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">City <span className="text-danger">*</span></label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Enter city"
+                            value={space.city || ''}
+                            onChange={(e) => handleSpaceChange(index, 'city', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Pin Code <span className="text-danger">*</span></label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Enter 6-digit PIN code"
+                            value={space.pinCode || ''}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '');
+                              if (value.length <= 6) handleSpaceChange(index, 'pinCode', value);
+                            }}
+                            maxLength={6}
+                          />
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Near Location</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Near location (Optional)"
+                            value={space.nearLocation || ''}
+                            onChange={(e) => handleSpaceChange(index, 'nearLocation', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <label className="form-label">Address</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Enter address"
+                          value={space.address || ''}
+                          onChange={(e) => handleSpaceChange(index, 'address', e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="mb-3">
+                        <label className="form-label">Profile Picture</label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml,image/x-icon,image/bmp,image/apng,image/heic"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file && file.size <= 10 * 1024 * 1024) {
+                              handleSpaceChange(index, 'profilePicture', file);
+                            } else {
+                              alert('File size must be less than 10MB');
+                            }
+                          }}
+                        />
+                        <small className="text-muted">Supported formats: JPEG, PNG, GIF, WebP, AVIF, SVG, ICO, BMP, APNG, HEIC (Max: 10MB)</small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={() => handleSave("info")}
