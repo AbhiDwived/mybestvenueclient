@@ -147,9 +147,13 @@ const EditProfile = () => {
       toast.error('Error: Vendor ID is missing. Please try logging in again.');
       navigate('/vendor/login');
     } else {
+console.log("Vendor ID:", vendorId);
+      console.log("Vendor ID:", vendorId);
       // Load Indian states
       const indianStates = State.getStatesOfCountry('IN');
+console.log("Indian States:", indianStates);
       setStates(indianStates);
+      console.log("Indian States:", indianStates);
       
       // Fetch FAQ data when vendor ID is available
       setIsLoadingFaqs(true);
@@ -265,13 +269,16 @@ const EditProfile = () => {
       percentage,
       items: completionItems
     };
+console.log("useEffect - vendor:", vendor);
   }, [businessName, category, businessDescription, serviceAreas, contactEmail, contactPhone, contactName, address, coverImage, vendor?.profilePicture, portfolioData?.images, faqs]);
+useEffect(() => {
+  console.log("useEffect - vendor:", vendor);
+  console.log("useEffect - data:", data);
+  if (vendor && data?.vendor) {
+    const vendorData = data.vendor;
+    console.log("useEffect - vendorData:", vendorData);
 
-  useEffect(() => {
-    if (vendor && data?.vendor) {
-      const vendorData = data.vendor;
-      
-  
+    
       
       setBusinessName(vendorData.businessName || vendor.businessName || '');
       setBusinessType(vendorData.businessType || vendor.businessType || '');
@@ -392,9 +399,8 @@ const EditProfile = () => {
 
 
   const prepareFormData = (imageFile = null) => {
+    console.log("📋 Preparing FormData...");
     const formData = new FormData();
-
-
 
     formData.append("_id", vendorId);
     formData.append("businessName", businessName || '');
@@ -418,16 +424,13 @@ const EditProfile = () => {
     formData.append("isApproved", true);
     formData.append("contactName", contactName || '');
 
-    // Location fields - ensure they're not undefined
     formData.append("address", address || '');
     formData.append("city", city || '');
     formData.append("state", state || '');
     formData.append("country", country || 'IN');
     formData.append("pinCode", pinCode || '');
     const finalNearLocation = nearLocation === 'other' ? customNearLocation : nearLocation;
-
     formData.append("nearLocation", finalNearLocation || '');
-    
     formData.append("services", Array.isArray(services) ? services.join(',') : (services || ''));
     
     priceRange.forEach((item, index) => {
@@ -437,8 +440,15 @@ const EditProfile = () => {
       formData.append(`pricing[${index}][unit]`, item.unit || 'per plate');
     });
 
-    // Add spaces data
+    // Add spaces data with detailed logging
+    console.log("🏢 Processing spaces for FormData:", spaces.length, "spaces");
     spaces.forEach((space, index) => {
+      console.log(`📦 Space ${index}:`, {
+        name: space.name,
+        hasImage: !!space.profilePicture,
+        imageType: space.profilePicture instanceof File ? 'File' : typeof space.profilePicture
+      });
+      
       formData.append(`spaces[${index}][name]`, space.name || '');
       formData.append(`spaces[${index}][type]`, space.type || 'Indoor');
       formData.append(`spaces[${index}][businessType]`, space.businessType || '');
@@ -463,7 +473,16 @@ const EditProfile = () => {
       formData.append(`spaces[${index}][country]`, space.country || 'IN');
       formData.append(`spaces[${index}][pinCode]`, space.pinCode || '');
       formData.append(`spaces[${index}][nearLocation]`, space.nearLocation || '');
-      formData.append(`spaces[${index}][profilePicture]`, space.profilePicture || '');
+      
+      // Handle profile picture with detailed logging
+      if (space.profilePicture instanceof File) {
+        console.log(`🖼️ Adding File for space ${index}:`, space.profilePicture.name);
+        formData.append(`spaceImages`, space.profilePicture);
+        formData.append(`spaceImageIndex`, index);
+      } else {
+        console.log(`🔗 Adding URL for space ${index}:`, space.profilePicture);
+        formData.append(`spaces[${index}][profilePicture]`, space.profilePicture || '');
+      }
       formData.append(`spaces[${index}][isActive]`, space.isActive || true);
     });
 
@@ -475,6 +494,7 @@ const EditProfile = () => {
       formData.append("profilePicture", vendor.profilePicture);
     }
 
+    console.log("✅ FormData prepared");
     return formData;
   };
 
@@ -492,36 +512,81 @@ const EditProfile = () => {
 
   // Update handleSave for contact
   const handleSave = async (type = "info") => {
+    console.log("🚀 handleSave called with type:", type);
+    console.log("📦 Current spaces before save:", spaces);
+    
     if (!vendorId) {
       toast.error("Error: Vendor ID is missing. Please try logging in again.");
       navigate('/vendor/login');
       return;
     }
     if (type === 'contact' && !validateContactInfo()) return;
-    // if (type === 'info') setIsSavingInfo(true);
-    // if (type === 'contact') setIsSavingContact(true);
 
     try {
-
       const formData = prepareFormData();
+      console.log("📋 FormData prepared, checking space images:");
+      
+      // Log space images being sent
+      spaces.forEach((space, index) => {
+        console.log(`🖼️ Space ${index} image:`, {
+          isFile: space.profilePicture instanceof File,
+          value: space.profilePicture instanceof File ? 'File object' : space.profilePicture
+        });
+      });
 
       const res = await updateProfile({
         vendorId,
         profileData: formData,
       }).unwrap();
-      await refetch();
+      
+      console.log("✅ Server response:", res);
+      console.log("🔍 Server response spaces:", res.vendor?.spaces);
+      
+      // Check each space for profilePicture
+      if (res.vendor?.spaces) {
+        res.vendor.spaces.forEach((space, idx) => {
+          console.log(`🖼️ Server space ${idx} profilePicture:`, space.profilePicture);
+        });
+      }
+      
+      const refetchResult = await refetch();
+      console.log("🔄 Refetch result:", refetchResult.data?.vendor?.spaces);
 
       const updatedVendor = res.vendor || res;
+      console.log("🔄 Updated vendor data:", updatedVendor);
+      console.log("🏢 Updated vendor spaces:", updatedVendor.spaces);
 
       // Always update the cover image from the server response
       if (updatedVendor.profilePicture) {
         setCoverImage(updatedVendor.profilePicture);
+        console.log("🖼️ Cover image updated:", updatedVendor.profilePicture);
+      }
+
+      // Use refetch data instead of server response for spaces
+      const finalVendorData = refetchResult.data?.vendor || updatedVendor;
+      console.log("🎯 Final vendor data for spaces:", finalVendorData.spaces);
+      
+      // Update spaces with new image URLs from server response
+      if (finalVendorData.spaces && Array.isArray(finalVendorData.spaces)) {
+        console.log("🔄 Updating spaces state with final data...");
+        finalVendorData.spaces.forEach((space, idx) => {
+          console.log(`🖼️ Final space ${idx} profilePicture:`, space.profilePicture);
+        });
+        const newSpaces = finalVendorData.spaces.map(space => ({
+          ...space,
+          cuisines: Array.isArray(space.cuisines) ? space.cuisines : 
+            (space.cuisines ? space.cuisines.split(',').map(c => c.trim()) : [])
+        }));
+        console.log("📦 New spaces data:", newSpaces);
+        setSpaces(newSpaces);
+      } else {
+        console.log("❌ No spaces data in final response");
       }
 
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
       toast.success("Profile updated successfully!");
     } catch (err) {
-
+      console.error("❌ Save error:", err);
       if (err.status === 404) {
         toast.error("Error: Vendor not found. Please try logging in again.");
         navigate('/vendor/login');
@@ -533,7 +598,6 @@ const EditProfile = () => {
       }
     }
     finally {
-      // Reset both loaders
       setIsSavingInfo(false);
       setIsSavingContact(false);
     }
@@ -709,9 +773,20 @@ const EditProfile = () => {
 
   // Space management functions
   const handleSpaceChange = (index, field, value) => {
+    console.log(`🔄 handleSpaceChange: Space ${index}, field: ${field}`, 
+      field === 'profilePicture' ? (value instanceof File ? `File: ${value.name}` : value) : value
+    );
     const updated = [...spaces];
     updated[index][field] = value;
     setSpaces(updated);
+    
+    if (field === 'profilePicture') {
+      console.log(`🖼️ Space ${index} image updated:`, {
+        isFile: value instanceof File,
+        fileName: value instanceof File ? value.name : 'N/A',
+        value: value instanceof File ? 'File object' : value
+      });
+    }
   };
 
   const handleCuisineChange = (spaceIndex, cuisine) => {
@@ -1093,17 +1168,18 @@ const EditProfile = () => {
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h6 className="mb-0">{businessType === 'venue' ? 'Space' : 'Service'} {index + 1}</h6>
                         <div className="d-flex align-items-center gap-2">
-                          <span className={`badge ${space.isActive ? 'bg-success' : 'bg-secondary'}`}>
-                            {space.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                          <button
-                            type="button"
-                            className={`btn btn-sm ${space.isActive ? 'btn-outline-warning' : 'btn-outline-success'}`}
-                            onClick={() => handleToggleSpaceStatus(index)}
-                            title={space.isActive ? `Deactivate ${businessType === 'venue' ? 'space' : 'service'}` : `Activate ${businessType === 'venue' ? 'space' : 'service'}`}
-                          >
-                            {space.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
+                          <div className="form-check form-switch">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id={`spaceToggle-${index}`}
+                              checked={space.isActive}
+                              onChange={() => handleToggleSpaceStatus(index)}
+                            />
+                            <label className="form-check-label" htmlFor={`spaceToggle-${index}`}>
+                              {space.isActive ? 'Active' : 'Inactive'}
+                            </label>
+                          </div>
                           <button
                             type="button"
                             className="btn btn-outline-danger btn-sm"
@@ -1415,15 +1491,37 @@ const EditProfile = () => {
                       
                       <div className="mb-3">
                         <label className="form-label">Profile Picture</label>
+                        {space.profilePicture && (
+                          <div className="mb-2">
+                            <img
+                              src={space.profilePicture instanceof File 
+                                ? URL.createObjectURL(space.profilePicture) 
+                                : (space.profilePicture.startsWith('http') || space.profilePicture.startsWith('/') 
+                                  ? space.profilePicture 
+                                  : `${serverURL}/${space.profilePicture}`)
+                              }
+                              alt="Space preview"
+                              className="img-thumbnail"
+                              style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = coverimage;
+                              }}
+                            />
+                          </div>
+                        )}
                         <input
                           type="file"
                           className="form-control"
                           accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml,image/x-icon,image/bmp,image/apng,image/heic"
                           onChange={(e) => {
                             const file = e.target.files[0];
+                            console.log(`📁 File selected for space ${index}:`, file ? file.name : 'No file');
                             if (file && file.size <= 10 * 1024 * 1024) {
+                              console.log(`✅ File valid, updating space ${index}`);
                               handleSpaceChange(index, 'profilePicture', file);
                             } else {
+                              console.log(`❌ File invalid for space ${index}:`, file ? 'Too large' : 'No file');
                               alert('File size must be less than 10MB');
                             }
                           }}
@@ -1530,6 +1628,107 @@ const EditProfile = () => {
               ))}
             </ul>
           </div>
+
+          {/* Space Cards Section */}
+          {spaces.length > 0 && (
+            <div className="border rounded p-3 mt-3">
+              <h3>Your Spaces</h3>
+              <p className="text-muted small">Overview of all your spaces and services</p>
+              <div className="d-flex flex-column gap-3">
+                {spaces.filter(space => space.isActive).map((space, index) => (
+                  <div key={index} className="card border p-0">
+                    {/* Full Width Image */}
+                    <img
+                      src={space.profilePicture instanceof File 
+                        ? URL.createObjectURL(space.profilePicture) 
+                        : space.profilePicture 
+                        ? (space.profilePicture.startsWith('http') || space.profilePicture.startsWith('/') 
+                          ? space.profilePicture 
+                          : `${serverURL}/${space.profilePicture}`)
+                        : coverimage
+                      }
+                      alt={space.name || 'Space'}
+                      className="card-img-top"
+                      style={{ height: '200px', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = coverimage;
+                      }}
+                    />
+                    
+                    {/* Space Details */}
+                    <div className="card-body">
+                      <div className="mb-2">
+                        <h5 className="mb-1">{space.name || 'Unnamed Space'}</h5>
+                        <div className="d-flex justify-content-between align-items-center w-100">
+                          <span className="badge bg-info">{space.venueType || space.vendorType || 'Not specified'}</span>
+                          <span className="badge bg-primary">{space.type || 'Indoor'}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Capacity Settings */}
+                      {(space.minCapacity || space.maxCapacity) && (
+                        <div className="mb-2">
+                          <small className="text-muted fw-bold">Capacity: </small>
+                          <span className="small">
+                            {space.minCapacity && space.maxCapacity 
+                              ? `${space.minCapacity} - ${space.maxCapacity} guests`
+                              : space.minCapacity 
+                              ? `Min ${space.minCapacity} guests`
+                              : `Max ${space.maxCapacity} guests`
+                            }
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Pricing Models */}
+                      {space.businessType === 'venue' && (space.vegPrice || space.nonVegPrice || space.vegImflPrice || space.nonVegImflPrice) && (
+                        <div className="mb-2">
+                          <small className="text-muted d-block fw-bold">Food (per plate):</small>
+                          <div className="d-flex flex-wrap gap-2">
+                            {space.vegPrice && <span className="small">Veg: ₹{space.vegPrice}</span>}
+                            {space.nonVegPrice && <span className="small">Non-Veg: ₹{space.nonVegPrice}</span>}
+                            {space.vegImflPrice && <span className="small">Veg+IMFL: ₹{space.vegImflPrice}</span>}
+                            {space.nonVegImflPrice && <span className="small">Non-Veg+IMFL: ₹{space.nonVegImflPrice}</span>}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Service Price for Vendors */}
+                      {space.businessType === 'vendor' && space.servicePrice && (
+                        <div className="mb-2">
+                          <small className="text-muted">Price: </small>
+                          <span className="small">₹{space.servicePrice} {space.priceUnit || 'per event'}</span>
+                        </div>
+                      )}
+                      
+                      {/* Cuisine Selection */}
+                      {space.cuisines && space.cuisines.length > 0 && (
+                        <div className="mb-2">
+                          <small className="text-muted d-block fw-bold">Cuisines:</small>
+                          <div className="d-flex flex-wrap gap-1">
+                            {space.cuisines.map((cuisine, cuisineIndex) => (
+                              <span key={cuisineIndex} className="small">{cuisine}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Location Details */}
+                      <div className="mb-0">
+                        <small className="text-muted fw-bold">Location: </small>
+                        <span className="small">
+                          {[space.address, space.city, space.state, space.pinCode]
+                            .filter(Boolean)
+                            .join(', ') || 'Location not specified'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Contact Info */}
