@@ -147,13 +147,9 @@ const EditProfile = () => {
       toast.error('Error: Vendor ID is missing. Please try logging in again.');
       navigate('/vendor/login');
     } else {
-console.log("Vendor ID:", vendorId);
-      console.log("Vendor ID:", vendorId);
       // Load Indian states
       const indianStates = State.getStatesOfCountry('IN');
-console.log("Indian States:", indianStates);
       setStates(indianStates);
-      console.log("Indian States:", indianStates);
       
       // Fetch FAQ data when vendor ID is available
       setIsLoadingFaqs(true);
@@ -269,14 +265,10 @@ console.log("Indian States:", indianStates);
       percentage,
       items: completionItems
     };
-console.log("useEffect - vendor:", vendor);
   }, [businessName, category, businessDescription, serviceAreas, contactEmail, contactPhone, contactName, address, coverImage, vendor?.profilePicture, portfolioData?.images, faqs]);
 useEffect(() => {
-  console.log("useEffect - vendor:", vendor);
-  console.log("useEffect - data:", data);
   if (vendor && data?.vendor) {
     const vendorData = data.vendor;
-    console.log("useEffect - vendorData:", vendorData);
 
     
       
@@ -399,7 +391,6 @@ useEffect(() => {
 
 
   const prepareFormData = (imageFile = null) => {
-    console.log("📋 Preparing FormData...");
     const formData = new FormData();
 
     formData.append("_id", vendorId);
@@ -440,14 +431,8 @@ useEffect(() => {
       formData.append(`pricing[${index}][unit]`, item.unit || 'per plate');
     });
 
-    // Add spaces data with detailed logging
-    console.log("🏢 Processing spaces for FormData:", spaces.length, "spaces");
+    // Add spaces data
     spaces.forEach((space, index) => {
-      console.log(`📦 Space ${index}:`, {
-        name: space.name,
-        hasImage: !!space.profilePicture,
-        imageType: space.profilePicture instanceof File ? 'File' : typeof space.profilePicture
-      });
       
       formData.append(`spaces[${index}][name]`, space.name || '');
       formData.append(`spaces[${index}][type]`, space.type || 'Indoor');
@@ -474,13 +459,11 @@ useEffect(() => {
       formData.append(`spaces[${index}][pinCode]`, space.pinCode || '');
       formData.append(`spaces[${index}][nearLocation]`, space.nearLocation || '');
       
-      // Handle profile picture with detailed logging
+      // Handle profile picture
       if (space.profilePicture instanceof File) {
-        console.log(`🖼️ Adding File for space ${index}:`, space.profilePicture.name);
         formData.append(`spaceImages`, space.profilePicture);
         formData.append(`spaceImageIndex`, index);
       } else {
-        console.log(`🔗 Adding URL for space ${index}:`, space.profilePicture);
         formData.append(`spaces[${index}][profilePicture]`, space.profilePicture || '');
       }
       formData.append(`spaces[${index}][isActive]`, space.isActive || true);
@@ -494,7 +477,6 @@ useEffect(() => {
       formData.append("profilePicture", vendor.profilePicture);
     }
 
-    console.log("✅ FormData prepared");
     return formData;
   };
 
@@ -512,9 +494,6 @@ useEffect(() => {
 
   // Update handleSave for contact
   const handleSave = async (type = "info") => {
-    console.log("🚀 handleSave called with type:", type);
-    console.log("📦 Current spaces before save:", spaces);
-    
     if (!vendorId) {
       toast.error("Error: Vendor ID is missing. Please try logging in again.");
       navigate('/vendor/login');
@@ -524,69 +503,37 @@ useEffect(() => {
 
     try {
       const formData = prepareFormData();
-      console.log("📋 FormData prepared, checking space images:");
-      
-      // Log space images being sent
-      spaces.forEach((space, index) => {
-        console.log(`🖼️ Space ${index} image:`, {
-          isFile: space.profilePicture instanceof File,
-          value: space.profilePicture instanceof File ? 'File object' : space.profilePicture
-        });
-      });
 
       const res = await updateProfile({
         vendorId,
         profileData: formData,
       }).unwrap();
       
-      console.log("✅ Server response:", res);
-      console.log("🔍 Server response spaces:", res.vendor?.spaces);
-      
-      // Check each space for profilePicture
-      if (res.vendor?.spaces) {
-        res.vendor.spaces.forEach((space, idx) => {
-          console.log(`🖼️ Server space ${idx} profilePicture:`, space.profilePicture);
-        });
-      }
-      
       const refetchResult = await refetch();
-      console.log("🔄 Refetch result:", refetchResult.data?.vendor?.spaces);
 
       const updatedVendor = res.vendor || res;
-      console.log("🔄 Updated vendor data:", updatedVendor);
-      console.log("🏢 Updated vendor spaces:", updatedVendor.spaces);
 
       // Always update the cover image from the server response
       if (updatedVendor.profilePicture) {
         setCoverImage(updatedVendor.profilePicture);
-        console.log("🖼️ Cover image updated:", updatedVendor.profilePicture);
       }
 
       // Use refetch data instead of server response for spaces
       const finalVendorData = refetchResult.data?.vendor || updatedVendor;
-      console.log("🎯 Final vendor data for spaces:", finalVendorData.spaces);
       
       // Update spaces with new image URLs from server response
       if (finalVendorData.spaces && Array.isArray(finalVendorData.spaces)) {
-        console.log("🔄 Updating spaces state with final data...");
-        finalVendorData.spaces.forEach((space, idx) => {
-          console.log(`🖼️ Final space ${idx} profilePicture:`, space.profilePicture);
-        });
         const newSpaces = finalVendorData.spaces.map(space => ({
           ...space,
           cuisines: Array.isArray(space.cuisines) ? space.cuisines : 
             (space.cuisines ? space.cuisines.split(',').map(c => c.trim()) : [])
         }));
-        console.log("📦 New spaces data:", newSpaces);
         setSpaces(newSpaces);
-      } else {
-        console.log("❌ No spaces data in final response");
       }
 
       dispatch(setVendorCredentials({ vendor: updatedVendor, token }));
       toast.success("Profile updated successfully!");
     } catch (err) {
-      console.error("❌ Save error:", err);
       if (err.status === 404) {
         toast.error("Error: Vendor not found. Please try logging in again.");
         navigate('/vendor/login');
@@ -773,20 +720,9 @@ useEffect(() => {
 
   // Space management functions
   const handleSpaceChange = (index, field, value) => {
-    console.log(`🔄 handleSpaceChange: Space ${index}, field: ${field}`, 
-      field === 'profilePicture' ? (value instanceof File ? `File: ${value.name}` : value) : value
-    );
     const updated = [...spaces];
     updated[index][field] = value;
     setSpaces(updated);
-    
-    if (field === 'profilePicture') {
-      console.log(`🖼️ Space ${index} image updated:`, {
-        isFile: value instanceof File,
-        fileName: value instanceof File ? value.name : 'N/A',
-        value: value instanceof File ? 'File object' : value
-      });
-    }
   };
 
   const handleCuisineChange = (spaceIndex, cuisine) => {
@@ -1516,12 +1452,9 @@ useEffect(() => {
                           accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml,image/x-icon,image/bmp,image/apng,image/heic"
                           onChange={(e) => {
                             const file = e.target.files[0];
-                            console.log(`📁 File selected for space ${index}:`, file ? file.name : 'No file');
                             if (file && file.size <= 10 * 1024 * 1024) {
-                              console.log(`✅ File valid, updating space ${index}`);
                               handleSpaceChange(index, 'profilePicture', file);
                             } else {
-                              console.log(`❌ File invalid for space ${index}:`, file ? 'Too large' : 'No file');
                               alert('File size must be less than 10MB');
                             }
                           }}
