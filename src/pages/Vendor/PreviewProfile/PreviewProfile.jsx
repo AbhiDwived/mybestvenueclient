@@ -5,10 +5,9 @@ import { HiOutlineMail } from "react-icons/hi";
 import { IoLocationOutline } from 'react-icons/io5';
 import { HiOutlineCalendar } from "react-icons/hi";
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useGetVendorByIdQuery, useVendorservicesPackageListMutation } from '../../../features/vendors/vendorAPI';
-import { useCreateBookingMutation, useGetUserBookingsQuery } from '../../../features/bookings/bookingAPI';
+import { useGetVendorByIdQuery } from '../../../features/vendors/vendorAPI';
 import { toast } from 'react-toastify';
-// import mainProfile from "../../../assets/mainProfile.png";
+import coverimage from '../../../assets/Images/user.png';
 
 import { FiFacebook, FiTwitter, FiShield } from "react-icons/fi";
 import PreviewProfileScreen from './PreviewProfileScreen';
@@ -47,38 +46,10 @@ const PreviewProfile = () => {
   
   const actualVendorId = vendor?.vendor?._id || vendorid;
 
-
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   
-  const [createBooking, { isLoading: isBookingLoading }] = useCreateBookingMutation();
-  const { refetch: refetchBookings } = useGetUserBookingsQuery(undefined, { skip: !isAuthenticated });
-  const [packages, setPackages] = useState([]);
-  const [getVendorPackages] = useVendorservicesPackageListMutation();
   const [currentPage, setCurrentPage] = useState(1);
-  const imagesPerPage = 9;
-  // const userId = user?._id;
-
-
-  
-
-  // Booking form state with validation
-  const [bookingForm, setBookingForm] = useState({
-    eventType: '',
-    packageName: '',
-    eventDate: '',
-    eventTime: '',
-    venue: '',
-    guestCount: '',
-    selectedPackage: '',
-    plannedAmount: '5000',
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    notes: ''
-  });
-
-  // Form validation state
-  const [formErrors, setFormErrors] = useState({});
+  const imagesPerPage = 6;
 
   // Inquiry form state with validation
   const [inquiryForm, setInquiryForm] = useState({
@@ -91,45 +62,6 @@ const PreviewProfile = () => {
 
   // Inquiry errors state
   const [inquiryErrors, setInquiryErrors] = useState({});
-
-  // Update form when user data changes
-  useEffect(() => {
-    if (user) {
-      setBookingForm(prev => ({
-        ...prev,
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || ''
-      }));
-    }
-  }, [user]);
-
-  // Update validateForm for booking
-  const validateForm = () => {
-    const errors = {};
-    if (!bookingForm.eventType) errors.eventType = 'Event type is required';
-    if (!bookingForm.packageName) errors.packageName = 'Package name is required';
-    if (!bookingForm.eventDate) errors.eventDate = 'Event date is required';
-    if (!bookingForm.name) errors.name = 'Name is required';
-    if (!bookingForm.email) errors.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(bookingForm.email)) errors.email = 'Invalid email address';
-    if (!bookingForm.phone) errors.phone = 'Phone is required';
-    else if (!/^[6-9]\d{9}$/.test(bookingForm.phone)) errors.phone = 'Invalid Indian phone number';
-    if (!bookingForm.plannedAmount) errors.plannedAmount = 'Planned amount is required';
-    if (!bookingForm.guestCount) errors.guestCount = 'Number of guests is required';
-    else if (parseInt(bookingForm.guestCount) <= 0) errors.guestCount = 'Number of guests must be greater than 0';
-    // Validate date is not in the past
-    if (bookingForm.eventDate) {
-      const selectedDate = new Date(bookingForm.eventDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
-        errors.eventDate = 'Event date cannot be in the past';
-      }
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
   // Inquiry validation
   const validateInquiry = () => {
@@ -145,121 +77,7 @@ const PreviewProfile = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleBookingInputChange = (field, value) => {
-    setBookingForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    // Clear error when field is updated
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  };
-
-  // Fetch vendor packages
-  useEffect(() => {
-    const fetchPackages = async () => {
-      if (!actualVendorId) {
-        return;
-      }
-
-      try {
-        const response = await getVendorPackages({ vendorId: actualVendorId }).unwrap();
-
-        if (response?.packages && Array.isArray(response.packages)) {
-          setPackages(response.packages);
-        } else {
-          setPackages([]);
-        }
-      } catch (error) {
-        toast.error('Failed to load vendor packages');
-        setPackages([]);
-      }
-    };
-
-    if (!isVendorLoading && actualVendorId) {
-      fetchPackages();
-    }
-  }, [actualVendorId, isVendorLoading, getVendorPackages]);
-
-  const handleBookingSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!isAuthenticated) {
-      toast.error('Please login to book a service');
-      navigate('/login');
-      return;
-    }
-
-    if (!validateForm()) {
-      toast.error('Please fill in all required fields correctly');
-      return;
-    }
-
-    try {
-      // Find selected package details
-      const selectedPackageDetails = packages.find(pkg => pkg._id === bookingForm.packageName);
-
-      // Use offer price if available and less than regular price
-      const finalPrice = selectedPackageDetails?.offerPrice &&
-        selectedPackageDetails.offerPrice < selectedPackageDetails.price
-        ? selectedPackageDetails.offerPrice
-        : selectedPackageDetails?.price || 0;
-
-      const response = await createBooking({
-        vendorId: actualVendorId,
-        vendorName: vendor?.vendor?.businessName || '',
-        eventType: bookingForm.eventType,
-        packageName: selectedPackageDetails?.packageName || '',
-        packageId: bookingForm.packageName,
-        packagePrice: selectedPackageDetails?.price || 0,
-        offerPrice: selectedPackageDetails?.offerPrice || 0,
-        finalPrice: finalPrice,
-        eventDate: bookingForm.eventDate,
-        eventTime: bookingForm.eventTime,
-        venue: bookingForm.venue,
-        guestCount: parseInt(bookingForm.guestCount) || 0,
-        plannedAmount: finalPrice,
-        userName: bookingForm.name,
-        userEmail: bookingForm.email,
-        userPhone: bookingForm.phone,
-        notes: bookingForm.notes
-      }).unwrap();
-
-      if (response.success) {
-        toast.success('Booking request sent successfully');
-        refetchBookings();
-
-        // Reset form
-        setBookingForm({
-          eventType: '',
-          packageName: '',
-          eventDate: '',
-          eventTime: '',
-          venue: '',
-          guestCount: '',
-          selectedPackage: '',
-          plannedAmount: '0',
-          name: user?.name || '',
-          email: user?.email || '',
-          phone: user?.phone || '',
-          notes: ''
-        });
-        setFormErrors({});
-      } else {
-        toast.error(response.message || 'Failed to create booking');
-      }
-    } catch (err) {
-      toast.error(err.data?.message || 'Error creating booking');
-    }
-  };
-
   const vendorData = vendor?.vendor;
-
-
 
   const [isSaved, setIsSaved] = useState(false);
 
@@ -269,8 +87,6 @@ const PreviewProfile = () => {
 
   const userRecord = useSelector((state) => state.auth);
   const userId = userRecord?.user?.id;
-
-  
 
   const handleInquiryChange = (e) => {
     const { name, value } = e.target;
@@ -409,11 +225,8 @@ const PreviewProfile = () => {
     videos: portfolioVideosData?.videos || []
   };
 
-
-
   const { data: reviewData } = useGetVendorReviewsQuery(actualVendorId, { skip: !actualVendorId });
   const reviews = reviewData?.reviews || [];
-  // const avgRating = reviews.length ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1) : 0;
   const avg = reviews.length
   ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
   : 0;
@@ -443,27 +256,18 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
       >
         <FaArrowLeft className='mr-2' /> Back to Vendor
       </button>
-      {/* Header */}
 
       <div className="border rounded-lg p-4 shadow-sm bg-white flex flex-col md:flex-row md:items-start gap-4">
-        {/* Profile Image */}
         <img
           src={vendor?.vendor?.profilePicture || vendor?.vendor?.profilePhoto }
           alt={vendor?.vendor?.businessName || "Vendor Profile"}
           className="w-40 h-40 rounded-full object-cover"
         />
 
-        {/* Content */}
         <div className="flex-1 space-y-1">
-
           <h2 className="text-xl font-bold text-gray-800">{vendor?.vendor?.businessName}</h2>
           <p className="text-sm text-gray-500">{vendor?.vendor?.vendorType}</p>
 
-
-
-
-
-          {/* Services */}
           <div className="flex flex-wrap gap-2 mt-2">
             {(() => {
               let raw = vendor?.vendor?.services || [];
@@ -490,7 +294,6 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
             })()}
           </div>
 
-          {/* Pricing */}
           <div className="flex overflow-x-auto flex-nowrap  gap-4 mt-2 whitespace-nowrap">
             {vendorData?.pricing?.filter(item => item?.type && item?.price)?.length > 0 ? (
               vendorData.pricing
@@ -508,7 +311,6 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
             )}
           </div>
 
-          {/* Rating & Location */}
           <div className="flex flex-wrap items-center gap-2 text-md text-gray-600 mt-1">
             <span className="flex items-center font-medium">
               <FaStar className="mr-1" color={"#FACC15"} size={22} />
@@ -522,7 +324,6 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
               {(() => {
                 const vendorAddress = vendor?.vendor?.address;
                 if (vendorAddress && typeof vendorAddress === 'object') {
-                  // Handle address object format
                   const parts = [];
                   if (vendorAddress.street) parts.push(vendorAddress.street);
                   if (vendorAddress.city) parts.push(vendorAddress.city);
@@ -530,10 +331,8 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
                   if (vendorAddress.zipCode) parts.push(vendorAddress.zipCode);
                   return parts.length > 0 ? parts.join(', ') : 'Location not available';
                 } else if (typeof vendorAddress === 'string') {
-                  // Handle legacy string format
                   return vendorAddress;
                 } else if (vendor?.vendor?.serviceAreas?.length > 0) {
-                  // Fallback to service areas
                   return vendor.vendor.serviceAreas.map((area, index) => (
                     <span key={index}>
                       {area}
@@ -545,8 +344,6 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
                 }
               })()}
             </span>
-
-
           </div>
 
           <div className="flex flex-wrap justify-start gap-2 mt-2 sm:mt-0 w-full">
@@ -556,27 +353,19 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
               {vendor?.vendor?.status ? "Active" : "Inactive"}
             </span>
 
-            {/* {vendor?.isVerified && ( */}
             <span className="text-sm px-3 py-1 rounded-full bg-white text-green-700 flex items-center gap-1 border-2 border-green-600 whitespace-nowrap">
               <FiShield className="text-green-600" size={16} />
               Verified
             </span>
-            {/* )} */}
 
-            {/* {vendor?.isApproved && ( */}
             <span className="text-sm px-3 py-1 rounded-full text-[#0f4c81] border-2 border-[#0f4c81] whitespace-nowrap">
               Approved
             </span>
-            {/* )} */}
           </div>
 
-          {/* Description */}
           <p className="text-md text-gray-500 mt-2">
-            {/* {vendor?.vendor?.description || 'No description available'} */}
           </p>
         </div>
-
-        {/* Save Button */}
 
         <div className="absolute sm:top-35 sm:right-8 right-4 md:mt-2">
           <button
@@ -586,33 +375,32 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
             <FaRegHeart className={isSaved ? "text-red-500 mr-2" : "mr-2"} /> Save
           </button>
         </div>
-
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 mt-6">
-        {/* Photo Gallery */}
-        <div className="md:col-span-2 bg-white p-4 rounded shadow">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Portfolio Gallery</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveGalleryTab('images')}
-                className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'images' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
-              >
-                Images ({vendorPortfolio.images.length})
-              </button>
-              <button
-                onClick={() => setActiveGalleryTab('videos')}
-                className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'videos' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
-              >
-                Videos ({vendorPortfolio.videos.length})
-              </button>
-            </div>
+      <div className="bg-white p-4 rounded shadow mt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Portfolio Gallery</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveGalleryTab('images')}
+              className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'images' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
+            >
+              Images ({vendorPortfolio.images.length})
+            </button>
+            <button
+              onClick={() => setActiveGalleryTab('videos')}
+              className={`px-3 py-1 rounded text-sm ${activeGalleryTab === 'videos' ? 'bg-[#0f4c81] text-white' : 'bg-gray-200 text-gray-700'}`}
+            >
+              Videos ({vendorPortfolio.videos.length})
+            </button>
           </div>
-
-          {activeGalleryTab === 'images' && (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="lg:col-span-3">
+            {activeGalleryTab === 'images' && (
+              <>
+                <div className="grid grid-cols-3 gap-4">
                 {vendorPortfolio.images.length > 0 ? (
                   vendorPortfolio.images
                     .slice((currentPage - 1) * imagesPerPage, currentPage * imagesPerPage)
@@ -639,7 +427,6 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
                 )}
               </div>
 
-              {/* Pagination */}
               {vendorPortfolio.images.length > imagesPerPage && (
                 <div className="flex justify-center items-center gap-2 mt-6">
                   <button
@@ -653,7 +440,6 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
                     Previous
                   </button>
 
-                  {/* Page numbers */}
                   {Array.from(
                     { length: Math.ceil(vendorPortfolio.images.length / imagesPerPage) },
                     (_, i) => i + 1
@@ -684,11 +470,11 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
                   </button>
                 </div>
               )}
-            </>
-          )}
+              </>
+            )}
 
-          {activeGalleryTab === 'videos' && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {activeGalleryTab === 'videos' && (
+              <div className="grid grid-cols-2 gap-4">
               {vendorPortfolio.videos.length > 0 ? (
                 vendorPortfolio.videos.map((video, i) => (
                   <div
@@ -714,196 +500,77 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
                   No portfolio videos available
                 </div>
               )}
+              </div>
+            )}
+          </div>
+          
+          <div className="lg:col-span-1">
+            <div className="border rounded-lg p-4 shadow-sm bg-white sticky top-5">
+              <h3 className="font-semibold text-lg mb-3">Send Inquiry</h3>
+              <form className="space-y-3 text-sm" onSubmit={handleInquirySubmit}>
+                <div>
+                  <label className="block mb-1">Your Name <span className="text-red-500">*</span></label>
+                  <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.name ? 'border-red-500' : ''}`} />
+                  {inquiryErrors.name && <span className="text-red-500 text-xs mt-1">{inquiryErrors.name}</span>}
+                </div>
+                <div>
+                  <label className="block mb-1">Your Email <span className="text-red-500">*</span></label>
+                  <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className={`w-full  border rounded px-3 py-2 ${inquiryErrors.email ? 'border-red-500' : ''}`} />
+                  {inquiryErrors.email && <span className="text-red-500 text-xs mt-1">{inquiryErrors.email}</span>}
+                </div>
+                <div>
+                  <label className="block mb-1">Phone Number <span className="text-red-500">*</span></label>
+                  <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className={`w-full  border rounded px-3 py-2 ${inquiryErrors.phone ? 'border-red-500' : ''}`} />
+                  {inquiryErrors.phone && <span className="text-red-500 text-xs mt-1">{inquiryErrors.phone}</span>}
+                </div>
+                <div>
+                  <input type="hidden" value={userId} className="w-full border rounded px-3 py-2" />
+                </div>
+                <input type="hidden" name="vendorId" value={vendorData._id} />
+                <div>
+                  <label className="block mb-1">Event Date <span className="text-red-500">*</span></label>
+                  
+                  <input
+                    type="date"
+                    name="eventDateRaw"
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => {
+                      const selectedDate = new Date(e.target.value);
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0); 
+
+                      if (selectedDate < today) {
+                        toast.error("Please select Valid date.");
+                        return;
+                      }
+
+                      const [year, month, day] = e.target.value.split("-");
+                      const formatted = `${day}/${month}/${year}`;
+                      setInquiryForm(prev => ({
+                        ...prev,
+                        eventDate: formatted
+                      }));
+                    }}
+                    className={`w-full border rounded px-3 py-2 ${inquiryErrors.eventDate ? 'border-red-500' : ''}`}
+                  />
+
+                  {inquiryErrors.eventDate && <span className="text-red-500 text-xs mt-1">{inquiryErrors.eventDate}</span>}
+                </div>
+                <div>
+                  <label className="block mb-1">Message <span className="text-red-500">*</span></label>
+                  <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.message ? 'border-red-500' : ''}`} />
+                  {inquiryErrors.message && <span className="text-red-500 text-xs mt-1">{inquiryErrors.message}</span>}
+                </div>
+                <button type="submit"
+                  disabled={inquiryLoading || userRecord?.user?.role === 'vendor'}
+                  className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">
+                  {inquiryLoading ? 'Sending...' : 'Send Inquiry'}</button>
+              </form>
             </div>
-          )}
+          </div>
         </div>
-
-        {/* Booking Form */}
-        <form onSubmit={handleBookingSubmit} className="mx-auto border rounded-lg p-4 sm:p-6 md:p-8 shadow-sm bg-white text-sm grid gap-4 sm:grid-cols-2 w-full max-w-screen-sm">
-          <h3 className="font-semibold text-xl sm:col-span-2">Book Your Service</h3>
-
-          <label className="sm:col-span-2">
-            <span className="block mb-1">Vendor</span>
-            <input
-              type="text"
-              className="w-full border rounded px-3 py-2"
-              value={vendor?.vendor?.businessName || ''}
-              readOnly
-            />
-          </label>
-
-          <label className="sm:col-span-2">
-            <span className="block mb-1">User Name <span className="text-red-500">*</span></span>
-            <input
-              type="text"
-              value={bookingForm.name}
-              onChange={(e) => handleBookingInputChange('name', e.target.value)}
-              className={`w-full border rounded px-3 py-2 ${formErrors.name ? 'border-red-500' : ''}`}
-              readOnly={isAuthenticated}
-            />
-            {formErrors.name && <span className="text-red-500 text-xs mt-1">{formErrors.name}</span>}
-          </label>
-
-          <label>
-            <span className="block mb-1">Email <span className="text-red-500">*</span></span>
-            <input
-              type="email"
-              value={bookingForm.email}
-              onChange={(e) => handleBookingInputChange('email', e.target.value)}
-              className={`w-full border rounded px-3 py-2 ${formErrors.email ? 'border-red-500' : ''}`}
-              readOnly={isAuthenticated}
-            />
-            {formErrors.email && <span className="text-red-500 text-xs mt-1">{formErrors.email}</span>}
-          </label>
-
-          <label>
-            <span className="block mb-1">Phone Number <span className="text-red-500">*</span></span>
-            <input
-              type="tel"
-              value={bookingForm.phone}
-              onChange={(e) => handleBookingInputChange('phone', e.target.value)}
-              className={`w-full border rounded px-3 py-2 ${formErrors.phone ? 'border-red-500' : ''}`}
-              readOnly={isAuthenticated}
-            />
-            {formErrors.phone && <span className="text-red-500 text-xs mt-1">{formErrors.phone}</span>}
-          </label>
-
-          <label>
-            <span className="block mb-1">Event Type <span className="text-red-500">*</span></span>
-            <select
-              value={bookingForm.eventType}
-              onChange={(e) => handleBookingInputChange('eventType', e.target.value)}
-              className={`w-full border rounded px-3 py-2 ${formErrors.eventType ? 'border-red-500' : ''}`}
-            >
-              <option value="">Select Event Type</option>
-              <option value="Wedding Ceremony">Wedding Ceremony</option>
-              <option value="Reception">Reception</option>
-              <option value="Engagement">Engagement</option>
-              <option value="Birthday Party">Birthday Party</option>
-              <option value="Corporate Event">Corporate Event</option>
-              <option value="Other">Other</option>
-            </select>
-            {formErrors.eventType && <span className="text-red-500 text-xs mt-1">{formErrors.eventType}</span>}
-          </label>
-
-          <label>
-            <span className="block mb-1">Package Name <span className="text-red-500">*</span></span>
-            <select
-              value={bookingForm.packageName}
-              onChange={(e) => {
-                    const selectedPackage = packages.find(pkg => pkg._id === e.target.value);
-                handleBookingInputChange('packageName', e.target.value);
-                if (selectedPackage) {
-                  handleBookingInputChange('plannedAmount', selectedPackage.price || 0);
-                }
-              }}
-              className={`w-full border rounded px-3 py-2 ${formErrors.packageName ? 'border-red-500' : ''}`}
-            >
-              <option value="">Select Package</option>
-              {Array.isArray(packages) && packages.length > 0 ? (
-                packages.map((pkg) => (
-                  <option key={pkg._id} value={pkg._id}>
-                    {pkg.packageName} - ₹{pkg.price?.toLocaleString('en-IN')}
-                    {pkg.offerPrice ? ` (Offer: ₹${pkg.offerPrice?.toLocaleString('en-IN')})` : ''}
-                  </option>
-                ))
-              ) : (
-                <option value="" disabled>No packages available</option>
-              )}
-            </select>
-            {formErrors.packageName && <span className="text-red-500 text-xs mt-1">{formErrors.packageName}</span>}
-          </label>
-
-          <label>
-            <span className="block mb-1">Event Date <span className="text-red-500">*</span></span>
-            <input
-              type="date"
-              value={bookingForm.eventDate}
-              onChange={(e) => handleBookingInputChange('eventDate', e.target.value)}
-              className={`w-full border rounded px-3 py-2 ${formErrors.eventDate ? 'border-red-500' : ''}`}
-              min={new Date().toISOString().split('T')[0]}
-            />
-            {formErrors.eventDate && <span className="text-red-500 text-xs mt-1">{formErrors.eventDate}</span>}
-          </label>
-
-          <label>
-            <span className="block mb-1">Booking Time</span>
-            <input
-              type="time"
-              value={bookingForm.eventTime}
-              onChange={(e) => handleBookingInputChange('eventTime', e.target.value)}
-              className="w-full border rounded px-3 py-2"
-            />
-          </label>
-
-          <label>
-            <span className="block mb-1">Number of Guests <span className="text-red-500">*</span></span>
-            <input
-              type="number"
-              value={bookingForm.guestCount}
-              onChange={(e) => handleBookingInputChange('guestCount', e.target.value)}
-              placeholder="e.g. 150"
-              className={`w-full border rounded px-3 py-2 ${formErrors.guestCount ? 'border-red-500' : ''}`}
-              min="0"
-            />
-            {formErrors.guestCount && <span className="text-red-500 text-xs mt-1">{formErrors.guestCount}</span>}
-          </label>
-
-          <label>
-            <span className="block mb-1">Preferred Venue</span>
-            <input
-              type="text"
-              value={bookingForm.venue}
-              onChange={(e) => handleBookingInputChange('venue', e.target.value)}
-              placeholder="Venue or City"
-              className="w-full border rounded px-3 py-2"
-            />
-          </label>
-
-          <label>
-            <span className="block mb-1">Planned Amount (₹) <span className="text-red-500">*</span></span>
-            <input
-              type="number"
-              value={bookingForm.plannedAmount}
-              className={`w-full border rounded px-3 py-2 bg-gray-50 ${formErrors.plannedAmount ? 'border-red-500' : ''}`}
-              readOnly
-            />
-            {formErrors.plannedAmount && <span className="text-red-500 text-xs mt-1">{formErrors.plannedAmount}</span>}
-            {(() => {
-              const selectedPackage = packages.find(pkg => pkg._id === bookingForm.packageName);
-              if (selectedPackage?.offerPrice && selectedPackage.offerPrice < selectedPackage.price) {
-                return (
-                  <span className="text-green-600 text-xs mt-1 block">
-                    Special offer price: ₹{selectedPackage.offerPrice.toLocaleString('en-IN')}
-                  </span>
-                );
-              }
-              return null;
-            })()}
-          </label>
-
-          <label className="sm:col-span-2">
-            <span className="block mb-1">Additional Notes</span>
-            <textarea
-              rows="3"
-              value={bookingForm.notes}
-              onChange={(e) => handleBookingInputChange('notes', e.target.value)}
-              placeholder="Tell us more about your event..."
-              className="w-full border rounded px-3 py-2"
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="sm:col-span-2 w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            disabled={isBookingLoading}
-          >
-            {isBookingLoading ? 'Sending Request...' : 'Book Now'}
-          </button>
-        </form>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 bg-gray-100 mt-6 rounded">
         {['About', 'Reviews', 'FAQ'].map((tab) => (
           <button
@@ -917,83 +584,107 @@ const avgRating = avg === 5 ? '5' : avg.toFixed(1);
         ))}
       </div>
 
-      {/* Main Grid: Left = tab content, Right = fixed form/info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
-
-        {/* Left side: Tabbed content */}
         <div className="md:col-span-2 space-y-6">
           {activeTab === 'About' && <PreviewProfileScreen />}
           {activeTab === 'Reviews' && <CustomerReviews vendorId={actualVendorId} />}
           {activeTab === 'FAQ' && <FaqQuestions vendorId={actualVendorId} />}
         </div>
 
-        {/* Right side: Inquiry */}
-        <div className="space-y-6  ">
-          {/* Inquiry Form */}
-          <div className="border rounded-lg p-4 shadow-sm bg-white sticky top-5">
-            <h3 className="font-semibold text-lg mb-3">Send Inquiry</h3>
-            <form className="space-y-3 text-sm" onSubmit={handleInquirySubmit}>
-              <div>
-                <label className="block mb-1">Your Name <span className="text-red-500">*</span></label>
-                <input type="text" name="name" value={inquiryForm.name} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.name ? 'border-red-500' : ''}`} />
-                {inquiryErrors.name && <span className="text-red-500 text-xs mt-1">{inquiryErrors.name}</span>}
+        <div className="space-y-6">
+          {vendorData?.spaces && vendorData.spaces.filter(space => space.isActive).length > 0 && (
+            <div className="border rounded p-4 shadow-sm bg-white">
+              <h3 className="text-lg font-semibold mb-2">Your Spaces</h3>
+              <p className="text-gray-500 text-sm mb-4">Overview of all spaces and services</p>
+              <div className="flex flex-col gap-4">
+                {vendorData.spaces.filter(space => space.isActive).map((space, index) => (
+                  <div key={index} className="border rounded overflow-hidden">
+                    <img
+                      src={space.profilePicture 
+                        ? (space.profilePicture.startsWith('http') || space.profilePicture.startsWith('/') 
+                          ? space.profilePicture 
+                          : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || "http://localhost:5000"}/${space.profilePicture}`)
+                        : vendor?.vendor?.profilePicture || coverimage
+                      }
+                      alt={space.name || 'Space'}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = coverimage;
+                      }}
+                    />
+                    
+                    <div className="p-4">
+                      <div className="mb-2">
+                        <h5 className="text-lg font-medium mb-1">{space.name || 'Unnamed Space'}</h5>
+                        <div className="flex justify-between items-center">
+                          <span className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
+                            {space.venueType || space.vendorType || 'Not specified'}
+                          </span>
+                          <span className="bg-gray-100 text-gray-800 text-sm px-2 py-1 rounded">
+                            {space.type || 'Indoor'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {(space.minCapacity || space.maxCapacity) && (
+                        <div className="mb-2">
+                          <span className="text-gray-600 text-sm font-medium">Capacity: </span>
+                          <span className="text-sm">
+                            {space.minCapacity && space.maxCapacity 
+                              ? `${space.minCapacity} - ${space.maxCapacity} guests`
+                              : space.minCapacity 
+                              ? `Min ${space.minCapacity} guests`
+                              : `Max ${space.maxCapacity} guests`
+                            }
+                          </span>
+                        </div>
+                      )}
+                      
+                      {space.businessType === 'venue' && (space.vegPrice || space.nonVegPrice || space.vegImflPrice || space.nonVegImflPrice) && (
+                        <div className="mb-2">
+                          <span className="text-gray-600 text-sm font-medium block">Food (per plate):</span>
+                          <div className="flex flex-wrap gap-2 text-sm">
+                            {space.vegPrice && <span>Veg: ₹{space.vegPrice}</span>}
+                            {space.nonVegPrice && <span>Non-Veg: ₹{space.nonVegPrice}</span>}
+                            {space.vegImflPrice && <span>Veg+IMFL: ₹{space.vegImflPrice}</span>}
+                            {space.nonVegImflPrice && <span>Non-Veg+IMFL: ₹{space.nonVegImflPrice}</span>}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {space.businessType === 'vendor' && space.servicePrice && (
+                        <div className="mb-2">
+                          <span className="text-gray-600 text-sm">Price: </span>
+                          <span className="text-sm">₹{space.servicePrice} {space.priceUnit || 'per event'}</span>
+                        </div>
+                      )}
+                      
+                      {space.cuisines && space.cuisines.length > 0 && (
+                        <div className="mb-2">
+                          <span className="text-gray-600 text-sm font-medium block">Cuisines:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {space.cuisines.map((cuisine, cuisineIndex) => (
+                              <span key={cuisineIndex} className="text-sm bg-gray-100 px-2 py-1 rounded">{cuisine}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <span className="text-gray-600 text-sm font-medium">Location: </span>
+                        <span className="text-sm">
+                          {[space.address, space.city, space.state, space.pinCode]
+                            .filter(Boolean)
+                            .join(', ') || 'Location not specified'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="block mb-1">Your Email <span className="text-red-500">*</span></label>
-                <input type="email" name="email" value={inquiryForm.email} onChange={handleInquiryChange} className={`w-full  border rounded px-3 py-2 ${inquiryErrors.email ? 'border-red-500' : ''}`} />
-                {inquiryErrors.email && <span className="text-red-500 text-xs mt-1">{inquiryErrors.email}</span>}
-              </div>
-              <div>
-                <label className="block mb-1">Phone Number <span className="text-red-500">*</span></label>
-                <input type="tel" name="phone" value={inquiryForm.phone} onChange={handleInquiryChange} className={`w-full  border rounded px-3 py-2 ${inquiryErrors.phone ? 'border-red-500' : ''}`} />
-                {inquiryErrors.phone && <span className="text-red-500 text-xs mt-1">{inquiryErrors.phone}</span>}
-              </div>
-              <div>
-                {/* <label className="block mb-1">useId</label> */}
-                <input type="hidden" value={userId} className="w-full border rounded px-3 py-2" />
-              </div>
-              <input type="hidden" name="vendorId" value={vendorData._id} />
-              <div>
-                <label className="block mb-1">Event Date <span className="text-red-500">*</span></label>
-                
-                <input
-                  type="date"
-                  name="eventDateRaw"
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => {
-                    const selectedDate = new Date(e.target.value);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0); 
-
-                    if (selectedDate < today) {
-                      // alert("Please select Valid date.");
-                      toast.error("Please select Valid date.");
-                      return;
-                    }
-
-                    const [year, month, day] = e.target.value.split("-");
-                    const formatted = `${day}/${month}/${year}`;
-                    setInquiryForm(prev => ({
-                      ...prev,
-                      eventDate: formatted
-                    }));
-                  }}
-                  className={`w-full border rounded px-3 py-2 ${inquiryErrors.eventDate ? 'border-red-500' : ''}`}
-                />
-
-                {inquiryErrors.eventDate && <span className="text-red-500 text-xs mt-1">{inquiryErrors.eventDate}</span>}
-              </div>
-              <div>
-                <label className="block mb-1">Message <span className="text-red-500">*</span></label>
-                <textarea name="message" rows="3" value={inquiryForm.message} onChange={handleInquiryChange} className={`w-full border rounded px-3 py-2 ${inquiryErrors.message ? 'border-red-500' : ''}`} />
-                {inquiryErrors.message && <span className="text-red-500 text-xs mt-1">{inquiryErrors.message}</span>}
-              </div>
-              <button type="submit"
-                disabled={inquiryLoading || userRecord?.user?.role === 'vendor'}
-                className="w-full bg-[#0f4c81] text-white py-2 rounded hover:bg-[#0f4c81]">
-                {inquiryLoading ? 'Sending...' : 'Send Inquiry'}</button>
-            </form>
-          </div>
+            </div>
+          )}
         </div>
       </div>
       {actualVendorId && <SimilarVendors vendorType={vendor?.vendor?.vendorType} currentVendorId={actualVendorId} />}

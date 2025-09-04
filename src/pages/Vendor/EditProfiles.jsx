@@ -367,7 +367,7 @@ useEffect(() => {
           pinCode: space.pinCode || '',
           nearLocation: space.nearLocation || '',
           profilePicture: space.profilePicture || '',
-          isActive: space.isActive !== undefined ? space.isActive : true
+          isActive: space.isActive === true
         })));
       }
     }
@@ -466,7 +466,7 @@ useEffect(() => {
       } else {
         formData.append(`spaces[${index}][profilePicture]`, space.profilePicture || '');
       }
-      formData.append(`spaces[${index}][isActive]`, space.isActive || true);
+      formData.append(`spaces[${index}][isActive]`, space.isActive === true);
     });
 
     if (imageFile) {
@@ -767,10 +767,27 @@ useEffect(() => {
     }]);
   };
 
-  const handleToggleSpaceStatus = (index) => {
+  const handleToggleSpaceStatus = async (index) => {
     const updated = [...spaces];
     updated[index].isActive = !updated[index].isActive;
     setSpaces(updated);
+    
+    // Save the changes immediately
+    try {
+      const formData = prepareFormData();
+      await updateProfile({
+        vendorId,
+        profileData: formData,
+      }).unwrap();
+      
+      toast.success(`Space ${updated[index].isActive ? 'activated' : 'deactivated'} successfully!`);
+    } catch (err) {
+      // Revert the change if save fails
+      const reverted = [...spaces];
+      reverted[index].isActive = !reverted[index].isActive;
+      setSpaces(reverted);
+      toast.error('Failed to update space status: ' + (err.data?.message || err.message));
+    }
   };
 
   const handleRemoveSpace = (index) => {
