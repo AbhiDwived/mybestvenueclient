@@ -9,7 +9,8 @@ import HowItWorks from '../Home/HowItWorks';
 import FeaturedVendors from '../Home/FeatureVendors';
 import WeddingVenuesByLocation from '../Home/WeddingVenuesByLocation';
 import WeddingVendorsByLocation from '../Home/WeddingVendorsByLocation';
-import LocationList from '../Location/LocationList'
+import LocationList from '../Location/LocationList';
+import LatestBlogs from '../Home/LatestBlogs';
 
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
       <VendorByCategory />
       <ProjectList />
       <FeaturedVendors/>
+      <LatestBlogs />
       <SuccessfulEvents />
       <Testimonials />
       <HowItWorks />
